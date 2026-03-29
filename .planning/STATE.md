@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-03-29T17:29:38.410Z"
+stopped_at: Completed 02-04-PLAN.md
+last_updated: "2026-03-29T17:37:39.765Z"
 last_activity: 2026-03-29
 progress:
   total_phases: 9
   completed_phases: 1
   total_plans: 14
-  completed_plans: 8
+  completed_plans: 11
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 ## Current Position
 
 Phase: 02 (school-data-model-dsgvo) — EXECUTING
-Plan: 2 of 7
+Plan: 5 of 7
 Status: Ready to execute
 Last activity: 2026-03-29
 
@@ -60,6 +60,9 @@ Progress: [..........] 0%
 | Phase 01 P05 | 3min | 2 tasks | 10 files |
 | Phase 01 P07 | 4min | 2 tasks | 8 files |
 | Phase 02 P01 | 8min | 2 tasks | 12 files |
+| Phase 02 P04 | 4min | 2 tasks | 12 files |
+| Phase 02 P02 | 5min | 2 tasks | 12 files |
+| Phase 02 P03 | 5min | 2 tasks | 21 files |
 
 ## Accumulated Context
 
@@ -92,6 +95,15 @@ Recent decisions affecting current work:
 - [Phase 02]: Custom Prisma client extension for field encryption (not third-party library) for Prisma 7 safety
 - [Phase 02]: Encryption format $enc:v1:{iv}:{authTag}:{ciphertext} with non-deterministic IV and versioned prefix
 - [Phase 02]: Person.dateOfBirth stored as String (not DateTime) for encryption compatibility
+- [Phase 02]: Stundentafel data stored as static TypeScript arrays -- no DB persistence for templates
+- [Phase 02]: Find-or-create pattern for applyTemplate: subjects reused if existing, created if new
+- [Phase 02]: ClassSubject isCustomized=false for template-created, true for manual additions/edits
+- [Phase 02]: Nested Person+Teacher creation via prisma.person.create for atomic record creation
+- [Phase 02]: Replace-all strategy for teacher qualifications/rules/reductions: deleteMany + createMany in transaction
+- [Phase 02]: Nested Person+Student creation via prisma.person.create with student: { create: {} } for atomic insert
+- [Phase 02]: GroupAutoAssignRule interface is input-driven (admin provides rules and student IDs) not auto-inferred from student attributes
+- [Phase 02]: Werteinheiten utility as pure functions (no DI) for testability and Phase 3 solver reuse
+- [Phase 02]: isAutoAssigned boolean flag on GroupMembership distinguishes manual vs rule-derived assignments for selective cleanup
 
 ### Pending Todos
 
@@ -105,6 +117,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-29T17:29:38.406Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-03-29T17:37:26.258Z
+Stopped at: Completed 02-04-PLAN.md
 Resume file: None
