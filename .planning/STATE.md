@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-06-PLAN.md
-last_updated: "2026-03-29T17:46:46.244Z"
+stopped_at: Completed 02-05-PLAN.md
+last_updated: "2026-03-29T17:47:21.607Z"
 last_activity: 2026-03-29
 progress:
   total_phases: 9
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 ## Current Position
 
 Phase: 02 (school-data-model-dsgvo) — EXECUTING
-Plan: 6 of 7
+Plan: 7 of 7
 Status: Ready to execute
 Last activity: 2026-03-29
 
@@ -64,6 +64,7 @@ Progress: [..........] 0%
 | Phase 02 P02 | 5min | 2 tasks | 12 files |
 | Phase 02 P03 | 5min | 2 tasks | 21 files |
 | Phase 02 P06 | 6min | 2 tasks | 15 files |
+| Phase 02 P05 | 6min | 2 tasks | 19 files |
 
 ## Accumulated Context
 
@@ -107,6 +108,9 @@ Recent decisions affecting current work:
 - [Phase 02]: isAutoAssigned boolean flag on GroupMembership distinguishes manual vs rule-derived assignments for selective cleanup
 - [Phase 02]: Deterministic anonymous counter from person ID hash for DSGVO anonymization naming
 - [Phase 02]: PDF export limited to 50 most recent audit entries to prevent oversized DSGVO Art. 15 documents
+- [Phase 02]: Austrian-specific retention defaults: noten=21900d (60yr), anwesenheit=1825d (5yr), kommunikation=365d (1yr)
+- [Phase 02]: Consent re-grant updates existing record with version++ (preserves unique constraint)
+- [Phase 02]: DsgvoModule OnModuleInit registers BullMQ repeatable job at cron 0 2 * * * for daily retention check
 
 ### Pending Todos
 
@@ -120,6 +124,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-29T17:46:46.242Z
-Stopped at: Completed 02-06-PLAN.md
+Last session: 2026-03-29T17:47:21.604Z
+Stopped at: Completed 02-05-PLAN.md
 Resume file: None
