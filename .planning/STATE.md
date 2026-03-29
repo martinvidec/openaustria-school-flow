@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-03-PLAN.md
-last_updated: "2026-03-29T12:25:55.374Z"
+stopped_at: Completed 01-04-PLAN.md
+last_updated: "2026-03-29T12:35:10.033Z"
 last_activity: 2026-03-29
 progress:
   total_phases: 9
   completed_phases: 0
   total_plans: 7
-  completed_plans: 3
+  completed_plans: 4
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 ## Current Position
 
 Phase: 01 (project-scaffolding-auth) — EXECUTING
-Plan: 4 of 7
+Plan: 5 of 7
 Status: Ready to execute
 Last activity: 2026-03-29
 
@@ -55,6 +55,7 @@ Progress: [..........] 0%
 | Phase 01 P01 | 4min | 2 tasks | 24 files |
 | Phase 01 P02 | 4min | 2 tasks | 8 files |
 | Phase 01 P03 | 2min | 2 tasks | 12 files |
+| Phase 01 P04 | 6min | 2 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,9 @@ Recent decisions affecting current work:
 - [Phase 01]: Custom Passport-JWT with jwks-rsa chosen over nest-keycloak-connect (NestJS 11 peer dep issue #197)
 - [Phase 01]: Global APP_GUARD with @Public() opt-out pattern -- all endpoints protected by default
 - [Phase 01]: Token lifetimes: 15min access, 30min idle SSO, 8hr max SSO session for school day persistence (AUTH-06)
+- [Phase 01]: Prisma.DbNull for nullable JSON fields -- Prisma 7 requires explicit DbNull, not null
+- [Phase 01]: DTO definite assignment assertions (!) for class-validator with TypeScript 6.0 strict mode
+- [Phase 01]: PermissionsGuard as second APP_GUARD in AuthModule -- JwtAuthGuard resolves user first, then PermissionsGuard checks abilities
 
 ### Pending Todos
 
@@ -88,6 +92,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-29T12:25:55.371Z
-Stopped at: Completed 01-03-PLAN.md
+Last session: 2026-03-29T12:35:10.030Z
+Stopped at: Completed 01-04-PLAN.md
 Resume file: None

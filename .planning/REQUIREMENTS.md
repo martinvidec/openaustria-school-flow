@@ -73,7 +73,7 @@
 
 - [x] **AUTH-01**: System unterstützt 5 Standardrollen: Administrator, Schulleitung, Lehrer, Eltern, Schüler
 - [x] **AUTH-02**: Zugriffsrechte sind pro Modul feingranular konfigurierbar
-- [ ] **AUTH-03**: Datensichtbarkeit ist rollenbasiert eingeschränkt (Eltern sehen nur eigenes Kind, Lehrer nur eigene Klassen)
+- [x] **AUTH-03**: Datensichtbarkeit ist rollenbasiert eingeschränkt (Eltern sehen nur eigenes Kind, Lehrer nur eigene Klassen)
 - [x] **AUTH-04**: System führt Audit-Trail über alle Datenzugriffe und -änderungen
 - [x] **AUTH-05**: Authentifizierung über Keycloak (OIDC/SAML, LDAP/AD-Anbindung)
 - [x] **AUTH-06**: Session bleibt über Browser-Refresh bestehen
@@ -208,7 +208,7 @@
 | COMM-06 | Phase 7 | Pending |
 | AUTH-01 | Phase 1 | Complete |
 | AUTH-02 | Phase 1 | Complete |
-| AUTH-03 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Complete |
 | AUTH-04 | Phase 1 | Complete |
 | AUTH-05 | Phase 1 | Complete |
 | AUTH-06 | Phase 1 | Complete |
