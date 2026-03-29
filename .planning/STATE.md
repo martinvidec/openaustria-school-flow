@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-02-PLAN.md
-last_updated: "2026-03-29T12:20:53.708Z"
+stopped_at: Completed 01-03-PLAN.md
+last_updated: "2026-03-29T12:25:55.374Z"
 last_activity: 2026-03-29
 progress:
   total_phases: 9
   completed_phases: 0
   total_plans: 7
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 ## Current Position
 
 Phase: 01 (project-scaffolding-auth) — EXECUTING
-Plan: 3 of 7
+Plan: 4 of 7
 Status: Ready to execute
 Last activity: 2026-03-29
 
@@ -54,6 +54,7 @@ Progress: [..........] 0%
 *Updated after each plan completion*
 | Phase 01 P01 | 4min | 2 tasks | 24 files |
 | Phase 01 P02 | 4min | 2 tasks | 8 files |
+| Phase 01 P03 | 2min | 2 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -71,6 +72,9 @@ Recent decisions affecting current work:
 - [Phase 01]: Docker Compose provides infra only (postgres, redis, keycloak) -- API runs locally for hot-reload
 - [Phase 01]: Prisma 7.6.0 generates client directly into output folder (not prisma/ subfolder) -- import from ./generated/client.js
 - [Phase 01]: Approved @prisma/engines and prisma in pnpm.onlyBuiltDependencies for build script execution
+- [Phase 01]: Custom Passport-JWT with jwks-rsa chosen over nest-keycloak-connect (NestJS 11 peer dep issue #197)
+- [Phase 01]: Global APP_GUARD with @Public() opt-out pattern -- all endpoints protected by default
+- [Phase 01]: Token lifetimes: 15min access, 30min idle SSO, 8hr max SSO session for school day persistence (AUTH-06)
 
 ### Pending Todos
 
@@ -84,6 +88,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-29T12:20:53.705Z
-Stopped at: Completed 01-02-PLAN.md
+Last session: 2026-03-29T12:25:55.371Z
+Stopped at: Completed 01-03-PLAN.md
 Resume file: None

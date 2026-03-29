@@ -75,8 +75,8 @@
 - [x] **AUTH-02**: Zugriffsrechte sind pro Modul feingranular konfigurierbar
 - [ ] **AUTH-03**: Datensichtbarkeit ist rollenbasiert eingeschränkt (Eltern sehen nur eigenes Kind, Lehrer nur eigene Klassen)
 - [x] **AUTH-04**: System führt Audit-Trail über alle Datenzugriffe und -änderungen
-- [ ] **AUTH-05**: Authentifizierung über Keycloak (OIDC/SAML, LDAP/AD-Anbindung)
-- [ ] **AUTH-06**: Session bleibt über Browser-Refresh bestehen
+- [x] **AUTH-05**: Authentifizierung über Keycloak (OIDC/SAML, LDAP/AD-Anbindung)
+- [x] **AUTH-06**: Session bleibt über Browser-Refresh bestehen
 
 ### DSGVO Compliance
 
@@ -110,7 +110,7 @@
 
 - [ ] **API-01**: Alle Funktionen sind über dokumentierte REST-API verfügbar
 - [ ] **API-02**: API-Dokumentation wird automatisch generiert (OpenAPI/Swagger)
-- [ ] **API-03**: API unterstützt Token-basierte Authentifizierung (OAuth2/OIDC)
+- [x] **API-03**: API unterstützt Token-basierte Authentifizierung (OAuth2/OIDC)
 
 ### Deployment
 
@@ -210,8 +210,8 @@
 | AUTH-02 | Phase 1 | Complete |
 | AUTH-03 | Phase 1 | Pending |
 | AUTH-04 | Phase 1 | Complete |
-| AUTH-05 | Phase 1 | Pending |
-| AUTH-06 | Phase 1 | Pending |
+| AUTH-05 | Phase 1 | Complete |
+| AUTH-06 | Phase 1 | Complete |
 | DSGVO-01 | Phase 2 | Pending |
 | DSGVO-02 | Phase 2 | Pending |
 | DSGVO-03 | Phase 2 | Pending |
@@ -230,7 +230,7 @@
 | HW-03 | Phase 8 | Pending |
 | API-01 | Phase 1 | Pending |
 | API-02 | Phase 1 | Pending |
-| API-03 | Phase 1 | Pending |
+| API-03 | Phase 1 | Complete |
 | DEPLOY-01 | Phase 1 | Complete |
 | DEPLOY-02 | Phase 9 | Pending |
 | DEPLOY-03 | Phase 9 | Pending |
