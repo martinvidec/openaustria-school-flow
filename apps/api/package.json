@@ -40,6 +40,9 @@
     "reflect-metadata": "^0.2",
     "rxjs": "^7"
   },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "devDependencies": {
     "@nestjs/cli": "^11",
     "@nestjs/testing": "^11",
