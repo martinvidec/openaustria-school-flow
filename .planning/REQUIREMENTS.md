@@ -163,83 +163,83 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 | Pending | Pending |
-| FOUND-02 | Pending | Pending |
-| FOUND-03 | Pending | Pending |
-| FOUND-04 | Pending | Pending |
-| FOUND-05 | Pending | Pending |
-| TIME-01 | Pending | Pending |
-| TIME-02 | Pending | Pending |
-| TIME-03 | Pending | Pending |
-| TIME-04 | Pending | Pending |
-| TIME-05 | Pending | Pending |
-| TIME-06 | Pending | Pending |
-| TIME-07 | Pending | Pending |
-| TIME-08 | Pending | Pending |
-| VIEW-01 | Pending | Pending |
-| VIEW-02 | Pending | Pending |
-| VIEW-03 | Pending | Pending |
-| VIEW-04 | Pending | Pending |
-| VIEW-05 | Pending | Pending |
-| VIEW-06 | Pending | Pending |
-| BOOK-01 | Pending | Pending |
-| BOOK-02 | Pending | Pending |
-| BOOK-03 | Pending | Pending |
-| BOOK-04 | Pending | Pending |
-| BOOK-05 | Pending | Pending |
-| BOOK-06 | Pending | Pending |
-| BOOK-07 | Pending | Pending |
-| SUBST-01 | Pending | Pending |
-| SUBST-02 | Pending | Pending |
-| SUBST-03 | Pending | Pending |
-| SUBST-04 | Pending | Pending |
-| SUBST-05 | Pending | Pending |
-| SUBST-06 | Pending | Pending |
-| ROOM-01 | Pending | Pending |
-| ROOM-02 | Pending | Pending |
-| ROOM-03 | Pending | Pending |
-| ROOM-04 | Pending | Pending |
-| ROOM-05 | Pending | Pending |
-| COMM-01 | Pending | Pending |
-| COMM-02 | Pending | Pending |
-| COMM-03 | Pending | Pending |
-| COMM-04 | Pending | Pending |
-| COMM-05 | Pending | Pending |
-| COMM-06 | Pending | Pending |
-| AUTH-01 | Pending | Pending |
-| AUTH-02 | Pending | Pending |
-| AUTH-03 | Pending | Pending |
-| AUTH-04 | Pending | Pending |
-| AUTH-05 | Pending | Pending |
-| AUTH-06 | Pending | Pending |
-| DSGVO-01 | Pending | Pending |
-| DSGVO-02 | Pending | Pending |
-| DSGVO-03 | Pending | Pending |
-| DSGVO-04 | Pending | Pending |
-| DSGVO-05 | Pending | Pending |
-| DSGVO-06 | Pending | Pending |
-| MOBILE-01 | Pending | Pending |
-| MOBILE-02 | Pending | Pending |
-| MOBILE-03 | Pending | Pending |
-| IMPORT-01 | Pending | Pending |
-| IMPORT-02 | Pending | Pending |
-| IMPORT-03 | Pending | Pending |
-| IMPORT-04 | Pending | Pending |
-| HW-01 | Pending | Pending |
-| HW-02 | Pending | Pending |
-| HW-03 | Pending | Pending |
-| API-01 | Pending | Pending |
-| API-02 | Pending | Pending |
-| API-03 | Pending | Pending |
-| DEPLOY-01 | Pending | Pending |
-| DEPLOY-02 | Pending | Pending |
-| DEPLOY-03 | Pending | Pending |
+| FOUND-01 | Phase 1 | Pending |
+| FOUND-02 | Phase 2 | Pending |
+| FOUND-03 | Phase 2 | Pending |
+| FOUND-04 | Phase 2 | Pending |
+| FOUND-05 | Phase 2 | Pending |
+| TIME-01 | Phase 3 | Pending |
+| TIME-02 | Phase 3 | Pending |
+| TIME-03 | Phase 3 | Pending |
+| TIME-04 | Phase 3 | Pending |
+| TIME-05 | Phase 3 | Pending |
+| TIME-06 | Phase 3 | Pending |
+| TIME-07 | Phase 3 | Pending |
+| TIME-08 | Phase 4 | Pending |
+| VIEW-01 | Phase 4 | Pending |
+| VIEW-02 | Phase 4 | Pending |
+| VIEW-03 | Phase 4 | Pending |
+| VIEW-04 | Phase 4 | Pending |
+| VIEW-05 | Phase 4 | Pending |
+| VIEW-06 | Phase 4 | Pending |
+| BOOK-01 | Phase 5 | Pending |
+| BOOK-02 | Phase 5 | Pending |
+| BOOK-03 | Phase 5 | Pending |
+| BOOK-04 | Phase 5 | Pending |
+| BOOK-05 | Phase 5 | Pending |
+| BOOK-06 | Phase 5 | Pending |
+| BOOK-07 | Phase 5 | Pending |
+| SUBST-01 | Phase 6 | Pending |
+| SUBST-02 | Phase 6 | Pending |
+| SUBST-03 | Phase 6 | Pending |
+| SUBST-04 | Phase 6 | Pending |
+| SUBST-05 | Phase 6 | Pending |
+| SUBST-06 | Phase 6 | Pending |
+| ROOM-01 | Phase 3 | Pending |
+| ROOM-02 | Phase 3 | Pending |
+| ROOM-03 | Phase 4 | Pending |
+| ROOM-04 | Phase 4 | Pending |
+| ROOM-05 | Phase 4 | Pending |
+| COMM-01 | Phase 7 | Pending |
+| COMM-02 | Phase 7 | Pending |
+| COMM-03 | Phase 7 | Pending |
+| COMM-04 | Phase 7 | Pending |
+| COMM-05 | Phase 7 | Pending |
+| COMM-06 | Phase 7 | Pending |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| AUTH-04 | Phase 1 | Pending |
+| AUTH-05 | Phase 1 | Pending |
+| AUTH-06 | Phase 1 | Pending |
+| DSGVO-01 | Phase 2 | Pending |
+| DSGVO-02 | Phase 2 | Pending |
+| DSGVO-03 | Phase 2 | Pending |
+| DSGVO-04 | Phase 2 | Pending |
+| DSGVO-05 | Phase 2 | Pending |
+| DSGVO-06 | Phase 2 | Pending |
+| MOBILE-01 | Phase 9 | Pending |
+| MOBILE-02 | Phase 9 | Pending |
+| MOBILE-03 | Phase 9 | Pending |
+| IMPORT-01 | Phase 8 | Pending |
+| IMPORT-02 | Phase 8 | Pending |
+| IMPORT-03 | Phase 8 | Pending |
+| IMPORT-04 | Phase 8 | Pending |
+| HW-01 | Phase 8 | Pending |
+| HW-02 | Phase 8 | Pending |
+| HW-03 | Phase 8 | Pending |
+| API-01 | Phase 1 | Pending |
+| API-02 | Phase 1 | Pending |
+| API-03 | Phase 1 | Pending |
+| DEPLOY-01 | Phase 1 | Pending |
+| DEPLOY-02 | Phase 9 | Pending |
+| DEPLOY-03 | Phase 9 | Pending |
 
 **Coverage:**
-- v1 requirements: 63 total
-- Mapped to phases: 0
-- Unmapped: 63 (pending roadmap creation)
+- v1 requirements: 71 total
+- Mapped to phases: 71
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-29*
-*Last updated: 2026-03-29 after initial definition*
+*Last updated: 2026-03-29 after roadmap creation*
