@@ -108,7 +108,7 @@
 
 ### Open API
 
-- [ ] **API-01**: Alle Funktionen sind über dokumentierte REST-API verfügbar
+- [x] **API-01**: Alle Funktionen sind über dokumentierte REST-API verfügbar
 - [ ] **API-02**: API-Dokumentation wird automatisch generiert (OpenAPI/Swagger)
 - [x] **API-03**: API unterstützt Token-basierte Authentifizierung (OAuth2/OIDC)
 
@@ -228,7 +228,7 @@
 | HW-01 | Phase 8 | Pending |
 | HW-02 | Phase 8 | Pending |
 | HW-03 | Phase 8 | Pending |
-| API-01 | Phase 1 | Pending |
+| API-01 | Phase 1 | Complete |
 | API-02 | Phase 1 | Pending |
 | API-03 | Phase 1 | Complete |
 | DEPLOY-01 | Phase 1 | Complete |

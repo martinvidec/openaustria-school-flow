@@ -41,7 +41,7 @@ Plans:
 - [x] 01-02-PLAN.md -- Prisma 7 schema (school profile, RBAC/ACL, audit trail models) and PrismaService
 - [x] 01-03-PLAN.md -- Keycloak realm setup and custom Passport-JWT authentication strategy
 - [x] 01-04-PLAN.md -- CASL-based RBAC+ACL authorization system with seed data and override API
-- [ ] 01-05-PLAN.md -- School profile CRUD API with Austrian school type templates
+- [x] 01-05-PLAN.md -- School profile CRUD API with Austrian school type templates
 - [x] 01-06-PLAN.md -- Audit trail (mutation logging, sensitive read interceptor, role-scoped query API)
 - [ ] 01-07-PLAN.md -- Swagger/OpenAPI with OAuth2, RFC 9457 errors, validation pipe, and unit tests
 
