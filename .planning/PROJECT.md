@@ -12,7 +12,10 @@ Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenp
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Rollen- und Rechteverwaltung (Admin, Schulleitung, Lehrer, Eltern, Schüler) — Validated in Phase 1: Project Scaffolding & Auth
+- [x] REST/GraphQL API als primäre Schnittstelle (UI-agnostisch, Client austauschbar) — Validated in Phase 1: Project Scaffolding & Auth
+- [x] Single-Tenant Deployment (Docker/Kubernetes, Self-Hosted als Default) — Validated in Phase 1: Project Scaffolding & Auth
+- [x] DSGVO-Konformität: Audit-Trail — Validated in Phase 1: Project Scaffolding & Auth
 
 ### Active
 
@@ -63,6 +66,9 @@ Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenp
 | Monorepo + Services | Modularität ohne Microservice-Komplexität; klare Grenzen mit internen APIs | — Pending |
 | Plugin-System für Konnektoren | Offene Erweiterbarkeit statt fest eingebauter Integrationen | — Pending |
 | Open Source | Gegenpol zu Untis-Monopol; Community-getrieben, kein Vendor Lock-in | — Pending |
+| NestJS 11 + Fastify + Prisma 7 | TypeScript ecosystem, Fastify perf, Prisma 7 driver-adapter arch | Phase 1 validated |
+| Keycloak 26.5 OIDC | Enterprise SSO, LDAP/AD federation, self-hosted | Phase 1 validated |
+| CASL hybrid RBAC+ACL | DB-persisted permissions, per-user overrides, condition templates | Phase 1 validated |
 
 ## Evolution
 
