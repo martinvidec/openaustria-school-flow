@@ -1,7 +1,8 @@
 ---
 phase: 1
 slug: project-scaffolding-auth
-status: draft
+status: approved
+reviewed_at: 2026-03-29
 shadcn_initialized: false
 preset: pending
 created: 2026-03-29
