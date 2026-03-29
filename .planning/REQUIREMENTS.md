@@ -7,7 +7,7 @@
 
 ### Foundation
 
-- [ ] **FOUND-01**: Admin kann Schulprofil anlegen (Name, Typ, Zeitraster, Unterrichtstage)
+- [x] **FOUND-01**: Admin kann Schulprofil anlegen (Name, Typ, Zeitraster, Unterrichtstage)
 - [ ] **FOUND-02**: Admin kann Lehrer mit Stammdaten erfassen (Name, Fächer, Verfügbarkeit, Beschäftigungsgrad)
 - [ ] **FOUND-03**: Admin kann Klassen/Gruppen anlegen mit Schülerzuordnung
 - [ ] **FOUND-04**: Admin kann Fächer mit Wochenstunden-Soll pro Klasse definieren
@@ -71,10 +71,10 @@
 
 ### RBAC & Security
 
-- [ ] **AUTH-01**: System unterstützt 5 Standardrollen: Administrator, Schulleitung, Lehrer, Eltern, Schüler
-- [ ] **AUTH-02**: Zugriffsrechte sind pro Modul feingranular konfigurierbar
+- [x] **AUTH-01**: System unterstützt 5 Standardrollen: Administrator, Schulleitung, Lehrer, Eltern, Schüler
+- [x] **AUTH-02**: Zugriffsrechte sind pro Modul feingranular konfigurierbar
 - [ ] **AUTH-03**: Datensichtbarkeit ist rollenbasiert eingeschränkt (Eltern sehen nur eigenes Kind, Lehrer nur eigene Klassen)
-- [ ] **AUTH-04**: System führt Audit-Trail über alle Datenzugriffe und -änderungen
+- [x] **AUTH-04**: System führt Audit-Trail über alle Datenzugriffe und -änderungen
 - [ ] **AUTH-05**: Authentifizierung über Keycloak (OIDC/SAML, LDAP/AD-Anbindung)
 - [ ] **AUTH-06**: Session bleibt über Browser-Refresh bestehen
 
@@ -163,7 +163,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 | Phase 1 | Pending |
+| FOUND-01 | Phase 1 | Complete |
 | FOUND-02 | Phase 2 | Pending |
 | FOUND-03 | Phase 2 | Pending |
 | FOUND-04 | Phase 2 | Pending |
@@ -206,10 +206,10 @@
 | COMM-04 | Phase 7 | Pending |
 | COMM-05 | Phase 7 | Pending |
 | COMM-06 | Phase 7 | Pending |
-| AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
+| AUTH-01 | Phase 1 | Complete |
+| AUTH-02 | Phase 1 | Complete |
 | AUTH-03 | Phase 1 | Pending |
-| AUTH-04 | Phase 1 | Pending |
+| AUTH-04 | Phase 1 | Complete |
 | AUTH-05 | Phase 1 | Pending |
 | AUTH-06 | Phase 1 | Pending |
 | DSGVO-01 | Phase 2 | Pending |
