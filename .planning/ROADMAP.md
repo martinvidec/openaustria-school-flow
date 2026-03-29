@@ -43,7 +43,7 @@ Plans:
 - [x] 01-04-PLAN.md -- CASL-based RBAC+ACL authorization system with seed data and override API
 - [x] 01-05-PLAN.md -- School profile CRUD API with Austrian school type templates
 - [x] 01-06-PLAN.md -- Audit trail (mutation logging, sensitive read interceptor, role-scoped query API)
-- [ ] 01-07-PLAN.md -- Swagger/OpenAPI with OAuth2, RFC 9457 errors, validation pipe, and unit tests
+- [x] 01-07-PLAN.md -- Swagger/OpenAPI with OAuth2, RFC 9457 errors, validation pipe, and unit tests
 
 ### Phase 2: School Data Model & DSGVO
 **Goal**: The complete school entity model (teachers, classes, students, subjects) is populated and queryable, with DSGVO compliance infrastructure (consent tracking, data deletion, export, encryption, retention) operational from the start
