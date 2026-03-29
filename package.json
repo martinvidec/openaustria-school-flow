@@ -21,7 +21,8 @@
       "@nestjs/core",
       "@swc/core",
       "@prisma/engines",
-      "prisma"
+      "prisma",
+      "esbuild"
     ]
   }
 }

@@ -9,7 +9,8 @@
     "start:prod": "node dist/main",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "echo lint-placeholder"
+    "lint": "echo lint-placeholder",
+    "prisma:seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@casl/ability": "^6.8.0",
@@ -24,6 +25,8 @@
     "@prisma/adapter-pg": "^7.6.0",
     "@prisma/client": "^7.6.0",
     "@schoolflow/shared": "workspace:*",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
     "jwks-rsa": "^4.0.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
@@ -41,6 +44,7 @@
     "@types/pg": "^8.20.0",
     "@vitest/coverage-v8": "^4",
     "prisma": "^7.6.0",
+    "tsx": "^4.21.0",
     "typescript": "~6.0.0",
     "unplugin-swc": "^1",
     "vitest": "^4"
