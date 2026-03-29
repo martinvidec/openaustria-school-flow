@@ -7,6 +7,7 @@ import { AuditModule } from './modules/audit/audit.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { AuditInterceptor } from './modules/audit/audit.interceptor';
 import { HealthModule } from './modules/health/health.module';
+import { SchoolModule } from './modules/school/school.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { HealthModule } from './modules/health/health.module';
     AuthModule,
     AuditModule,
     HealthModule,
+    SchoolModule,
   ],
   providers: [
     {
