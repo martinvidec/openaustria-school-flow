@@ -10,6 +10,8 @@ import { AuditInterceptor } from './modules/audit/audit.interceptor';
 import { HealthModule } from './modules/health/health.module';
 import { SchoolModule } from './modules/school/school.module';
 import { EncryptionModule } from './modules/dsgvo/encryption/encryption.module';
+import { StudentModule } from './modules/student/student.module';
+import { ClassModule } from './modules/class/class.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { EncryptionModule } from './modules/dsgvo/encryption/encryption.module';
     HealthModule,
     SchoolModule,
     EncryptionModule,
+    StudentModule,
+    ClassModule,
   ],
   providers: [
     {
