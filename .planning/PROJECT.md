@@ -16,6 +16,8 @@ Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenp
 - [x] REST/GraphQL API als primäre Schnittstelle (UI-agnostisch, Client austauschbar) — Validated in Phase 1: Project Scaffolding & Auth
 - [x] Single-Tenant Deployment (Docker/Kubernetes, Self-Hosted als Default) — Validated in Phase 1: Project Scaffolding & Auth
 - [x] DSGVO-Konformität: Audit-Trail — Validated in Phase 1: Project Scaffolding & Auth
+- [x] Schuldatenmodell (Lehrer, Klassen, Schüler, Fächer) mit schultyp-agnostischer Konfiguration — Validated in Phase 2: School Data Model & DSGVO
+- [x] DSGVO-Konformität (Einwilligungen, Löschkonzepte, Datenexport, Verschlüsselung, Aufbewahrungsfristen) — Validated in Phase 2: School Data Model & DSGVO
 
 ### Active
 
@@ -26,10 +28,6 @@ Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenp
 - [ ] Raum- und Ressourcenverwaltung (Kapazitäten, Fachräume, Doppelbelegungsschutz)
 - [ ] Plugin-/Konnektor-System mit offener API (MS Teams, Google Calendar, Outlook, etc.)
 - [ ] Multi-Plattform UI (Web + Mobile) mit modernem, responsivem Design
-- [ ] Rollen- und Rechteverwaltung (Admin, Schulleitung, Lehrer, Eltern, Schüler)
-- [ ] REST/GraphQL API als primäre Schnittstelle (UI-agnostisch, Client austauschbar)
-- [ ] Single-Tenant Deployment (Docker/Kubernetes, Self-Hosted als Default)
-- [ ] DSGVO-Konformität (Datenhaltung, Löschkonzepte, Einwilligungen, Audit-Trail)
 
 ### Out of Scope
 
@@ -69,6 +67,10 @@ Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenp
 | NestJS 11 + Fastify + Prisma 7 | TypeScript ecosystem, Fastify perf, Prisma 7 driver-adapter arch | Phase 1 validated |
 | Keycloak 26.5 OIDC | Enterprise SSO, LDAP/AD federation, self-hosted | Phase 1 validated |
 | CASL hybrid RBAC+ACL | DB-persisted permissions, per-user overrides, condition templates | Phase 1 validated |
+| AES-256-GCM field encryption | DSGVO personal data protection, versioned format $enc:v1:{iv}:{authTag}:{ct} | Phase 2 validated |
+| Stundentafel as static TS arrays | Template data not persisted in DB, applied via find-or-create pattern | Phase 2 validated |
+| Austrian Lehrverpflichtung/Werteinheiten model | Correct teacher workload calculation for solver input | Phase 2 validated |
+| BullMQ async DSGVO jobs | Retention cron, data deletion, data export via background processing | Phase 2 validated |
 
 ## Evolution
 
@@ -88,4 +90,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-29 after initialization*
+*Last updated: 2026-03-29 after Phase 2 completion — School Data Model & DSGVO*
