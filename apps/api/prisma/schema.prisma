@@ -1,0 +1,198 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/config/database/generated"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --- School Profile (FOUND-01, D-08, D-09, D-10, D-11) ---
+
+enum SchoolType {
+  VS        // Volksschule
+  MS        // Mittelschule
+  AHS_UNTER // AHS Unterstufe
+  AHS_OBER  // AHS Oberstufe
+  BHS       // Berufsbildende hoehere Schule
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+}
+
+model School {
+  id          String     @id @default(uuid())
+  name        String
+  schoolType  SchoolType @map("school_type")
+  address     String?
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  timeGrid    TimeGrid?
+  schoolYear  SchoolYear?
+  schoolDays  SchoolDay[]
+
+  @@map("schools")
+}
+
+model TimeGrid {
+  id        String   @id @default(uuid())
+  schoolId  String   @unique @map("school_id")
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  periods   Period[]
+
+  @@map("time_grids")
+}
+
+model Period {
+  id          String   @id @default(uuid())
+  timeGridId  String   @map("time_grid_id")
+  timeGrid    TimeGrid @relation(fields: [timeGridId], references: [id], onDelete: Cascade)
+
+  periodNumber Int     @map("period_number")
+  startTime    String  // "08:00" stored as HH:mm
+  endTime      String  // "08:50"
+  isBreak      Boolean @default(false) @map("is_break")
+  label        String? // "1. Stunde", "Grosse Pause"
+  durationMin  Int     @map("duration_min")
+
+  @@unique([timeGridId, periodNumber])
+  @@map("periods")
+}
+
+model SchoolDay {
+  id        String    @id @default(uuid())
+  schoolId  String    @map("school_id")
+  school    School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  dayOfWeek DayOfWeek @map("day_of_week")
+  isActive  Boolean   @default(true) @map("is_active")
+
+  @@unique([schoolId, dayOfWeek])
+  @@map("school_days")
+}
+
+model SchoolYear {
+  id              String   @id @default(uuid())
+  schoolId        String   @unique @map("school_id")
+  school          School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
+  name            String   // "2026/2027"
+  startDate       DateTime @map("start_date")
+  semesterBreak   DateTime @map("semester_break")
+  endDate         DateTime @map("end_date")
+
+  holidays        Holiday[]
+  autonomousDays  AutonomousDay[]
+
+  @@map("school_years")
+}
+
+model Holiday {
+  id            String     @id @default(uuid())
+  schoolYearId  String     @map("school_year_id")
+  schoolYear    SchoolYear @relation(fields: [schoolYearId], references: [id], onDelete: Cascade)
+
+  name          String     // "Herbstferien", "Weihnachtsferien"
+  startDate     DateTime   @map("start_date")
+  endDate       DateTime   @map("end_date")
+
+  @@map("holidays")
+}
+
+model AutonomousDay {
+  id            String     @id @default(uuid())
+  schoolYearId  String     @map("school_year_id")
+  schoolYear    SchoolYear @relation(fields: [schoolYearId], references: [id], onDelete: Cascade)
+
+  date          DateTime
+  reason        String?
+
+  @@map("autonomous_days")
+}
+
+// --- RBAC + ACL (AUTH-01, AUTH-02, AUTH-03, D-01, D-02, D-04) ---
+
+model Role {
+  id          String       @id @default(uuid())
+  name        String       @unique // admin, schulleitung, lehrer, eltern, schueler
+  displayName String       @map("display_name")
+  description String?
+
+  permissions Permission[]
+  userRoles   UserRole[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id         String   @id @default(uuid())
+  roleId     String   @map("role_id")
+  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  action     String   // "create", "read", "update", "delete", "manage"
+  subject    String   // "school", "timetable", "classbook", "grades", "all"
+  conditions Json?    // { "userId": "{{ id }}" }
+  inverted   Boolean  @default(false)
+  reason     String?
+
+  @@map("permissions")
+}
+
+model PermissionOverride {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id") // Keycloak user ID
+  action     String
+  subject    String
+  conditions Json?
+  granted    Boolean  @default(true) // true = grant, false = deny
+  grantedBy  String   @map("granted_by")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, action, subject])
+  @@map("permission_overrides")
+}
+
+model UserRole {
+  id       String @id @default(uuid())
+  userId   String @map("user_id") // Keycloak user ID
+  roleId   String @map("role_id")
+  role     Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+// --- Audit Trail (AUTH-04, D-05, D-06, D-07) ---
+
+enum AuditCategory {
+  MUTATION       // All writes
+  SENSITIVE_READ // Grades, personal data, health data
+}
+
+model AuditEntry {
+  id            String        @id @default(uuid())
+  userId        String        @map("user_id")
+  action        String        // "create", "update", "delete", "read"
+  resource      String        // "school", "grades", "student"
+  resourceId    String?       @map("resource_id")
+  category      AuditCategory
+  metadata      Json?         // Changed fields, request body
+  ipAddress     String?       @map("ip_address")
+  userAgent     String?       @map("user_agent")
+  createdAt     DateTime      @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([resource, resourceId])
+  @@index([createdAt])
+  @@index([category])
+  @@map("audit_entries")
+}
