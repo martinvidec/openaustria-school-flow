@@ -39,6 +39,18 @@ model School {
   schoolYear  SchoolYear?
   schoolDays  SchoolDay[]
 
+  // Phase 2 relations
+  persons           Person[]
+  teachers          Teacher[]
+  students          Student[]
+  parents           Parent[]
+  schoolClasses     SchoolClass[]
+  subjects          Subject[]
+  retentionPolicies RetentionPolicy[]
+  dsfaEntries       DsfaEntry[]
+  vvzEntries        VvzEntry[]
+  dsgvoJobs         DsgvoJob[]
+
   @@map("schools")
 }
 
@@ -195,4 +207,398 @@ model AuditEntry {
   @@index([createdAt])
   @@index([category])
   @@map("audit_entries")
+}
+
+// --- Phase 2: School Data Model & DSGVO ---
+
+// --- Enums ---
+
+enum PersonType {
+  TEACHER
+  STUDENT
+  PARENT
+}
+
+enum AvailabilityRuleType {
+  MAX_DAYS_PER_WEEK
+  BLOCKED_PERIOD
+  BLOCKED_DAY_PART
+  PREFERRED_FREE_DAY
+}
+
+enum ReductionType {
+  KUSTODIAT
+  KLASSENVORSTAND
+  MENTOR
+  PERSONALVERTRETUNG
+  ADMINISTRATION
+  OTHER
+}
+
+enum GroupType {
+  RELIGION
+  WAHLPFLICHT
+  LEISTUNG
+  LANGUAGE
+  CUSTOM
+}
+
+enum SubjectType {
+  PFLICHT
+  WAHLPFLICHT
+  FREIGEGENSTAND
+  UNVERBINDLICH
+}
+
+enum ProcessingPurpose {
+  STUNDENPLANERSTELLUNG
+  KOMMUNIKATION
+  NOTENVERARBEITUNG
+  FOTOFREIGABE
+  KONTAKTDATEN_WEITERGABE
+  LERNPLATTFORM
+  STATISTIK
+}
+
+enum DsgvoJobType {
+  DATA_EXPORT
+  DATA_DELETION
+  RETENTION_CLEANUP
+}
+
+enum DsgvoJobStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+// --- Person (centralized PII per D-13, encrypted fields per D-16) ---
+
+model Person {
+  id                     String      @id @default(uuid())
+  schoolId               String      @map("school_id")
+  school                 School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  keycloakUserId         String?     @unique @map("keycloak_user_id")
+  personType             PersonType  @map("person_type")
+  firstName              String      @map("first_name")
+  lastName               String      @map("last_name")
+  email                  String?
+  phone                  String?     // encrypted at app level (D-16)
+  address                String?     // encrypted at app level (D-16)
+  dateOfBirth            String?     @map("date_of_birth") // encrypted, stored as string for encryption compatibility
+  socialSecurityNumber   String?     @map("social_security_number") // encrypted (D-16)
+  healthData             String?     @map("health_data") // encrypted (D-16)
+  isAnonymized           Boolean     @default(false) @map("is_anonymized")
+  anonymizedAt           DateTime?   @map("anonymized_at")
+  createdAt              DateTime    @default(now()) @map("created_at")
+  updatedAt              DateTime    @updatedAt @map("updated_at")
+
+  teacher        Teacher?
+  student        Student?
+  parent         Parent?
+  consentRecords ConsentRecord[]
+
+  @@index([schoolId])
+  @@map("persons")
+}
+
+// --- Teacher (D-02, D-03, D-04) ---
+
+model Teacher {
+  id                    String   @id @default(uuid())
+  personId              String   @unique @map("person_id")
+  person                Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  schoolId              String   @map("school_id")
+  school                School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  personalNumber        String?  @map("personal_number")
+  yearsOfService        Int?     @map("years_of_service")
+  isPermanent           Boolean  @default(false) @map("is_permanent")
+  employmentPercentage  Float    @default(100) @map("employment_percentage")
+  isShared              Boolean  @default(false) @map("is_shared")
+  homeSchoolId          String?  @map("home_school_id")
+  werteinheitenTarget   Float    @default(20) @map("werteinheiten_target")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  qualifications    TeacherSubject[]
+  availabilityRules AvailabilityRule[]
+  reductions        TeachingReduction[]
+
+  @@index([schoolId])
+  @@map("teachers")
+}
+
+// --- Student (D-06) ---
+
+model Student {
+  id               String       @id @default(uuid())
+  personId         String       @unique @map("person_id")
+  person           Person       @relation(fields: [personId], references: [id], onDelete: Cascade)
+  schoolId         String       @map("school_id")
+  school           School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  classId          String?      @map("class_id")
+  schoolClass      SchoolClass? @relation(fields: [classId], references: [id], onDelete: SetNull)
+  studentNumber    String?      @map("student_number")
+  enrollmentDate   DateTime?    @map("enrollment_date")
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+
+  groupMemberships GroupMembership[]
+  parentStudents   ParentStudent[]
+
+  @@index([schoolId])
+  @@index([classId])
+  @@map("students")
+}
+
+// --- Parent (DSGVO export/consent link) ---
+
+model Parent {
+  id        String   @id @default(uuid())
+  personId  String   @unique @map("person_id")
+  person    Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  schoolId  String   @map("school_id")
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  children ParentStudent[]
+
+  @@map("parents")
+}
+
+// --- ParentStudent (M:N junction) ---
+
+model ParentStudent {
+  id        String  @id @default(uuid())
+  parentId  String  @map("parent_id")
+  parent    Parent  @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  studentId String  @map("student_id")
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([parentId, studentId])
+  @@map("parent_students")
+}
+
+// --- AvailabilityRule (D-01) ---
+
+model AvailabilityRule {
+  id            String               @id @default(uuid())
+  teacherId     String               @map("teacher_id")
+  teacher       Teacher              @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  ruleType      AvailabilityRuleType @map("rule_type")
+  dayOfWeek     DayOfWeek?           @map("day_of_week")
+  periodNumbers Int[]                @map("period_numbers")
+  maxValue      Int?                 @map("max_value")
+  dayPart       String?              @map("day_part")
+  isHard        Boolean              @default(true) @map("is_hard")
+
+  @@map("availability_rules")
+}
+
+// --- TeachingReduction (D-02) ---
+
+model TeachingReduction {
+  id             String        @id @default(uuid())
+  teacherId      String        @map("teacher_id")
+  teacher        Teacher       @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  reductionType  ReductionType @map("reduction_type")
+  werteinheiten  Float
+  description    String?
+  schoolYearId   String?       @map("school_year_id")
+
+  @@map("teaching_reductions")
+}
+
+// --- SchoolClass (D-06) ---
+
+model SchoolClass {
+  id           String   @id @default(uuid())
+  schoolId     String   @map("school_id")
+  school       School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name         String
+  yearLevel    Int      @map("year_level")
+  schoolYearId String   @map("school_year_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  students      Student[]
+  groups        Group[]
+  classSubjects ClassSubject[]
+
+  @@unique([schoolId, name, schoolYearId])
+  @@map("school_classes")
+}
+
+// --- Group (D-06, D-07, D-08) ---
+
+model Group {
+  id        String    @id @default(uuid())
+  classId   String    @map("class_id")
+  class     SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  name      String
+  groupType GroupType @map("group_type")
+  level     String?
+  subjectId String?   @map("subject_id")
+
+  memberships GroupMembership[]
+
+  @@map("groups")
+}
+
+// --- GroupMembership (D-07) ---
+
+model GroupMembership {
+  id             String   @id @default(uuid())
+  groupId        String   @map("group_id")
+  group          Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  studentId      String   @map("student_id")
+  student        Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  isAutoAssigned Boolean  @default(true) @map("is_auto_assigned")
+  assignedAt     DateTime @default(now()) @map("assigned_at")
+
+  @@unique([groupId, studentId])
+  @@map("group_memberships")
+}
+
+// --- Subject (D-09, D-10, D-11) ---
+
+model Subject {
+  id                       String      @id @default(uuid())
+  schoolId                 String      @map("school_id")
+  school                   School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name                     String
+  shortName                String      @map("short_name")
+  subjectType              SubjectType @map("subject_type")
+  lehrverpflichtungsgruppe String?     @map("lehrverpflichtungsgruppe")
+  werteinheitenFactor      Float?      @map("werteinheiten_factor")
+  createdAt                DateTime    @default(now()) @map("created_at")
+  updatedAt                DateTime    @updatedAt @map("updated_at")
+
+  classSubjects   ClassSubject[]
+  teacherSubjects TeacherSubject[]
+
+  @@unique([schoolId, shortName])
+  @@map("subjects")
+}
+
+// --- ClassSubject (D-09, D-10) ---
+
+model ClassSubject {
+  id           String      @id @default(uuid())
+  classId      String      @map("class_id")
+  schoolClass  SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subjectId    String      @map("subject_id")
+  subject      Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  groupId      String?     @map("group_id")
+  weeklyHours  Int         @map("weekly_hours")
+  isCustomized Boolean     @default(false) @map("is_customized")
+
+  @@unique([classId, subjectId, groupId])
+  @@map("class_subjects")
+}
+
+// --- TeacherSubject (D-05) ---
+
+model TeacherSubject {
+  id        String  @id @default(uuid())
+  teacherId String  @map("teacher_id")
+  teacher   Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  subjectId String  @map("subject_id")
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([teacherId, subjectId])
+  @@map("teacher_subjects")
+}
+
+// --- DSGVO: ConsentRecord (D-12) ---
+
+model ConsentRecord {
+  id          String            @id @default(uuid())
+  personId    String            @map("person_id")
+  person      Person            @relation(fields: [personId], references: [id], onDelete: Cascade)
+  purpose     ProcessingPurpose
+  granted     Boolean           @default(false)
+  version     Int               @default(1)
+  grantedAt   DateTime?         @map("granted_at")
+  withdrawnAt DateTime?         @map("withdrawn_at")
+  legalBasis  String?           @map("legal_basis")
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+
+  @@unique([personId, purpose])
+  @@map("consent_records")
+}
+
+// --- DSGVO: RetentionPolicy (D-15) ---
+
+model RetentionPolicy {
+  id            String  @id @default(uuid())
+  schoolId      String  @map("school_id")
+  school        School  @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  dataCategory  String  @map("data_category")
+  retentionDays Int     @map("retention_days")
+  isDefault     Boolean @default(true) @map("is_default")
+
+  @@unique([schoolId, dataCategory])
+  @@map("retention_policies")
+}
+
+// --- DSGVO: DsfaEntry (D-18) ---
+
+model DsfaEntry {
+  id                  String   @id @default(uuid())
+  schoolId            String   @map("school_id")
+  school              School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  title               String
+  description         String
+  dataCategories      String[] @map("data_categories")
+  riskAssessment      String?  @map("risk_assessment")
+  mitigationMeasures  String?  @map("mitigation_measures")
+  status              String   @default("draft")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@map("dsfa_entries")
+}
+
+// --- DSGVO: VvzEntry (D-18) ---
+
+model VvzEntry {
+  id                      String   @id @default(uuid())
+  schoolId                String   @map("school_id")
+  school                  School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  activityName            String   @map("activity_name")
+  purpose                 String
+  legalBasis              String   @map("legal_basis")
+  dataCategories          String[] @map("data_categories")
+  affectedPersons         String[] @map("affected_persons")
+  retentionPeriod         String?  @map("retention_period")
+  technicalMeasures       String?  @map("technical_measures")
+  organizationalMeasures  String?  @map("organizational_measures")
+  createdAt               DateTime @default(now()) @map("created_at")
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  @@map("vvz_entries")
+}
+
+// --- DSGVO: DsgvoJob (async operation tracking) ---
+
+model DsgvoJob {
+  id           String         @id @default(uuid())
+  schoolId     String         @map("school_id")
+  school       School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  personId     String?        @map("person_id")
+  jobType      DsgvoJobType   @map("job_type")
+  status       DsgvoJobStatus @default(QUEUED)
+  bullmqJobId  String?        @map("bullmq_job_id")
+  resultData   Json?          @map("result_data")
+  errorMessage String?        @map("error_message")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  @@index([personId])
+  @@index([status])
+  @@map("dsgvo_jobs")
 }
