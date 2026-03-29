@@ -30,12 +30,12 @@
     "jwks-rsa": "^4.0.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
+    "@fastify/static": "^8",
     "pg": "^8.20.0",
     "reflect-metadata": "^0.2",
     "rxjs": "^7"
   },
   "devDependencies": {
-    "@fastify/static": "^8",
     "@nestjs/cli": "^11",
     "@nestjs/testing": "^11",
     "@swc/cli": "^0.6",
