@@ -1,0 +1,35 @@
+{
+  "name": "@schoolflow/api",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "build": "nest build",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:prod": "node dist/main",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "echo lint-placeholder"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11",
+    "@nestjs/config": "^4",
+    "@nestjs/core": "^11",
+    "@nestjs/platform-fastify": "^11",
+    "@nestjs/swagger": "^11",
+    "@schoolflow/shared": "workspace:*",
+    "reflect-metadata": "^0.2",
+    "rxjs": "^7"
+  },
+  "devDependencies": {
+    "@fastify/static": "^8",
+    "@nestjs/cli": "^11",
+    "@nestjs/testing": "^11",
+    "@swc/cli": "^0.6",
+    "@swc/core": "^1",
+    "@vitest/coverage-v8": "^4",
+    "typescript": "~6.0.0",
+    "unplugin-swc": "^1",
+    "vitest": "^4"
+  }
+}

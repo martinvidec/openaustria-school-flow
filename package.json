@@ -1,0 +1,25 @@
+{
+  "name": "openaustria-school-flow",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "dev": "turbo dev",
+    "clean": "turbo clean"
+  },
+  "devDependencies": {
+    "turbo": "^2.8",
+    "typescript": "~6.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "@swc/core"
+    ]
+  }
+}
