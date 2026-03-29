@@ -55,7 +55,7 @@ Plans:
   3. System handles different school types (VS, MS, AHS, BHS) through configurable time grids and rule sets
   4. A user can request export of all their personal data (Art. 15 DSGVO) and receive a complete data package
   5. Admin can trigger full deletion of a person's data (right to be forgotten), and the system enforces configurable retention periods with automatic expiry
-**Plans**: 7 plans
+**Plans**: 8 plans
 
 Plans:
 - [x] 02-01-PLAN.md -- Prisma schema extension (18 models, 8 enums), BullMQ queue infrastructure, AES-256-GCM encryption service
@@ -65,6 +65,7 @@ Plans:
 - [x] 02-05-PLAN.md -- DSGVO consent tracking (Art. 6/7), retention policy management with daily BullMQ cron, DSFA/VVZ CRUD with JSON export
 - [x] 02-06-PLAN.md -- DSGVO data deletion/anonymization (Art. 17), data export with JSON + PDF (Art. 15/20), async BullMQ processing
 - [x] 02-07-PLAN.md -- CASL permissions for all Phase 2 entities, audit interceptor updates, seed data with sample school
+- [ ] 02-08-PLAN.md -- Gap closure: fix 3 TSC build errors (BullMQ v5 repeat.pattern, Prisma InputJsonValue casts)
 
 ### Phase 3: Timetable Solver Engine
 **Goal**: The system can automatically generate valid timetables that satisfy hard constraints (no clashes), respect soft constraints (pedagogical quality), and show solving progress in real time -- the core differentiator
@@ -223,7 +224,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Project Scaffolding & Auth | 7/7 | Complete | 2026-03-29 |
-| 2. School Data Model & DSGVO | 0/7 | Planned | - |
+| 2. School Data Model & DSGVO | 7/8 | Gap closure | - |
 | 3. Timetable Solver Engine | 0/8 | Not started | - |
 | 4. Timetable Viewing, Editing & Room Management | 0/8 | Not started | - |
 | 5. Digital Class Book | 0/6 | Not started | - |
