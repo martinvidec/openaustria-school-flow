@@ -58,7 +58,7 @@ Plans:
 **Plans**: 7 plans
 
 Plans:
-- [ ] 02-01-PLAN.md -- Prisma schema extension (18 models, 8 enums), BullMQ queue infrastructure, AES-256-GCM encryption service
+- [x] 02-01-PLAN.md -- Prisma schema extension (18 models, 8 enums), BullMQ queue infrastructure, AES-256-GCM encryption service
 - [ ] 02-02-PLAN.md -- Teacher CRUD with Austrian Lehrverpflichtung/Werteinheiten model, availability rules, teaching reductions
 - [ ] 02-03-PLAN.md -- Student CRUD, Class/Group management, auto-derivation group membership rule engine
 - [ ] 02-04-PLAN.md -- Subject CRUD, Austrian Stundentafel templates (AHS Unterstufe + MS), ClassSubject weekly hour management

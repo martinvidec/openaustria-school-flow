@@ -8,10 +8,10 @@
 ### Foundation
 
 - [x] **FOUND-01**: Admin kann Schulprofil anlegen (Name, Typ, Zeitraster, Unterrichtstage)
-- [ ] **FOUND-02**: Admin kann Lehrer mit Stammdaten erfassen (Name, Fächer, Verfügbarkeit, Beschäftigungsgrad)
-- [ ] **FOUND-03**: Admin kann Klassen/Gruppen anlegen mit Schülerzuordnung
-- [ ] **FOUND-04**: Admin kann Fächer mit Wochenstunden-Soll pro Klasse definieren
-- [ ] **FOUND-05**: System unterstützt verschiedene Schultypen (VS, MS, AHS, BHS) über konfigurierbare Zeitraster und Regelwerke
+- [x] **FOUND-02**: Admin kann Lehrer mit Stammdaten erfassen (Name, Fächer, Verfügbarkeit, Beschäftigungsgrad)
+- [x] **FOUND-03**: Admin kann Klassen/Gruppen anlegen mit Schülerzuordnung
+- [x] **FOUND-04**: Admin kann Fächer mit Wochenstunden-Soll pro Klasse definieren
+- [x] **FOUND-05**: System unterstützt verschiedene Schultypen (VS, MS, AHS, BHS) über konfigurierbare Zeitraster und Regelwerke
 
 ### Timetable Engine
 
@@ -80,12 +80,12 @@
 
 ### DSGVO Compliance
 
-- [ ] **DSGVO-01**: System trackt Einwilligungen pro Datenverarbeitungszweck
-- [ ] **DSGVO-02**: Personenbezogene Daten können vollständig gelöscht werden (Recht auf Vergessenwerden)
+- [x] **DSGVO-01**: System trackt Einwilligungen pro Datenverarbeitungszweck
+- [x] **DSGVO-02**: Personenbezogene Daten können vollständig gelöscht werden (Recht auf Vergessenwerden)
 - [ ] **DSGVO-03**: Nutzer können Export aller eigenen Daten anfordern (Art. 15 DSGVO)
-- [ ] **DSGVO-04**: Datenbank-Felder mit sensiblen Daten sind verschlüsselt (at rest + in transit)
-- [ ] **DSGVO-05**: Automatisierte Aufbewahrungsfristen mit konfigurierbarer Ablaufzeit
-- [ ] **DSGVO-06**: System liefert DSFA-Template und Verarbeitungsverzeichnis-Export
+- [x] **DSGVO-04**: Datenbank-Felder mit sensiblen Daten sind verschlüsselt (at rest + in transit)
+- [x] **DSGVO-05**: Automatisierte Aufbewahrungsfristen mit konfigurierbarer Ablaufzeit
+- [x] **DSGVO-06**: System liefert DSFA-Template und Verarbeitungsverzeichnis-Export
 
 ### Mobile Access
 
@@ -164,10 +164,10 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | FOUND-01 | Phase 1 | Complete |
-| FOUND-02 | Phase 2 | Pending |
-| FOUND-03 | Phase 2 | Pending |
-| FOUND-04 | Phase 2 | Pending |
-| FOUND-05 | Phase 2 | Pending |
+| FOUND-02 | Phase 2 | Complete |
+| FOUND-03 | Phase 2 | Complete |
+| FOUND-04 | Phase 2 | Complete |
+| FOUND-05 | Phase 2 | Complete |
 | TIME-01 | Phase 3 | Pending |
 | TIME-02 | Phase 3 | Pending |
 | TIME-03 | Phase 3 | Pending |
@@ -212,12 +212,12 @@
 | AUTH-04 | Phase 1 | Complete |
 | AUTH-05 | Phase 1 | Complete |
 | AUTH-06 | Phase 1 | Complete |
-| DSGVO-01 | Phase 2 | Pending |
-| DSGVO-02 | Phase 2 | Pending |
+| DSGVO-01 | Phase 2 | Complete |
+| DSGVO-02 | Phase 2 | Complete |
 | DSGVO-03 | Phase 2 | Pending |
-| DSGVO-04 | Phase 2 | Pending |
-| DSGVO-05 | Phase 2 | Pending |
-| DSGVO-06 | Phase 2 | Pending |
+| DSGVO-04 | Phase 2 | Complete |
+| DSGVO-05 | Phase 2 | Complete |
+| DSGVO-06 | Phase 2 | Complete |
 | MOBILE-01 | Phase 9 | Pending |
 | MOBILE-02 | Phase 9 | Pending |
 | MOBILE-03 | Phase 9 | Pending |
