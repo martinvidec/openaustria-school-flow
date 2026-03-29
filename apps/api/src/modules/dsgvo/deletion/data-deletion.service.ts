@@ -2,6 +2,7 @@ import { Injectable, ConflictException, NotFoundException } from '@nestjs/common
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { PrismaService } from '../../../config/database/prisma.service';
+import { Prisma } from '../../../config/database/generated/client.js';
 import { DSGVO_DELETION_QUEUE } from '../../../config/queue/queue.constants';
 import { RequestDeletionDto } from './dto/request-deletion.dto';
 
@@ -127,7 +128,7 @@ export class DataDeletionService {
             const sanitized = this.sanitizeAuditMetadata(entry.metadata);
             await tx.auditEntry.update({
               where: { id: entry.id },
-              data: { metadata: sanitized },
+              data: { metadata: sanitized as Prisma.InputJsonValue },
             });
           }
         }

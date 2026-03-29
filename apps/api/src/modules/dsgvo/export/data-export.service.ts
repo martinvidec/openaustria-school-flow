@@ -2,6 +2,7 @@ import { Injectable, ConflictException, NotFoundException } from '@nestjs/common
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { PrismaService } from '../../../config/database/prisma.service';
+import { Prisma } from '../../../config/database/generated/client.js';
 import { DSGVO_EXPORT_QUEUE } from '../../../config/queue/queue.constants';
 import { PdfExportService, PersonExportData } from './pdf-export.service';
 import { RequestExportDto } from './dto/request-export.dto';
@@ -201,7 +202,7 @@ export class DataExportService {
         where: { id: dsgvoJobId },
         data: {
           status: 'COMPLETED',
-          resultData: { jsonExport, pdfBase64 },
+          resultData: { jsonExport, pdfBase64 } as unknown as Prisma.InputJsonValue,
         },
       });
     } catch (error) {

@@ -47,7 +47,7 @@ export class DsgvoModule implements OnModuleInit {
 
   async onModuleInit() {
     await this.retentionQueue.add('retention-daily-check', {}, {
-      repeat: { cron: '0 2 * * *' }, // Daily at 2 AM
+      repeat: { pattern: '0 2 * * *' }, // Daily at 2 AM
       removeOnComplete: { count: 30 },
       removeOnFail: { count: 100 },
     });
