@@ -82,7 +82,7 @@
 
 - [x] **DSGVO-01**: System trackt Einwilligungen pro Datenverarbeitungszweck
 - [x] **DSGVO-02**: Personenbezogene Daten können vollständig gelöscht werden (Recht auf Vergessenwerden)
-- [ ] **DSGVO-03**: Nutzer können Export aller eigenen Daten anfordern (Art. 15 DSGVO)
+- [x] **DSGVO-03**: Nutzer können Export aller eigenen Daten anfordern (Art. 15 DSGVO)
 - [x] **DSGVO-04**: Datenbank-Felder mit sensiblen Daten sind verschlüsselt (at rest + in transit)
 - [x] **DSGVO-05**: Automatisierte Aufbewahrungsfristen mit konfigurierbarer Ablaufzeit
 - [x] **DSGVO-06**: System liefert DSFA-Template und Verarbeitungsverzeichnis-Export
@@ -214,7 +214,7 @@
 | AUTH-06 | Phase 1 | Complete |
 | DSGVO-01 | Phase 2 | Complete |
 | DSGVO-02 | Phase 2 | Complete |
-| DSGVO-03 | Phase 2 | Pending |
+| DSGVO-03 | Phase 2 | Complete |
 | DSGVO-04 | Phase 2 | Complete |
 | DSGVO-05 | Phase 2 | Complete |
 | DSGVO-06 | Phase 2 | Complete |

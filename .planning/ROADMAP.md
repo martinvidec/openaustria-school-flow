@@ -62,8 +62,8 @@ Plans:
 - [x] 02-02-PLAN.md -- Teacher CRUD with Austrian Lehrverpflichtung/Werteinheiten model, availability rules, teaching reductions
 - [x] 02-03-PLAN.md -- Student CRUD, Class/Group management, auto-derivation group membership rule engine
 - [x] 02-04-PLAN.md -- Subject CRUD, Austrian Stundentafel templates (AHS Unterstufe + MS), ClassSubject weekly hour management
-- [ ] 02-05-PLAN.md -- DSGVO consent tracking (Art. 6/7), retention policy management with daily BullMQ cron, DSFA/VVZ CRUD with JSON export
-- [ ] 02-06-PLAN.md -- DSGVO data deletion/anonymization (Art. 17), data export with JSON + PDF (Art. 15/20), async BullMQ processing
+- [x] 02-05-PLAN.md -- DSGVO consent tracking (Art. 6/7), retention policy management with daily BullMQ cron, DSFA/VVZ CRUD with JSON export
+- [x] 02-06-PLAN.md -- DSGVO data deletion/anonymization (Art. 17), data export with JSON + PDF (Art. 15/20), async BullMQ processing
 - [ ] 02-07-PLAN.md -- CASL permissions for all Phase 2 entities, audit interceptor updates, seed data with sample school
 
 ### Phase 3: Timetable Solver Engine
