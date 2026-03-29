@@ -34,16 +34,16 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Access to every API endpoint is restricted by role (Admin, Schulleitung, Lehrer, Eltern, Schueler) with module-level granularity, and data visibility is scoped (parents see only their child, teachers only their classes)
   4. Every data access and mutation is logged in an audit trail
   5. API documentation is auto-generated (OpenAPI/Swagger) and all endpoints use OAuth2/OIDC token auth
-**Plans**: TBD
+**Plans**: 7 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
-- [ ] 01-03: TBD
-- [ ] 01-04: TBD
-- [ ] 01-05: TBD
-- [ ] 01-06: TBD
-- [ ] 01-07: TBD
+- [ ] 01-01-PLAN.md -- Monorepo scaffolding (pnpm, Turborepo, NestJS Fastify, Docker Compose, shared package)
+- [ ] 01-02-PLAN.md -- Prisma 7 schema (school profile, RBAC/ACL, audit trail models) and PrismaService
+- [ ] 01-03-PLAN.md -- Keycloak realm setup and custom Passport-JWT authentication strategy
+- [ ] 01-04-PLAN.md -- CASL-based RBAC+ACL authorization system with seed data and override API
+- [ ] 01-05-PLAN.md -- School profile CRUD API with Austrian school type templates
+- [ ] 01-06-PLAN.md -- Audit trail (mutation logging, sensitive read interceptor, role-scoped query API)
+- [ ] 01-07-PLAN.md -- Swagger/OpenAPI with OAuth2, RFC 9457 errors, validation pipe, and unit tests
 
 ### Phase 2: School Data Model & DSGVO
 **Goal**: The complete school entity model (teachers, classes, students, subjects) is populated and queryable, with DSGVO compliance infrastructure (consent tracking, data deletion, export, encryption, retention) operational from the start
@@ -222,7 +222,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Project Scaffolding & Auth | 0/7 | Not started | - |
+| 1. Project Scaffolding & Auth | 0/7 | Planned | - |
 | 2. School Data Model & DSGVO | 0/7 | Not started | - |
 | 3. Timetable Solver Engine | 0/8 | Not started | - |
 | 4. Timetable Viewing, Editing & Room Management | 0/8 | Not started | - |
