@@ -2,7 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../config/database/prisma.service';
 
 // Sensitive resources that trigger read logging (D-05)
-export const SENSITIVE_RESOURCES = ['grades', 'student', 'teacher', 'user'] as const;
+// Phase 2 additions: consent, export, person, retention (DSGVO-sensitive data)
+export const SENSITIVE_RESOURCES = [
+  'grades', 'student', 'teacher', 'user',
+  'consent', 'export', 'person', 'retention',
+] as const;
 
 // Pedagogically relevant resources for Schulleitung visibility (D-06)
 export const PEDAGOGICAL_RESOURCES = ['grades', 'classbook', 'student', 'teacher'] as const;
