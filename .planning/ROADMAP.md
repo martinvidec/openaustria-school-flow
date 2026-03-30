@@ -77,17 +77,15 @@ Plans:
   3. Admin can define custom constraints (blocked time slots, teacher availability, part-time models) and the solver incorporates them
   4. Admin sees real-time solving progress (score, remaining violations, improvement rate) via WebSocket and can stop solving early to accept the best-so-far result
   5. When no feasible timetable exists, the system explains which constraints conflict
-**Plans**: TBD
+**Plans**: 6 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
-- [ ] 03-03: TBD
-- [ ] 03-04: TBD
-- [ ] 03-05: TBD
-- [ ] 03-06: TBD
-- [ ] 03-07: TBD
-- [ ] 03-08: TBD
+- [ ] 03-01-PLAN.md -- Prisma schema (Room, TimetableRun, TimetableLesson, ConstraintTemplate models), Room CRUD module, solver queue constant
+- [ ] 03-02-PLAN.md -- Timefold Quarkus sidecar scaffold, domain model, 4 hard constraints, REST API, Docker Compose integration
+- [ ] 03-03-PLAN.md -- Soft constraints (pedagogical quality), room-type hard constraint, double periods, A/B weeks, ConstraintVerifier tests
+- [ ] 03-04-PLAN.md -- Configurable constraint weights (ConstraintWeightOverrides), constraint template CRUD API
+- [ ] 03-05-PLAN.md -- NestJS solver orchestration (BullMQ processor, solver input aggregation, solver client, TimetableService, internal callbacks)
+- [ ] 03-06-PLAN.md -- Socket.IO WebSocket progress gateway, conflict explanation endpoint, ScoreAnalysis JVM tests
 
 ### Phase 4: Timetable Viewing, Editing & Room Management
 **Goal**: Every role sees their relevant timetable with real-time updates, admins can manually adjust schedules via drag-and-drop, rooms are fully managed, and timetables can be exported
@@ -225,7 +223,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 |-------|----------------|--------|-----------|
 | 1. Project Scaffolding & Auth | 7/7 | Complete | 2026-03-29 |
 | 2. School Data Model & DSGVO | 7/8 | Gap closure | - |
-| 3. Timetable Solver Engine | 0/8 | Not started | - |
+| 3. Timetable Solver Engine | 0/6 | Not started | - |
 | 4. Timetable Viewing, Editing & Room Management | 0/8 | Not started | - |
 | 5. Digital Class Book | 0/6 | Not started | - |
 | 6. Substitution Planning | 0/6 | Not started | - |
