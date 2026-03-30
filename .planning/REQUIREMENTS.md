@@ -16,10 +16,10 @@
 ### Timetable Engine
 
 - [x] **TIME-01**: System generiert automatisch Stundenplan unter Einhaltung von Hard Constraints (Lehrer-Clash, Raum-Clash, Zeitfenster)
-- [ ] **TIME-02**: System berücksichtigt Soft Constraints (max. Stunden/Tag, keine Dopplung gleicher Fächer, bevorzugte Zeitfenster, ausgewogene Wochenverteilung)
+- [x] **TIME-02**: System berücksichtigt Soft Constraints (max. Stunden/Tag, keine Dopplung gleicher Fächer, bevorzugte Zeitfenster, ausgewogene Wochenverteilung)
 - [ ] **TIME-03**: Admin kann individuelle Constraints definieren (geblockte Zeitfenster, Lehrer-Verfügbarkeit, Teilzeit-Modelle)
-- [ ] **TIME-04**: System unterstützt Doppelstunden und flexible Blocklängen
-- [ ] **TIME-05**: System unterstützt A/B-Wochen und mehrwöchige Stundenplan-Zyklen
+- [x] **TIME-04**: System unterstützt Doppelstunden und flexible Blocklängen
+- [x] **TIME-05**: System unterstützt A/B-Wochen und mehrwöchige Stundenplan-Zyklen
 - [ ] **TIME-06**: System zeigt Solving-Fortschritt in Echtzeit an (Anytime-Solving mit Zwischenergebnissen)
 - [ ] **TIME-07**: System erklärt bei unlösbaren Stundenplänen, welche Constraints in Konflikt stehen
 - [ ] **TIME-08**: Admin kann generierten Stundenplan manuell nachbearbeiten (Drag & Drop)
@@ -169,10 +169,10 @@
 | FOUND-04 | Phase 2 | Complete |
 | FOUND-05 | Phase 2 | Complete |
 | TIME-01 | Phase 3 | Complete |
-| TIME-02 | Phase 3 | Pending |
+| TIME-02 | Phase 3 | Complete |
 | TIME-03 | Phase 3 | Pending |
-| TIME-04 | Phase 3 | Pending |
-| TIME-05 | Phase 3 | Pending |
+| TIME-04 | Phase 3 | Complete |
+| TIME-05 | Phase 3 | Complete |
 | TIME-06 | Phase 3 | Pending |
 | TIME-07 | Phase 3 | Pending |
 | TIME-08 | Phase 4 | Pending |
