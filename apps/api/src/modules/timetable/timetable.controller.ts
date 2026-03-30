@@ -71,6 +71,27 @@ export class TimetableController {
     return this.timetableService.findRun(runId);
   }
 
+  /**
+   * GET /api/v1/schools/:schoolId/timetable/runs/:runId/violations
+   * Returns grouped constraint violations for a completed/stopped run (D-10, TIME-07).
+   * When hard constraints remain (hardScore < 0), this explains WHY the
+   * timetable is infeasible and which constraints conflict.
+   *
+   * Response: ViolationGroupDto[]
+   * Each group contains:
+   *   - type: constraint name (e.g., "Teacher conflict", "Room double-booking")
+   *   - count: number of violations
+   *   - examples: human-readable entity references
+   */
+  @Get('runs/:runId/violations')
+  @CheckPermissions({ action: 'read', subject: 'timetable' })
+  @ApiOperation({ summary: 'Get grouped constraint violations for a solve run' })
+  @ApiResponse({ status: 200, description: 'Violation groups' })
+  @ApiResponse({ status: 404, description: 'Run not found' })
+  async getViolations(@Param('runId') runId: string) {
+    return this.timetableService.getViolations(runId);
+  }
+
   @Delete('runs/:runId/stop')
   @HttpCode(HttpStatus.OK)
   @CheckPermissions({ action: 'update', subject: 'timetable' })

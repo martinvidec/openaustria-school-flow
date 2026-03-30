@@ -7,13 +7,24 @@ import ai.timefold.solver.core.api.domain.constraintweight.ConstraintWeight;
 import ai.timefold.solver.core.api.score.buildin.hardsoft.HardSoftScore;
 
 /**
- * Defines default weights for all configurable soft constraints.
- * Hard constraints are NOT listed here -- they always use HardSoftScore.ONE_HARD.
+ * Defines default weights for all constraints (hard and soft).
+ * Timefold 1.32.0 with @ConstraintConfiguration requires ALL constraints
+ * defined in ConstraintProvider to have a @ConstraintWeight entry, including
+ * hard constraints that always use ONE_HARD.
  *
- * Admin can override individual weights via the constraint template API.
+ * Admin can override individual SOFT weights via the constraint template API.
+ * Hard constraint weights are fixed (ONE_HARD) and cannot be overridden.
  * NestJS sends weight overrides as a JSON map which is applied via applyOverrides().
  *
- * Default soft constraint weights:
+ * Hard constraints (fixed, not configurable):
+ * - "Teacher conflict": ONE_HARD
+ * - "Room conflict": ONE_HARD
+ * - "Teacher availability": ONE_HARD
+ * - "Student group conflict": ONE_HARD
+ * - "Room type requirement": ONE_HARD
+ * - "Class timeslot restriction": ONE_HARD
+ *
+ * Soft constraint weights (configurable):
  * - "No same subject doubling": 10
  * - "Balanced weekly distribution": 5
  * - "Max lessons per day": 8
@@ -26,6 +37,26 @@ import ai.timefold.solver.core.api.score.buildin.hardsoft.HardSoftScore;
 @ConstraintConfiguration
 public class TimetableConstraintConfiguration {
 
+    // Hard constraints (fixed weights -- must be declared for Timefold @ConstraintConfiguration)
+    @ConstraintWeight("Teacher conflict")
+    private HardSoftScore teacherConflictWeight = HardSoftScore.ONE_HARD;
+
+    @ConstraintWeight("Room conflict")
+    private HardSoftScore roomConflictWeight = HardSoftScore.ONE_HARD;
+
+    @ConstraintWeight("Teacher availability")
+    private HardSoftScore teacherAvailabilityWeight = HardSoftScore.ONE_HARD;
+
+    @ConstraintWeight("Student group conflict")
+    private HardSoftScore studentGroupConflictWeight = HardSoftScore.ONE_HARD;
+
+    @ConstraintWeight("Room type requirement")
+    private HardSoftScore roomTypeRequirementWeight = HardSoftScore.ONE_HARD;
+
+    @ConstraintWeight("Class timeslot restriction")
+    private HardSoftScore classTimeslotRestrictionWeight = HardSoftScore.ONE_HARD;
+
+    // Soft constraints (configurable weights)
     @ConstraintWeight("No same subject doubling")
     private HardSoftScore noSameSubjectDoublingWeight = HardSoftScore.ofSoft(10);
 

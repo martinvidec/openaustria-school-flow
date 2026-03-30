@@ -1,6 +1,5 @@
 package at.schoolflow.solver.constraints;
 
-import ai.timefold.solver.core.api.score.buildin.hardsoft.HardSoftScore;
 import ai.timefold.solver.core.api.score.stream.Constraint;
 import ai.timefold.solver.core.api.score.stream.ConstraintCollectors;
 import ai.timefold.solver.core.api.score.stream.ConstraintFactory;
@@ -71,7 +70,7 @@ public class TimetableConstraintProvider implements ConstraintProvider {
                 .forEachUniquePair(Lesson.class,
                         Joiners.equal(Lesson::getTimeslot),
                         Joiners.equal(Lesson::getTeacherId))
-                .penalize(HardSoftScore.ONE_HARD)
+                .penalizeConfigurable()
                 .asConstraint("Teacher conflict");
     }
 
@@ -84,7 +83,7 @@ public class TimetableConstraintProvider implements ConstraintProvider {
                 .forEachUniquePair(Lesson.class,
                         Joiners.equal(Lesson::getTimeslot),
                         Joiners.equal(Lesson::getRoom))
-                .penalize(HardSoftScore.ONE_HARD)
+                .penalizeConfigurable()
                 .asConstraint("Room conflict");
     }
 
@@ -103,7 +102,7 @@ public class TimetableConstraintProvider implements ConstraintProvider {
                         Joiners.equal(
                                 lesson -> lesson.getTimeslot().getPeriodNumber(),
                                 TeacherAvailability::getPeriodNumber))
-                .penalize(HardSoftScore.ONE_HARD)
+                .penalizeConfigurable()
                 .asConstraint("Teacher availability");
     }
 
@@ -125,7 +124,7 @@ public class TimetableConstraintProvider implements ConstraintProvider {
                         l1.getGroupId() == null
                                 || l2.getGroupId() == null
                                 || l1.getGroupId().equals(l2.getGroupId()))
-                .penalize(HardSoftScore.ONE_HARD)
+                .penalizeConfigurable()
                 .asConstraint("Student group conflict");
     }
 
@@ -139,7 +138,7 @@ public class TimetableConstraintProvider implements ConstraintProvider {
                 .forEach(Lesson.class)
                 .filter(lesson -> lesson.getRequiredRoomType() != null)
                 .filter(lesson -> !lesson.getRequiredRoomType().equals(lesson.getRoom().getRoomType()))
-                .penalize(HardSoftScore.ONE_HARD)
+                .penalizeConfigurable()
                 .asConstraint("Room type requirement");
     }
 
@@ -156,7 +155,7 @@ public class TimetableConstraintProvider implements ConstraintProvider {
                 .filter((lesson, restriction) ->
                         lesson.getTimeslot() != null
                                 && lesson.getTimeslot().getPeriodNumber() > restriction.getMaxPeriod())
-                .penalize(HardSoftScore.ONE_HARD)
+                .penalizeConfigurable()
                 .asConstraint("Class timeslot restriction");
     }
 

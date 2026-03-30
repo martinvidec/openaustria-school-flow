@@ -231,17 +231,48 @@ public class SolverResource {
     }
 
     /**
-     * Build violation groups from Timefold ScoreAnalysis for the progress dashboard.
+     * Build violation groups from Timefold ScoreAnalysis for the progress dashboard (D-10).
+     * Each group includes up to 5 human-readable entity reference examples
+     * so the admin understands WHY constraints are violated.
      */
     private List<SolveProgress.ViolationGroup> buildViolationGroups(ScoreAnalysis<HardSoftScore> analysis) {
         List<SolveProgress.ViolationGroup> groups = new ArrayList<>();
         analysis.constraintMap().forEach((ref, constraintAnalysis) -> {
             HardSoftScore constraintScore = constraintAnalysis.score();
             if (constraintScore.hardScore() < 0 || constraintScore.softScore() < 0) {
+                List<String> examples = new ArrayList<>();
+                try {
+                    // Extract human-readable examples from match justifications
+                    // Cap at 5 examples per constraint type to avoid oversized responses
+                    constraintAnalysis.matches().stream()
+                            .limit(5)
+                            .forEach(match -> {
+                                try {
+                                    Object justification = match.justification();
+                                    if (justification instanceof Lesson lesson) {
+                                        examples.add(String.format("%s (%s): %s P%d",
+                                                lesson.getTeacherName(),
+                                                lesson.getSubjectName(),
+                                                lesson.getTimeslot() != null ? lesson.getTimeslot().getDayOfWeek() : "unassigned",
+                                                lesson.getTimeslot() != null ? lesson.getTimeslot().getPeriodNumber() : 0));
+                                    } else if (justification != null) {
+                                        examples.add(justification.toString());
+                                    }
+                                } catch (Exception e) {
+                                    // Skip individual match if justification extraction fails
+                                    LOG.debugf("Could not extract justification for constraint %s: %s",
+                                            ref.constraintName(), e.getMessage());
+                                }
+                            });
+                } catch (Exception e) {
+                    // matches() may not be available in all ScoreAnalysis modes
+                    LOG.debugf("Could not extract matches for constraint %s: %s",
+                            ref.constraintName(), e.getMessage());
+                }
                 groups.add(new SolveProgress.ViolationGroup(
                         ref.constraintName(),
                         constraintAnalysis.matchCount(),
-                        List.of() // Detailed examples added in future plans
+                        examples
                 ));
             }
         });

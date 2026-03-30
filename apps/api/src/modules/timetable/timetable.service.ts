@@ -4,7 +4,7 @@ import { Queue } from 'bullmq';
 import { PrismaService } from '../../config/database/prisma.service';
 import { SOLVER_QUEUE } from '../../config/queue/queue.constants';
 import { SolverClientService } from './solver-client.service';
-import { SolveProgressDto } from './dto/solve-progress.dto';
+import { SolveProgressDto, ViolationGroupDto } from './dto/solve-progress.dto';
 import { SolveResultDto, SolvedLessonDto } from './dto/solve-result.dto';
 import { SolveJobData } from './processors/solve.processor';
 import { Prisma } from '../../config/database/generated/client.js';
@@ -204,6 +204,26 @@ export class TimetableService {
     ]);
 
     this.logger.log(`Run ${runId} activated for school ${run.schoolId}`);
+  }
+
+  /**
+   * Get grouped constraint violations for a completed/stopped run (D-10, TIME-07).
+   * Returns the violations stored as JSON when the solver completed.
+   * When hardScore < 0, these explain WHY the timetable is infeasible.
+   */
+  async getViolations(runId: string): Promise<ViolationGroupDto[]> {
+    const run = await this.prisma.timetableRun.findUniqueOrThrow({
+      where: { id: runId },
+      select: { violations: true, status: true },
+    });
+
+    if (!run.violations) {
+      return [];
+    }
+
+    // violations is stored as JSON array of ViolationGroupDto objects
+    const violations = run.violations as unknown as ViolationGroupDto[];
+    return Array.isArray(violations) ? violations : [];
   }
 
   /**
