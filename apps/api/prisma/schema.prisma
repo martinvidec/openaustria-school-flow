@@ -51,6 +51,11 @@ model School {
   vvzEntries        VvzEntry[]
   dsgvoJobs         DsgvoJob[]
 
+  // Phase 3 relations
+  rooms                Room[]
+  timetableRuns        TimetableRun[]
+  constraintTemplates  ConstraintTemplate[]
+
   @@map("schools")
 }
 
@@ -492,8 +497,9 @@ model ClassSubject {
   subjectId    String      @map("subject_id")
   subject      Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   groupId      String?     @map("group_id")
-  weeklyHours  Int         @map("weekly_hours")
-  isCustomized Boolean     @default(false) @map("is_customized")
+  weeklyHours        Int         @map("weekly_hours")
+  isCustomized       Boolean     @default(false) @map("is_customized")
+  preferDoublePeriod Boolean     @default(false) @map("prefer_double_period")
 
   @@unique([classId, subjectId, groupId])
   @@map("class_subjects")
@@ -601,4 +607,102 @@ model DsgvoJob {
   @@index([personId])
   @@index([status])
   @@map("dsgvo_jobs")
+}
+
+// --- Phase 3: Timetable Solver Engine ---
+
+// --- Enums ---
+
+enum RoomType {
+  KLASSENZIMMER
+  TURNSAAL
+  EDV_RAUM
+  WERKRAUM
+  LABOR
+  MUSIKRAUM
+}
+
+enum SolveStatus {
+  QUEUED
+  SOLVING
+  COMPLETED
+  FAILED
+  STOPPED
+}
+
+// --- Room (D-12, ROOM-01, ROOM-02) ---
+
+model Room {
+  id         String   @id @default(uuid())
+  schoolId   String   @map("school_id")
+  school     School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name       String
+  roomType   RoomType @map("room_type")
+  capacity   Int
+  equipment  String[] // ["Beamer", "Smartboard", "PCs"]
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  lessons    TimetableLesson[]
+
+  @@unique([schoolId, name])
+  @@map("rooms")
+}
+
+// --- TimetableRun (D-09, D-11) ---
+
+model TimetableRun {
+  id               String      @id @default(uuid())
+  schoolId         String      @map("school_id")
+  school           School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  status           SolveStatus @default(QUEUED)
+  hardScore        Int?        @map("hard_score")
+  softScore        Int?        @map("soft_score")
+  elapsedSeconds   Int?        @map("elapsed_seconds")
+  constraintConfig Json?       @map("constraint_config")
+  violations       Json?
+  isActive         Boolean     @default(false) @map("is_active")
+  maxSolveSeconds  Int         @default(300) @map("max_solve_seconds")
+  abWeekEnabled    Boolean     @default(false) @map("ab_week_enabled")
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+
+  lessons          TimetableLesson[]
+
+  @@index([schoolId, createdAt])
+  @@map("timetable_runs")
+}
+
+// --- TimetableLesson (solved lesson assignment) ---
+
+model TimetableLesson {
+  id             String       @id @default(uuid())
+  runId          String       @map("run_id")
+  run            TimetableRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  classSubjectId String       @map("class_subject_id")
+  teacherId      String       @map("teacher_id")
+  roomId         String       @map("room_id")
+  room           Room         @relation(fields: [roomId], references: [id])
+  dayOfWeek      DayOfWeek    @map("day_of_week")
+  periodNumber   Int          @map("period_number")
+  weekType       String       @default("BOTH") @map("week_type")
+
+  @@unique([runId, roomId, dayOfWeek, periodNumber, weekType])
+  @@unique([runId, teacherId, dayOfWeek, periodNumber, weekType])
+  @@index([runId])
+  @@map("timetable_lessons")
+}
+
+// --- ConstraintTemplate (D-04) ---
+
+model ConstraintTemplate {
+  id           String   @id @default(uuid())
+  schoolId     String   @map("school_id")
+  school       School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  templateType String   @map("template_type")
+  params       Json
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("constraint_templates")
 }
