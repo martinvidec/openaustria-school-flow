@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 03-05-PLAN.md
-last_updated: "2026-03-30T18:21:59.632Z"
+status: verifying
+stopped_at: Completed 03-06-PLAN.md
+last_updated: "2026-03-30T18:32:27.123Z"
 last_activity: 2026-03-30
 progress:
   total_phases: 9
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 21
-  completed_plans: 20
+  completed_plans: 21
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 
 Phase: 03 (timetable-solver-engine) — EXECUTING
 Plan: 6 of 6
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-03-30
 
 Progress: [..........] 0%
@@ -72,6 +72,7 @@ Progress: [..........] 0%
 | Phase 03 P03 | 6min | 2 tasks | 3 files |
 | Phase 03 P04 | 18min | 2 tasks | 13 files |
 | Phase 03 P05 | 6min | 2 tasks | 11 files |
+| Phase 03 P06 | 8min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -136,6 +137,9 @@ Recent decisions affecting current work:
 - [Phase 03]: TimetableModule as dedicated NestJS module for solver-related endpoints (constraint templates, future solve runs)
 - [Phase 03]: Dual controller pattern: TimetableController (JWT-protected admin) + SolverCallbackController (@Public with X-Solver-Secret)
 - [Phase 03]: SolvedLessonDto includes dayOfWeek/periodNumber/weekType directly from sidecar (not parsed from timeslotId)
+- [Phase 03]: Hard constraints registered in @ConstraintConfiguration with ONE_HARD weight for Timefold 1.32.0 penalizeConfigurable() compatibility
+- [Phase 03]: Socket.IO with websocket+polling transports for school network proxy fallback (Pitfall 7)
+- [Phase 03]: Lightweight WebSocket solve:complete event (scores only) -- client fetches full lesson list via REST
 
 ### Pending Todos
 
@@ -149,6 +153,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T18:21:59.629Z
-Stopped at: Completed 03-05-PLAN.md
+Last session: 2026-03-30T18:32:27.121Z
+Stopped at: Completed 03-06-PLAN.md
 Resume file: None

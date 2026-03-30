@@ -21,7 +21,7 @@
 - [x] **TIME-04**: System unterstützt Doppelstunden und flexible Blocklängen
 - [x] **TIME-05**: System unterstützt A/B-Wochen und mehrwöchige Stundenplan-Zyklen
 - [x] **TIME-06**: System zeigt Solving-Fortschritt in Echtzeit an (Anytime-Solving mit Zwischenergebnissen)
-- [ ] **TIME-07**: System erklärt bei unlösbaren Stundenplänen, welche Constraints in Konflikt stehen
+- [x] **TIME-07**: System erklärt bei unlösbaren Stundenplänen, welche Constraints in Konflikt stehen
 - [ ] **TIME-08**: Admin kann generierten Stundenplan manuell nachbearbeiten (Drag & Drop)
 
 ### Timetable Viewing
@@ -174,7 +174,7 @@
 | TIME-04 | Phase 3 | Complete |
 | TIME-05 | Phase 3 | Complete |
 | TIME-06 | Phase 3 | Complete |
-| TIME-07 | Phase 3 | Pending |
+| TIME-07 | Phase 3 | Complete |
 | TIME-08 | Phase 4 | Pending |
 | VIEW-01 | Phase 4 | Pending |
 | VIEW-02 | Phase 4 | Pending |
