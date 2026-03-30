@@ -54,7 +54,7 @@
 
 ### Room & Resource Management
 
-- [ ] **ROOM-01**: Admin kann Raumkatalog pflegen (Typ, Kapazität, Ausstattung)
+- [x] **ROOM-01**: Admin kann Raumkatalog pflegen (Typ, Kapazität, Ausstattung)
 - [ ] **ROOM-02**: System verhindert Doppelbelegung von Räumen (Hard Constraint)
 - [ ] **ROOM-03**: Lehrer kann freie Räume für Ad-hoc-Nutzung buchen
 - [ ] **ROOM-04**: Admin kann Ressourcen verwalten (Tablet-Wägen, Laborgeräte, Beamer)
@@ -195,7 +195,7 @@
 | SUBST-04 | Phase 6 | Pending |
 | SUBST-05 | Phase 6 | Pending |
 | SUBST-06 | Phase 6 | Pending |
-| ROOM-01 | Phase 3 | Pending |
+| ROOM-01 | Phase 3 | Complete |
 | ROOM-02 | Phase 3 | Pending |
 | ROOM-03 | Phase 4 | Pending |
 | ROOM-04 | Phase 4 | Pending |
