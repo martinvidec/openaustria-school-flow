@@ -84,7 +84,7 @@ Plans:
 - [x] 03-02-PLAN.md -- Timefold Quarkus sidecar scaffold, domain model, 4 hard constraints, REST API, Docker Compose integration
 - [x] 03-03-PLAN.md -- Soft constraints (pedagogical quality), room-type hard constraint, double periods, A/B weeks, ConstraintVerifier tests
 - [x] 03-04-PLAN.md -- Configurable constraint weights (ConstraintWeightOverrides), constraint template CRUD API
-- [ ] 03-05-PLAN.md -- NestJS solver orchestration (BullMQ processor, solver input aggregation, solver client, TimetableService, internal callbacks)
+- [x] 03-05-PLAN.md -- NestJS solver orchestration (BullMQ processor, solver input aggregation, solver client, TimetableService, internal callbacks)
 - [ ] 03-06-PLAN.md -- Socket.IO WebSocket progress gateway, conflict explanation endpoint, ScoreAnalysis JVM tests
 
 ### Phase 4: Timetable Viewing, Editing & Room Management

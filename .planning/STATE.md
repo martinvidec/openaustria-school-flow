@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-04-PLAN.md
-last_updated: "2026-03-30T17:54:00.787Z"
+stopped_at: Completed 03-05-PLAN.md
+last_updated: "2026-03-30T18:21:59.632Z"
 last_activity: 2026-03-30
 progress:
   total_phases: 9
   completed_phases: 2
   total_plans: 21
-  completed_plans: 19
+  completed_plans: 20
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 ## Current Position
 
 Phase: 03 (timetable-solver-engine) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-03-30
 
@@ -71,6 +71,7 @@ Progress: [..........] 0%
 | Phase 03 P02 | 24min | 2 tasks | 21 files |
 | Phase 03 P03 | 6min | 2 tasks | 3 files |
 | Phase 03 P04 | 18min | 2 tasks | 13 files |
+| Phase 03 P05 | 6min | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -133,6 +134,8 @@ Recent decisions affecting current work:
 - [Phase 03]: @ConstraintConfiguration with @ConstraintWeight for configurable soft constraints (not ConstraintWeightOverrides)
 - [Phase 03]: NO_LESSONS_AFTER as hard constraint (school-mandated dismissal), SUBJECT_MORNING as soft constraint (pedagogical preference)
 - [Phase 03]: TimetableModule as dedicated NestJS module for solver-related endpoints (constraint templates, future solve runs)
+- [Phase 03]: Dual controller pattern: TimetableController (JWT-protected admin) + SolverCallbackController (@Public with X-Solver-Secret)
+- [Phase 03]: SolvedLessonDto includes dayOfWeek/periodNumber/weekType directly from sidecar (not parsed from timeslotId)
 
 ### Pending Todos
 
@@ -146,6 +149,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-30T17:54:00.784Z
-Stopped at: Completed 03-04-PLAN.md
+Last session: 2026-03-30T18:21:59.629Z
+Stopped at: Completed 03-05-PLAN.md
 Resume file: None
