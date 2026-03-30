@@ -6,10 +6,12 @@ import jakarta.inject.Inject;
 
 import ai.timefold.solver.test.api.score.stream.ConstraintVerifier;
 import at.schoolflow.solver.constraints.TimetableConstraintProvider;
+import at.schoolflow.solver.domain.ClassTimeslotRestriction;
 import at.schoolflow.solver.domain.Lesson;
 import at.schoolflow.solver.domain.SchoolTimetable;
 import at.schoolflow.solver.domain.SolverRoom;
 import at.schoolflow.solver.domain.SolverTimeslot;
+import at.schoolflow.solver.domain.SubjectTimePreference;
 import at.schoolflow.solver.domain.TeacherAvailability;
 import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
@@ -506,6 +508,94 @@ class ConstraintTest {
 
         constraintVerifier.verifyThat(TimetableConstraintProvider::preferMorningForMainSubjects)
                 .given(l1)
+                .penalizesBy(0);
+    }
+
+    // ===== CLASS TIMESLOT RESTRICTION (NO_LESSONS_AFTER) TESTS =====
+
+    @Test
+    void testClassTimeslotRestriction_penalized() {
+        // Class has maxPeriod=4, lesson is at period 7 = hard violation
+        Lesson l1 = lesson("l1", "t1", "c1", "mathe");
+        l1.setTimeslot(MON_P7);
+        l1.setRoom(ROOM_K1);
+
+        ClassTimeslotRestriction restriction = new ClassTimeslotRestriction("c1", 4);
+
+        constraintVerifier.verifyThat(TimetableConstraintProvider::classTimeslotRestriction)
+                .given(l1, restriction)
+                .penalizesBy(1);
+    }
+
+    @Test
+    void testClassTimeslotRestriction_withinLimit() {
+        // Class has maxPeriod=4, lesson is at period 3 = no violation
+        Lesson l1 = lesson("l1", "t1", "c1", "mathe");
+        l1.setTimeslot(MON_P3);
+        l1.setRoom(ROOM_K1);
+
+        ClassTimeslotRestriction restriction = new ClassTimeslotRestriction("c1", 4);
+
+        constraintVerifier.verifyThat(TimetableConstraintProvider::classTimeslotRestriction)
+                .given(l1, restriction)
+                .penalizesBy(0);
+    }
+
+    @Test
+    void testClassTimeslotRestriction_differentClass() {
+        // Restriction is for c2, lesson is for c1 = no violation
+        Lesson l1 = lesson("l1", "t1", "c1", "mathe");
+        l1.setTimeslot(MON_P7);
+        l1.setRoom(ROOM_K1);
+
+        ClassTimeslotRestriction restriction = new ClassTimeslotRestriction("c2", 4);
+
+        constraintVerifier.verifyThat(TimetableConstraintProvider::classTimeslotRestriction)
+                .given(l1, restriction)
+                .penalizesBy(0);
+    }
+
+    // ===== SUBJECT TIME PREFERENCE (SUBJECT_MORNING) TESTS =====
+
+    @Test
+    void testSubjectTimePreference_penalized() {
+        // Subject mathe has latestPeriod=4, lesson is at period 7 = soft penalty
+        Lesson l1 = lesson("l1", "t1", "c1", "mathe");
+        l1.setTimeslot(MON_P7);
+        l1.setRoom(ROOM_K1);
+
+        SubjectTimePreference pref = new SubjectTimePreference("mathe", 4);
+
+        constraintVerifier.verifyThat(TimetableConstraintProvider::subjectTimePreference)
+                .given(l1, pref)
+                .penalizesBy(1);
+    }
+
+    @Test
+    void testSubjectTimePreference_withinLimit() {
+        // Subject mathe has latestPeriod=4, lesson is at period 3 = no penalty
+        Lesson l1 = lesson("l1", "t1", "c1", "mathe");
+        l1.setTimeslot(MON_P3);
+        l1.setRoom(ROOM_K1);
+
+        SubjectTimePreference pref = new SubjectTimePreference("mathe", 4);
+
+        constraintVerifier.verifyThat(TimetableConstraintProvider::subjectTimePreference)
+                .given(l1, pref)
+                .penalizesBy(0);
+    }
+
+    @Test
+    void testSubjectTimePreference_differentSubject() {
+        // Preference is for deutsch, lesson is for mathe = no penalty
+        Lesson l1 = lesson("l1", "t1", "c1", "mathe");
+        l1.setTimeslot(MON_P7);
+        l1.setRoom(ROOM_K1);
+
+        SubjectTimePreference pref = new SubjectTimePreference("deutsch", 4);
+
+        constraintVerifier.verifyThat(TimetableConstraintProvider::subjectTimePreference)
+                .given(l1, pref)
                 .penalizesBy(0);
     }
 

@@ -2,7 +2,9 @@ package at.schoolflow.solver.domain;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import ai.timefold.solver.core.api.domain.constraintweight.ConstraintConfigurationProvider;
 import ai.timefold.solver.core.api.domain.solution.PlanningEntityCollectionProperty;
 import ai.timefold.solver.core.api.domain.solution.PlanningScore;
 import ai.timefold.solver.core.api.domain.solution.PlanningSolution;
@@ -13,9 +15,8 @@ import ai.timefold.solver.core.api.score.buildin.hardsoft.HardSoftScore;
 /**
  * The planning solution representing a complete school timetable problem.
  * Contains all lessons (planning entities), timeslots and rooms (problem facts),
- * and teacher availability constraints.
- *
- * NOTE: ConstraintWeightOverrides will be added in Plan 04 for soft constraint tuning.
+ * teacher availability constraints, custom constraint template data, and
+ * configurable constraint weights via TimetableConstraintConfiguration.
  */
 @PlanningSolution
 public class SchoolTimetable {
@@ -34,6 +35,15 @@ public class SchoolTimetable {
     @ProblemFactCollectionProperty
     private List<TeacherAvailability> blockedSlots;
 
+    @ProblemFactCollectionProperty
+    private List<ClassTimeslotRestriction> classTimeslotRestrictions;
+
+    @ProblemFactCollectionProperty
+    private List<SubjectTimePreference> subjectTimePreferences;
+
+    @ConstraintConfigurationProvider
+    private TimetableConstraintConfiguration constraintConfiguration;
+
     @PlanningScore
     private HardSoftScore score;
 
@@ -43,6 +53,9 @@ public class SchoolTimetable {
         this.timeslots = new ArrayList<>();
         this.rooms = new ArrayList<>();
         this.blockedSlots = new ArrayList<>();
+        this.classTimeslotRestrictions = new ArrayList<>();
+        this.subjectTimePreferences = new ArrayList<>();
+        this.constraintConfiguration = new TimetableConstraintConfiguration();
     }
 
     public SchoolTimetable(List<Lesson> lessons,
@@ -53,6 +66,25 @@ public class SchoolTimetable {
         this.timeslots = timeslots;
         this.rooms = rooms;
         this.blockedSlots = blockedSlots != null ? blockedSlots : new ArrayList<>();
+        this.classTimeslotRestrictions = new ArrayList<>();
+        this.subjectTimePreferences = new ArrayList<>();
+        this.constraintConfiguration = new TimetableConstraintConfiguration();
+    }
+
+    public SchoolTimetable(List<Lesson> lessons,
+                           List<SolverTimeslot> timeslots,
+                           List<SolverRoom> rooms,
+                           List<TeacherAvailability> blockedSlots,
+                           List<ClassTimeslotRestriction> classTimeslotRestrictions,
+                           List<SubjectTimePreference> subjectTimePreferences,
+                           TimetableConstraintConfiguration constraintConfiguration) {
+        this.lessons = lessons;
+        this.timeslots = timeslots;
+        this.rooms = rooms;
+        this.blockedSlots = blockedSlots != null ? blockedSlots : new ArrayList<>();
+        this.classTimeslotRestrictions = classTimeslotRestrictions != null ? classTimeslotRestrictions : new ArrayList<>();
+        this.subjectTimePreferences = subjectTimePreferences != null ? subjectTimePreferences : new ArrayList<>();
+        this.constraintConfiguration = constraintConfiguration != null ? constraintConfiguration : new TimetableConstraintConfiguration();
     }
 
     // Getters
@@ -71,6 +103,18 @@ public class SchoolTimetable {
 
     public List<TeacherAvailability> getBlockedSlots() {
         return blockedSlots;
+    }
+
+    public List<ClassTimeslotRestriction> getClassTimeslotRestrictions() {
+        return classTimeslotRestrictions;
+    }
+
+    public List<SubjectTimePreference> getSubjectTimePreferences() {
+        return subjectTimePreferences;
+    }
+
+    public TimetableConstraintConfiguration getConstraintConfiguration() {
+        return constraintConfiguration;
     }
 
     public HardSoftScore getScore() {
@@ -95,7 +139,34 @@ public class SchoolTimetable {
         this.blockedSlots = blockedSlots;
     }
 
+    public void setClassTimeslotRestrictions(List<ClassTimeslotRestriction> classTimeslotRestrictions) {
+        this.classTimeslotRestrictions = classTimeslotRestrictions;
+    }
+
+    public void setSubjectTimePreferences(List<SubjectTimePreference> subjectTimePreferences) {
+        this.subjectTimePreferences = subjectTimePreferences;
+    }
+
+    public void setConstraintConfiguration(TimetableConstraintConfiguration constraintConfiguration) {
+        this.constraintConfiguration = constraintConfiguration;
+    }
+
     public void setScore(HardSoftScore score) {
         this.score = score;
+    }
+
+    /**
+     * Convenience method to apply weight overrides from a map (e.g., from NestJS API).
+     * Keys are constraint names, values are soft weight integers.
+     * Only soft constraint weights can be overridden; hard constraints are not configurable.
+     */
+    public void applyWeightOverrides(Map<String, Integer> overrides) {
+        if (overrides == null || overrides.isEmpty()) {
+            return;
+        }
+        if (this.constraintConfiguration == null) {
+            this.constraintConfiguration = new TimetableConstraintConfiguration();
+        }
+        this.constraintConfiguration.applyOverrides(overrides);
     }
 }

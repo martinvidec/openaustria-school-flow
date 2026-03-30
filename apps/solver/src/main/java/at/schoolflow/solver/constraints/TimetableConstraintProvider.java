@@ -7,27 +7,34 @@ import ai.timefold.solver.core.api.score.stream.ConstraintFactory;
 import ai.timefold.solver.core.api.score.stream.ConstraintProvider;
 import ai.timefold.solver.core.api.score.stream.Joiners;
 
+import at.schoolflow.solver.domain.ClassTimeslotRestriction;
 import at.schoolflow.solver.domain.Lesson;
+import at.schoolflow.solver.domain.SubjectTimePreference;
 import at.schoolflow.solver.domain.TeacherAvailability;
 
 /**
  * Defines hard and soft constraints for the school timetable.
  *
- * Hard constraints (physical/logical — must never be violated):
+ * Hard constraints (physical/logical -- must never be violated):
  * 1. Teacher conflict: same teacher cannot teach two lessons at the same time
  * 2. Room conflict: same room cannot host two lessons at the same time
  * 3. Teacher availability: teacher cannot be scheduled during blocked timeslots
  * 4. Student group conflict: same class/group cannot have overlapping lessons
  * 5. Room type requirement: lesson requiring specific room type must be in matching room
+ * 6. Class timeslot restriction: class must not have lessons after maxPeriod (NO_LESSONS_AFTER)
  *
- * Soft constraints (pedagogical quality — optimized by solver):
- * 6. No same-subject doubling: penalize two non-consecutive lessons of same subject/class/day
- * 7. Balanced weekly distribution: spread subject lessons evenly across the week
- * 8. Max lessons per day: penalize excessive lessons (>8) per class per day
- * 9. Prefer double periods: reward consecutive scheduling for double-period-preferred subjects
- * 10. Home room preference: prefer scheduling classes in their home room
- * 11. Minimize room changes: penalize unnecessary room switches during the day
- * 12. Prefer morning for main subjects: main subjects penalized for afternoon scheduling
+ * Soft constraints (pedagogical quality -- optimized by solver, weights configurable):
+ * 7. No same-subject doubling: penalize two non-consecutive lessons of same subject/class/day
+ * 8. Balanced weekly distribution: spread subject lessons evenly across the week
+ * 9. Max lessons per day: penalize excessive lessons (>8) per class per day
+ * 10. Prefer double periods: reward consecutive scheduling for double-period-preferred subjects
+ * 11. Home room preference: prefer scheduling classes in their home room
+ * 12. Minimize room changes: penalize unnecessary room switches during the day
+ * 13. Prefer morning for main subjects: main subjects penalized for afternoon scheduling
+ * 14. Subject time preference: penalize subjects scheduled after their preferred latest period (SUBJECT_MORNING)
+ *
+ * Soft constraint weights are defined in TimetableConstraintConfiguration and can be
+ * overridden at runtime via the constraint template API (D-03, D-04).
  */
 public class TimetableConstraintProvider implements ConstraintProvider {
 
@@ -40,7 +47,8 @@ public class TimetableConstraintProvider implements ConstraintProvider {
                 teacherAvailability(constraintFactory),
                 studentGroupConflict(constraintFactory),
                 roomTypeRequirement(constraintFactory),
-                // Soft constraints
+                classTimeslotRestriction(constraintFactory),
+                // Soft constraints (weights from TimetableConstraintConfiguration)
                 noSameSubjectDoubling(constraintFactory),
                 balancedWeeklyDistribution(constraintFactory),
                 maxLessonsPerDay(constraintFactory),
@@ -48,6 +56,7 @@ public class TimetableConstraintProvider implements ConstraintProvider {
                 homeRoomPreference(constraintFactory),
                 minimizeRoomChanges(constraintFactory),
                 preferMorningForMainSubjects(constraintFactory),
+                subjectTimePreference(constraintFactory),
         };
     }
 
@@ -134,11 +143,29 @@ public class TimetableConstraintProvider implements ConstraintProvider {
                 .asConstraint("Room type requirement");
     }
 
-    // ===== Soft Constraints =====
+    /**
+     * Class timeslot restriction (NO_LESSONS_AFTER template): a class must not have
+     * lessons after the specified maxPeriod. This is a hard constraint because
+     * it represents a school-mandated dismissal rule.
+     */
+    public Constraint classTimeslotRestriction(ConstraintFactory constraintFactory) {
+        return constraintFactory
+                .forEach(Lesson.class)
+                .join(ClassTimeslotRestriction.class,
+                        Joiners.equal(Lesson::getClassId, ClassTimeslotRestriction::getClassId))
+                .filter((lesson, restriction) ->
+                        lesson.getTimeslot() != null
+                                && lesson.getTimeslot().getPeriodNumber() > restriction.getMaxPeriod())
+                .penalize(HardSoftScore.ONE_HARD)
+                .asConstraint("Class timeslot restriction");
+    }
+
+    // ===== Soft Constraints (configurable weights via @ConstraintConfiguration) =====
 
     /**
      * Penalize two non-consecutive lessons of the same subject on the same day
      * for the same class (TIME-02). Consecutive lessons (double periods) are OK.
+     * Default weight: 10
      */
     public Constraint noSameSubjectDoubling(ConstraintFactory constraintFactory) {
         return constraintFactory
@@ -147,7 +174,7 @@ public class TimetableConstraintProvider implements ConstraintProvider {
                         Joiners.equal(Lesson::getSubjectId),
                         Joiners.equal(lesson -> lesson.getTimeslot().getDayOfWeek()))
                 .filter((l1, l2) -> !areConsecutive(l1, l2))
-                .penalize(HardSoftScore.ONE_SOFT)
+                .penalizeConfigurable()
                 .asConstraint("No same subject doubling");
     }
 
@@ -155,6 +182,7 @@ public class TimetableConstraintProvider implements ConstraintProvider {
      * Spread subject lessons evenly across the week (TIME-02).
      * Uses Timefold's loadBalance collector to penalize uneven distribution
      * of lessons per day for each class-subject combination.
+     * Default weight: 5
      */
     public Constraint balancedWeeklyDistribution(ConstraintFactory constraintFactory) {
         return constraintFactory
@@ -162,7 +190,7 @@ public class TimetableConstraintProvider implements ConstraintProvider {
                 .groupBy(Lesson::getClassId, Lesson::getSubjectId,
                         ConstraintCollectors.loadBalance(
                                 lesson -> lesson.getTimeslot().getDayOfWeek()))
-                .penalize(HardSoftScore.ONE_SOFT,
+                .penalizeConfigurable(
                         (classId, subjectId, balance) -> balance.unfairness().intValue())
                 .asConstraint("Balanced weekly distribution");
     }
@@ -170,6 +198,7 @@ public class TimetableConstraintProvider implements ConstraintProvider {
     /**
      * Penalize each lesson beyond 8 per day for a class (TIME-02).
      * Represents excessive workload per day for students.
+     * Default weight: 8
      */
     public Constraint maxLessonsPerDay(ConstraintFactory constraintFactory) {
         return constraintFactory
@@ -178,7 +207,7 @@ public class TimetableConstraintProvider implements ConstraintProvider {
                         lesson -> lesson.getTimeslot().getDayOfWeek(),
                         ConstraintCollectors.count())
                 .filter((classId, dayOfWeek, count) -> count > 8)
-                .penalize(HardSoftScore.ONE_SOFT,
+                .penalizeConfigurable(
                         (classId, dayOfWeek, count) -> count - 8)
                 .asConstraint("Max lessons per day");
     }
@@ -187,6 +216,7 @@ public class TimetableConstraintProvider implements ConstraintProvider {
      * For lessons where preferDoublePeriod=true, penalize if the lesson
      * has no consecutive partner of the same subject+class on the same day (D-05, TIME-04).
      * This encourages the solver to schedule double periods for flagged subjects.
+     * Default weight: 8
      */
     public Constraint preferDoublePeriod(ConstraintFactory constraintFactory) {
         return constraintFactory
@@ -198,20 +228,21 @@ public class TimetableConstraintProvider implements ConstraintProvider {
                         Joiners.equal(l -> l.getTimeslot().getDayOfWeek()),
                         Joiners.filtering((l1, l2) ->
                                 !l1.getId().equals(l2.getId()) && areConsecutive(l1, l2)))
-                .penalize(HardSoftScore.ONE_SOFT)
+                .penalizeConfigurable()
                 .asConstraint("Prefer double periods");
     }
 
     /**
      * Prefer scheduling a class in their home room (Stammklasse-Raum) (D-13).
      * If lesson.homeRoomId is set and the assigned room does not match, penalize soft.
+     * Default weight: 2
      */
     public Constraint homeRoomPreference(ConstraintFactory constraintFactory) {
         return constraintFactory
                 .forEach(Lesson.class)
                 .filter(lesson -> lesson.getHomeRoomId() != null)
                 .filter(lesson -> !lesson.getHomeRoomId().equals(lesson.getRoom().getId()))
-                .penalize(HardSoftScore.ONE_SOFT)
+                .penalizeConfigurable()
                 .asConstraint("Home room preference");
     }
 
@@ -220,6 +251,7 @@ public class TimetableConstraintProvider implements ConstraintProvider {
      * For each pair of consecutive lessons for the same class on the same day,
      * if they are in different rooms AND neither requires a special room type
      * (both could be in a regular Klassenzimmer), penalize the room change.
+     * Default weight: 3
      */
     public Constraint minimizeRoomChanges(ConstraintFactory constraintFactory) {
         return constraintFactory
@@ -230,7 +262,7 @@ public class TimetableConstraintProvider implements ConstraintProvider {
                 .filter((l1, l2) -> !l1.getRoom().getId().equals(l2.getRoom().getId()))
                 .filter((l1, l2) ->
                         l1.getRequiredRoomType() == null && l2.getRequiredRoomType() == null)
-                .penalize(HardSoftScore.ONE_SOFT)
+                .penalizeConfigurable()
                 .asConstraint("Minimize room changes");
     }
 
@@ -239,14 +271,33 @@ public class TimetableConstraintProvider implements ConstraintProvider {
      * classroom subjects like Mathematik, Deutsch) are penalized for being
      * scheduled after period 6 (afternoon). This encourages scheduling demanding
      * subjects in the morning when students are more attentive.
+     * Default weight: 1
      */
     public Constraint preferMorningForMainSubjects(ConstraintFactory constraintFactory) {
         return constraintFactory
                 .forEach(Lesson.class)
                 .filter(lesson -> lesson.getRequiredRoomType() == null)
                 .filter(lesson -> lesson.getTimeslot().getPeriodNumber() > 6)
-                .penalize(HardSoftScore.ONE_SOFT)
+                .penalizeConfigurable()
                 .asConstraint("Prefer morning for main subjects");
+    }
+
+    /**
+     * Subject time preference (SUBJECT_MORNING template): penalize scheduling a
+     * subject after its preferred latest period. For example, Mathematik should
+     * be scheduled before period 4.
+     * Default weight: 3
+     */
+    public Constraint subjectTimePreference(ConstraintFactory constraintFactory) {
+        return constraintFactory
+                .forEach(Lesson.class)
+                .join(SubjectTimePreference.class,
+                        Joiners.equal(Lesson::getSubjectId, SubjectTimePreference::getSubjectId))
+                .filter((lesson, pref) ->
+                        lesson.getTimeslot() != null
+                                && lesson.getTimeslot().getPeriodNumber() > pref.getLatestPeriod())
+                .penalizeConfigurable()
+                .asConstraint("Subject time preference");
     }
 
     // ===== Helper Methods =====
