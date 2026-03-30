@@ -225,6 +225,25 @@ public class Lesson {
         this.room = room;
     }
 
+    // ===== A/B Week Support =====
+
+    /**
+     * For A/B week mode: returns true if this lesson is compatible with the given timeslot's week type.
+     * "BOTH" lessons can go in A or B timeslots.
+     * "A" lessons can only go in "A" or "BOTH" timeslots.
+     * "B" lessons can only go in "B" or "BOTH" timeslots.
+     *
+     * NOTE: The actual A/B week constraint filtering is handled by the value range provider --
+     * only compatible timeslots are offered to each lesson. This is more efficient than a
+     * constraint (avoids search space explosion per Research Pitfall 1).
+     */
+    public boolean isWeekCompatible(SolverTimeslot slot) {
+        if ("BOTH".equals(this.weekType) || "BOTH".equals(slot.getWeekType())) {
+            return true;
+        }
+        return this.weekType != null && this.weekType.equals(slot.getWeekType());
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
