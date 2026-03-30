@@ -18,14 +18,14 @@ Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenp
 - [x] DSGVO-Konformität: Audit-Trail — Validated in Phase 1: Project Scaffolding & Auth
 - [x] Schuldatenmodell (Lehrer, Klassen, Schüler, Fächer) mit schultyp-agnostischer Konfiguration — Validated in Phase 2: School Data Model & DSGVO
 - [x] DSGVO-Konformität (Einwilligungen, Löschkonzepte, Datenexport, Verschlüsselung, Aufbewahrungsfristen) — Validated in Phase 2: School Data Model & DSGVO
+- [x] Automatische Stundenplanerstellung mit Constraint-Engine (Verfügbarkeit, Räume, pädagogische Regeln, organisatorische Vorgaben) — Validated in Phase 3: Timetable Solver Engine
+- [x] Raum- und Ressourcenverwaltung (Kapazitäten, Fachräume, Doppelbelegungsschutz) — Validated in Phase 3: Timetable Solver Engine
 
 ### Active
 
-- [ ] Automatische Stundenplanerstellung mit Constraint-Engine (Verfügbarkeit, Räume, pädagogische Regeln, organisatorische Vorgaben)
 - [ ] Digitales Klassenbuch (Anwesenheit, Unterrichtsinhalte, Noten, Abwesenheiten)
 - [ ] Schulkommunikation (Lehrer-Eltern, Lehrer-Schüler, Mitteilungen, Lesebestätigungen)
 - [ ] Vertretungsplanung (automatische Vorschläge basierend auf Verfügbarkeit)
-- [ ] Raum- und Ressourcenverwaltung (Kapazitäten, Fachräume, Doppelbelegungsschutz)
 - [ ] Plugin-/Konnektor-System mit offener API (MS Teams, Google Calendar, Outlook, etc.)
 - [ ] Multi-Plattform UI (Web + Mobile) mit modernem, responsivem Design
 
@@ -71,6 +71,10 @@ Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenp
 | Stundentafel as static TS arrays | Template data not persisted in DB, applied via find-or-create pattern | Phase 2 validated |
 | Austrian Lehrverpflichtung/Werteinheiten model | Correct teacher workload calculation for solver input | Phase 2 validated |
 | BullMQ async DSGVO jobs | Retention cron, data deletion, data export via background processing | Phase 2 validated |
+| Timefold 1.32.0 Quarkus sidecar | Purpose-built constraint solver for school timetabling, JVM performance | Phase 3 validated |
+| 6 hard + 8 soft constraints | Two-tier model with configurable weights via ConstraintWeightOverrides | Phase 3 validated |
+| A/B week support | Per-school toggle for 2-week cycles, solver generates both weeks | Phase 3 validated |
+| Socket.IO WebSocket progress | Real-time solve progress broadcasting with school-scoped rooms | Phase 3 validated |
 
 ## Evolution
 
@@ -90,4 +94,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-29 after Phase 2 completion — School Data Model & DSGVO*
+*Last updated: 2026-03-30 after Phase 3 completion — Timetable Solver Engine*
