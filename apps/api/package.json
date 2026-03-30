@@ -23,8 +23,10 @@
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-fastify": "^11",
+    "@nestjs/platform-socket.io": "^11.1.17",
     "@nestjs/schedule": "^6.1.1",
     "@nestjs/swagger": "^11",
+    "@nestjs/websockets": "^11.1.17",
     "@prisma/adapter-pg": "^7.6.0",
     "@prisma/client": "^7.6.0",
     "@schoolflow/shared": "workspace:*",
@@ -38,7 +40,8 @@
     "pdfkit": "^0.18.0",
     "pg": "^8.20.0",
     "reflect-metadata": "^0.2",
-    "rxjs": "^7"
+    "rxjs": "^7",
+    "socket.io": "^4.8.3"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

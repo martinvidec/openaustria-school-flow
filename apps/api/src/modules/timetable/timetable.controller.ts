@@ -19,6 +19,7 @@ import {
 } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { TimetableService } from './timetable.service';
+import { TimetableGateway } from './timetable.gateway';
 import { StartSolveDto } from './dto/solve-request.dto';
 import { SolveProgressDto } from './dto/solve-progress.dto';
 import { SolveResultDto } from './dto/solve-result.dto';
@@ -105,6 +106,7 @@ export class SolverCallbackController {
 
   constructor(
     private timetableService: TimetableService,
+    private timetableGateway: TimetableGateway,
     private configService: ConfigService,
   ) {
     this.solverSecret = this.configService.get<string>('SOLVER_SHARED_SECRET', 'dev-secret');
@@ -134,6 +136,11 @@ export class SolverCallbackController {
   ) {
     this.validateSolverSecret(secret);
     await this.timetableService.handleProgress(runId, progress);
+
+    // Broadcast progress to connected WebSocket clients (D-08, TIME-06)
+    const run = await this.timetableService.findRun(runId);
+    this.timetableGateway.emitProgress(run.schoolId, progress);
+
     return { received: true };
   }
 
@@ -151,6 +158,18 @@ export class SolverCallbackController {
   ) {
     this.validateSolverSecret(secret);
     await this.timetableService.handleCompletion(runId, result);
+
+    // Broadcast completion to connected WebSocket clients (D-08, TIME-06)
+    // NOTE: Only send lightweight summary -- full lesson list fetched via REST
+    const run = await this.timetableService.findRun(runId);
+    this.timetableGateway.emitComplete(run.schoolId, {
+      runId: result.runId,
+      status: result.status,
+      hardScore: result.hardScore,
+      softScore: result.softScore,
+      elapsedSeconds: result.elapsedSeconds,
+    });
+
     return { received: true };
   }
 }
