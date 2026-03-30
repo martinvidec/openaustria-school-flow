@@ -17,7 +17,7 @@
 
 - [x] **TIME-01**: System generiert automatisch Stundenplan unter Einhaltung von Hard Constraints (Lehrer-Clash, Raum-Clash, Zeitfenster)
 - [x] **TIME-02**: System berücksichtigt Soft Constraints (max. Stunden/Tag, keine Dopplung gleicher Fächer, bevorzugte Zeitfenster, ausgewogene Wochenverteilung)
-- [ ] **TIME-03**: Admin kann individuelle Constraints definieren (geblockte Zeitfenster, Lehrer-Verfügbarkeit, Teilzeit-Modelle)
+- [x] **TIME-03**: Admin kann individuelle Constraints definieren (geblockte Zeitfenster, Lehrer-Verfügbarkeit, Teilzeit-Modelle)
 - [x] **TIME-04**: System unterstützt Doppelstunden und flexible Blocklängen
 - [x] **TIME-05**: System unterstützt A/B-Wochen und mehrwöchige Stundenplan-Zyklen
 - [ ] **TIME-06**: System zeigt Solving-Fortschritt in Echtzeit an (Anytime-Solving mit Zwischenergebnissen)
@@ -170,7 +170,7 @@
 | FOUND-05 | Phase 2 | Complete |
 | TIME-01 | Phase 3 | Complete |
 | TIME-02 | Phase 3 | Complete |
-| TIME-03 | Phase 3 | Pending |
+| TIME-03 | Phase 3 | Complete |
 | TIME-04 | Phase 3 | Complete |
 | TIME-05 | Phase 3 | Complete |
 | TIME-06 | Phase 3 | Pending |
