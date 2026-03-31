@@ -16,6 +16,7 @@ import { StudentModule } from './modules/student/student.module';
 import { ClassModule } from './modules/class/class.module';
 import { SubjectModule } from './modules/subject/subject.module';
 import { RoomModule } from './modules/room/room.module';
+import { ResourceModule } from './modules/resource/resource.module';
 import { TimetableModule } from './modules/timetable/timetable.module';
 
 @Module({
@@ -37,6 +38,7 @@ import { TimetableModule } from './modules/timetable/timetable.module';
     ClassModule,
     SubjectModule,
     RoomModule,
+    ResourceModule,
     TimetableModule,
   ],
   providers: [
