@@ -97,10 +97,11 @@ Plans:
   3. Admin can drag-and-drop lessons to manually adjust the generated timetable, with immediate constraint validation
   4. Teachers can book free rooms for ad-hoc use, admins can manage resources (tablet carts, lab equipment), and room changes propagate instantly to all views
   5. Any user can export their timetable as PDF or iCal for personal calendars
-**Plans**: 8 plans
+**Plans**: 9 plans
 **UI hint**: yes
 
 Plans:
+- [ ] 04-00-PLAN.md -- Nyquist Wave 0: Vitest web config, Testing Library setup, test stub files for all requirements
 - [ ] 04-01-PLAN.md -- Prisma schema extensions (TimetableLesson edit fields, RoomBooking, Resource, ResourceBooking models) and shared TypeScript types
 - [ ] 04-02-PLAN.md -- React SPA scaffolding (Vite + React 19 + TanStack Router + Query + Zustand + shadcn/ui + Tailwind 4 + Keycloak auth) with role-based sidebar
 - [ ] 04-03-PLAN.md -- Backend timetable view API (role-filtered with joined data), constraint validation, lesson move, edit history, revert endpoints

@@ -110,7 +110,7 @@ Eine Open-Source-Plattform zur Verwaltung von Schulen im DACH-Raum — die freie
 | Technology | Version | Purpose | Why | Confidence |
 |------------|---------|---------|-----|------------|
 | React | 19.x (19.2.1) | UI library | Largest ecosystem. Best hiring pool. shadcn/ui component library. Shares mental model with React Native for mobile. | HIGH |
-| Vite | 6.x | Build tool, dev server | Sub-second HMR. Native ESM. Faster than Webpack by 10-20x. | HIGH |
+| Vite | 8.x (8.0.3) | Build tool, dev server | Sub-second HMR. Native ESM. Faster than Webpack by 10-20x. | HIGH |
 | TanStack Query | 5.x (5.95) | Server state management | Caching, deduplication, background refetching. Suspense support. Replaces manual fetch+useState patterns. | HIGH |
 | TanStack Router | 1.x | Routing | Type-safe routing with search params. File-based route generation. Better than React Router for large apps. | MEDIUM |
 | shadcn/ui + Radix UI | Latest | Component library | Copy-paste components you own. Accessible by default. Tailwind CSS styling. No version lock-in. Currently transitioning to Base UI foundation -- monitor this. | MEDIUM |
