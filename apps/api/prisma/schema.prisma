@@ -56,6 +56,9 @@ model School {
   timetableRuns        TimetableRun[]
   constraintTemplates  ConstraintTemplate[]
 
+  // Phase 4 relations
+  resources            Resource[]
+
   @@map("schools")
 }
 
@@ -644,6 +647,7 @@ model Room {
   updatedAt  DateTime @updatedAt @map("updated_at")
 
   lessons    TimetableLesson[]
+  bookings   RoomBooking[]
 
   @@unique([schoolId, name])
   @@map("rooms")
@@ -686,11 +690,84 @@ model TimetableLesson {
   dayOfWeek      DayOfWeek    @map("day_of_week")
   periodNumber   Int          @map("period_number")
   weekType       String       @default("BOTH") @map("week_type")
+  isManualEdit   Boolean      @default(false) @map("is_manual_edit")
+  editedBy       String?      @map("edited_by")
+  editedAt       DateTime?    @map("edited_at")
 
   @@unique([runId, roomId, dayOfWeek, periodNumber, weekType])
   @@unique([runId, teacherId, dayOfWeek, periodNumber, weekType])
   @@index([runId])
   @@map("timetable_lessons")
+}
+
+// --- TimetableLessonEdit (D-10, persistent edit history) ---
+
+model TimetableLessonEdit {
+  id             String   @id @default(uuid())
+  lessonId       String   @map("lesson_id")
+  runId          String   @map("run_id")
+  editedBy       String   @map("edited_by")
+  editAction     String   @map("edit_action")  // "move", "swap", "cancel", "revert"
+  previousState  Json     @map("previous_state")
+  newState       Json     @map("new_state")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([runId, createdAt])
+  @@map("timetable_lesson_edits")
+}
+
+// --- RoomBooking (D-13, D-14, ROOM-03) ---
+
+model RoomBooking {
+  id           String    @id @default(uuid())
+  roomId       String    @map("room_id")
+  room         Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  bookedBy     String    @map("booked_by")
+  dayOfWeek    DayOfWeek @map("day_of_week")
+  periodNumber Int       @map("period_number")
+  weekType     String    @default("BOTH") @map("week_type")
+  purpose      String?
+  isAdHoc      Boolean   @default(true) @map("is_ad_hoc")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@unique([roomId, dayOfWeek, periodNumber, weekType])
+  @@map("room_bookings")
+}
+
+// --- Resource (D-15, ROOM-04) ---
+
+model Resource {
+  id           String   @id @default(uuid())
+  schoolId     String   @map("school_id")
+  school       School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name         String
+  resourceType String   @map("resource_type")
+  description  String?
+  quantity     Int      @default(1)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  bookings     ResourceBooking[]
+
+  @@unique([schoolId, name])
+  @@map("resources")
+}
+
+// --- ResourceBooking (D-15, ROOM-04) ---
+
+model ResourceBooking {
+  id           String    @id @default(uuid())
+  resourceId   String    @map("resource_id")
+  resource     Resource  @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  roomId       String?   @map("room_id")
+  bookedBy     String    @map("booked_by")
+  dayOfWeek    DayOfWeek @map("day_of_week")
+  periodNumber Int       @map("period_number")
+  weekType     String    @default("BOTH") @map("week_type")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@unique([resourceId, dayOfWeek, periodNumber, weekType])
+  @@map("resource_bookings")
 }
 
 // --- ConstraintTemplate (D-04) ---
