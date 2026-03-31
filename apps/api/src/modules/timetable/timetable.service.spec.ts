@@ -352,4 +352,12 @@ describe('TimetableService', () => {
       });
     });
   });
+
+  describe('TimetableService - validateMove (TIME-08)', () => {
+    it.todo('returns valid=true when no constraints are violated');
+    it.todo('returns hard violation for teacher clash');
+    it.todo('returns hard violation for room conflict');
+    it.todo('returns soft warning for max hours per day exceeded');
+    it.todo('blocks move when hard violations exist');
+  });
 });
