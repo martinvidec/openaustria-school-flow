@@ -22,7 +22,7 @@
 - [x] **TIME-05**: System unterstützt A/B-Wochen und mehrwöchige Stundenplan-Zyklen
 - [x] **TIME-06**: System zeigt Solving-Fortschritt in Echtzeit an (Anytime-Solving mit Zwischenergebnissen)
 - [x] **TIME-07**: System erklärt bei unlösbaren Stundenplänen, welche Constraints in Konflikt stehen
-- [ ] **TIME-08**: Admin kann generierten Stundenplan manuell nachbearbeiten (Drag & Drop)
+- [x] **TIME-08**: Admin kann generierten Stundenplan manuell nachbearbeiten (Drag & Drop)
 
 ### Timetable Viewing
 
@@ -56,9 +56,9 @@
 
 - [x] **ROOM-01**: Admin kann Raumkatalog pflegen (Typ, Kapazität, Ausstattung)
 - [x] **ROOM-02**: System verhindert Doppelbelegung von Räumen (Hard Constraint)
-- [ ] **ROOM-03**: Lehrer kann freie Räume für Ad-hoc-Nutzung buchen
-- [ ] **ROOM-04**: Admin kann Ressourcen verwalten (Tablet-Wägen, Laborgeräte, Beamer)
-- [ ] **ROOM-05**: Raumänderungen propagieren sofort in alle Stundenplan-Ansichten
+- [x] **ROOM-03**: Lehrer kann freie Räume für Ad-hoc-Nutzung buchen
+- [x] **ROOM-04**: Admin kann Ressourcen verwalten (Tablet-Wägen, Laborgeräte, Beamer)
+- [x] **ROOM-05**: Raumänderungen propagieren sofort in alle Stundenplan-Ansichten
 
 ### Communication
 
@@ -175,7 +175,7 @@
 | TIME-05 | Phase 3 | Complete |
 | TIME-06 | Phase 3 | Complete |
 | TIME-07 | Phase 3 | Complete |
-| TIME-08 | Phase 4 | Pending |
+| TIME-08 | Phase 4 | Complete |
 | VIEW-01 | Phase 4 | Pending |
 | VIEW-02 | Phase 4 | Pending |
 | VIEW-03 | Phase 4 | Pending |
@@ -197,9 +197,9 @@
 | SUBST-06 | Phase 6 | Pending |
 | ROOM-01 | Phase 3 | Complete |
 | ROOM-02 | Phase 3 | Complete |
-| ROOM-03 | Phase 4 | Pending |
-| ROOM-04 | Phase 4 | Pending |
-| ROOM-05 | Phase 4 | Pending |
+| ROOM-03 | Phase 4 | Complete |
+| ROOM-04 | Phase 4 | Complete |
+| ROOM-05 | Phase 4 | Complete |
 | COMM-01 | Phase 7 | Pending |
 | COMM-02 | Phase 7 | Pending |
 | COMM-03 | Phase 7 | Pending |
