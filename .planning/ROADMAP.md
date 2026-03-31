@@ -103,8 +103,8 @@ Plans:
 Plans:
 - [x] 04-00-PLAN.md -- Nyquist Wave 0: Vitest web config, Testing Library setup, test stub files for all requirements
 - [x] 04-01-PLAN.md -- Prisma schema extensions (TimetableLesson edit fields, RoomBooking, Resource, ResourceBooking models) and shared TypeScript types
-- [ ] 04-02-PLAN.md -- React SPA scaffolding (Vite + React 19 + TanStack Router + Query + Zustand + shadcn/ui + Tailwind 4 + Keycloak auth) with role-based sidebar
-- [ ] 04-03-PLAN.md -- Backend timetable view API (role-filtered with joined data), constraint validation, lesson move, edit history, revert endpoints
+- [x] 04-02-PLAN.md -- React SPA scaffolding (Vite + React 19 + TanStack Router + Query + Zustand + shadcn/ui + Tailwind 4 + Keycloak auth) with role-based sidebar
+- [x] 04-03-PLAN.md -- Backend timetable view API (role-filtered with joined data), constraint validation, lesson move, edit history, revert endpoints
 - [ ] 04-04-PLAN.md -- Room booking API with availability grid, resource CRUD module, WebSocket timetable events gateway (/timetable namespace)
 - [ ] 04-05-PLAN.md -- Frontend timetable grid (CSS Grid layout, TimetableCell, DayWeekToggle, ABWeekTabs, PerspectiveSelector, subject colors, change indicators)
 - [ ] 04-06-PLAN.md -- Frontend DnD editing (@dnd-kit draggable/droppable, constraint feedback, edit history panel, revert capability)
