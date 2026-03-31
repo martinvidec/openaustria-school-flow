@@ -2,9 +2,11 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Delete,
   Body,
   Param,
+  Query,
   HttpCode,
   HttpStatus,
   Headers,
@@ -16,6 +18,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiHeader,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { TimetableService } from './timetable.service';
@@ -23,7 +26,13 @@ import { TimetableGateway } from './timetable.gateway';
 import { StartSolveDto } from './dto/solve-request.dto';
 import { SolveProgressDto } from './dto/solve-progress.dto';
 import { SolveResultDto } from './dto/solve-result.dto';
+import { TimetableViewQueryDto, TimetableViewResponseDto } from './dto/timetable-view.dto';
+import { ValidateMoveDto, MoveValidationResponseDto } from './dto/validate-move.dto';
+import { MoveLessonDto } from './dto/move-lesson.dto';
+import { TimetableEditService } from './timetable-edit.service';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { AuthenticatedUser } from '../auth/types/authenticated-user';
 import { Public } from '../auth/decorators/public.decorator';
 
 /**
@@ -34,7 +43,10 @@ import { Public } from '../auth/decorators/public.decorator';
 @ApiBearerAuth()
 @Controller('api/v1/schools/:schoolId/timetable')
 export class TimetableController {
-  constructor(private timetableService: TimetableService) {}
+  constructor(
+    private timetableService: TimetableService,
+    private timetableEditService: TimetableEditService,
+  ) {}
 
   @Post('solve')
   @HttpCode(HttpStatus.ACCEPTED)
@@ -112,6 +124,71 @@ export class TimetableController {
   async activateRun(@Param('runId') runId: string) {
     await this.timetableService.activateRun(runId);
     return { runId, activated: true };
+  }
+
+  @Get('view')
+  @CheckPermissions({ action: 'read', subject: 'timetable' })
+  @ApiOperation({ summary: 'Get timetable view with joined subject/teacher/room data' })
+  @ApiQuery({ name: 'perspective', enum: ['teacher', 'class', 'room'] })
+  @ApiQuery({ name: 'perspectiveId', type: String })
+  @ApiQuery({ name: 'weekType', enum: ['A', 'B', 'BOTH'], required: false })
+  @ApiResponse({ status: 200, description: 'Timetable view', type: TimetableViewResponseDto })
+  async getView(
+    @Param('schoolId') schoolId: string,
+    @Query() query: TimetableViewQueryDto,
+  ): Promise<TimetableViewResponseDto> {
+    return this.timetableService.getView(schoolId, query);
+  }
+
+  @Post('validate-move')
+  @HttpCode(HttpStatus.OK)
+  @CheckPermissions({ action: 'update', subject: 'timetable' })
+  @ApiOperation({ summary: 'Validate a lesson move against constraints without modifying data' })
+  @ApiResponse({ status: 200, description: 'Validation result', type: MoveValidationResponseDto })
+  @ApiResponse({ status: 404, description: 'Lesson not found' })
+  async validateMove(
+    @Param('schoolId') schoolId: string,
+    @Body() dto: ValidateMoveDto,
+  ): Promise<MoveValidationResponseDto> {
+    return this.timetableEditService.validateMove(schoolId, dto);
+  }
+
+  @Patch('lessons/:lessonId/move')
+  @CheckPermissions({ action: 'update', subject: 'timetable' })
+  @ApiOperation({ summary: 'Move a lesson to a new time slot (with constraint validation)' })
+  @ApiResponse({ status: 200, description: 'Lesson moved successfully' })
+  @ApiResponse({ status: 400, description: 'Move violates hard constraints' })
+  @ApiResponse({ status: 404, description: 'Lesson not found' })
+  async moveLesson(
+    @Param('schoolId') schoolId: string,
+    @Param('lessonId') lessonId: string,
+    @Body() dto: MoveLessonDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.timetableEditService.moveLesson(schoolId, lessonId, dto, user.id);
+  }
+
+  @Get('runs/:runId/edit-history')
+  @CheckPermissions({ action: 'read', subject: 'timetable' })
+  @ApiOperation({ summary: 'Get edit history for a timetable run' })
+  @ApiResponse({ status: 200, description: 'Edit history entries' })
+  async getEditHistory(@Param('runId') runId: string) {
+    return this.timetableEditService.getEditHistory(runId);
+  }
+
+  @Post('runs/:runId/revert/:editId')
+  @HttpCode(HttpStatus.OK)
+  @CheckPermissions({ action: 'update', subject: 'timetable' })
+  @ApiOperation({ summary: 'Revert timetable to a specific edit point' })
+  @ApiResponse({ status: 200, description: 'Revert successful' })
+  @ApiResponse({ status: 404, description: 'Edit record not found' })
+  async revertToEdit(
+    @Param('runId') runId: string,
+    @Param('editId') editId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    await this.timetableEditService.revertToEdit(runId, editId, user.id);
+    return { reverted: true, runId, revertedToEditId: editId };
   }
 }
 
