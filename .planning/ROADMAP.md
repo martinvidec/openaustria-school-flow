@@ -97,18 +97,18 @@ Plans:
   3. Admin can drag-and-drop lessons to manually adjust the generated timetable, with immediate constraint validation
   4. Teachers can book free rooms for ad-hoc use, admins can manage resources (tablet carts, lab equipment), and room changes propagate instantly to all views
   5. Any user can export their timetable as PDF or iCal for personal calendars
-**Plans**: TBD
+**Plans**: 8 plans
 **UI hint**: yes
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
-- [ ] 04-03: TBD
-- [ ] 04-04: TBD
-- [ ] 04-05: TBD
-- [ ] 04-06: TBD
-- [ ] 04-07: TBD
-- [ ] 04-08: TBD
+- [ ] 04-01-PLAN.md -- Prisma schema extensions (TimetableLesson edit fields, RoomBooking, Resource, ResourceBooking models) and shared TypeScript types
+- [ ] 04-02-PLAN.md -- React SPA scaffolding (Vite + React 19 + TanStack Router + Query + Zustand + shadcn/ui + Tailwind 4 + Keycloak auth) with role-based sidebar
+- [ ] 04-03-PLAN.md -- Backend timetable view API (role-filtered with joined data), constraint validation, lesson move, edit history, revert endpoints
+- [ ] 04-04-PLAN.md -- Room booking API with availability grid, resource CRUD module, WebSocket timetable events gateway (/timetable namespace)
+- [ ] 04-05-PLAN.md -- Frontend timetable grid (CSS Grid layout, TimetableCell, DayWeekToggle, ABWeekTabs, PerspectiveSelector, subject colors, change indicators)
+- [ ] 04-06-PLAN.md -- Frontend DnD editing (@dnd-kit draggable/droppable, constraint feedback, edit history panel, revert capability)
+- [ ] 04-07-PLAN.md -- Frontend room availability grid with ad-hoc booking dialog, admin resource CRUD page
+- [ ] 04-08-PLAN.md -- Socket.IO real-time integration (TanStack Query cache invalidation), PDF and iCal export (server-side pdfkit + ical-generator)
 
 ### Phase 5: Digital Class Book
 **Goal**: Teachers can run their daily class book workflow digitally -- record attendance, document lessons, enter grades, and add student notes -- on any device, while parents can submit digital absence excuses
