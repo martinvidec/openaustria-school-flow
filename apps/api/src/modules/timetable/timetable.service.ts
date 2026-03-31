@@ -8,6 +8,12 @@ import { SolveProgressDto, ViolationGroupDto } from './dto/solve-progress.dto';
 import { SolveResultDto, SolvedLessonDto } from './dto/solve-result.dto';
 import { SolveJobData } from './processors/solve.processor';
 import { Prisma } from '../../config/database/generated/client.js';
+import {
+  TimetableViewQueryDto,
+  TimetableViewResponseDto,
+  TimetableViewLessonDto,
+  PeriodDto,
+} from './dto/timetable-view.dto';
 
 /** Maximum number of solve runs kept per school (D-11) */
 const MAX_RUNS_PER_SCHOOL = 3;
@@ -224,6 +230,168 @@ export class TimetableService {
     // violations is stored as JSON array of ViolationGroupDto objects
     const violations = run.violations as unknown as ViolationGroupDto[];
     return Array.isArray(violations) ? violations : [];
+  }
+
+  /**
+   * Get timetable view with joined subject/teacher/room data, filtered by perspective.
+   * Returns the active run's lessons with period and day metadata.
+   *
+   * VIEW-01: teacher perspective, VIEW-02: class perspective, VIEW-03: room perspective
+   * VIEW-05: joined data (subject names, teacher surnames, room names)
+   */
+  async getView(
+    schoolId: string,
+    query: TimetableViewQueryDto,
+  ): Promise<TimetableViewResponseDto> {
+    // Find active run for this school
+    const activeRun = await this.prisma.timetableRun.findFirst({
+      where: { schoolId, isActive: true },
+    });
+
+    // Get school metadata: time grid periods + active school days
+    const school = await this.prisma.school.findUniqueOrThrow({
+      where: { id: schoolId },
+      include: {
+        timeGrid: { include: { periods: { orderBy: { periodNumber: 'asc' } } } },
+        schoolDays: { where: { isActive: true } },
+      },
+    });
+
+    const periods: PeriodDto[] = (school.timeGrid?.periods ?? []).map((p) => ({
+      periodNumber: p.periodNumber,
+      startTime: p.startTime,
+      endTime: p.endTime,
+      isBreak: p.isBreak,
+      label: p.label,
+      durationMin: p.durationMin,
+    }));
+
+    const activeDays = school.schoolDays.map((d) => d.dayOfWeek);
+    const abWeekEnabled = activeRun?.abWeekEnabled ?? false;
+
+    // If no active run, return empty response with metadata
+    if (!activeRun) {
+      return {
+        schoolId,
+        runId: '',
+        perspective: query.perspective,
+        perspectiveId: query.perspectiveId,
+        perspectiveName: '',
+        abWeekEnabled,
+        periods,
+        activeDays,
+        lessons: [],
+      };
+    }
+
+    // Get all lessons for the active run
+    const lessons = await this.prisma.timetableLesson.findMany({
+      where: {
+        runId: activeRun.id,
+        ...(query.weekType && query.weekType !== 'BOTH'
+          ? { weekType: { in: [query.weekType, 'BOTH'] } }
+          : {}),
+      },
+      include: {
+        room: true,
+      },
+    });
+
+    // Collect all unique classSubjectIds and teacherIds for batch lookup
+    const classSubjectIds = [...new Set(lessons.map((l) => l.classSubjectId))];
+    const teacherIds = [...new Set(lessons.map((l) => l.teacherId))];
+
+    // Batch-load ClassSubject -> Subject -> name/shortName AND ClassSubject -> classId
+    const classSubjects = await this.prisma.classSubject.findMany({
+      where: { id: { in: classSubjectIds } },
+      include: {
+        subject: true,
+        schoolClass: true,
+      },
+    });
+    const csMap = new Map(classSubjects.map((cs) => [cs.id, cs]));
+
+    // Batch-load Teacher -> Person -> lastName
+    const teachers = await this.prisma.teacher.findMany({
+      where: { id: { in: teacherIds } },
+      include: { person: true },
+    });
+    const teacherMap = new Map(teachers.map((t) => [t.id, t]));
+
+    // Filter lessons by perspective
+    const filteredLessons = lessons.filter((lesson) => {
+      const cs = csMap.get(lesson.classSubjectId);
+      switch (query.perspective) {
+        case 'teacher':
+          return lesson.teacherId === query.perspectiveId;
+        case 'class':
+          return cs?.classId === query.perspectiveId;
+        case 'room':
+          return lesson.roomId === query.perspectiveId;
+        default:
+          return false;
+      }
+    });
+
+    // Resolve perspectiveName
+    let perspectiveName = '';
+    switch (query.perspective) {
+      case 'teacher': {
+        const teacher = teacherMap.get(query.perspectiveId);
+        perspectiveName = teacher
+          ? `${teacher.person.firstName} ${teacher.person.lastName}`
+          : '';
+        break;
+      }
+      case 'class': {
+        const sc = await this.prisma.schoolClass.findUnique({
+          where: { id: query.perspectiveId },
+        });
+        perspectiveName = sc?.name ?? '';
+        break;
+      }
+      case 'room': {
+        const room = await this.prisma.room.findUnique({
+          where: { id: query.perspectiveId },
+        });
+        perspectiveName = room?.name ?? '';
+        break;
+      }
+    }
+
+    // Map to DTOs with joined data
+    const lessonDtos: TimetableViewLessonDto[] = filteredLessons.map((lesson) => {
+      const cs = csMap.get(lesson.classSubjectId);
+      const teacher = teacherMap.get(lesson.teacherId);
+
+      return {
+        id: lesson.id,
+        classSubjectId: lesson.classSubjectId,
+        subjectId: cs?.subjectId ?? '',
+        subjectAbbreviation: cs?.subject?.shortName ?? '',
+        subjectName: cs?.subject?.name ?? '',
+        teacherId: lesson.teacherId,
+        teacherSurname: teacher?.person?.lastName ?? '',
+        roomId: lesson.roomId,
+        roomName: lesson.room?.name ?? '',
+        dayOfWeek: lesson.dayOfWeek,
+        periodNumber: lesson.periodNumber,
+        weekType: lesson.weekType,
+        isManualEdit: lesson.isManualEdit,
+      };
+    });
+
+    return {
+      schoolId,
+      runId: activeRun.id,
+      perspective: query.perspective,
+      perspectiveId: query.perspectiveId,
+      perspectiveName,
+      abWeekEnabled,
+      periods,
+      activeDays,
+      lessons: lessonDtos,
+    };
   }
 
   /**
