@@ -107,7 +107,7 @@ Plans:
 - [x] 04-03-PLAN.md -- Backend timetable view API (role-filtered with joined data), constraint validation, lesson move, edit history, revert endpoints
 - [x] 04-04-PLAN.md -- Room booking API with availability grid, resource CRUD module, WebSocket timetable events gateway (/timetable namespace)
 - [x] 04-05-PLAN.md -- Frontend timetable grid (CSS Grid layout, TimetableCell, DayWeekToggle, ABWeekTabs, PerspectiveSelector, subject colors, change indicators)
-- [ ] 04-06-PLAN.md -- Frontend DnD editing (@dnd-kit draggable/droppable, constraint feedback, edit history panel, revert capability)
+- [x] 04-06-PLAN.md -- Frontend DnD editing (@dnd-kit draggable/droppable, constraint feedback, edit history panel, revert capability)
 - [ ] 04-07-PLAN.md -- Frontend room availability grid with ad-hoc booking dialog, admin resource CRUD page
 - [ ] 04-08-PLAN.md -- Socket.IO real-time integration (TanStack Query cache invalidation), PDF and iCal export (server-side pdfkit + ical-generator)
 
