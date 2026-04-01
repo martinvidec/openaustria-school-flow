@@ -694,6 +694,10 @@ model TimetableLesson {
   editedBy       String?      @map("edited_by")
   editedAt       DateTime?    @map("edited_at")
 
+  changeType              String?  @map("change_type")          // 'substitution' | 'cancelled' | 'room-swap' | null
+  originalTeacherSurname  String?  @map("original_teacher_surname")  // Surname of original teacher before substitution
+  originalRoomName        String?  @map("original_room_name")         // Name of original room before room swap
+
   @@unique([runId, roomId, dayOfWeek, periodNumber, weekType])
   @@unique([runId, teacherId, dayOfWeek, periodNumber, weekType])
   @@index([runId])
