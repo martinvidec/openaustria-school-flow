@@ -93,6 +93,12 @@ async function main() {
     // Phase 2: person (read + delete for DSGVO deletion)
     { action: 'read', subject: 'person' },
     { action: 'delete', subject: 'person' },
+    // Phase 4: room (full CRUD -- ROOM-01)
+    { action: 'manage', subject: 'room' },
+    // Phase 4: room-booking (manage all bookings -- ROOM-03)
+    { action: 'manage', subject: 'room-booking' },
+    // Phase 4: resource (full CRUD -- ROOM-04)
+    { action: 'manage', subject: 'resource' },
   ];
 
   // Lehrer: own classes, own grades (AUTH-03) + Phase 2 subjects
@@ -115,6 +121,13 @@ async function main() {
     { action: 'read', subject: 'consent' },
     // Phase 2: export (own data export only)
     { action: 'create', subject: 'export' },
+    // Phase 4: room (read availability for ad-hoc booking -- ROOM-03)
+    { action: 'read', subject: 'room' },
+    // Phase 4: room-booking (create and cancel own bookings -- ROOM-03)
+    { action: 'create', subject: 'room-booking' },
+    { action: 'delete', subject: 'room-booking' },
+    // Phase 4: resource (read for booking -- ROOM-04)
+    { action: 'read', subject: 'resource' },
   ];
 
   // Eltern: own child only (AUTH-03) + Phase 2 subjects
@@ -136,6 +149,8 @@ async function main() {
     // Phase 2: export (own data export)
     { action: 'create', subject: 'export' },
     { action: 'read', subject: 'export' },
+    // Phase 4: room (read for timetable room info)
+    { action: 'read', subject: 'room' },
   ];
 
   // Schueler: own data only (AUTH-03) + Phase 2 subjects
@@ -152,6 +167,8 @@ async function main() {
     // Phase 2: export (own data)
     { action: 'create', subject: 'export' },
     { action: 'read', subject: 'export' },
+    // Phase 4: room (read for timetable room info)
+    { action: 'read', subject: 'room' },
   ];
 
   const allPermissions = [
