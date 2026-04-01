@@ -110,7 +110,7 @@ Plans:
 - [x] 04-06-PLAN.md -- Frontend DnD editing (@dnd-kit draggable/droppable, constraint feedback, edit history panel, revert capability)
 - [x] 04-07-PLAN.md -- Frontend room availability grid with ad-hoc booking dialog, admin resource CRUD page
 - [x] 04-08-PLAN.md -- Socket.IO real-time integration (TanStack Query cache invalidation), PDF and iCal export (server-side pdfkit + ical-generator)
-- [ ] 04-09-PLAN.md -- Gap closure: schoolId resolution from user context, student/parent timetable perspective auto-initialization
+- [x] 04-09-PLAN.md -- Gap closure: schoolId resolution from user context, student/parent timetable perspective auto-initialization
 - [x] 04-10-PLAN.md -- Gap closure: changeType/originalTeacher/originalRoom fields on TimetableLesson schema and getView() mapper
 
 ### Phase 5: Digital Class Book
