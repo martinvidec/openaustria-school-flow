@@ -229,7 +229,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 1. Project Scaffolding & Auth | 7/7 | Complete | 2026-03-29 |
 | 2. School Data Model & DSGVO | 7/8 | Gap closure | - |
 | 3. Timetable Solver Engine | 0/6 | Not started | - |
-| 4. Timetable Viewing, Editing & Room Management | 11/13 | UAT gap closure | - |
+| 4. Timetable Viewing, Editing & Room Management | 12/13 | UAT gap closure | - |
 | 5. Digital Class Book | 0/6 | Not started | - |
 | 6. Substitution Planning | 0/6 | Not started | - |
 | 7. Communication | 0/6 | Not started | - |
