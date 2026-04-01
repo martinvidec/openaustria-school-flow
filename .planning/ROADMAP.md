@@ -111,7 +111,7 @@ Plans:
 - [x] 04-07-PLAN.md -- Frontend room availability grid with ad-hoc booking dialog, admin resource CRUD page
 - [x] 04-08-PLAN.md -- Socket.IO real-time integration (TanStack Query cache invalidation), PDF and iCal export (server-side pdfkit + ical-generator)
 - [ ] 04-09-PLAN.md -- Gap closure: schoolId resolution from user context, student/parent timetable perspective auto-initialization
-- [ ] 04-10-PLAN.md -- Gap closure: changeType/originalTeacher/originalRoom fields on TimetableLesson schema and getView() mapper
+- [x] 04-10-PLAN.md -- Gap closure: changeType/originalTeacher/originalRoom fields on TimetableLesson schema and getView() mapper
 
 ### Phase 5: Digital Class Book
 **Goal**: Teachers can run their daily class book workflow digitally -- record attendance, document lessons, enter grades, and add student notes -- on any device, while parents can submit digital absence excuses

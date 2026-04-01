@@ -29,8 +29,8 @@
 - [ ] **VIEW-01**: Lehrer sieht eigenen Stundenplan (Tages- und Wochenansicht)
 - [ ] **VIEW-02**: Schüler/Eltern sehen Klassen-Stundenplan
 - [ ] **VIEW-03**: Admin sieht alle Stundenpläne (Lehrer, Klassen, Räume)
-- [ ] **VIEW-04**: Vertretungen, Ausfälle und Raumänderungen werden in Echtzeit aktualisiert
-- [ ] **VIEW-05**: Farbcodierung nach Fächern, visuelle Indikatoren für Änderungen
+- [x] **VIEW-04**: Vertretungen, Ausfälle und Raumänderungen werden in Echtzeit aktualisiert
+- [x] **VIEW-05**: Farbcodierung nach Fächern, visuelle Indikatoren für Änderungen
 - [ ] **VIEW-06**: Stundenplan als PDF und iCal exportierbar
 
 ### Digital Class Book
@@ -179,8 +179,8 @@
 | VIEW-01 | Phase 4 | Pending |
 | VIEW-02 | Phase 4 | Pending |
 | VIEW-03 | Phase 4 | Pending |
-| VIEW-04 | Phase 4 | Pending |
-| VIEW-05 | Phase 4 | Pending |
+| VIEW-04 | Phase 4 | Complete |
+| VIEW-05 | Phase 4 | Complete |
 | VIEW-06 | Phase 4 | Pending |
 | BOOK-01 | Phase 5 | Pending |
 | BOOK-02 | Phase 5 | Pending |
