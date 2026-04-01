@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-09-PLAN.md
-last_updated: "2026-04-01T18:02:09.855Z"
+stopped_at: Completed 04-11-PLAN.md
+last_updated: "2026-04-01T22:02:15.749Z"
 last_activity: 2026-04-01
 progress:
   total_phases: 9
   completed_phases: 4
-  total_plans: 32
-  completed_plans: 32
+  total_plans: 34
+  completed_plans: 34
   percent: 83
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 ## Current Position
 
 Phase: 04 (timetable-viewing-editing-room-management) — EXECUTING
-Plan: 3 of 11
+Plan: 2 of 13
 Status: Ready to execute
 Last activity: 2026-04-01
 
@@ -79,6 +79,7 @@ Progress: [========..] 83%
 | Phase 04 P07 | 10min | 2 tasks | 7 files |
 | Phase 04 P10 | 2min | 2 tasks | 2 files |
 | Phase 04 P09 | 8min | 2 tasks | 14 files |
+| Phase 04 P11 | 2min | 1 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -159,6 +160,8 @@ Recent decisions affecting current work:
 - [Phase 04]: String? instead of Prisma enum for changeType to avoid migration when Phase 6 adds new change types
 - [Phase 04]: Backend user-context query uses request.user.id (Keycloak sub) mapped to Person.keycloakUserId for lookup
 - [Phase 04]: Zustand store + useQuery hook pattern for server-derived global state (school context resolved at authenticated layout mount)
+- [Phase 04]: @IsString @IsNotEmpty replaces @IsUUID for lessonId -- Prisma findUnique handles invalid IDs gracefully
+- [Phase 04]: Fallback MoveValidation objects with hardViolations instead of null on error -- prevents downstream TypeError
 
 ### Pending Todos
 
@@ -172,6 +175,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-01T18:02:09.852Z
-Stopped at: Completed 04-09-PLAN.md
+Last session: 2026-04-01T22:02:15.745Z
+Stopped at: Completed 04-11-PLAN.md
 Resume file: None

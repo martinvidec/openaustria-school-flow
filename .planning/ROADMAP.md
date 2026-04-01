@@ -112,8 +112,8 @@ Plans:
 - [x] 04-08-PLAN.md -- Socket.IO real-time integration (TanStack Query cache invalidation), PDF and iCal export (server-side pdfkit + ical-generator)
 - [x] 04-09-PLAN.md -- Gap closure: schoolId resolution from user context, student/parent timetable perspective auto-initialization
 - [x] 04-10-PLAN.md -- Gap closure: changeType/originalTeacher/originalRoom fields on TimetableLesson schema and getView() mapper
-- [ ] 04-11-PLAN.md -- UAT gap closure: fix DnD lesson move crash (DTO @IsUUID validation, 422 error handling, null safety)
-- [ ] 04-12-PLAN.md -- UAT gap closure: Lehrer room/resource CASL permissions, Socket.IO IoAdapter for Fastify
+- [x] 04-11-PLAN.md -- UAT gap closure: fix DnD lesson move crash (DTO @IsUUID validation, 422 error handling, null safety)
+- [x] 04-12-PLAN.md -- UAT gap closure: Lehrer room/resource CASL permissions, Socket.IO IoAdapter for Fastify
 
 ### Phase 5: Digital Class Book
 **Goal**: Teachers can run their daily class book workflow digitally -- record attendance, document lessons, enter grades, and add student notes -- on any device, while parents can submit digital absence excuses
