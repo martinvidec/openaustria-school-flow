@@ -18,6 +18,7 @@ import { SubjectModule } from './modules/subject/subject.module';
 import { RoomModule } from './modules/room/room.module';
 import { ResourceModule } from './modules/resource/resource.module';
 import { TimetableModule } from './modules/timetable/timetable.module';
+import { UserContextModule } from './modules/user-context/user-context.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { TimetableModule } from './modules/timetable/timetable.module';
     RoomModule,
     ResourceModule,
     TimetableModule,
+    UserContextModule,
   ],
   providers: [
     {

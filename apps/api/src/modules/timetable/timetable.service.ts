@@ -378,6 +378,9 @@ export class TimetableService {
         periodNumber: lesson.periodNumber,
         weekType: lesson.weekType,
         isManualEdit: lesson.isManualEdit,
+        changeType: (lesson.changeType as TimetableViewLessonDto['changeType']) ?? null,
+        originalTeacherSurname: lesson.originalTeacherSurname ?? undefined,
+        originalRoomName: lesson.originalRoomName ?? undefined,
       };
     });
 
