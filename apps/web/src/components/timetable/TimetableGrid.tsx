@@ -28,6 +28,10 @@ interface TimetableGridProps {
   selectedDay?: string;
   editable?: boolean;
   onCellClick?: (lesson: TimetableViewLesson) => void;
+  /** Custom renderer for lesson cells (e.g. DraggableLesson in edit mode) */
+  renderCell?: (lesson: TimetableViewLesson, color: SubjectColorPair) => React.ReactNode;
+  /** Custom renderer for empty slots (e.g. DroppableSlot in edit mode) */
+  renderEmptySlot?: (day: string, period: number) => React.ReactNode;
 }
 
 /** Represents a merged Doppelstunde (double period) */
@@ -56,6 +60,8 @@ export function TimetableGrid({
   selectedDay,
   editable = false,
   onCellClick,
+  renderCell,
+  renderEmptySlot,
 }: TimetableGridProps) {
   // Determine which days to show based on view mode
   const visibleDays = useMemo(() => {
@@ -207,6 +213,8 @@ export function TimetableGrid({
             getColor={getColor}
             editable={editable}
             onCellClick={onCellClick}
+            renderCell={renderCell}
+            renderEmptySlot={renderEmptySlot}
           />
         );
       })}
@@ -224,6 +232,8 @@ interface PeriodRowProps {
   getColor: (subjectId: string) => SubjectColorPair;
   editable: boolean;
   onCellClick?: (lesson: TimetableViewLesson) => void;
+  renderCell?: (lesson: TimetableViewLesson, color: SubjectColorPair) => React.ReactNode;
+  renderEmptySlot?: (day: string, period: number) => React.ReactNode;
 }
 
 /** Renders one period row: period label + lesson cells for each day column */
@@ -236,6 +246,8 @@ function PeriodRow({
   getColor,
   editable,
   onCellClick,
+  renderCell,
+  renderEmptySlot,
 }: PeriodRowProps) {
   if (period.isBreak) {
     return (
@@ -289,7 +301,9 @@ function PeriodRow({
               key={key}
               className="bg-muted/20"
               style={{ gridRow, gridColumn: colIndex }}
-            />
+            >
+              {renderEmptySlot?.(day, period.periodNumber)}
+            </div>
           );
         }
 
@@ -316,12 +330,16 @@ function PeriodRow({
             }}
             className="bg-background"
           >
-            <TimetableCell
-              lesson={lesson}
-              color={color}
-              editable={editable}
-              onClick={onCellClick ? () => onCellClick(lesson) : undefined}
-            />
+            {renderCell ? (
+              renderCell(lesson, color)
+            ) : (
+              <TimetableCell
+                lesson={lesson}
+                color={color}
+                editable={editable}
+                onClick={onCellClick ? () => onCellClick(lesson) : undefined}
+              />
+            )}
           </div>
         );
       })}
