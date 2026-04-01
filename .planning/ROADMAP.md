@@ -108,8 +108,8 @@ Plans:
 - [x] 04-04-PLAN.md -- Room booking API with availability grid, resource CRUD module, WebSocket timetable events gateway (/timetable namespace)
 - [x] 04-05-PLAN.md -- Frontend timetable grid (CSS Grid layout, TimetableCell, DayWeekToggle, ABWeekTabs, PerspectiveSelector, subject colors, change indicators)
 - [x] 04-06-PLAN.md -- Frontend DnD editing (@dnd-kit draggable/droppable, constraint feedback, edit history panel, revert capability)
-- [ ] 04-07-PLAN.md -- Frontend room availability grid with ad-hoc booking dialog, admin resource CRUD page
-- [ ] 04-08-PLAN.md -- Socket.IO real-time integration (TanStack Query cache invalidation), PDF and iCal export (server-side pdfkit + ical-generator)
+- [x] 04-07-PLAN.md -- Frontend room availability grid with ad-hoc booking dialog, admin resource CRUD page
+- [x] 04-08-PLAN.md -- Socket.IO real-time integration (TanStack Query cache invalidation), PDF and iCal export (server-side pdfkit + ical-generator)
 
 ### Phase 5: Digital Class Book
 **Goal**: Teachers can run their daily class book workflow digitally -- record attendance, document lessons, enter grades, and add student notes -- on any device, while parents can submit digital absence excuses
