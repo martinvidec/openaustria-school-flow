@@ -3,6 +3,7 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 import { ProblemDetailFilter } from './common/filters/problem-detail.filter';
 import { createValidationPipe } from './common/pipes/validation.pipe';
 
@@ -24,6 +25,11 @@ async function bootstrap() {
     origin: ['http://localhost:5173', 'http://localhost:3000'],
     credentials: true,
   });
+
+  // Socket.IO adapter for Fastify compatibility
+  // Required because Fastify does not share Express's built-in HTTP upgrade handling.
+  // Without this, @WebSocketGateway decorators may fail to bind Socket.IO to the server.
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   // Global validation pipe
   app.useGlobalPipes(createValidationPipe());
