@@ -5,12 +5,14 @@ import { TimetableGrid } from '@/components/timetable/TimetableGrid';
 import { DayWeekToggle } from '@/components/timetable/DayWeekToggle';
 import { ABWeekTabs } from '@/components/timetable/ABWeekTabs';
 import { PerspectiveSelector } from '@/components/timetable/PerspectiveSelector';
+import { ExportMenu } from '@/components/export/ExportMenu';
 import {
   useTimetableView,
   useTeachers,
   useClasses,
   useRooms,
 } from '@/hooks/useTimetable';
+import { exportTimetable } from '@/hooks/useExport';
 import { useTimetableStore } from '@/stores/timetable-store';
 import { useAuth } from '@/hooks/useAuth';
 import { getSubjectColorWithOverride } from '@/lib/colors';
@@ -132,6 +134,18 @@ function TimetablePage() {
           onChange={setWeekType}
           isABMode={timetableData?.abWeekEnabled ?? false}
         />
+
+        {/* Export menu (VIEW-06): PDF and iCal export for current perspective */}
+        {perspectiveId && (
+          <ExportMenu
+            onExportPDF={() =>
+              exportTimetable(schoolId, 'pdf', perspective, perspectiveId, weekType)
+            }
+            onExportICal={() =>
+              exportTimetable(schoolId, 'ical', perspective, perspectiveId, weekType)
+            }
+          />
+        )}
       </div>
 
       {/* Loading state */}

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TimetableController, SolverCallbackController } from './timetable.controller';
 import { TimetableService } from './timetable.service';
 import { TimetableEditService } from './timetable-edit.service';
+import { TimetableExportService } from './timetable-export.service';
 import { TimetableGateway } from './timetable.gateway';
 import { TimetableEventsGateway } from './timetable-events.gateway';
 import { SolverInputService } from './solver-input.service';
@@ -15,6 +16,7 @@ import { ConstraintTemplateService } from './constraint-template.service';
   providers: [
     TimetableService,
     TimetableEditService,
+    TimetableExportService,
     TimetableGateway,
     TimetableEventsGateway,
     SolverInputService,
@@ -22,6 +24,6 @@ import { ConstraintTemplateService } from './constraint-template.service';
     SolveProcessor,
     ConstraintTemplateService,
   ],
-  exports: [TimetableService, TimetableEditService, TimetableGateway, TimetableEventsGateway, ConstraintTemplateService],
+  exports: [TimetableService, TimetableEditService, TimetableExportService, TimetableGateway, TimetableEventsGateway, ConstraintTemplateService],
 })
 export class TimetableModule {}

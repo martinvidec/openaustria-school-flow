@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   Query,
+  Res,
   HttpCode,
   HttpStatus,
   Headers,
@@ -22,6 +23,7 @@ import {
 } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { TimetableService } from './timetable.service';
+import { TimetableExportService } from './timetable-export.service';
 import { TimetableGateway } from './timetable.gateway';
 import { StartSolveDto } from './dto/solve-request.dto';
 import { SolveProgressDto } from './dto/solve-progress.dto';
@@ -46,6 +48,7 @@ export class TimetableController {
   constructor(
     private timetableService: TimetableService,
     private timetableEditService: TimetableEditService,
+    private timetableExportService: TimetableExportService,
   ) {}
 
   @Post('solve')
@@ -189,6 +192,57 @@ export class TimetableController {
   ) {
     await this.timetableEditService.revertToEdit(runId, editId, user.id);
     return { reverted: true, runId, revertedToEditId: editId };
+  }
+
+  @Get('export/pdf')
+  @CheckPermissions({ action: 'read', subject: 'timetable' })
+  @ApiOperation({ summary: 'Export timetable as PDF' })
+  @ApiQuery({ name: 'perspective', enum: ['teacher', 'class', 'room'] })
+  @ApiQuery({ name: 'perspectiveId', type: String })
+  @ApiQuery({ name: 'weekType', enum: ['A', 'B', 'BOTH'], required: false })
+  @ApiResponse({ status: 200, description: 'PDF file download' })
+  async exportPdf(
+    @Param('schoolId') schoolId: string,
+    @Query('perspective') perspective: string,
+    @Query('perspectiveId') perspectiveId: string,
+    @Query('weekType') weekType: string | undefined,
+    @Res() res: { header: (key: string, value: string) => void; send: (data: unknown) => void },
+  ) {
+    const buffer = await this.timetableExportService.exportPdf(
+      schoolId,
+      perspective,
+      perspectiveId,
+      weekType,
+    );
+    const filename = `stundenplan-${perspective}-${new Date().toISOString().split('T')[0]}.pdf`;
+    res.header('Content-Type', 'application/pdf');
+    res.header('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(buffer);
+  }
+
+  @Get('export/ical')
+  @CheckPermissions({ action: 'read', subject: 'timetable' })
+  @ApiOperation({ summary: 'Export timetable as iCal (.ics)' })
+  @ApiQuery({ name: 'perspective', enum: ['teacher', 'class', 'room'] })
+  @ApiQuery({ name: 'perspectiveId', type: String })
+  @ApiQuery({ name: 'weekType', enum: ['A', 'B', 'BOTH'], required: false })
+  @ApiResponse({ status: 200, description: 'iCal file download' })
+  async exportIcal(
+    @Param('schoolId') schoolId: string,
+    @Query('perspective') perspective: string,
+    @Query('perspectiveId') perspectiveId: string,
+    @Query('weekType') weekType: string | undefined,
+    @Res() res: { header: (key: string, value: string) => void; send: (data: unknown) => void },
+  ) {
+    const icalString = await this.timetableExportService.exportIcal(
+      schoolId,
+      perspective,
+      perspectiveId,
+      weekType,
+    );
+    res.header('Content-Type', 'text/calendar; charset=utf-8');
+    res.header('Content-Disposition', 'attachment; filename="stundenplan.ics"');
+    res.send(icalString);
   }
 }
 
