@@ -35,6 +35,7 @@ import {
 import { useMoveLesson } from '@/hooks/useTimetableEdit';
 import { useDragConstraints } from '@/hooks/useDragConstraints';
 import { useTimetableStore } from '@/stores/timetable-store';
+import { useSchoolContext } from '@/stores/school-context-store';
 import { useAuth } from '@/hooks/useAuth';
 import { getSubjectColorWithOverride } from '@/lib/colors';
 import type { TimetableViewLesson, SubjectColorPair } from '@schoolflow/shared';
@@ -69,8 +70,7 @@ function TimetableEditPage() {
   const isAdmin =
     roles.includes('admin') || roles.includes('schulleitung');
 
-  // TODO: schoolId should come from user context or route params
-  const schoolId = 'current-school-id';
+  const schoolId = useSchoolContext((s) => s.schoolId) ?? '';
 
   const {
     perspective,

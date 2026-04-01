@@ -18,6 +18,7 @@ import {
   useBookRoom,
   useCancelBooking,
 } from '@/hooks/useRoomAvailability';
+import { useSchoolContext } from '@/stores/school-context-store';
 import type { RoomAvailabilitySlot } from '@schoolflow/shared';
 
 export const Route = createFileRoute('/_authenticated/rooms/')({
@@ -65,8 +66,7 @@ const DEFAULT_PERIODS = Array.from({ length: 10 }, (_, i) => ({
 }));
 
 function RoomsPage() {
-  // TODO: schoolId should come from user context or route params
-  const schoolId = 'current-school-id';
+  const schoolId = useSchoolContext((s) => s.schoolId) ?? '';
 
   // Filter state
   const [dayOfWeek, setDayOfWeek] = useState(getTodayDayOfWeek);

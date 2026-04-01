@@ -14,6 +14,7 @@ import {
 } from '@/hooks/useTimetable';
 import { exportTimetable } from '@/hooks/useExport';
 import { useTimetableStore } from '@/stores/timetable-store';
+import { useSchoolContext } from '@/stores/school-context-store';
 import { useAuth } from '@/hooks/useAuth';
 import { getSubjectColorWithOverride } from '@/lib/colors';
 
@@ -55,8 +56,11 @@ function TimetablePage() {
   const roles = user?.roles ?? [];
   const primaryRole = getPrimaryRole(roles);
 
-  // TODO: schoolId should come from user context or route params
-  const schoolId = 'current-school-id';
+  const schoolId = useSchoolContext((s) => s.schoolId) ?? '';
+  const classId = useSchoolContext((s) => s.classId);
+  const className = useSchoolContext((s) => s.className);
+  const childClassId = useSchoolContext((s) => s.childClassId);
+  const childClassName = useSchoolContext((s) => s.childClassName);
 
   const {
     perspective,
@@ -77,10 +81,13 @@ function TimetablePage() {
 
     if (primaryRole === 'lehrer' && user) {
       setPerspective('teacher', user.id, `${user.firstName} ${user.lastName}`);
+    } else if (primaryRole === 'schueler' && classId) {
+      setPerspective('class', classId, className ?? '');
+    } else if (primaryRole === 'eltern' && childClassId) {
+      setPerspective('class', childClassId, childClassName ?? '');
     }
-    // For schueler/eltern, we would need the user's classId from the API
-    // For admin, we wait for them to select via PerspectiveSelector
-  }, [primaryRole, user, perspectiveId, setPerspective]);
+    // For admin/schulleitung, we wait for them to select via PerspectiveSelector
+  }, [primaryRole, user, perspectiveId, setPerspective, classId, className, childClassId, childClassName]);
 
   // Set today as selected day for day view
   useEffect(() => {

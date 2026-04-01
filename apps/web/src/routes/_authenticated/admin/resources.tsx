@@ -23,6 +23,7 @@ import {
   useUpdateResource,
   useDeleteResource,
 } from '@/hooks/useResources';
+import { useSchoolContext } from '@/stores/school-context-store';
 import type { ResourceDto } from '@schoolflow/shared';
 
 export const Route = createFileRoute('/_authenticated/admin/resources')({
@@ -52,8 +53,7 @@ const EMPTY_FORM: ResourceFormState = {
 };
 
 function ResourcesPage() {
-  // TODO: schoolId should come from user context or route params
-  const schoolId = 'current-school-id';
+  const schoolId = useSchoolContext((s) => s.schoolId) ?? '';
 
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);

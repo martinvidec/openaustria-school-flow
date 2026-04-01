@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EditHistoryPanel } from '@/components/timetable/EditHistoryPanel';
 import { useTimetableView } from '@/hooks/useTimetable';
 import { useTimetableStore } from '@/stores/timetable-store';
+import { useSchoolContext } from '@/stores/school-context-store';
 import { useAuth } from '@/hooks/useAuth';
 
 export const Route = createFileRoute(
@@ -23,8 +24,7 @@ function TimetableHistoryPage() {
   const isAdmin =
     roles.includes('admin') || roles.includes('schulleitung');
 
-  // TODO: schoolId should come from user context or route params
-  const schoolId = 'current-school-id';
+  const schoolId = useSchoolContext((s) => s.schoolId) ?? '';
 
   const { perspective, perspectiveId, weekType } = useTimetableStore();
 
