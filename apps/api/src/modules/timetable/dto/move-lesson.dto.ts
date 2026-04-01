@@ -1,4 +1,4 @@
-import { IsEnum, IsInt, IsOptional, IsUUID, Min } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
@@ -25,7 +25,7 @@ export class MoveLessonDto {
   targetPeriod!: number;
 
   @IsOptional()
-  @IsUUID()
+  @IsString()
   @ApiPropertyOptional({
     description: 'Target room ID (optional, keeps current room if not provided)',
     example: '550e8400-e29b-41d4-a716-446655440001',

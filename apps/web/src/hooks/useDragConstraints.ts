@@ -36,11 +36,28 @@ export function useDragConstraints(schoolId: string) {
             method: 'POST',
             body: JSON.stringify({ lessonId, targetDay, targetPeriod, targetRoomId }),
           });
+          if (!res.ok) {
+            // Server returned 4xx/5xx -- show as hard violation instead of crashing
+            const fallback: MoveValidation = {
+              valid: false,
+              hardViolations: [{ type: 'server_error', description: `Validierung fehlgeschlagen (${res.status})` }],
+              softWarnings: [],
+            };
+            cache.current.set(cacheKey, fallback);
+            setValidationResult(fallback);
+            return;
+          }
           const result: MoveValidation = await res.json();
           cache.current.set(cacheKey, result);
           setValidationResult(result);
         } catch {
-          setValidationResult(null);
+          // Network error -- show as hard violation
+          const fallback: MoveValidation = {
+            valid: false,
+            hardViolations: [{ type: 'network_error', description: 'Netzwerkfehler bei der Validierung' }],
+            softWarnings: [],
+          };
+          setValidationResult(fallback);
         }
       }, 200);
     },

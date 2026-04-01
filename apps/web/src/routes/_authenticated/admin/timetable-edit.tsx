@@ -185,7 +185,7 @@ function TimetableEditPage() {
       const targetPeriod = data.period as number;
 
       // Check constraint validation result
-      if (validationResult) {
+      if (validationResult && validationResult.hardViolations) {
         if (validationResult.hardViolations.length > 0) {
           // Hard violations block the drop
           toast.error(
@@ -196,7 +196,7 @@ function TimetableEditPage() {
         }
 
         // Soft warnings: allow drop but show warning toast
-        if (validationResult.softWarnings.length > 0) {
+        if (validationResult.softWarnings && validationResult.softWarnings.length > 0) {
           moveLesson.mutate(
             { lessonId, targetDay, targetPeriod },
             {
@@ -383,11 +383,11 @@ function TimetableEditPage() {
                 {/* Constraint feedback tooltip */}
                 {activeLesson &&
                   validationResult &&
-                  (validationResult.hardViolations.length > 0 ||
-                    validationResult.softWarnings.length > 0) && (
+                  ((validationResult.hardViolations?.length ?? 0) > 0 ||
+                    (validationResult.softWarnings?.length ?? 0) > 0) && (
                     <ConstraintFeedback
-                      violations={validationResult.hardViolations}
-                      warnings={validationResult.softWarnings}
+                      violations={validationResult.hardViolations ?? []}
+                      warnings={validationResult.softWarnings ?? []}
                       position={mousePos}
                     />
                   )}
