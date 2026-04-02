@@ -17,9 +17,10 @@ export function useMoveLesson(schoolId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (dto: MoveLessonRequest): Promise<TimetableViewLesson> => {
+      const { lessonId, ...moveBody } = dto;
       const res = await apiFetch(
-        `/api/v1/schools/${schoolId}/timetable/lessons/${dto.lessonId}/move`,
-        { method: 'PATCH', body: JSON.stringify(dto) },
+        `/api/v1/schools/${schoolId}/timetable/lessons/${lessonId}/move`,
+        { method: 'PATCH', body: JSON.stringify(moveBody) },
       );
       if (!res.ok) {
         const error = await res.json();

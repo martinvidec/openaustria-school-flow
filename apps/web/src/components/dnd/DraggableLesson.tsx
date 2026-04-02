@@ -1,5 +1,4 @@
 import { useDraggable } from '@dnd-kit/core';
-import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
 import { TimetableCell } from '@/components/timetable/TimetableCell';
 import type { TimetableViewLesson, SubjectColorPair } from '@schoolflow/shared';
@@ -33,7 +32,6 @@ export function DraggableLesson({
     attributes,
     listeners,
     setNodeRef,
-    transform,
     isDragging,
   } = useDraggable({
     id: lessonId,
@@ -42,7 +40,6 @@ export function DraggableLesson({
   });
 
   const style: React.CSSProperties = {
-    transform: CSS.Translate.toString(transform),
     opacity: isDragging ? 0.5 : 1,
   };
 

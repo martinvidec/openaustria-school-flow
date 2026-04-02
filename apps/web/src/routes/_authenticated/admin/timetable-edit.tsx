@@ -7,7 +7,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  closestCenter,
+  pointerWithin,
   type DragStartEvent,
   type DragOverEvent,
   type DragEndEvent,
@@ -328,7 +328,7 @@ function TimetableEditPage() {
             {editMode ? (
               <DndContext
                 sensors={sensors}
-                collisionDetection={closestCenter}
+                collisionDetection={pointerWithin}
                 onDragStart={handleDragStart}
                 onDragOver={handleDragOver}
                 onDragEnd={handleDragEnd}
