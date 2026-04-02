@@ -68,9 +68,14 @@ export function useTeachers(schoolId: string | undefined) {
   return useQuery<EntityOption[]>({
     queryKey: ['teachers', schoolId],
     queryFn: async () => {
-      const res = await apiFetch(`/api/v1/schools/${schoolId}/teachers`);
+      const res = await apiFetch(`/api/v1/teachers`);
       if (!res.ok) throw new Error('Failed to load teachers');
-      return res.json();
+      const json = await res.json();
+      const items = json.data ?? json;
+      return items.map((t: { id: string; person?: { lastName?: string; firstName?: string } }) => ({
+        id: t.id,
+        name: t.person ? `${t.person.lastName} ${t.person.firstName}` : t.id,
+      }));
     },
     enabled: !!schoolId,
   });
@@ -83,9 +88,14 @@ export function useClasses(schoolId: string | undefined) {
   return useQuery<EntityOption[]>({
     queryKey: ['classes', schoolId],
     queryFn: async () => {
-      const res = await apiFetch(`/api/v1/schools/${schoolId}/classes`);
+      const res = await apiFetch(`/api/v1/classes`);
       if (!res.ok) throw new Error('Failed to load classes');
-      return res.json();
+      const json = await res.json();
+      const items = json.data ?? json;
+      return items.map((c: { id: string; name: string }) => ({
+        id: c.id,
+        name: c.name,
+      }));
     },
     enabled: !!schoolId,
   });
@@ -100,8 +110,14 @@ export function useRooms(schoolId: string | undefined) {
     queryFn: async () => {
       const res = await apiFetch(`/api/v1/schools/${schoolId}/rooms`);
       if (!res.ok) throw new Error('Failed to load rooms');
-      return res.json();
+      const json = await res.json();
+      const items = json.data ?? json;
+      return items.map((r: { id: string; name: string }) => ({
+        id: r.id,
+        name: r.name,
+      }));
     },
     enabled: !!schoolId,
   });
 }
+

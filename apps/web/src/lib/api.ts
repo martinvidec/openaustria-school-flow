@@ -16,11 +16,7 @@ export async function apiFetch(
   const headers = new Headers(options?.headers);
   headers.set('Authorization', `Bearer ${keycloak.token}`);
 
-  if (
-    options?.method &&
-    options.method !== 'GET' &&
-    !headers.has('Content-Type')
-  ) {
+  if (options?.body && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
 
