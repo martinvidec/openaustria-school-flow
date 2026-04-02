@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 04-12-PLAN.md
-last_updated: "2026-04-02T10:08:41.590Z"
+status: executing
+stopped_at: Completed 04-13-PLAN.md
+last_updated: "2026-04-02T11:37:04.689Z"
 last_activity: 2026-04-02
 progress:
   total_phases: 9
-  completed_phases: 4
-  total_plans: 34
-  completed_plans: 34
+  completed_phases: 3
+  total_plans: 36
+  completed_plans: 35
   percent: 83
 ---
 
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 
 ## Current Position
 
-Phase: 5
-Plan: Not started
-Status: Phase 04 complete
+Phase: 04 (timetable-viewing-editing-room-management) — EXECUTING
+Plan: 2 of 15
+Status: Ready to execute
 Last activity: 2026-04-02
 
 Progress: [========..] 83%
@@ -81,6 +81,7 @@ Progress: [========..] 83%
 | Phase 04 P09 | 8min | 2 tasks | 14 files |
 | Phase 04 P11 | 2min | 1 tasks | 4 files |
 | Phase 04 P12 | 2min | 2 tasks | 2 files |
+| Phase 04 P13 | 1min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -167,6 +168,9 @@ Recent decisions affecting current work:
 - [Phase 04]: Lehrer gets read room + create/delete room-booking + read resource (no room CRUD authority)
 - [Phase 04]: Schulleitung gets manage-all for room, room-booking, and resource
 - [Phase 04]: Schueler and Eltern get read-only room permission for timetable display
+- [Phase 04]: apiFetch Content-Type set only when body present (not on all non-GET methods)
+- [Phase 04]: pointerWithin collision detection for DnD (pointer-accurate, replaces closestCenter)
+- [Phase 04]: DraggableLesson opacity-only style (no CSS.Translate transform) -- DragOverlay provides drag ghost
 
 ### Pending Todos
 
@@ -180,6 +184,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-01T22:01:44Z
-Stopped at: Completed 04-12-PLAN.md
+Last session: 2026-04-02T11:37:04.686Z
+Stopped at: Completed 04-13-PLAN.md
 Resume file: None

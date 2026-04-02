@@ -114,7 +114,7 @@ Plans:
 - [x] 04-10-PLAN.md -- Gap closure: changeType/originalTeacher/originalRoom fields on TimetableLesson schema and getView() mapper
 - [x] 04-11-PLAN.md -- UAT gap closure: fix DnD lesson move crash (DTO @IsUUID validation, 422 error handling, null safety)
 - [x] 04-12-PLAN.md -- UAT gap closure: Lehrer room/resource CASL permissions, Socket.IO IoAdapter for Fastify
-- [ ] 04-13-PLAN.md -- UAT gap closure: apiFetch Content-Type fix, useRooms pagination unwrap, DnD 3 root causes (lessonId body, collision detection, CSS transform)
+- [x] 04-13-PLAN.md -- UAT gap closure: apiFetch Content-Type fix, useRooms pagination unwrap, DnD 3 root causes (lessonId body, collision detection, CSS transform)
 - [ ] 04-14-PLAN.md -- UAT gap closure: room type enum alignment, filter empty state, bookingId in availability response for cancel handler
 
 ### Phase 5: Digital Class Book
