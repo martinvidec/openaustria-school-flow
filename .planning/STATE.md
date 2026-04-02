@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 04-13-PLAN.md
-last_updated: "2026-04-02T11:37:04.689Z"
+stopped_at: Completed 04-14-PLAN.md
+last_updated: "2026-04-02T11:42:27.762Z"
 last_activity: 2026-04-02
 progress:
   total_phases: 9
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 36
-  completed_plans: 35
+  completed_plans: 36
   percent: 83
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 ## Current Position
 
 Phase: 04 (timetable-viewing-editing-room-management) — EXECUTING
-Plan: 2 of 15
+Plan: 3 of 15
 Status: Ready to execute
 Last activity: 2026-04-02
 
@@ -82,6 +82,7 @@ Progress: [========..] 83%
 | Phase 04 P11 | 2min | 1 tasks | 4 files |
 | Phase 04 P12 | 2min | 2 tasks | 2 files |
 | Phase 04 P13 | 1min | 2 tasks | 5 files |
+| Phase 04 P14 | 2min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -171,6 +172,7 @@ Recent decisions affecting current work:
 - [Phase 04]: apiFetch Content-Type set only when body present (not on all non-GET methods)
 - [Phase 04]: pointerWithin collision detection for DnD (pointer-accurate, replaces closestCenter)
 - [Phase 04]: DraggableLesson opacity-only style (no CSS.Translate transform) -- DragOverlay provides drag ghost
+- [Phase 04]: Removed ART/Kunstraum from frontend ROOM_TYPES as it does not exist in backend RoomTypeDto (6 types only)
 
 ### Pending Todos
 
@@ -184,6 +186,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-02T11:37:04.686Z
-Stopped at: Completed 04-13-PLAN.md
+Last session: 2026-04-02T11:42:27.759Z
+Stopped at: Completed 04-14-PLAN.md
 Resume file: None
