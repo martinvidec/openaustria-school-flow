@@ -97,7 +97,7 @@ Plans:
   3. Admin can drag-and-drop lessons to manually adjust the generated timetable, with immediate constraint validation
   4. Teachers can book free rooms for ad-hoc use, admins can manage resources (tablet carts, lab equipment), and room changes propagate instantly to all views
   5. Any user can export their timetable as PDF or iCal for personal calendars
-**Plans**: 13 plans
+**Plans**: 15 plans
 **UI hint**: yes
 
 Plans:
@@ -114,6 +114,8 @@ Plans:
 - [x] 04-10-PLAN.md -- Gap closure: changeType/originalTeacher/originalRoom fields on TimetableLesson schema and getView() mapper
 - [x] 04-11-PLAN.md -- UAT gap closure: fix DnD lesson move crash (DTO @IsUUID validation, 422 error handling, null safety)
 - [x] 04-12-PLAN.md -- UAT gap closure: Lehrer room/resource CASL permissions, Socket.IO IoAdapter for Fastify
+- [ ] 04-13-PLAN.md -- UAT gap closure: apiFetch Content-Type fix, useRooms pagination unwrap, DnD 3 root causes (lessonId body, collision detection, CSS transform)
+- [ ] 04-14-PLAN.md -- UAT gap closure: room type enum alignment, filter empty state, bookingId in availability response for cancel handler
 
 ### Phase 5: Digital Class Book
 **Goal**: Teachers can run their daily class book workflow digitally -- record attendance, document lessons, enter grades, and add student notes -- on any device, while parents can submit digital absence excuses
@@ -229,7 +231,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 1. Project Scaffolding & Auth | 7/7 | Complete | 2026-03-29 |
 | 2. School Data Model & DSGVO | 7/8 | Gap closure | - |
 | 3. Timetable Solver Engine | 0/6 | Not started | - |
-| 4. Timetable Viewing, Editing & Room Management | 12/13 | UAT gap closure | - |
+| 4. Timetable Viewing, Editing & Room Management | 12/15 | UAT gap closure | - |
 | 5. Digital Class Book | 0/6 | Not started | - |
 | 6. Substitution Planning | 0/6 | Not started | - |
 | 7. Communication | 0/6 | Not started | - |
