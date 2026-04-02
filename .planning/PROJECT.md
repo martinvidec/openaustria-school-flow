@@ -20,6 +20,10 @@ Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenp
 - [x] DSGVO-Konformität (Einwilligungen, Löschkonzepte, Datenexport, Verschlüsselung, Aufbewahrungsfristen) — Validated in Phase 2: School Data Model & DSGVO
 - [x] Automatische Stundenplanerstellung mit Constraint-Engine (Verfügbarkeit, Räume, pädagogische Regeln, organisatorische Vorgaben) — Validated in Phase 3: Timetable Solver Engine
 - [x] Raum- und Ressourcenverwaltung (Kapazitäten, Fachräume, Doppelbelegungsschutz) — Validated in Phase 3: Timetable Solver Engine
+- [x] Rollenbasierte Stundenplanansichten (Lehrer, Klasse, Raum) mit Echtzeit-Updates — Validated in Phase 4: Timetable Viewing, Editing & Room Management
+- [x] Drag-and-Drop Stundenplanbearbeitung mit Constraint-Validierung — Validated in Phase 4: Timetable Viewing, Editing & Room Management
+- [x] Raumbuchung und Ressourcenverwaltung (Ad-hoc Buchung, Verfügbarkeitsgrid) — Validated in Phase 4: Timetable Viewing, Editing & Room Management
+- [x] Stundenplan-Export (PDF/iCal) — Validated in Phase 4: Timetable Viewing, Editing & Room Management
 
 ### Active
 
@@ -75,6 +79,11 @@ Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenp
 | 6 hard + 8 soft constraints | Two-tier model with configurable weights via ConstraintWeightOverrides | Phase 3 validated |
 | A/B week support | Per-school toggle for 2-week cycles, solver generates both weeks | Phase 3 validated |
 | Socket.IO WebSocket progress | Real-time solve progress broadcasting with school-scoped rooms | Phase 3 validated |
+| React 19 + Vite SPA | Plain SPA for timetable UI, served as static files, no SSR needed | Phase 4 validated |
+| shadcn/ui + Tailwind CSS 4 | Copy-paste components, accessible by default, utility-first styling | Phase 4 validated |
+| TanStack Router + Query | Type-safe routing, server state caching with suspense support | Phase 4 validated |
+| @dnd-kit for drag-and-drop | Accessible DnD with constraint validation overlay | Phase 4 validated |
+| IoAdapter for Fastify WebSocket | Explicit Socket.IO binding required for NestJS + Fastify | Phase 4 validated |
 
 ## Evolution
 
@@ -94,4 +103,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-30 after Phase 3 completion — Timetable Solver Engine*
+*Last updated: 2026-04-01 after Phase 4 completion — Timetable Viewing, Editing & Room Management*
