@@ -34,5 +34,6 @@ export class RoomAvailabilitySlotDto {
     type: 'lesson' | 'booking';
     label: string;
     bookedBy?: string;
+    bookingId?: string;
   };
 }

@@ -149,11 +149,9 @@ function RoomsPage() {
 
   // Handle cancel booking confirmation
   function handleCancelBooking() {
-    if (!cancelTarget) return;
-    // The booking ID would normally come from the slot data;
-    // using roomId + period as a composite key for the cancel mutation
+    if (!cancelTarget?.occupiedBy?.bookingId) return;
     cancelBooking.mutate(
-      `${cancelTarget.roomId}-${cancelTarget.dayOfWeek}-${cancelTarget.periodNumber}`,
+      cancelTarget.occupiedBy.bookingId,
       {
         onSuccess: () => setCancelTarget(null),
       },

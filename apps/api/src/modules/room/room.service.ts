@@ -373,6 +373,7 @@ export class RoomService {
             type: 'booking',
             label: booking.purpose || 'Ad-hoc-Buchung',
             bookedBy: booking.bookedBy,
+            bookingId: booking.id,
           };
         }
 
