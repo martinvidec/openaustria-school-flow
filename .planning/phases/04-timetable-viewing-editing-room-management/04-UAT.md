@@ -1,5 +1,5 @@
 ---
-status: complete
+status: diagnosed
 phase: 04-timetable-viewing-editing-room-management
 source: [04-00-SUMMARY.md, 04-01-SUMMARY.md, 04-02-SUMMARY.md, 04-03-SUMMARY.md, 04-04-SUMMARY.md, 04-05-SUMMARY.md, 04-06-SUMMARY.md, 04-07-SUMMARY.md, 04-08-SUMMARY.md, 04-09-SUMMARY.md, 04-10-SUMMARY.md, 04-11-SUMMARY.md, 04-12-SUMMARY.md]
 started: "2026-04-02T10:00:00Z"
@@ -138,47 +138,87 @@ blocked: 8
   reason: "User reported: Räume ist nicht im dropdown zur Auswahl, Stundenpläne für Lehrer und Klassen werden angezeigt."
   severity: major
   test: 5
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "useRooms hook in apps/web/src/hooks/useTimetable.ts returns raw paginated response (res.json()) without unwrapping json.data or mapping to EntityOption[]. PerspectiveSelector checks rooms.length > 0 which is undefined on a plain object, so Raeume group is silently skipped."
+  artifacts:
+    - path: "apps/web/src/hooks/useTimetable.ts"
+      issue: "useRooms (lines 107-117) missing pagination unwrap and EntityOption mapping — useTeachers and useClasses both do json.data ?? json + .map()"
+  missing:
+    - "Unwrap json.data from paginated response in useRooms"
+    - "Map room items to EntityOption[] ({id, name})"
+  debug_session: ".planning/debug/missing-raeume-perspective.md"
 
 - truth: "Drag-and-drop shows colored overlay matching mouse position, constraint feedback works, lessons can be moved to empty slots"
   status: failed
   reason: "User reported: funktioniert nicht. nur grüne auf leeren Zellen wird angezeigt, die gehighlightete Zelle korrespondiert nicht mit der Mausposition. Snap back passiert immer. Zellen können nicht auf leere Plätze verschoben werden."
   severity: blocker
   test: 13
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Three causes: (1) useMoveLesson sends lessonId in request body but MoveLessonDto has forbidNonWhitelisted:true, causing 422 on every move. (2) closestCenter collision detection targets wrong cell + DraggableLesson applies CSS.Translate transform to original element confusing collision geometry. (3) Only green feedback is consequence of wrong cell being validated."
+  artifacts:
+    - path: "apps/web/src/hooks/useTimetableEdit.ts"
+      issue: "Lines 20-22: sends full dto including lessonId in body; MoveLessonDto rejects extra property"
+    - path: "apps/web/src/routes/_authenticated/admin/timetable-edit.tsx"
+      issue: "Line 331: closestCenter collision detection targets wrong cell — should use pointerWithin"
+    - path: "apps/web/src/components/dnd/DraggableLesson.tsx"
+      issue: "Line 45: CSS.Translate.toString(transform) on original element shifts bounding box during drag"
+  missing:
+    - "Destructure dto to exclude lessonId from body: const { lessonId, ...moveBody } = dto"
+    - "Replace closestCenter with pointerWithin collision detection"
+    - "Remove CSS.Translate transform from DraggableLesson (keep only opacity)"
+  debug_session: ".planning/debug/dnd-constraint-validation.md"
 
 - truth: "Room booking creation succeeds via dialog"
   status: failed
   reason: "User reported: Dialog kommt, beim klick auf buchen tritt ein Fehler auf."
   severity: blocker
   test: 16
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Multiple potential causes: (1) Room type enum mismatch if filter was active — frontend sends REGULAR but backend expects KLASSENZIMMER. (2) Cancel handler sends composite key instead of booking UUID. (3) apiFetch sets Content-Type: application/json on body-less requests causing Fastify rejection. Exact creation error needs runtime confirmation but enum mismatch and apiFetch bug are most likely."
+  artifacts:
+    - path: "apps/web/src/routes/_authenticated/rooms/index.tsx"
+      issue: "Lines 152-161: cancelBooking sends roomId-dayOfWeek-periodNumber instead of booking UUID"
+    - path: "apps/web/src/routes/_authenticated/rooms/index.tsx"
+      issue: "Lines 38-47: ROOM_TYPES enum values don't match backend RoomTypeDto"
+    - path: "apps/web/src/lib/api.ts"
+      issue: "Lines 19-22: sets Content-Type: application/json even when no body present"
+  missing:
+    - "Add bookingId to RoomAvailabilitySlot type and include in API response"
+    - "Use actual booking UUID in cancel handler"
+    - "Fix apiFetch to only set Content-Type when body is present"
+  debug_session: ".planning/debug/room-booking-creation-error.md"
 
 - truth: "Room type filter and equipment filter work correctly on room availability grid"
   status: failed
   reason: "User reported: der room type filter funktioniert nicht, der ausstattungsfilter gibt folgende Meldung zurück: 'Legen Sie Raeume an, um die Raumbelegung verwalten zu koennen.' Day filter funktioniert wie erwartet, capacity filter funktioniert wie erwartet."
   severity: major
   test: 18
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "Two issues: (1) Frontend ROOM_TYPES uses English values (REGULAR, COMPUTER_LAB) but backend RoomTypeDto/Prisma enum uses German (KLASSENZIMMER, EDV_RAUM). @IsEnum validation rejects frontend values with 422. (2) Empty state condition checks slots.length > 0 without distinguishing 'no rooms exist' from 'no rooms match filter', showing misleading 'Legen Sie Raeume an' message."
+  artifacts:
+    - path: "apps/web/src/routes/_authenticated/rooms/index.tsx"
+      issue: "Lines 38-47: ROOM_TYPES array uses English enum values not matching backend"
+    - path: "apps/web/src/routes/_authenticated/rooms/index.tsx"
+      issue: "Lines 165, 271-282: empty state conflates 'no rooms' with 'filter matched nothing'"
+    - path: "apps/web/src/components/rooms/RoomAvailabilityGrid.tsx"
+      issue: "Lines 49-57: ROOM_TYPE_LABELS uses English keys, falls back to raw German enum string"
+    - path: "apps/api/src/modules/room/dto/create-room.dto.ts"
+      issue: "Lines 3-10: RoomTypeDto defines KLASSENZIMMER, TURNSAAL, EDV_RAUM, WERKRAUM, LABOR, MUSIKRAUM"
+  missing:
+    - "Align frontend ROOM_TYPES with backend RoomTypeDto enum values"
+    - "Update ROOM_TYPE_LABELS to use German enum keys with German display labels"
+    - "Differentiate empty state: show 'Keine Raeume entsprechen den Filterkriterien' when filters active"
+  debug_session: ".planning/debug/room-filter-not-working.md"
 
 - truth: "Resource delete button works with confirmation dialog"
   status: failed
   reason: "User reported: funktioniert alles bis auf das Löschen. Klick auf den Delete Button bringt eine Fehlermeldung"
   severity: major
   test: 19
-  root_cause: ""
-  artifacts: []
-  missing: []
-  debug_session: ""
+  root_cause: "apiFetch in apps/web/src/lib/api.ts sets Content-Type: application/json for ALL non-GET requests including DELETE with no body. Fastify 5.x rejects Content-Type: application/json with empty body (FST_ERR_CTP_EMPTY_JSON_BODY = 400). Same bug affects room booking cancellation DELETE."
+  artifacts:
+    - path: "apps/web/src/lib/api.ts"
+      issue: "Lines 19-22: condition sets Content-Type on method !== GET without checking if body exists"
+    - path: "apps/web/src/hooks/useResources.ts"
+      issue: "Lines 88-95: useDeleteResource calls apiFetch with DELETE and no body"
+    - path: "apps/web/src/hooks/useRoomAvailability.ts"
+      issue: "Line 94: room booking cancel mutation — same pattern, same latent bug"
+  missing:
+    - "Change apiFetch condition to only set Content-Type: application/json when options?.body is present"
+  debug_session: ".planning/debug/resource-delete-error.md"
