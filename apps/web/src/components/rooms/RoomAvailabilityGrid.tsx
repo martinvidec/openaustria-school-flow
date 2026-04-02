@@ -45,15 +45,14 @@ function groupByRoom(
   return map;
 }
 
-/** Human-readable room type labels */
+/** Human-readable room type labels — keys match backend RoomTypeDto enum */
 const ROOM_TYPE_LABELS: Record<string, string> = {
-  REGULAR: 'Klasse',
-  COMPUTER_LAB: 'EDV',
-  SCIENCE_LAB: 'Labor',
-  GYM: 'Turnsaal',
-  MUSIC: 'Musik',
-  ART: 'Kunst',
-  WORKSHOP: 'Werkstatt',
+  KLASSENZIMMER: 'Klasse',
+  EDV_RAUM: 'EDV',
+  LABOR: 'Labor',
+  TURNSAAL: 'Turnsaal',
+  MUSIKRAUM: 'Musik',
+  WERKRAUM: 'Werkstatt',
 };
 
 /**

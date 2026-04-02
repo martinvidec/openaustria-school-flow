@@ -34,16 +34,15 @@ const WEEKDAYS = [
   { value: 'FRIDAY', label: 'Freitag' },
 ] as const;
 
-/** Room types with German labels */
+/** Room types with German labels — values match backend RoomTypeDto enum */
 const ROOM_TYPES = [
   { value: '', label: 'Alle Raumtypen' },
-  { value: 'REGULAR', label: 'Klassenzimmer' },
-  { value: 'COMPUTER_LAB', label: 'EDV-Raum' },
-  { value: 'SCIENCE_LAB', label: 'Labor' },
-  { value: 'GYM', label: 'Turnsaal' },
-  { value: 'MUSIC', label: 'Musikraum' },
-  { value: 'ART', label: 'Kunstraum' },
-  { value: 'WORKSHOP', label: 'Werkstatt' },
+  { value: 'KLASSENZIMMER', label: 'Klassenzimmer' },
+  { value: 'EDV_RAUM', label: 'EDV-Raum' },
+  { value: 'LABOR', label: 'Labor' },
+  { value: 'TURNSAAL', label: 'Turnsaal' },
+  { value: 'MUSIKRAUM', label: 'Musikraum' },
+  { value: 'WERKRAUM', label: 'Werkraum' },
 ] as const;
 
 /** Returns today's day of week as DayOfWeekType string (default MONDAY if weekend) */
@@ -164,6 +163,7 @@ function RoomsPage() {
   // Check if there are any rooms in the data
   const hasRooms = slots.length > 0;
   const hasBookings = slots.some((s) => !s.isAvailable);
+  const hasActiveFilters = roomType !== '__all__' || minCapacity !== '' || equipment !== '';
 
   return (
     <div className="space-y-6">
@@ -267,15 +267,19 @@ function RoomsPage() {
         </Card>
       )}
 
-      {/* Empty state: no rooms */}
+      {/* Empty state: no rooms or no filter matches */}
       {!isLoading && !isError && !hasRooms && (
         <Card>
           <CardHeader>
-            <CardTitle>Keine Raeume angelegt</CardTitle>
+            <CardTitle>
+              {hasActiveFilters ? 'Keine passenden Raeume' : 'Keine Raeume angelegt'}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Legen Sie Raeume an, um die Raumbelegung verwalten zu koennen.
+              {hasActiveFilters
+                ? 'Keine Raeume entsprechen den aktuellen Filterkriterien. Passen Sie die Filter an oder setzen Sie sie zurueck.'
+                : 'Legen Sie Raeume an, um die Raumbelegung verwalten zu koennen.'}
             </p>
           </CardContent>
         </Card>
