@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 5 context gathered
-last_updated: "2026-04-02T12:54:02.535Z"
-last_activity: 2026-04-02
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-04-03T08:45:21.826Z"
+last_activity: 2026-04-03
 progress:
   total_phases: 9
   completed_phases: 4
-  total_plans: 36
-  completed_plans: 36
+  total_plans: 46
+  completed_plans: 37
   percent: 83
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenplanerstellung, die sie selbst hosten koennen -- ohne Vendor Lock-in, mit offenen APIs und DSGVO-Konformitaet von Tag 1.
-**Current focus:** Phase 04 — timetable-viewing-editing-room-management
+**Current focus:** Phase 05 — digital-class-book
 
 ## Current Position
 
-Phase: 5
-Plan: Not started
+Phase: 05 (digital-class-book) — EXECUTING
+Plan: 2 of 10
 Status: Ready to execute
-Last activity: 2026-04-02
+Last activity: 2026-04-03
 
 Progress: [========..] 83%
 
@@ -83,6 +83,7 @@ Progress: [========..] 83%
 | Phase 04 P12 | 2min | 2 tasks | 2 files |
 | Phase 04 P13 | 1min | 2 tasks | 5 files |
 | Phase 04 P14 | 2min | 2 tasks | 5 files |
+| Phase 05 P01 | 2min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -173,6 +174,9 @@ Recent decisions affecting current work:
 - [Phase 04]: pointerWithin collision detection for DnD (pointer-accurate, replaces closestCenter)
 - [Phase 04]: DraggableLesson opacity-only style (no CSS.Translate transform) -- DragOverlay provides drag ghost
 - [Phase 04]: Removed ART/Kunstraum from frontend ROOM_TYPES as it does not exist in backend RoomTypeDto (6 types only)
+- [Phase 05]: ClassBookEntry uses classSubjectId without FK to avoid cascade issues with timetable re-solves
+- [Phase 05]: klassenvorstandId on SchoolClass enables Klassenvorstand-based excuse review workflow
+- [Phase 05]: GradeWeight unique constraint on [schoolId, classSubjectId] supports school defaults and per-subject teacher overrides
 
 ### Pending Todos
 
@@ -186,6 +190,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-02T12:54:02.529Z
-Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-digital-class-book/05-CONTEXT.md
+Last session: 2026-04-03T08:45:21.818Z
+Stopped at: Completed 05-01-PLAN.md
+Resume file: None

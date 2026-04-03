@@ -131,7 +131,7 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 05-01-PLAN.md -- Prisma schema (7 models, 4 enums, klassenvorstandId), shared TypeScript types, Wave 0 test stubs
+- [x] 05-01-PLAN.md -- Prisma schema (7 models, 4 enums, klassenvorstandId), shared TypeScript types, Wave 0 test stubs
 - [ ] 05-02-PLAN.md -- ClassBookModule, AttendanceService+Controller, LessonContentService+Controller, DTOs
 - [ ] 05-03-PLAN.md -- GradeService+Controller, grade-average utility (TDD), StudentNoteService+Controller, DTOs
 - [ ] 05-04-PLAN.md -- StatisticsService+Controller, ExcuseService+Controller with file upload (@fastify/multipart), DTOs

@@ -35,12 +35,12 @@
 
 ### Digital Class Book
 
-- [ ] **BOOK-01**: Lehrer kann Anwesenheit pro Stunde erfassen (anwesend, abwesend, verspätet, entschuldigt)
-- [ ] **BOOK-02**: Lehrer kann Unterrichtsinhalt pro Stunde dokumentieren
-- [ ] **BOOK-03**: Lehrer kann Noten erfassen (mündlich, schriftlich, praktisch) mit konfigurierbarer Gewichtung
-- [ ] **BOOK-04**: Lehrer kann Notizen zu einzelnen Schülern pro Stunde hinterlegen
-- [ ] **BOOK-05**: System erstellt Abwesenheitsstatistiken pro Schüler, Klasse und Zeitraum
-- [ ] **BOOK-06**: Eltern können digitale Entschuldigungen einreichen
+- [x] **BOOK-01**: Lehrer kann Anwesenheit pro Stunde erfassen (anwesend, abwesend, verspätet, entschuldigt)
+- [x] **BOOK-02**: Lehrer kann Unterrichtsinhalt pro Stunde dokumentieren
+- [x] **BOOK-03**: Lehrer kann Noten erfassen (mündlich, schriftlich, praktisch) mit konfigurierbarer Gewichtung
+- [x] **BOOK-04**: Lehrer kann Notizen zu einzelnen Schülern pro Stunde hinterlegen
+- [x] **BOOK-05**: System erstellt Abwesenheitsstatistiken pro Schüler, Klasse und Zeitraum
+- [x] **BOOK-06**: Eltern können digitale Entschuldigungen einreichen
 - [ ] **BOOK-07**: Klassenbuch funktioniert auf Desktop, Tablet und Smartphone gleichermaßen
 
 ### Substitution Planning
@@ -182,12 +182,12 @@
 | VIEW-04 | Phase 4 | Complete |
 | VIEW-05 | Phase 4 | Complete |
 | VIEW-06 | Phase 4 | Complete |
-| BOOK-01 | Phase 5 | Pending |
-| BOOK-02 | Phase 5 | Pending |
-| BOOK-03 | Phase 5 | Pending |
-| BOOK-04 | Phase 5 | Pending |
-| BOOK-05 | Phase 5 | Pending |
-| BOOK-06 | Phase 5 | Pending |
+| BOOK-01 | Phase 5 | Complete |
+| BOOK-02 | Phase 5 | Complete |
+| BOOK-03 | Phase 5 | Complete |
+| BOOK-04 | Phase 5 | Complete |
+| BOOK-05 | Phase 5 | Complete |
+| BOOK-06 | Phase 5 | Complete |
 | BOOK-07 | Phase 5 | Pending |
 | SUBST-01 | Phase 6 | Pending |
 | SUBST-02 | Phase 6 | Pending |
