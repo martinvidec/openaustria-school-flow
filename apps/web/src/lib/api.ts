@@ -16,7 +16,9 @@ export async function apiFetch(
   const headers = new Headers(options?.headers);
   headers.set('Authorization', `Bearer ${keycloak.token}`);
 
-  if (options?.body && !headers.has('Content-Type')) {
+  // Auto-set Content-Type for JSON bodies. Skip for FormData -- the browser
+  // must set the multipart boundary automatically (file upload support).
+  if (options?.body && !headers.has('Content-Type') && !(options.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');
   }
 
