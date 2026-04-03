@@ -134,7 +134,7 @@ Plans:
 - [x] 05-01-PLAN.md -- Prisma schema (7 models, 4 enums, klassenvorstandId), shared TypeScript types, Wave 0 test stubs
 - [x] 05-02-PLAN.md -- ClassBookModule, AttendanceService+Controller, LessonContentService+Controller, DTOs
 - [x] 05-03-PLAN.md -- GradeService+Controller, grade-average utility (TDD), StudentNoteService+Controller, DTOs
-- [ ] 05-04-PLAN.md -- StatisticsService+Controller, ExcuseService+Controller with file upload (@fastify/multipart), DTOs
+- [x] 05-04-PLAN.md -- StatisticsService+Controller, ExcuseService+Controller with file upload (@fastify/multipart), DTOs
 - [ ] 05-05-PLAN.md -- CASL permission seeds for classbook domain, ClassBookEventsGateway (Socket.IO /classbook namespace)
 - [ ] 05-06-PLAN.md -- Frontend data layer: TanStack Query hooks (classbook, grades, excuses), Socket.IO classbook client, ClassBookHeader
 - [ ] 05-07-PLAN.md -- Lesson detail page with tabs, AttendanceGrid (quick-tap), LessonContentForm (auto-save), timetable cell click navigation

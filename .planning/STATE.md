@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05-03-PLAN.md
-last_updated: "2026-04-03T20:28:38.884Z"
+stopped_at: Completed 05-04-PLAN.md
+last_updated: "2026-04-03T20:39:08.314Z"
 last_activity: 2026-04-03
 progress:
   total_phases: 9
   completed_phases: 4
   total_plans: 46
-  completed_plans: 39
+  completed_plans: 40
   percent: 83
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 ## Current Position
 
 Phase: 05 (digital-class-book) — EXECUTING
-Plan: 4 of 10
+Plan: 5 of 10
 Status: Ready to execute
 Last activity: 2026-04-03
 
@@ -85,6 +85,7 @@ Progress: [========..] 83%
 | Phase 04 P14 | 2min | 2 tasks | 5 files |
 | Phase 05 P01 | 2min | 2 tasks | 10 files |
 | Phase 05 P03 | 6min | 2 tasks | 9 files |
+| Phase 05 P04 | 7min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -181,6 +182,10 @@ Recent decisions affecting current work:
 - [Phase 05]: Pure function pattern for grade-average.util.ts (no DI) following werteinheiten.util.ts precedent
 - [Phase 05]: Weight hierarchy: classSubject override > school default > hardcoded 40/30/30 for grade categories
 - [Phase 05]: D-10 private note visibility: admin/schulleitung see all, author sees own private notes, others see non-private only
+- [Phase 05]: Austrian semester detection: getSemesterDateRange() for Sep-Jan/Feb-Jun school calendar
+- [Phase 05]: @fastify/multipart registered on raw Fastify instance via getHttpAdapter().getInstance()
+- [Phase 05]: Magic byte validation for PDF/JPG/PNG alongside MIME type check for file upload security
+- [Phase 05]: Accepted excuse cascades ABSENT -> EXCUSED via Prisma transaction with updateMany
 
 ### Pending Todos
 
@@ -194,6 +199,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-03T20:28:38.881Z
-Stopped at: Completed 05-03-PLAN.md
+Last session: 2026-04-03T20:39:08.311Z
+Stopped at: Completed 05-04-PLAN.md
 Resume file: None
