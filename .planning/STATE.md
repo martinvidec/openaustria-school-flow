@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05-04-PLAN.md
-last_updated: "2026-04-03T20:39:08.314Z"
+stopped_at: Completed 05-05-PLAN.md
+last_updated: "2026-04-03T20:47:05.069Z"
 last_activity: 2026-04-03
 progress:
   total_phases: 9
   completed_phases: 4
   total_plans: 46
-  completed_plans: 40
+  completed_plans: 41
   percent: 83
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 ## Current Position
 
 Phase: 05 (digital-class-book) — EXECUTING
-Plan: 5 of 10
+Plan: 6 of 10
 Status: Ready to execute
 Last activity: 2026-04-03
 
@@ -86,6 +86,7 @@ Progress: [========..] 83%
 | Phase 05 P01 | 2min | 2 tasks | 10 files |
 | Phase 05 P03 | 6min | 2 tasks | 9 files |
 | Phase 05 P04 | 7min | 2 tasks | 10 files |
+| Phase 05 P05 | 5min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -186,6 +187,8 @@ Recent decisions affecting current work:
 - [Phase 05]: @fastify/multipart registered on raw Fastify instance via getHttpAdapter().getInstance()
 - [Phase 05]: Magic byte validation for PDF/JPG/PNG alongside MIME type check for file upload security
 - [Phase 05]: Accepted excuse cascades ABSENT -> EXCUSED via Prisma transaction with updateMany
+- [Phase 05]: Admin manage:all already covers classbook subjects -- no explicit admin entries needed
+- [Phase 05]: Per-domain WebSocket namespace pattern: /classbook mirrors /timetable gateway structure with DI into services
 
 ### Pending Todos
 
@@ -199,6 +202,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-03T20:39:08.311Z
-Stopped at: Completed 05-04-PLAN.md
+Last session: 2026-04-03T20:47:05.065Z
+Stopped at: Completed 05-05-PLAN.md
 Resume file: None
