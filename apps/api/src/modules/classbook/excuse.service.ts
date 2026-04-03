@@ -9,6 +9,7 @@ import { PrismaService } from '../../config/database/prisma.service';
 import { CreateExcuseDto, ReviewExcuseDto } from './dto/excuse.dto';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { ClassBookEventsGateway } from './classbook-events.gateway';
 
 /** Allowed MIME types for excuse attachments (D-13) */
 const ALLOWED_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
@@ -22,7 +23,10 @@ const MAGIC_BYTES: Record<string, number[]> = {
 
 @Injectable()
 export class ExcuseService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly classBookEventsGateway: ClassBookEventsGateway,
+  ) {}
 
   /**
    * Create a new absence excuse (parent only). BOOK-06, D-11.
@@ -213,6 +217,13 @@ export class ExcuseService {
         },
       });
     }
+
+    // Emit real-time event for connected clients (parent receives notification)
+    this.classBookEventsGateway.emitExcuseUpdated(excuse.schoolId, {
+      excuseId: excuse.id,
+      studentId: excuse.studentId,
+      status: dto.status,
+    });
 
     // Re-fetch updated excuse
     const updated = await this.prisma.absenceExcuse.findUnique({

@@ -11,10 +11,11 @@ import { StatisticsController } from './statistics.controller';
 import { StatisticsService } from './statistics.service';
 import { ExcuseController } from './excuse.controller';
 import { ExcuseService } from './excuse.service';
+import { ClassBookEventsGateway } from './classbook-events.gateway';
 
 @Module({
   controllers: [AttendanceController, ClassBookController, GradeController, StudentNoteController, StatisticsController, ExcuseController],
-  providers: [AttendanceService, LessonContentService, GradeService, StudentNoteService, StatisticsService, ExcuseService],
-  exports: [AttendanceService, LessonContentService, GradeService, StudentNoteService, StatisticsService, ExcuseService],
+  providers: [AttendanceService, LessonContentService, GradeService, StudentNoteService, StatisticsService, ExcuseService, ClassBookEventsGateway],
+  exports: [AttendanceService, LessonContentService, GradeService, StudentNoteService, StatisticsService, ExcuseService, ClassBookEventsGateway],
 })
 export class ClassBookModule {}

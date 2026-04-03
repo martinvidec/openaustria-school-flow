@@ -2,10 +2,14 @@ import { Injectable, NotFoundException, ConflictException, BadRequestException }
 import { PrismaService } from '../../config/database/prisma.service';
 import { CreateClassBookEntryDto, BulkAttendanceDto, AttendanceStatusEnum } from './dto/attendance.dto';
 import { DayOfWeek } from '../../config/database/generated/client.js';
+import { ClassBookEventsGateway } from './classbook-events.gateway';
 
 @Injectable()
 export class AttendanceService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly classBookEventsGateway: ClassBookEventsGateway,
+  ) {}
 
   /**
    * Get or create a ClassBookEntry by composite key (classSubjectId + date + periodNumber + weekType).
@@ -223,6 +227,22 @@ export class AttendanceService {
 
     await this.prisma.$transaction(upserts);
 
+    // Emit real-time event for connected clients
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { person: { keycloakUserId: teacherKeycloakId } },
+      include: { person: { select: { firstName: true, lastName: true } } },
+    });
+    const teacherName = teacher
+      ? `${teacher.person.firstName} ${teacher.person.lastName}`
+      : 'Unbekannt';
+
+    this.classBookEventsGateway.emitAttendanceUpdated(entry.schoolId, {
+      lessonId: '',
+      classBookEntryId,
+      teacherName,
+      changeCount: dto.records.length,
+    });
+
     // Return updated records
     return this.getAttendanceForEntry(classBookEntryId);
   }
@@ -240,13 +260,29 @@ export class AttendanceService {
       throw new NotFoundException('Klassenbucheintrag nicht gefunden');
     }
 
-    await this.prisma.attendanceRecord.updateMany({
+    const updateResult = await this.prisma.attendanceRecord.updateMany({
       where: { classBookEntryId },
       data: {
         status: 'PRESENT',
         lateMinutes: null,
         recordedBy: teacherKeycloakId,
       },
+    });
+
+    // Emit real-time event for connected clients
+    const teacher = await this.prisma.teacher.findFirst({
+      where: { person: { keycloakUserId: teacherKeycloakId } },
+      include: { person: { select: { firstName: true, lastName: true } } },
+    });
+    const teacherName = teacher
+      ? `${teacher.person.firstName} ${teacher.person.lastName}`
+      : 'Unbekannt';
+
+    this.classBookEventsGateway.emitAttendanceUpdated(entry.schoolId, {
+      lessonId: '',
+      classBookEntryId,
+      teacherName,
+      changeCount: updateResult.count,
     });
 
     return this.getAttendanceForEntry(classBookEntryId);
