@@ -328,7 +328,7 @@ export class TimetableExportService {
         repeating: {
           freq: 'WEEKLY' as any,
           interval,
-          byDay: icalDay ? [icalDay] : undefined,
+          byDay: icalDay ? [icalDay] as any : undefined,
         },
       });
 

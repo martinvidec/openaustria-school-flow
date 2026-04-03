@@ -19,6 +19,7 @@ import { RoomModule } from './modules/room/room.module';
 import { ResourceModule } from './modules/resource/resource.module';
 import { TimetableModule } from './modules/timetable/timetable.module';
 import { UserContextModule } from './modules/user-context/user-context.module';
+import { ClassBookModule } from './modules/classbook/classbook.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { UserContextModule } from './modules/user-context/user-context.module';
     ResourceModule,
     TimetableModule,
     UserContextModule,
+    ClassBookModule,
   ],
   providers: [
     {
