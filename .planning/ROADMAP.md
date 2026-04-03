@@ -127,16 +127,20 @@ Plans:
   3. System generates absence statistics per student, per class, and per time period
   4. Parents can submit digital absence excuses that teachers can review and accept
   5. The class book works equally well on desktop, tablet, and smartphone
-**Plans**: TBD
+**Plans**: 10 plans
 **UI hint**: yes
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
-- [ ] 05-03: TBD
-- [ ] 05-04: TBD
-- [ ] 05-05: TBD
-- [ ] 05-06: TBD
+- [ ] 05-01-PLAN.md -- Prisma schema (7 models, 4 enums, klassenvorstandId), shared TypeScript types, Wave 0 test stubs
+- [ ] 05-02-PLAN.md -- ClassBookModule, AttendanceService+Controller, LessonContentService+Controller, DTOs
+- [ ] 05-03-PLAN.md -- GradeService+Controller, grade-average utility (TDD), StudentNoteService+Controller, DTOs
+- [ ] 05-04-PLAN.md -- StatisticsService+Controller, ExcuseService+Controller with file upload (@fastify/multipart), DTOs
+- [ ] 05-05-PLAN.md -- CASL permission seeds for classbook domain, ClassBookEventsGateway (Socket.IO /classbook namespace)
+- [ ] 05-06-PLAN.md -- Frontend data layer: TanStack Query hooks (classbook, grades, excuses), Socket.IO classbook client, ClassBookHeader
+- [ ] 05-07-PLAN.md -- Lesson detail page with tabs, AttendanceGrid (quick-tap), LessonContentForm (auto-save), timetable cell click navigation
+- [ ] 05-08-PLAN.md -- GradeMatrix (spreadsheet, Austrian Notensystem, weighted averages), GradeEntryDialog, StudentNoteList with private flag
+- [ ] 05-09-PLAN.md -- ExcuseForm (parent), ExcuseReviewList (Klassenvorstand), AbsenceStatisticsPanel, sidebar navigation updates
+- [ ] 05-10-PLAN.md -- Integration: wire Noten/Notizen tabs, responsive polish (BOOK-07), human verification checkpoint
 
 ### Phase 6: Substitution Planning
 **Goal**: When a teacher is absent, the system automatically suggests qualified substitutes, notifies them, and propagates changes to all timetable views -- turning a daily admin headache into a one-click workflow
@@ -232,7 +236,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 2. School Data Model & DSGVO | 7/8 | Gap closure | - |
 | 3. Timetable Solver Engine | 0/6 | Not started | - |
 | 4. Timetable Viewing, Editing & Room Management | 12/15 | UAT gap closure | - |
-| 5. Digital Class Book | 0/6 | Not started | - |
+| 5. Digital Class Book | 0/10 | Not started | - |
 | 6. Substitution Planning | 0/6 | Not started | - |
 | 7. Communication | 0/6 | Not started | - |
 | 8. Homework, Exams & Data Import | 0/6 | Not started | - |
