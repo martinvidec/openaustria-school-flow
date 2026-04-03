@@ -9,10 +9,12 @@ import { StudentNoteController } from './student-note.controller';
 import { StudentNoteService } from './student-note.service';
 import { StatisticsController } from './statistics.controller';
 import { StatisticsService } from './statistics.service';
+import { ExcuseController } from './excuse.controller';
+import { ExcuseService } from './excuse.service';
 
 @Module({
-  controllers: [AttendanceController, ClassBookController, GradeController, StudentNoteController, StatisticsController],
-  providers: [AttendanceService, LessonContentService, GradeService, StudentNoteService, StatisticsService],
-  exports: [AttendanceService, LessonContentService, GradeService, StudentNoteService, StatisticsService],
+  controllers: [AttendanceController, ClassBookController, GradeController, StudentNoteController, StatisticsController, ExcuseController],
+  providers: [AttendanceService, LessonContentService, GradeService, StudentNoteService, StatisticsService, ExcuseService],
+  exports: [AttendanceService, LessonContentService, GradeService, StudentNoteService, StatisticsService, ExcuseService],
 })
 export class ClassBookModule {}

@@ -6,6 +6,7 @@ import { AppModule } from './app.module';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { ProblemDetailFilter } from './common/filters/problem-detail.filter';
 import { createValidationPipe } from './common/pipes/validation.pipe';
+import multipart from '@fastify/multipart';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
@@ -24,6 +25,12 @@ async function bootstrap() {
   app.enableCors({
     origin: ['http://localhost:5173', 'http://localhost:3000'],
     credentials: true,
+  });
+
+  // @fastify/multipart for file upload support (D-13, BOOK-06)
+  const fastifyInstance = app.getHttpAdapter().getInstance();
+  await fastifyInstance.register(multipart, {
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB per D-13
   });
 
   // Socket.IO adapter for Fastify compatibility
