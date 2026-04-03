@@ -99,6 +99,12 @@ async function main() {
     { action: 'manage', subject: 'room-booking' },
     // Phase 4: resource (full CRUD -- ROOM-04)
     { action: 'manage', subject: 'resource' },
+    // Phase 5: grade (manage all grades -- BOOK-03, D-08)
+    { action: 'manage', subject: 'grade' },
+    // Phase 5: student-note (manage all notes -- BOOK-04)
+    { action: 'manage', subject: 'student-note' },
+    // Phase 5: excuse (manage all excuses -- BOOK-06)
+    { action: 'manage', subject: 'excuse' },
   ];
 
   // Lehrer: own classes, own grades (AUTH-03) + Phase 2 subjects
@@ -128,6 +134,15 @@ async function main() {
     { action: 'delete', subject: 'room-booking' },
     // Phase 4: resource (read for booking -- ROOM-04)
     { action: 'read', subject: 'resource' },
+    // Phase 5: grade (manage grades for own classes -- BOOK-03, D-08)
+    { action: 'read', subject: 'grade' },
+    { action: 'manage', subject: 'grade' },
+    // Phase 5: student-note (manage own notes, read class notes -- BOOK-04, D-10)
+    { action: 'read', subject: 'student-note' },
+    { action: 'manage', subject: 'student-note' },
+    // Phase 5: excuse (read excuses, manage for Klassenvorstand -- BOOK-06, D-12)
+    { action: 'read', subject: 'excuse' },
+    { action: 'manage', subject: 'excuse' },
   ];
 
   // Eltern: own child only (AUTH-03) + Phase 2 subjects
@@ -151,6 +166,11 @@ async function main() {
     { action: 'read', subject: 'export' },
     // Phase 4: room (read for timetable room info)
     { action: 'read', subject: 'room' },
+    // Phase 5: grade (read own child's grades -- BOOK-03, D-08)
+    { action: 'read', subject: 'grade', conditions: { parentId: '{{ id }}' } },
+    // Phase 5: excuse (create + read own excuses -- BOOK-06, D-11)
+    { action: 'create', subject: 'excuse' },
+    { action: 'read', subject: 'excuse', conditions: { parentId: '{{ id }}' } },
   ];
 
   // Schueler: own data only (AUTH-03) + Phase 2 subjects
@@ -169,6 +189,8 @@ async function main() {
     { action: 'read', subject: 'export' },
     // Phase 4: room (read for timetable room info)
     { action: 'read', subject: 'room' },
+    // Phase 5: grade (read own grades -- BOOK-03, D-08)
+    { action: 'read', subject: 'grade', conditions: { studentId: '{{ id }}' } },
   ];
 
   const allPermissions = [
