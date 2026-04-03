@@ -329,9 +329,10 @@ model Teacher {
   createdAt             DateTime @default(now()) @map("created_at")
   updatedAt             DateTime @updatedAt @map("updated_at")
 
-  qualifications    TeacherSubject[]
-  availabilityRules AvailabilityRule[]
-  reductions        TeachingReduction[]
+  qualifications         TeacherSubject[]
+  availabilityRules      AvailabilityRule[]
+  reductions             TeachingReduction[]
+  klassenvorstandClasses SchoolClass[] @relation("Klassenvorstand")
 
   @@index([schoolId])
   @@map("teachers")
@@ -422,18 +423,20 @@ model TeachingReduction {
 // --- SchoolClass (D-06) ---
 
 model SchoolClass {
-  id           String   @id @default(uuid())
-  schoolId     String   @map("school_id")
-  school       School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  name         String
-  yearLevel    Int      @map("year_level")
-  schoolYearId String   @map("school_year_id")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id                String   @id @default(uuid())
+  schoolId          String   @map("school_id")
+  school            School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name              String
+  yearLevel         Int      @map("year_level")
+  schoolYearId      String   @map("school_year_id")
+  klassenvorstandId String?  @map("klassenvorstand_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
 
-  students      Student[]
-  groups        Group[]
-  classSubjects ClassSubject[]
+  klassenvorstand Teacher?       @relation("Klassenvorstand", fields: [klassenvorstandId], references: [id])
+  students        Student[]
+  groups          Group[]
+  classSubjects   ClassSubject[]
 
   @@unique([schoolId, name, schoolYearId])
   @@map("school_classes")
@@ -786,4 +789,173 @@ model ConstraintTemplate {
   createdAt    DateTime @default(now()) @map("created_at")
 
   @@map("constraint_templates")
+}
+
+// --- Phase 5: Digital Class Book ---
+
+// --- Enums ---
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum GradeCategory {
+  SCHULARBEIT
+  MUENDLICH
+  MITARBEIT
+}
+
+enum ExcuseStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum ExcuseReason {
+  KRANK
+  ARZTTERMIN
+  FAMILIAER
+  SONSTIG
+}
+
+// --- ClassBookEntry (one per lesson occurrence) ---
+
+model ClassBookEntry {
+  id             String    @id @default(uuid())
+  classSubjectId String    @map("class_subject_id")
+  dayOfWeek      DayOfWeek @map("day_of_week")
+  periodNumber   Int       @map("period_number")
+  weekType       String    @default("BOTH") @map("week_type")
+  date           DateTime
+  teacherId      String    @map("teacher_id")
+  schoolId       String    @map("school_id")
+  thema          String?
+  lehrstoff      String?
+  hausaufgabe    String?
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  attendanceRecords AttendanceRecord[]
+  studentNotes      StudentNote[]
+
+  @@unique([classSubjectId, date, periodNumber, weekType])
+  @@index([schoolId, date])
+  @@index([teacherId])
+  @@map("class_book_entries")
+}
+
+// --- AttendanceRecord (one per student per ClassBookEntry) ---
+
+model AttendanceRecord {
+  id               String           @id @default(uuid())
+  classBookEntryId String           @map("class_book_entry_id")
+  classBookEntry   ClassBookEntry   @relation(fields: [classBookEntryId], references: [id], onDelete: Cascade)
+  studentId        String           @map("student_id")
+  status           AttendanceStatus @default(PRESENT)
+  lateMinutes      Int?             @map("late_minutes")
+  excuseId         String?          @map("excuse_id")
+  recordedBy       String           @map("recorded_by")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  @@unique([classBookEntryId, studentId])
+  @@index([studentId])
+  @@map("attendance_records")
+}
+
+// --- GradeEntry (individual grade for a student) ---
+
+model GradeEntry {
+  id             String        @id @default(uuid())
+  schoolId       String        @map("school_id")
+  classSubjectId String        @map("class_subject_id")
+  studentId      String        @map("student_id")
+  teacherId      String        @map("teacher_id")
+  category       GradeCategory
+  value          Float
+  description    String?
+  date           DateTime
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  @@index([classSubjectId, studentId])
+  @@index([studentId])
+  @@map("grade_entries")
+}
+
+// --- GradeWeight (configurable weighting per category, D-06) ---
+
+model GradeWeight {
+  id              String   @id @default(uuid())
+  schoolId        String   @map("school_id")
+  classSubjectId  String?  @map("class_subject_id")
+  schularbeitPct  Float    @default(40) @map("schularbeit_pct")
+  muendlichPct    Float    @default(30) @map("muendlich_pct")
+  mitarbeitPct    Float    @default(30) @map("mitarbeit_pct")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@unique([schoolId, classSubjectId])
+  @@map("grade_weights")
+}
+
+// --- StudentNote (per-student note linked to a lesson entry) ---
+
+model StudentNote {
+  id               String         @id @default(uuid())
+  classBookEntryId String         @map("class_book_entry_id")
+  classBookEntry   ClassBookEntry @relation(fields: [classBookEntryId], references: [id], onDelete: Cascade)
+  studentId        String         @map("student_id")
+  authorId         String         @map("author_id")
+  content          String
+  isPrivate        Boolean        @default(false) @map("is_private")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+
+  @@index([classBookEntryId])
+  @@index([studentId])
+  @@map("student_notes")
+}
+
+// --- AbsenceExcuse (parent-submitted excuse) ---
+
+model AbsenceExcuse {
+  id         String       @id @default(uuid())
+  schoolId   String       @map("school_id")
+  studentId  String       @map("student_id")
+  parentId   String       @map("parent_id")
+  startDate  DateTime     @map("start_date")
+  endDate    DateTime     @map("end_date")
+  reason     ExcuseReason
+  note       String?
+  status     ExcuseStatus @default(PENDING)
+  reviewedBy String?      @map("reviewed_by")
+  reviewNote String?      @map("review_note")
+  reviewedAt DateTime?    @map("reviewed_at")
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+
+  attachments ExcuseAttachment[]
+
+  @@index([studentId])
+  @@index([schoolId, status])
+  @@map("absence_excuses")
+}
+
+// --- ExcuseAttachment (file uploaded with excuse, D-13) ---
+
+model ExcuseAttachment {
+  id          String        @id @default(uuid())
+  excuseId    String        @map("excuse_id")
+  excuse      AbsenceExcuse @relation(fields: [excuseId], references: [id], onDelete: Cascade)
+  filename    String
+  storagePath String        @map("storage_path")
+  mimeType    String        @map("mime_type")
+  sizeBytes   Int           @map("size_bytes")
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  @@map("excuse_attachments")
 }
