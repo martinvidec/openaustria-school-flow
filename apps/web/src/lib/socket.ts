@@ -46,3 +46,50 @@ export function disconnectTimetableSocket(): void {
     timetableSocket = null;
   }
 }
+
+// --- Classbook namespace ---
+
+let classbookSocket: Socket | null = null;
+
+/**
+ * Creates (or reconnects) a Socket.IO client for the /classbook namespace.
+ * Uses school-scoped rooms so events are broadcast only to the relevant school.
+ *
+ * Per Phase 5 decision: per-domain WebSocket namespace pattern mirrors /timetable gateway.
+ * Mounted at classbook lesson page level (not authenticated layout) since classbook
+ * events are only relevant when actively viewing classbook pages.
+ */
+export function createClassbookSocket(schoolId: string): Socket {
+  if (classbookSocket) {
+    classbookSocket.disconnect();
+  }
+
+  classbookSocket = io(`${API_URL}/classbook`, {
+    query: { schoolId },
+    auth: { token: keycloak.token },
+    transports: ['websocket', 'polling'],
+    autoConnect: true,
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionAttempts: 10,
+  });
+
+  return classbookSocket;
+}
+
+/**
+ * Returns the current classbook socket instance, or null if not connected.
+ */
+export function getClassbookSocket(): Socket | null {
+  return classbookSocket;
+}
+
+/**
+ * Disconnects and cleans up the classbook socket.
+ */
+export function disconnectClassbookSocket(): void {
+  if (classbookSocket) {
+    classbookSocket.disconnect();
+    classbookSocket = null;
+  }
+}
