@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TimetableGrid } from '@/components/timetable/TimetableGrid';
@@ -52,9 +52,11 @@ function getTodayDayOfWeek(): string {
 }
 
 function TimetablePage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const roles = user?.roles ?? [];
   const primaryRole = getPrimaryRole(roles);
+  const isTeacher = roles.includes('lehrer');
 
   const schoolId = useSchoolContext((s) => s.schoolId) ?? '';
   const classId = useSchoolContext((s) => s.classId);
@@ -222,7 +224,13 @@ function TimetablePage() {
           viewMode={viewMode}
           selectedDay={selectedDay ?? undefined}
           editable={false}
-          onCellClick={undefined}
+          onCellClick={
+            isTeacher
+              ? (lesson) => {
+                  navigate({ to: '/classbook/$lessonId', params: { lessonId: lesson.id } });
+                }
+              : undefined
+          }
         />
       )}
     </div>

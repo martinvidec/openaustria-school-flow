@@ -9,51 +9,117 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedTimetableIndexRouteImport } from './routes/_authenticated/timetable/index'
-
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
+import { Route as AuthenticatedRoomsIndexRouteImport } from './routes/_authenticated/rooms/index'
+import { Route as AuthenticatedClassbookLessonIdRouteImport } from './routes/_authenticated/classbook/$lessonId'
+import { Route as AuthenticatedAdminTimetableHistoryRouteImport } from './routes/_authenticated/admin/timetable-history'
+import { Route as AuthenticatedAdminTimetableEditRouteImport } from './routes/_authenticated/admin/timetable-edit'
+import { Route as AuthenticatedAdminResourcesRouteImport } from './routes/_authenticated/admin/resources'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedTimetableIndexRoute =
   AuthenticatedTimetableIndexRouteImport.update({
     id: '/timetable/',
     path: '/timetable/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedRoomsIndexRoute = AuthenticatedRoomsIndexRouteImport.update({
+  id: '/rooms/',
+  path: '/rooms/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedClassbookLessonIdRoute =
+  AuthenticatedClassbookLessonIdRouteImport.update({
+    id: '/classbook/$lessonId',
+    path: '/classbook/$lessonId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdminTimetableHistoryRoute =
+  AuthenticatedAdminTimetableHistoryRouteImport.update({
+    id: '/admin/timetable-history',
+    path: '/admin/timetable-history',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdminTimetableEditRoute =
+  AuthenticatedAdminTimetableEditRouteImport.update({
+    id: '/admin/timetable-edit',
+    path: '/admin/timetable-edit',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdminResourcesRoute =
+  AuthenticatedAdminResourcesRouteImport.update({
+    id: '/admin/resources',
+    path: '/admin/resources',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin/resources': typeof AuthenticatedAdminResourcesRoute
+  '/admin/timetable-edit': typeof AuthenticatedAdminTimetableEditRoute
+  '/admin/timetable-history': typeof AuthenticatedAdminTimetableHistoryRoute
+  '/classbook/$lessonId': typeof AuthenticatedClassbookLessonIdRoute
+  '/rooms/': typeof AuthenticatedRoomsIndexRoute
   '/timetable/': typeof AuthenticatedTimetableIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin/resources': typeof AuthenticatedAdminResourcesRoute
+  '/admin/timetable-edit': typeof AuthenticatedAdminTimetableEditRoute
+  '/admin/timetable-history': typeof AuthenticatedAdminTimetableHistoryRoute
+  '/classbook/$lessonId': typeof AuthenticatedClassbookLessonIdRoute
+  '/rooms': typeof AuthenticatedRoomsIndexRoute
   '/timetable': typeof AuthenticatedTimetableIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/_authenticated': typeof AuthenticatedRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/_authenticated/admin/resources': typeof AuthenticatedAdminResourcesRoute
+  '/_authenticated/admin/timetable-edit': typeof AuthenticatedAdminTimetableEditRoute
+  '/_authenticated/admin/timetable-history': typeof AuthenticatedAdminTimetableHistoryRoute
+  '/_authenticated/classbook/$lessonId': typeof AuthenticatedClassbookLessonIdRoute
+  '/_authenticated/rooms/': typeof AuthenticatedRoomsIndexRoute
   '/_authenticated/timetable/': typeof AuthenticatedTimetableIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/timetable/'
+  fullPaths:
+    | '/'
+    | '/admin/resources'
+    | '/admin/timetable-edit'
+    | '/admin/timetable-history'
+    | '/classbook/$lessonId'
+    | '/rooms/'
+    | '/timetable/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/timetable'
+  to:
+    | '/'
+    | '/admin/resources'
+    | '/admin/timetable-edit'
+    | '/admin/timetable-history'
+    | '/classbook/$lessonId'
+    | '/rooms'
+    | '/timetable'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/_authenticated/admin/resources'
+    | '/_authenticated/admin/timetable-edit'
+    | '/_authenticated/admin/timetable-history'
+    | '/_authenticated/classbook/$lessonId'
+    | '/_authenticated/rooms/'
     | '/_authenticated/timetable/'
   fileRoutesById: FileRoutesById
 }
@@ -62,7 +128,83 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
 }
 
-const AuthenticatedRouteChildren = {
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/timetable/': {
+      id: '/_authenticated/timetable/'
+      path: '/timetable'
+      fullPath: '/timetable/'
+      preLoaderRoute: typeof AuthenticatedTimetableIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/rooms/': {
+      id: '/_authenticated/rooms/'
+      path: '/rooms'
+      fullPath: '/rooms/'
+      preLoaderRoute: typeof AuthenticatedRoomsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/classbook/$lessonId': {
+      id: '/_authenticated/classbook/$lessonId'
+      path: '/classbook/$lessonId'
+      fullPath: '/classbook/$lessonId'
+      preLoaderRoute: typeof AuthenticatedClassbookLessonIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin/timetable-history': {
+      id: '/_authenticated/admin/timetable-history'
+      path: '/admin/timetable-history'
+      fullPath: '/admin/timetable-history'
+      preLoaderRoute: typeof AuthenticatedAdminTimetableHistoryRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin/timetable-edit': {
+      id: '/_authenticated/admin/timetable-edit'
+      path: '/admin/timetable-edit'
+      fullPath: '/admin/timetable-edit'
+      preLoaderRoute: typeof AuthenticatedAdminTimetableEditRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin/resources': {
+      id: '/_authenticated/admin/resources'
+      path: '/admin/resources'
+      fullPath: '/admin/resources'
+      preLoaderRoute: typeof AuthenticatedAdminResourcesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+  }
+}
+
+interface AuthenticatedRouteChildren {
+  AuthenticatedAdminResourcesRoute: typeof AuthenticatedAdminResourcesRoute
+  AuthenticatedAdminTimetableEditRoute: typeof AuthenticatedAdminTimetableEditRoute
+  AuthenticatedAdminTimetableHistoryRoute: typeof AuthenticatedAdminTimetableHistoryRoute
+  AuthenticatedClassbookLessonIdRoute: typeof AuthenticatedClassbookLessonIdRoute
+  AuthenticatedRoomsIndexRoute: typeof AuthenticatedRoomsIndexRoute
+  AuthenticatedTimetableIndexRoute: typeof AuthenticatedTimetableIndexRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAdminResourcesRoute: AuthenticatedAdminResourcesRoute,
+  AuthenticatedAdminTimetableEditRoute: AuthenticatedAdminTimetableEditRoute,
+  AuthenticatedAdminTimetableHistoryRoute:
+    AuthenticatedAdminTimetableHistoryRoute,
+  AuthenticatedClassbookLessonIdRoute: AuthenticatedClassbookLessonIdRoute,
+  AuthenticatedRoomsIndexRoute: AuthenticatedRoomsIndexRoute,
   AuthenticatedTimetableIndexRoute: AuthenticatedTimetableIndexRoute,
 }
 
@@ -74,33 +216,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
 }
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof AuthenticatedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/timetable/': {
-      id: '/_authenticated/timetable/'
-      path: '/timetable/'
-      fullPath: '/timetable/'
-      preLoaderRoute: typeof AuthenticatedTimetableIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteImport
-    }
-  }
-}
-
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
