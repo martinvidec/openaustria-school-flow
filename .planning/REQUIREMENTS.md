@@ -41,7 +41,7 @@
 - [x] **BOOK-04**: Lehrer kann Notizen zu einzelnen Schülern pro Stunde hinterlegen
 - [x] **BOOK-05**: System erstellt Abwesenheitsstatistiken pro Schüler, Klasse und Zeitraum
 - [x] **BOOK-06**: Eltern können digitale Entschuldigungen einreichen
-- [ ] **BOOK-07**: Klassenbuch funktioniert auf Desktop, Tablet und Smartphone gleichermaßen
+- [x] **BOOK-07**: Klassenbuch funktioniert auf Desktop, Tablet und Smartphone gleichermaßen
 
 ### Substitution Planning
 
@@ -188,7 +188,7 @@
 | BOOK-04 | Phase 5 | Complete |
 | BOOK-05 | Phase 5 | Complete |
 | BOOK-06 | Phase 5 | Complete |
-| BOOK-07 | Phase 5 | Pending |
+| BOOK-07 | Phase 5 | Complete |
 | SUBST-01 | Phase 6 | Pending |
 | SUBST-02 | Phase 6 | Pending |
 | SUBST-03 | Phase 6 | Pending |
