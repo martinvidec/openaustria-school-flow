@@ -1,10 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../config/database/prisma.service';
 import { UpdateLessonContentDto } from './dto/lesson-content.dto';
+import { ClassBookEventsGateway } from './classbook-events.gateway';
 
 @Injectable()
 export class LessonContentService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly classBookEventsGateway: ClassBookEventsGateway,
+  ) {}
 
   /**
    * Update lesson content fields (thema, lehrstoff, hausaufgabe) on a ClassBookEntry.
@@ -26,6 +30,12 @@ export class LessonContentService {
         ...(dto.lehrstoff !== undefined && { lehrstoff: dto.lehrstoff }),
         ...(dto.hausaufgabe !== undefined && { hausaufgabe: dto.hausaufgabe }),
       },
+    });
+
+    // Emit real-time event
+    this.classBookEventsGateway.emitEntryUpdated(updated.schoolId, {
+      classBookEntryId: updated.id,
+      lessonId: updated.classSubjectId,
     });
 
     return {

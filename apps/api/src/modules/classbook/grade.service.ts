@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../../config/database/prisma.service';
 import { CreateGradeEntryDto, UpdateGradeEntryDto, UpdateGradeWeightDto, GradeMatrixQueryDto } from './dto/grade.dto';
 import { calculateWeightedAverage, formatGradeDisplay, isValidGradeValue } from './grade-average.util';
+import { ClassBookEventsGateway } from './classbook-events.gateway';
 import type { GradeCategory, GradeEntryDto, GradeMatrixRow, GradeWeightDto, WeightConfig } from '@schoolflow/shared';
 
 /** Hardcoded default weights when no school or classSubject override exists (D-06) */
@@ -13,7 +14,10 @@ const DEFAULT_WEIGHTS: WeightConfig = {
 
 @Injectable()
 export class GradeService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly classBookEventsGateway: ClassBookEventsGateway,
+  ) {}
 
   /**
    * Create a grade entry with Austrian Notensystem validation (D-05).
@@ -41,6 +45,12 @@ export class GradeService {
 
     // Resolve student name
     const studentName = await this.resolveStudentName(entry.studentId);
+
+    // Emit real-time event
+    this.classBookEventsGateway.emitGradeAdded(schoolId, {
+      classSubjectId: dto.classSubjectId,
+      gradeId: entry.id,
+    });
 
     return {
       id: entry.id,
