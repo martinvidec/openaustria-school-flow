@@ -169,12 +169,12 @@ export function TimetableGrid({
   ].join(' ');
 
   return (
+    <div className="overflow-x-auto overflow-y-auto -mx-4 px-4 sm:mx-0 sm:px-0">
     <div
       role="grid"
       aria-label="Stundenplan"
       className={cn(
         'grid gap-px bg-muted/30 rounded-lg border overflow-hidden',
-        viewMode === 'week' && 'overflow-x-auto',
       )}
       style={{
         gridTemplateColumns: gridTemplateCols,
@@ -218,6 +218,7 @@ export function TimetableGrid({
           />
         );
       })}
+    </div>
     </div>
   );
 }

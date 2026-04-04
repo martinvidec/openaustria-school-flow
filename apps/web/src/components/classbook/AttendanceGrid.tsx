@@ -186,7 +186,7 @@ export function AttendanceGrid({ entryId, schoolId }: AttendanceGridProps) {
       </div>
 
       {/* Student rows with scroll container for long lists */}
-      <div className="max-h-[70vh] overflow-y-auto divide-y border rounded-lg overflow-x-hidden" role="list" aria-label="Anwesenheitsliste">
+      <div className="max-h-[70vh] overflow-y-auto overflow-x-auto divide-y border rounded-lg" role="list" aria-label="Anwesenheitsliste">
         {localRecords.map((record) => (
           <div
             key={record.studentId}
