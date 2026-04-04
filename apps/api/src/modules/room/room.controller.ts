@@ -28,7 +28,7 @@ import { RoomAvailabilityQueryDto } from './dto/room-availability.dto';
 
 @ApiTags('rooms')
 @ApiBearerAuth()
-@Controller('api/v1/schools/:schoolId/rooms')
+@Controller('schools/:schoolId/rooms')
 export class RoomController {
   constructor(private roomService: RoomService) {}
 

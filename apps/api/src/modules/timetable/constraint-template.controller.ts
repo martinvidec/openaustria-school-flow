@@ -22,7 +22,7 @@ import { CheckPermissions } from '../auth/decorators/check-permissions.decorator
 
 @ApiTags('constraint-templates')
 @ApiBearerAuth()
-@Controller('api/v1/schools/:schoolId/constraint-templates')
+@Controller('schools/:schoolId/constraint-templates')
 export class ConstraintTemplateController {
   constructor(private constraintTemplateService: ConstraintTemplateService) {}
 

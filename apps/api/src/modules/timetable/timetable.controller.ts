@@ -43,7 +43,7 @@ import { Public } from '../auth/decorators/public.decorator';
  */
 @ApiTags('timetable')
 @ApiBearerAuth()
-@Controller('api/v1/schools/:schoolId/timetable')
+@Controller('schools/:schoolId/timetable')
 export class TimetableController {
   constructor(
     private timetableService: TimetableService,

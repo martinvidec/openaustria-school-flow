@@ -24,7 +24,7 @@ import { AuthenticatedUser } from '../auth/types/authenticated-user';
 
 @ApiTags('resources')
 @ApiBearerAuth()
-@Controller('api/v1/schools/:schoolId/resources')
+@Controller('schools/:schoolId/resources')
 export class ResourceController {
   constructor(private resourceService: ResourceService) {}
 

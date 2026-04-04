@@ -6,7 +6,7 @@ import { AuthenticatedUser } from '../auth/types/authenticated-user';
 
 @ApiTags('user-context')
 @ApiBearerAuth()
-@Controller('api/v1/users')
+@Controller('users')
 export class UserContextController {
   constructor(private userContextService: UserContextService) {}
 

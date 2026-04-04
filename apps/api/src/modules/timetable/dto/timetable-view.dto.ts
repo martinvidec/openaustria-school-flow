@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsUUID } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
@@ -14,10 +14,10 @@ export class TimetableViewQueryDto {
   })
   perspective!: 'teacher' | 'class' | 'room';
 
-  @IsUUID()
+  @IsString()
   @ApiProperty({
     description: 'ID of the entity to view (teacher, class, or room)',
-    example: '550e8400-e29b-41d4-a716-446655440000',
+    example: 'teacher-id',
   })
   perspectiveId!: string;
 
