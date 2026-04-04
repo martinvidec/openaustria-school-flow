@@ -1,7 +1,7 @@
 {
   "realm": "schoolflow",
   "enabled": true,
-  "sslRequired": "external",
+  "sslRequired": "none",
   "registrationAllowed": false,
   "loginTheme": "keycloak",
   "accessTokenLifespan": 900,
@@ -45,11 +45,37 @@
       "directAccessGrantsEnabled": true,
       "redirectUris": [
         "http://localhost:3000/*",
-        "http://localhost:5173/*"
+        "http://localhost:5173/*",
+        "http://localhost:5174/*"
       ],
       "webOrigins": [
         "http://localhost:3000",
-        "http://localhost:5173"
+        "http://localhost:5173",
+        "http://localhost:5174"
+      ],
+      "protocol": "openid-connect",
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "roles"
+      ],
+      "optionalClientScopes": []
+    },
+    {
+      "clientId": "schoolflow-web",
+      "name": "SchoolFlow Web",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": [
+        "http://localhost:5173/*",
+        "http://localhost:5174/*"
+      ],
+      "webOrigins": [
+        "http://localhost:5173",
+        "http://localhost:5174"
       ],
       "protocol": "openid-connect",
       "defaultClientScopes": [
@@ -198,6 +224,7 @@
   ],
   "users": [
     {
+      "id": "00000000-0000-0000-0000-000000000001",
       "username": "admin-user",
       "email": "admin@schoolflow.dev",
       "enabled": true,
@@ -216,6 +243,7 @@
       ]
     },
     {
+      "id": "00000000-0000-0000-0000-000000000002",
       "username": "lehrer-user",
       "email": "lehrer@schoolflow.dev",
       "enabled": true,
@@ -234,6 +262,7 @@
       ]
     },
     {
+      "id": "00000000-0000-0000-0000-000000000003",
       "username": "eltern-user",
       "email": "eltern@schoolflow.dev",
       "enabled": true,
@@ -252,6 +281,7 @@
       ]
     },
     {
+      "id": "00000000-0000-0000-0000-000000000004",
       "username": "schueler-user",
       "email": "schueler@schoolflow.dev",
       "enabled": true,
@@ -270,6 +300,7 @@
       ]
     },
     {
+      "id": "00000000-0000-0000-0000-000000000005",
       "username": "schulleitung-user",
       "email": "direktor@schoolflow.dev",
       "enabled": true,

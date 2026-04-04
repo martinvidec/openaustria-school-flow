@@ -589,9 +589,162 @@ async function main() {
     },
   });
 
+  // =====================================================
+  // Section: Keycloak user linkage for test fixtures
+  // =====================================================
+  // Fixed UUIDs come from docker/keycloak/realm-export.json users[].id.
+  // This creates Person + Teacher/Student/Parent records for each Keycloak test user
+  // so login works immediately after a fresh docker compose up + db push + seed.
+  const KC_ADMIN_ID = '00000000-0000-0000-0000-000000000001';
+  const KC_LEHRER_ID = '00000000-0000-0000-0000-000000000002';
+  const KC_ELTERN_ID = '00000000-0000-0000-0000-000000000003';
+  const KC_SCHUELER_ID = '00000000-0000-0000-0000-000000000004';
+  const KC_SCHULLEITUNG_ID = '00000000-0000-0000-0000-000000000005';
+
+  // Lehrer: Maria Mueller -> new TEACHER person + teacher record
+  const lehrerPerson = await prisma.person.upsert({
+    where: { id: 'kc-lehrer-person' },
+    update: { keycloakUserId: KC_LEHRER_ID },
+    create: {
+      id: 'kc-lehrer-person',
+      schoolId: school.id,
+      personType: 'TEACHER',
+      firstName: 'Maria',
+      lastName: 'Mueller',
+      email: 'lehrer@schoolflow.dev',
+      keycloakUserId: KC_LEHRER_ID,
+    },
+  });
+  const lehrerTeacher = await prisma.teacher.upsert({
+    where: { personId: lehrerPerson.id },
+    update: {},
+    create: {
+      id: 'kc-lehrer-teacher',
+      personId: lehrerPerson.id,
+      schoolId: school.id,
+      employmentPercentage: 100,
+      werteinheitenTarget: 20,
+      isPermanent: true,
+    },
+  });
+
+  // Schulleitung: Elisabeth Fischer -> TEACHER person (schulleitung is role)
+  const schulleitungPerson = await prisma.person.upsert({
+    where: { id: 'kc-schulleitung-person' },
+    update: { keycloakUserId: KC_SCHULLEITUNG_ID },
+    create: {
+      id: 'kc-schulleitung-person',
+      schoolId: school.id,
+      personType: 'TEACHER',
+      firstName: 'Elisabeth',
+      lastName: 'Fischer',
+      email: 'direktor@schoolflow.dev',
+      keycloakUserId: KC_SCHULLEITUNG_ID,
+    },
+  });
+  await prisma.teacher.upsert({
+    where: { personId: schulleitungPerson.id },
+    update: {},
+    create: {
+      id: 'kc-schulleitung-teacher',
+      personId: schulleitungPerson.id,
+      schoolId: school.id,
+      employmentPercentage: 50,
+      werteinheitenTarget: 10,
+      isPermanent: true,
+    },
+  });
+
+  // Admin: System Admin -> TEACHER person (no PersonType enum value for ADMIN)
+  await prisma.person.upsert({
+    where: { id: 'kc-admin-person' },
+    update: { keycloakUserId: KC_ADMIN_ID },
+    create: {
+      id: 'kc-admin-person',
+      schoolId: school.id,
+      personType: 'TEACHER',
+      firstName: 'System',
+      lastName: 'Admin',
+      email: 'admin@schoolflow.dev',
+      keycloakUserId: KC_ADMIN_ID,
+    },
+  });
+
+  // Schueler: Max Huber -> update existing seed-person-student-1 (Lisa) to be this kc user?
+  // Instead create a dedicated student linked to seed-class-1a
+  const schuelerPerson = await prisma.person.upsert({
+    where: { id: 'kc-schueler-person' },
+    update: { keycloakUserId: KC_SCHUELER_ID },
+    create: {
+      id: 'kc-schueler-person',
+      schoolId: school.id,
+      personType: 'STUDENT',
+      firstName: 'Max',
+      lastName: 'Huber',
+      email: 'schueler@schoolflow.dev',
+      keycloakUserId: KC_SCHUELER_ID,
+    },
+  });
+  await prisma.student.upsert({
+    where: { personId: schuelerPerson.id },
+    update: {},
+    create: {
+      id: 'kc-schueler-student',
+      personId: schuelerPerson.id,
+      schoolId: school.id,
+      classId: class1A.id,
+      studentNumber: '2025-9999',
+      enrollmentDate: new Date('2025-09-01'),
+    },
+  });
+
+  // Eltern: Franz Huber -> PARENT person + parent record, linked to Lisa Huber (seed-student-1)
+  const elternPerson = await prisma.person.upsert({
+    where: { id: 'kc-eltern-person' },
+    update: { keycloakUserId: KC_ELTERN_ID },
+    create: {
+      id: 'kc-eltern-person',
+      schoolId: school.id,
+      personType: 'PARENT',
+      firstName: 'Franz',
+      lastName: 'Huber',
+      email: 'eltern@schoolflow.dev',
+      keycloakUserId: KC_ELTERN_ID,
+    },
+  });
+  const elternParent = await prisma.parent.upsert({
+    where: { personId: elternPerson.id },
+    update: {},
+    create: {
+      id: 'kc-eltern-parent',
+      personId: elternPerson.id,
+      schoolId: school.id,
+    },
+  });
+  // Link parent to Lisa Huber (seed-student-1)
+  const existingLink = await prisma.parentStudent.findFirst({
+    where: { parentId: elternParent.id, studentId: 'seed-student-1' },
+  });
+  if (!existingLink) {
+    await prisma.parentStudent.create({
+      data: {
+        id: 'kc-eltern-parentstudent',
+        parentId: elternParent.id,
+        studentId: 'seed-student-1',
+      },
+    });
+  }
+
+  // Set Maria Mueller as Klassenvorstand of 1A so she sees excuses for Lisa Huber
+  await prisma.schoolClass.update({
+    where: { id: class1A.id },
+    data: { klassenvorstandId: lehrerTeacher.id },
+  });
+
   console.log(`Seeded ${roles.length} roles and ${allPermissions.length} default permissions`);
   console.log(`Seeded sample school: ${school.name} (${school.schoolType})`);
   console.log('Seeded 3 teachers, 6 students, 4 subjects, 2 classes, 7 retention policies');
+  console.log('Linked 5 Keycloak test users to Person records with Klassenvorstand assignment');
 }
 
 main()
