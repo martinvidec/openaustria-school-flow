@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ExcuseForm } from '@/components/classbook/ExcuseForm';
@@ -7,7 +7,7 @@ import { ExcuseReviewList } from '@/components/classbook/ExcuseReviewList';
 import { useAuth } from '@/hooks/useAuth';
 import { useSchoolContext } from '@/stores/school-context-store';
 import { useExcuses } from '@/hooks/useExcuses';
-import { apiFetch } from '@/lib/api';
+import { useUserContext } from '@/hooks/useUserContext';
 
 export const Route = createFileRoute('/_authenticated/excuses/')({
   component: ExcusesPage,
@@ -48,38 +48,19 @@ function ExcusesPage() {
 }
 
 function ParentExcuseView({ schoolId }: { schoolId: string }) {
-  const [children, setChildren] = useState<ChildInfo[]>([]);
-  const [childrenLoading, setChildrenLoading] = useState(true);
+  const { data: userContext, isLoading: contextLoading } = useUserContext();
 
-  // Fetch parent's children
-  useEffect(() => {
-    if (!schoolId) return;
-
-    let cancelled = false;
-
-    async function fetchChildren() {
-      try {
-        const res = await apiFetch(`/api/v1/schools/${schoolId}/my-children`);
-        if (res.ok && !cancelled) {
-          const data = await res.json();
-          const items = data.data ?? data;
-          setChildren(
-            items.map((c: { id: string; firstName?: string; lastName?: string; name?: string }) => ({
-              id: c.id,
-              name: c.name ?? `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim(),
-            })),
-          );
-        }
-      } catch {
-        // Silently handle error; empty children list is shown
-      } finally {
-        if (!cancelled) setChildrenLoading(false);
-      }
+  const children = useMemo<ChildInfo[]>(() => {
+    if (!userContext) return [];
+    // Use children array from /users/me if available
+    const ctx = userContext as { children?: Array<{ studentId: string; studentName: string }> };
+    if (ctx.children && ctx.children.length > 0) {
+      return ctx.children.map((c) => ({ id: c.studentId, name: c.studentName }));
     }
+    return [];
+  }, [userContext]);
 
-    fetchChildren();
-    return () => { cancelled = true; };
-  }, [schoolId]);
+  const childrenLoading = contextLoading;
 
   // Fetch parent's submitted excuses
   const { data: excuses = [], isLoading: excusesLoading } = useExcuses(schoolId);

@@ -133,11 +133,66 @@ export class AttendanceService {
       where: { classBookEntryId },
     });
 
-    if (records.length === 0) {
-      return [];
+    // Get the class for this entry via classSubject
+    const classSubject = await this.prisma.classSubject.findUnique({
+      where: { id: entry.classSubjectId },
+    });
+
+    // Get all students in the class
+    const classStudents = classSubject
+      ? await this.prisma.student.findMany({
+          where: { classId: classSubject.classId },
+          include: { person: { select: { firstName: true, lastName: true } } },
+        })
+      : [];
+
+    // If no records yet, auto-initialize with PRESENT for all class students
+    if (records.length === 0 && classStudents.length > 0) {
+      const creates = classStudents.map((s) =>
+        this.prisma.attendanceRecord.create({
+          data: {
+            classBookEntryId,
+            studentId: s.id,
+            status: 'PRESENT',
+            recordedBy: 'system',
+          },
+        }),
+      );
+      await this.prisma.$transaction(creates);
+      // Re-fetch the newly created records
+      const newRecords = await this.prisma.attendanceRecord.findMany({
+        where: { classBookEntryId },
+      });
+
+      const studentMap = new Map(
+        classStudents.map((s) => [s.id, `${s.person.firstName} ${s.person.lastName}`]),
+      );
+
+      const result = newRecords.map((r) => ({
+        id: r.id,
+        classBookEntryId: r.classBookEntryId,
+        studentId: r.studentId,
+        studentName: studentMap.get(r.studentId) ?? 'Unbekannt',
+        status: r.status,
+        lateMinutes: r.lateMinutes,
+        excuseId: r.excuseId,
+        recordedBy: r.recordedBy,
+        updatedAt: r.updatedAt.toISOString(),
+      }));
+
+      result.sort((a, b) => {
+        const [aFirst, ...aLastParts] = a.studentName.split(' ');
+        const aLast = aLastParts.join(' ');
+        const [bFirst, ...bLastParts] = b.studentName.split(' ');
+        const bLast = bLastParts.join(' ');
+        const lastNameCmp = aLast.localeCompare(bLast, 'de');
+        return lastNameCmp !== 0 ? lastNameCmp : aFirst.localeCompare(bFirst, 'de');
+      });
+
+      return result;
     }
 
-    // Query student names separately (no direct Prisma relation by design)
+    // Query student names for existing records
     const studentIds = records.map((r) => r.studentId);
     const students = await this.prisma.student.findMany({
       where: { id: { in: studentIds } },

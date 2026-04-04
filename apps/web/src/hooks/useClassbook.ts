@@ -323,7 +323,6 @@ export function useDeleteNote(schoolId: string | undefined) {
         { method: 'DELETE' },
       );
       if (!res.ok) throw new Error('Failed to delete note');
-      return res.json();
     },
     onSuccess: () => {
       if (schoolId) {

@@ -136,7 +136,6 @@ export function useDeleteGrade(schoolId: string | undefined) {
         { method: 'DELETE' },
       );
       if (!res.ok) throw new Error('Failed to delete grade');
-      return res.json();
     },
     onSuccess: () => {
       if (schoolId) {

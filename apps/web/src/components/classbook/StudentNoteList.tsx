@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { StudentNoteForm } from './StudentNoteForm';
-import { useNotes, useDeleteNote } from '@/hooks/useClassbook';
+import { useNotes, useDeleteNote, useAttendance } from '@/hooks/useClassbook';
 import { useAuth } from '@/hooks/useAuth';
 import type { StudentNoteDto } from '@schoolflow/shared';
 import { Lock, MoreVertical, Loader2, Plus, MessageSquareText } from 'lucide-react';
@@ -79,6 +79,7 @@ function groupByStudent(notes: StudentNoteDto[]): Array<{ studentId: string; stu
 export function StudentNoteList({ entryId, schoolId }: StudentNoteListProps) {
   const { user } = useAuth();
   const { data: notes, isLoading } = useNotes(schoolId, entryId);
+  const { data: attendance } = useAttendance(schoolId, entryId);
   const deleteMutation = useDeleteNote(schoolId);
 
   const [showAddForm, setShowAddForm] = useState(false);
@@ -91,17 +92,13 @@ export function StudentNoteList({ entryId, schoolId }: StudentNoteListProps) {
     return groupByStudent(notes);
   }, [notes]);
 
-  // Extract student list for form
+  // Build student list from attendance records (contains all class students)
   const studentList = useMemo(() => {
-    if (!notes || notes.length === 0) return [];
-    const seen = new Map<string, string>();
-    for (const note of notes) {
-      if (!seen.has(note.studentId)) {
-        seen.set(note.studentId, note.studentName);
-      }
-    }
-    return Array.from(seen.entries()).map(([id, name]) => ({ id, name }));
-  }, [notes]);
+    if (!attendance || attendance.length === 0) return [];
+    return attendance
+      .map((r: { studentId: string; studentName: string }) => ({ id: r.studentId, name: r.studentName }))
+      .sort((a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name, 'de'));
+  }, [attendance]);
 
   const handleDeleteNote = async () => {
     if (!deleteNote) return;
