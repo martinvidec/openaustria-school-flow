@@ -2,6 +2,8 @@ import { Link, useRouterState } from '@tanstack/react-router';
 import {
   Calendar,
   DoorOpen,
+  FileText,
+  BarChart3,
   Package,
   PencilRuler,
   History,
@@ -31,6 +33,18 @@ const navItems: NavItem[] = [
     label: 'Raeume',
     href: '/rooms',
     icon: DoorOpen,
+    roles: ['lehrer', 'admin', 'schulleitung'],
+  },
+  {
+    label: 'Entschuldigungen',
+    href: '/excuses',
+    icon: FileText,
+    roles: ['eltern', 'lehrer', 'admin', 'schulleitung'],
+  },
+  {
+    label: 'Abwesenheit',
+    href: '/statistics/absence',
+    icon: BarChart3,
     roles: ['lehrer', 'admin', 'schulleitung'],
   },
   {
