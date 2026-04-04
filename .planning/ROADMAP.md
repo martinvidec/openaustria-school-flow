@@ -139,7 +139,7 @@ Plans:
 - [x] 05-06-PLAN.md -- Frontend data layer: TanStack Query hooks (classbook, grades, excuses), Socket.IO classbook client, ClassBookHeader
 - [x] 05-07-PLAN.md -- Lesson detail page with tabs, AttendanceGrid (quick-tap), LessonContentForm (auto-save), timetable cell click navigation
 - [x] 05-08-PLAN.md -- GradeMatrix (spreadsheet, Austrian Notensystem, weighted averages), GradeEntryDialog, StudentNoteList with private flag
-- [ ] 05-09-PLAN.md -- ExcuseForm (parent), ExcuseReviewList (Klassenvorstand), AbsenceStatisticsPanel, sidebar navigation updates
+- [x] 05-09-PLAN.md -- ExcuseForm (parent), ExcuseReviewList (Klassenvorstand), AbsenceStatisticsPanel, sidebar navigation updates
 - [ ] 05-10-PLAN.md -- Integration: wire Noten/Notizen tabs, responsive polish (BOOK-07), human verification checkpoint
 
 ### Phase 6: Substitution Planning

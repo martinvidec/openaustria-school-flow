@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 05-08-PLAN.md
-last_updated: "2026-04-03T21:27:33.679Z"
-last_activity: 2026-04-03
+stopped_at: Completed 05-09-PLAN.md
+last_updated: "2026-04-04T06:00:06.662Z"
+last_activity: 2026-04-04
 progress:
   total_phases: 9
   completed_phases: 4
   total_plans: 46
-  completed_plans: 44
+  completed_plans: 45
   percent: 83
 ---
 
@@ -26,9 +26,9 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 ## Current Position
 
 Phase: 05 (digital-class-book) — EXECUTING
-Plan: 9 of 10
+Plan: 10 of 10
 Status: Ready to execute
-Last activity: 2026-04-03
+Last activity: 2026-04-04
 
 Progress: [========..] 83%
 
@@ -90,6 +90,7 @@ Progress: [========..] 83%
 | Phase 05 P06 | 5min | 2 tasks | 7 files |
 | Phase 05 P07 | 16min | 2 tasks | 10 files |
 | Phase 05 P08 | 7min | 2 tasks | 6 files |
+| Phase 05 P09 | 8min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -197,6 +198,8 @@ Recent decisions affecting current work:
 - [Phase 05]: shadcn CLI incompatible with components.json format -- created Textarea/Input/Label manually following shadcn pattern
 - [Phase 05]: Noten/Notizen tabs as placeholder text referencing Plan 08 -- plan scope limited to Anwesenheit and Inhalt
 - [Phase 05]: ScrollArea created manually following shadcn pattern (consistent with Phase 5 decision for Textarea/Input/Label)
+- [Phase 05]: Direct apiFetch for file upload in ExcuseForm instead of useUploadAttachment hook (excuseId not available at hook call time)
+- [Phase 05]: Native HTML date inputs for excuse/statistics date pickers instead of Calendar+Popover (component not installed)
 
 ### Pending Todos
 
@@ -210,6 +213,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-03T21:27:33.675Z
-Stopped at: Completed 05-08-PLAN.md
+Last session: 2026-04-04T06:00:06.658Z
+Stopped at: Completed 05-09-PLAN.md
 Resume file: None
