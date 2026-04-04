@@ -140,7 +140,7 @@ Plans:
 - [x] 05-07-PLAN.md -- Lesson detail page with tabs, AttendanceGrid (quick-tap), LessonContentForm (auto-save), timetable cell click navigation
 - [x] 05-08-PLAN.md -- GradeMatrix (spreadsheet, Austrian Notensystem, weighted averages), GradeEntryDialog, StudentNoteList with private flag
 - [x] 05-09-PLAN.md -- ExcuseForm (parent), ExcuseReviewList (Klassenvorstand), AbsenceStatisticsPanel, sidebar navigation updates
-- [ ] 05-10-PLAN.md -- Integration: wire Noten/Notizen tabs, responsive polish (BOOK-07), human verification checkpoint
+- [x] 05-10-PLAN.md -- Integration: wire Noten/Notizen tabs, responsive polish (BOOK-07), human verification checkpoint
 
 ### Phase 6: Substitution Planning
 **Goal**: When a teacher is absent, the system automatically suggests qualified substitutes, notifies them, and propagates changes to all timetable views -- turning a daily admin headache into a one-click workflow
