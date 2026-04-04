@@ -59,12 +59,21 @@ export class UserContextService {
 
     if (person.parent) {
       result.parentId = person.parent.id;
-      const firstChild = person.parent.children[0]?.student;
+      const allChildren = person.parent.children
+        .map((c) => c.student)
+        .filter((s) => !!s);
+      const firstChild = allChildren[0];
       if (firstChild) {
         result.childClassId = firstChild.classId ?? undefined;
         result.childClassName = firstChild.schoolClass?.name ?? undefined;
         result.childStudentName = `${firstChild.person.firstName} ${firstChild.person.lastName}`;
       }
+      result.children = allChildren.map((s) => ({
+        studentId: s.id,
+        studentName: `${s.person.firstName} ${s.person.lastName}`,
+        classId: s.classId ?? '',
+        className: s.schoolClass?.name ?? '',
+      }));
     }
 
     return result;

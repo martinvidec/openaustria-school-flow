@@ -59,6 +59,7 @@ function TimetablePage() {
   const isTeacher = roles.includes('lehrer');
 
   const schoolId = useSchoolContext((s) => s.schoolId) ?? '';
+  const teacherId = useSchoolContext((s) => s.teacherId);
   const classId = useSchoolContext((s) => s.classId);
   const className = useSchoolContext((s) => s.className);
   const childClassId = useSchoolContext((s) => s.childClassId);
@@ -81,15 +82,15 @@ function TimetablePage() {
   useEffect(() => {
     if (perspectiveId) return; // Already initialized
 
-    if (primaryRole === 'lehrer' && user) {
-      setPerspective('teacher', user.id, `${user.firstName} ${user.lastName}`);
+    if (primaryRole === 'lehrer' && user && teacherId) {
+      setPerspective('teacher', teacherId, `${user.firstName} ${user.lastName}`);
     } else if (primaryRole === 'schueler' && classId) {
       setPerspective('class', classId, className ?? '');
     } else if (primaryRole === 'eltern' && childClassId) {
       setPerspective('class', childClassId, childClassName ?? '');
     }
     // For admin/schulleitung, we wait for them to select via PerspectiveSelector
-  }, [primaryRole, user, perspectiveId, setPerspective, classId, className, childClassId, childClassName]);
+  }, [primaryRole, user, teacherId, perspectiveId, setPerspective, classId, className, childClassId, childClassName]);
 
   // Set today as selected day for day view
   useEffect(() => {

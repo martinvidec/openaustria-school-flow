@@ -39,4 +39,7 @@ export class UserContextResponseDto {
 
   @ApiPropertyOptional({ description: 'First child student name (if person is a parent)' })
   childStudentName?: string;
+
+  @ApiPropertyOptional({ description: 'All children (if person is a parent)' })
+  children?: Array<{ studentId: string; studentName: string; classId: string; className: string }>;
 }

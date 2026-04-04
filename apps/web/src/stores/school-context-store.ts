@@ -3,6 +3,7 @@ import { create } from 'zustand';
 interface SchoolContextState {
   schoolId: string | null;
   personType: string | null;
+  teacherId: string | null;
   classId: string | null;
   className: string | null;
   childClassId: string | null;
@@ -13,6 +14,7 @@ interface SchoolContextState {
   setContext: (data: {
     schoolId: string;
     personType: string;
+    teacherId?: string | null;
     classId?: string | null;
     className?: string | null;
     childClassId?: string | null;
@@ -24,6 +26,7 @@ interface SchoolContextState {
 export const useSchoolContext = create<SchoolContextState>((set) => ({
   schoolId: null,
   personType: null,
+  teacherId: null,
   classId: null,
   className: null,
   childClassId: null,
@@ -35,6 +38,7 @@ export const useSchoolContext = create<SchoolContextState>((set) => ({
     set({
       schoolId: data.schoolId,
       personType: data.personType,
+      teacherId: data.teacherId ?? null,
       classId: data.classId ?? null,
       className: data.className ?? null,
       childClassId: data.childClassId ?? null,
