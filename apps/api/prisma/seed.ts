@@ -604,7 +604,7 @@ async function main() {
   // Lehrer: Maria Mueller -> new TEACHER person + teacher record
   const lehrerPerson = await prisma.person.upsert({
     where: { id: 'kc-lehrer-person' },
-    update: { keycloakUserId: KC_LEHRER_ID },
+    update: {},
     create: {
       id: 'kc-lehrer-person',
       schoolId: school.id,
@@ -631,7 +631,7 @@ async function main() {
   // Schulleitung: Elisabeth Fischer -> TEACHER person (schulleitung is role)
   const schulleitungPerson = await prisma.person.upsert({
     where: { id: 'kc-schulleitung-person' },
-    update: { keycloakUserId: KC_SCHULLEITUNG_ID },
+    update: {},
     create: {
       id: 'kc-schulleitung-person',
       schoolId: school.id,
@@ -658,7 +658,7 @@ async function main() {
   // Admin: System Admin -> TEACHER person (no PersonType enum value for ADMIN)
   await prisma.person.upsert({
     where: { id: 'kc-admin-person' },
-    update: { keycloakUserId: KC_ADMIN_ID },
+    update: {},
     create: {
       id: 'kc-admin-person',
       schoolId: school.id,
@@ -674,7 +674,7 @@ async function main() {
   // Instead create a dedicated student linked to seed-class-1a
   const schuelerPerson = await prisma.person.upsert({
     where: { id: 'kc-schueler-person' },
-    update: { keycloakUserId: KC_SCHUELER_ID },
+    update: {},
     create: {
       id: 'kc-schueler-person',
       schoolId: school.id,
@@ -701,7 +701,7 @@ async function main() {
   // Eltern: Franz Huber -> PARENT person + parent record, linked to Lisa Huber (seed-student-1)
   const elternPerson = await prisma.person.upsert({
     where: { id: 'kc-eltern-person' },
-    update: { keycloakUserId: KC_ELTERN_ID },
+    update: {},
     create: {
       id: 'kc-eltern-person',
       schoolId: school.id,
