@@ -152,8 +152,8 @@ export function ExcuseForm({ schoolId, children }: ExcuseFormProps) {
         )}
       </div>
 
-      {/* Date range: Von / Bis */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* Date range: Von / Bis -- stacked on mobile, side by side on sm+ */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="excuse-start">Von</Label>
           <input
@@ -161,7 +161,7 @@ export function ExcuseForm({ schoolId, children }: ExcuseFormProps) {
             type="date"
             value={startDate}
             onChange={(e) => handleStartDateChange(e.target.value)}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="flex h-11 min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-required="true"
           />
         </div>
@@ -172,7 +172,7 @@ export function ExcuseForm({ schoolId, children }: ExcuseFormProps) {
             type="date"
             value={endDate}
             onChange={(e) => handleEndDateChange(e.target.value)}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="flex h-11 min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-required="true"
           />
         </div>
@@ -223,7 +223,7 @@ export function ExcuseForm({ schoolId, children }: ExcuseFormProps) {
       <Button
         type="submit"
         disabled={!isFormValid || isSubmitting}
-        className="w-full"
+        className="w-full sm:w-auto min-h-[44px]"
       >
         {isSubmitting ? 'Wird eingereicht...' : 'Entschuldigung einreichen'}
       </Button>

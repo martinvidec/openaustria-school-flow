@@ -3,6 +3,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClassBookHeader } from '@/components/classbook/ClassBookHeader';
 import { AttendanceGrid } from '@/components/classbook/AttendanceGrid';
 import { LessonContentForm } from '@/components/classbook/LessonContentForm';
+import { GradeMatrix } from '@/components/classbook/GradeMatrix';
+import { StudentNoteList } from '@/components/classbook/StudentNoteList';
 import { useClassbookSocket } from '@/hooks/useClassbookSocket';
 import { useSchoolContext } from '@/stores/school-context-store';
 import { useClassbookEntryByTimetableLesson } from '@/hooks/useClassbook';
@@ -89,7 +91,7 @@ function ClassBookLessonPage() {
         value={tab ?? 'anwesenheit'}
         onValueChange={handleTabChange}
       >
-        <TabsList className="w-full sm:w-auto overflow-x-auto">
+        <TabsList className="w-full sm:w-auto overflow-x-auto flex-nowrap">
           <TabsTrigger value="anwesenheit" className="min-w-[44px]">
             Anwesenheit
           </TabsTrigger>
@@ -121,17 +123,11 @@ function ClassBookLessonPage() {
         </TabsContent>
 
         <TabsContent value="noten" className="mt-4">
-          {/* GradeMatrix placeholder -- implemented in Plan 08 */}
-          <p className="text-muted-foreground">
-            Noten werden in einem naechsten Schritt implementiert.
-          </p>
+          <GradeMatrix classSubjectId={entry.classSubjectId} schoolId={schoolId} />
         </TabsContent>
 
         <TabsContent value="notizen" className="mt-4">
-          {/* StudentNoteList placeholder -- implemented in Plan 08 */}
-          <p className="text-muted-foreground">
-            Notizen werden in einem naechsten Schritt implementiert.
-          </p>
+          <StudentNoteList entryId={entry.id} schoolId={schoolId} />
         </TabsContent>
       </Tabs>
     </div>

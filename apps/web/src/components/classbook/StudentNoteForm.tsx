@@ -133,11 +133,11 @@ export function StudentNoteForm({
         </div>
 
         {/* Private checkbox */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-h-[44px]">
           <input
             id="note-private"
             type="checkbox"
-            className="h-4 w-4 rounded border-input accent-primary"
+            className="h-5 w-5 rounded border-input accent-primary"
             checked={isPrivate}
             onChange={(e) => setIsPrivate(e.target.checked)}
           />
@@ -147,12 +147,12 @@ export function StudentNoteForm({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2">
-          <Button onClick={handleSubmit} disabled={!canSubmit || isSubmitting} size="sm">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <Button onClick={handleSubmit} disabled={!canSubmit || isSubmitting} size="sm" className="min-h-[44px]">
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isEdit ? 'Speichern' : 'Notiz hinzufuegen'}
           </Button>
-          <Button variant="outline" onClick={onCancel} size="sm">
+          <Button variant="outline" onClick={onCancel} size="sm" className="min-h-[44px]">
             Abbrechen
           </Button>
         </div>

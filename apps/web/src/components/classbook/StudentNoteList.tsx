@@ -129,7 +129,7 @@ export function StudentNoteList({ entryId, schoolId }: StudentNoteListProps) {
       <div className="flex items-center justify-between">
         <div />
         {!showAddForm && (
-          <Button onClick={() => setShowAddForm(true)}>
+          <Button onClick={() => setShowAddForm(true)} className="w-full sm:w-auto min-h-[44px]">
             <Plus className="mr-2 h-4 w-4" />
             Notiz hinzufuegen
           </Button>
@@ -257,7 +257,7 @@ function NoteCard({
         {isOwn && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button variant="ghost" size="icon" className="h-11 w-11 min-h-[44px] min-w-[44px]">
                 <MoreVertical className="h-4 w-4" />
                 <span className="sr-only">Aktionen</span>
               </Button>

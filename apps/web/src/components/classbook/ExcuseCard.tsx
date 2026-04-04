@@ -114,17 +114,18 @@ export function ExcuseCard({
 
         {/* Actions for Klassenvorstand */}
         {showActions && excuse.status === 'PENDING' && (
-          <div className="flex items-center gap-2 pt-1">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
             <Button
               size="sm"
               onClick={() => onAccept?.(excuse.id)}
+              className="min-h-[44px]"
             >
               Akzeptieren
             </Button>
             <Button
               size="sm"
               variant="outline"
-              className="text-destructive border-destructive/50 hover:bg-destructive/10"
+              className="text-destructive border-destructive/50 hover:bg-destructive/10 min-h-[44px]"
               onClick={() => onReject?.(excuse.id)}
             >
               Ablehnen

@@ -121,12 +121,12 @@ export function AbsenceStatisticsPanel({ schoolId, classId: initialClassId }: Ab
       {/* Filter bar */}
       <Card>
         <CardContent className="py-4">
-          <div className="flex flex-wrap items-end gap-4">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-4">
             {/* Class selector */}
             <div className="space-y-1.5">
               <Label>Klasse</Label>
               <Select value={selectedClassId} onValueChange={setSelectedClassId}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px] min-h-[44px]">
                   <SelectValue placeholder="Klasse auswaehlen" />
                 </SelectTrigger>
                 <SelectContent>
@@ -139,28 +139,28 @@ export function AbsenceStatisticsPanel({ schoolId, classId: initialClassId }: Ab
               </Select>
             </div>
 
-            {/* Date range */}
+            {/* Date range -- stacked on mobile, inline on sm+ */}
             <div className="space-y-1.5">
               <Label>Zeitraum</Label>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                 <input
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  className="flex h-11 min-h-[44px] w-full sm:w-auto rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 />
-                <span className="text-sm text-muted-foreground">bis</span>
+                <span className="text-sm text-muted-foreground hidden sm:inline">bis</span>
                 <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  className="flex h-11 min-h-[44px] w-full sm:w-auto rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 />
               </div>
             </div>
 
             {/* PDF export */}
-            <Button variant="outline" onClick={handleExportPdf} className="gap-2">
+            <Button variant="outline" onClick={handleExportPdf} className="gap-2 w-full sm:w-auto min-h-[44px]">
               <Download className="h-4 w-4" />
               Als PDF exportieren
             </Button>
@@ -221,6 +221,7 @@ export function AbsenceStatisticsPanel({ schoolId, classId: initialClassId }: Ab
                         className={cn(
                           'px-4 py-3 font-semibold text-muted-foreground whitespace-nowrap cursor-pointer hover:text-foreground transition-colors select-none',
                           col.align === 'right' ? 'text-right' : 'text-left',
+                          col.key === 'studentName' && 'sticky left-0 z-10 bg-muted/50',
                         )}
                         onClick={() => handleSort(col.key)}
                         aria-sort={
@@ -250,7 +251,7 @@ export function AbsenceStatisticsPanel({ schoolId, classId: initialClassId }: Ab
                         row.absenceRate > 20 && 'bg-destructive/5',
                       )}
                     >
-                      <td className="px-4 py-3 font-medium">{row.studentName}</td>
+                      <td className="px-4 py-3 font-medium sticky left-0 z-10 bg-background">{row.studentName}</td>
                       <td className="px-4 py-3 text-right tabular-nums">{row.totalLessons}</td>
                       <td className="px-4 py-3 text-right tabular-nums">{row.presentCount}</td>
                       <td className="px-4 py-3 text-right tabular-nums">{row.absentUnexcusedCount}</td>

@@ -196,7 +196,7 @@ export function GradeMatrix({ classSubjectId, schoolId }: GradeMatrixProps) {
         {/* Action bar even in empty state */}
         <div className="flex items-center justify-between">
           <div />
-          <Button onClick={() => setAddDialogOpen(true)}>
+          <Button onClick={() => setAddDialogOpen(true)} className="w-full sm:w-auto min-h-[44px]">
             <Plus className="mr-2 h-4 w-4" />
             Note hinzufuegen
           </Button>
@@ -223,7 +223,7 @@ export function GradeMatrix({ classSubjectId, schoolId }: GradeMatrixProps) {
   return (
     <div className="space-y-4">
       {/* Filter bar + actions */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
         {/* Category filter badges */}
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Kategorie-Filter">
           {(Object.entries(CATEGORY_LABELS) as [CategoryFilter, string][]).map(([key, label]) => (
@@ -231,7 +231,7 @@ export function GradeMatrix({ classSubjectId, schoolId }: GradeMatrixProps) {
               key={key}
               variant={categoryFilter === key ? 'default' : 'outline'}
               className={cn(
-                'cursor-pointer select-none transition-colors',
+                'cursor-pointer select-none transition-colors min-h-[44px] sm:min-h-0 px-3 sm:px-2',
                 categoryFilter === key
                   ? 'bg-primary text-primary-foreground'
                   : 'hover:bg-accent',
@@ -245,8 +245,8 @@ export function GradeMatrix({ classSubjectId, schoolId }: GradeMatrixProps) {
           ))}
         </div>
 
-        <div className="ml-auto flex items-center gap-2">
-          <Button onClick={() => setAddDialogOpen(true)}>
+        <div className="sm:ml-auto flex items-center gap-2">
+          <Button onClick={() => setAddDialogOpen(true)} className="w-full sm:w-auto min-h-[44px]">
             <Plus className="mr-2 h-4 w-4" />
             Note hinzufuegen
           </Button>
@@ -311,9 +311,9 @@ export function GradeMatrix({ classSubjectId, schoolId }: GradeMatrixProps) {
             </thead>
             <tbody>
               {sortedRows.map((row) => (
-                <tr key={row.studentId} className="border-b last:border-b-0 hover:bg-muted/30">
+                <tr key={row.studentId} className="border-b last:border-b-0 hover:bg-muted/30 h-10">
                   {/* Sticky student name */}
-                  <td className="sticky left-0 z-10 min-w-[120px] border-r bg-background px-3 py-1.5 font-medium sm:min-w-[160px]">
+                  <td className="sticky left-0 z-10 min-w-[120px] border-r bg-background px-3 py-1.5 font-medium text-sm sm:min-w-[160px]">
                     <span className="line-clamp-1">{row.studentName}</span>
                   </td>
 

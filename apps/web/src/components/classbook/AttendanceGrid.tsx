@@ -164,14 +164,14 @@ export function AttendanceGrid({ entryId, schoolId }: AttendanceGridProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2 sm:space-y-3">
       {/* Action bar */}
       <div className="flex items-center justify-between">
         <Button
           variant="secondary"
           onClick={handleSetAllPresent}
           disabled={setAllPresentMutation.isPending}
-          className="min-h-[44px]"
+          className="min-h-[44px] w-full sm:w-auto"
         >
           <UserCheck className="h-4 w-4 mr-1.5" />
           Alle anwesend
@@ -185,17 +185,16 @@ export function AttendanceGrid({ entryId, schoolId }: AttendanceGridProps) {
         )}
       </div>
 
-      {/* Student rows */}
-      <div className="divide-y border rounded-lg overflow-hidden" role="list" aria-label="Anwesenheitsliste">
+      {/* Student rows with scroll container for long lists */}
+      <div className="max-h-[70vh] overflow-y-auto divide-y border rounded-lg overflow-x-hidden" role="list" aria-label="Anwesenheitsliste">
         {localRecords.map((record) => (
           <div
             key={record.studentId}
-            className="flex items-center justify-between px-3 sm:px-4 bg-background"
-            style={{ minHeight: '48px' }}
+            className="flex items-center justify-between h-12 px-3 sm:px-4 rounded-md bg-background"
             role="listitem"
           >
             {/* Student name */}
-            <span className="text-sm truncate flex-1 min-w-0 mr-3">
+            <span className="text-sm truncate max-w-[60%] sm:max-w-none min-w-0 mr-3">
               {record.studentName}
             </span>
 
@@ -208,11 +207,21 @@ export function AttendanceGrid({ entryId, schoolId }: AttendanceGridProps) {
                 />
               )}
 
-              <AttendanceStatusIcon
-                status={record.status}
-                onCycle={() => handleCycleStatus(record.studentId)}
-                compact={false}
-              />
+              {/* Compact (icon only) on mobile, full labels on sm+ */}
+              <span className="sm:hidden">
+                <AttendanceStatusIcon
+                  status={record.status}
+                  onCycle={() => handleCycleStatus(record.studentId)}
+                  compact={true}
+                />
+              </span>
+              <span className="hidden sm:inline-flex">
+                <AttendanceStatusIcon
+                  status={record.status}
+                  onCycle={() => handleCycleStatus(record.studentId)}
+                  compact={false}
+                />
+              </span>
             </div>
           </div>
         ))}
