@@ -19,6 +19,15 @@ const mockPrisma = {
     count: vi.fn(),
     findFirst: vi.fn(),
   },
+  // Phase 6 (D-19): handover_materials retention category.
+  // Default to "no expired rows" so pre-existing tests stay focused on their
+  // audit-entry assertions without needing to stub handover mocks explicitly.
+  handoverNote: {
+    count: vi.fn().mockResolvedValue(0),
+    findFirst: vi.fn().mockResolvedValue(null),
+    findMany: vi.fn().mockResolvedValue([]),
+    delete: vi.fn(),
+  },
 };
 
 describe('RetentionService', () => {
@@ -26,6 +35,11 @@ describe('RetentionService', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    // Restore Phase 6 handover default values after clearAllMocks() resets them
+    mockPrisma.handoverNote.count.mockResolvedValue(0);
+    mockPrisma.handoverNote.findFirst.mockResolvedValue(null);
+    mockPrisma.handoverNote.findMany.mockResolvedValue([]);
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         RetentionService,

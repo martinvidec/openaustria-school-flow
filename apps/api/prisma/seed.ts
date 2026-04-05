@@ -39,8 +39,16 @@ async function main() {
   // =====================================================
 
   // Admin: manage all (D-03: System scope)
+  // NOTE: `manage:all` already subsumes everything below at the CASL layer.
+  // The explicit Phase 6 entries are duplicates for discoverability -- they
+  // make it trivial to grep which subjects admin owns without knowing CASL.
   const adminPermissions = [
     { action: 'manage', subject: 'all' },
+    // Phase 6 explicit subjects (redundant with manage:all, kept for grep-ability)
+    { action: 'manage', subject: 'substitution' },
+    { action: 'manage', subject: 'absence' },
+    { action: 'manage', subject: 'handover' },
+    { action: 'manage', subject: 'notification' },
   ];
 
   // Schulleitung: pedagogical management (D-03) + Phase 2 subjects
@@ -105,6 +113,11 @@ async function main() {
     { action: 'manage', subject: 'student-note' },
     // Phase 5: excuse (manage all excuses -- BOOK-06)
     { action: 'manage', subject: 'excuse' },
+    // Phase 6: substitution planning (SUBST-01..06)
+    { action: 'manage', subject: 'substitution' },
+    { action: 'manage', subject: 'absence' },
+    { action: 'manage', subject: 'handover' },
+    { action: 'manage', subject: 'notification' },
   ];
 
   // Lehrer: own classes, own grades (AUTH-03) + Phase 2 subjects
@@ -143,6 +156,20 @@ async function main() {
     // Phase 5: excuse (read excuses, manage for Klassenvorstand -- BOOK-06, D-12)
     { action: 'read', subject: 'excuse' },
     { action: 'manage', subject: 'excuse' },
+    // Phase 6: substitution (read own offers, update to respond accept/decline)
+    { action: 'read', subject: 'substitution' },
+    { action: 'update', subject: 'substitution' },
+    // Phase 6: absence (read absences in the teacher's context)
+    { action: 'read', subject: 'absence' },
+    // Phase 6: additional substitution read scoped to teacher's class for KV
+    { action: 'read', subject: 'substitution', conditions: { teacherId: '{{ id }}' } },
+    // Phase 6: handover (create/read/delete own handover notes)
+    { action: 'create', subject: 'handover' },
+    { action: 'read', subject: 'handover' },
+    { action: 'delete', subject: 'handover' },
+    // Phase 6: notification (read + mark-read own notifications)
+    { action: 'read', subject: 'notification' },
+    { action: 'update', subject: 'notification' },
   ];
 
   // Eltern: own child only (AUTH-03) + Phase 2 subjects
@@ -171,6 +198,9 @@ async function main() {
     // Phase 5: excuse (create + read own excuses -- BOOK-06, D-11)
     { action: 'create', subject: 'excuse' },
     { action: 'read', subject: 'excuse', conditions: { parentId: '{{ id }}' } },
+    // Phase 6: notification (read + mark-read own notifications)
+    { action: 'read', subject: 'notification' },
+    { action: 'update', subject: 'notification' },
   ];
 
   // Schueler: own data only (AUTH-03) + Phase 2 subjects
@@ -191,6 +221,9 @@ async function main() {
     { action: 'read', subject: 'room' },
     // Phase 5: grade (read own grades -- BOOK-03, D-08)
     { action: 'read', subject: 'grade', conditions: { studentId: '{{ id }}' } },
+    // Phase 6: notification (read + mark-read own notifications)
+    { action: 'read', subject: 'notification' },
+    { action: 'update', subject: 'notification' },
   ];
 
   const allPermissions = [
