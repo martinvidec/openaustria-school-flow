@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-04-05T09:12:00.620Z"
+stopped_at: Completed 06-02-PLAN.md
+last_updated: "2026-04-05T09:30:04.825Z"
 last_activity: 2026-04-05
 progress:
   total_phases: 9
   completed_phases: 5
   total_plans: 52
-  completed_plans: 47
+  completed_plans: 48
   percent: 83
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 ## Current Position
 
 Phase: 06 (substitution-planning) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
 Last activity: 2026-04-05
 
@@ -92,6 +92,7 @@ Progress: [========..] 83%
 | Phase 05 P08 | 7min | 2 tasks | 6 files |
 | Phase 05 P09 | 8min | 2 tasks | 8 files |
 | Phase 06 P01 | 7min | 3 tasks tasks | 18 files files |
+| Phase 06 P02 | 10min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -205,6 +206,10 @@ Recent decisions affecting current work:
 - [Phase 06]: Denormalized lesson identity on Substitution (classSubjectId + dayOfWeek + periodNumber + weekType) — soft reference survives TimetableRun churn (Pitfall 1)
 - [Phase 06]: ClassBookEntry.substitutionId uses SetNull cascade (not Cascade) to preserve audit trail of past substitutions — mirrors Phase 4 TimetableLessonEdit pattern
 - [Phase 06]: HandoverNote.substitutionId is @unique — DB-level enforcement of D-20 exactly one handover note per substitution
+- [Phase 06]: Controllers mount at /schools/:schoolId/... (not req.user.schoolId) because AuthenticatedUser does not carry schoolId in this codebase
+- [Phase 06]: Stillarbeit without supervisor falls back to originalTeacherId for CBE.teacherId FK (required field); audit trail stays with originally scheduled teacher + Stillarbeit marker
+- [Phase 06]: Pitfall 2 stale-candidate re-check inlined in SubstitutionService.assignSubstitute (minimal: conflicting TimetableLesson + conflicting OFFERED/CONFIRMED Substitution) — full RankingService.passesHardFilters arrives in Plan 06-03
+- [Phase 06]: CBE upsert helpers resolve schoolId via teacherAbsence.findUniqueOrThrow inside the same transaction rather than denormalizing schoolId onto Substitution
 
 ### Pending Todos
 
@@ -218,6 +223,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-05T09:12:00.617Z
-Stopped at: Completed 06-01-PLAN.md
+Last session: 2026-04-05T09:30:04.822Z
+Stopped at: Completed 06-02-PLAN.md
 Resume file: None

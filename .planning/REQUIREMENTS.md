@@ -45,7 +45,7 @@
 
 ### Substitution Planning
 
-- [ ] **SUBST-01**: Admin kann Lehrer-Abwesenheit mit Grund und Dauer erfassen
+- [x] **SUBST-01**: Admin kann Lehrer-Abwesenheit mit Grund und Dauer erfassen
 - [ ] **SUBST-02**: System schlägt automatisch passende Vertretungen vor (Verfügbarkeit, Qualifikation, Auslastungs-Fairness)
 - [ ] **SUBST-03**: Vertretungslehrer kann Vertretung per Push-Notification bestätigen/ablehnen
 - [ ] **SUBST-04**: Abwesender Lehrer kann Übergabenotizen pro Stunde hinterlassen
@@ -189,7 +189,7 @@
 | BOOK-05 | Phase 5 | Complete |
 | BOOK-06 | Phase 5 | Complete |
 | BOOK-07 | Phase 5 | Complete |
-| SUBST-01 | Phase 6 | Pending |
+| SUBST-01 | Phase 6 | Complete |
 | SUBST-02 | Phase 6 | Pending |
 | SUBST-03 | Phase 6 | Pending |
 | SUBST-04 | Phase 6 | Pending |
