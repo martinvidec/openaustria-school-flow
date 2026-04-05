@@ -152,16 +152,16 @@ Plans:
   3. The absent teacher can leave handover notes per lesson for the substitute
   4. All substitution changes propagate instantly to every timetable view (teacher, class, room)
   5. System tracks substitution statistics per teacher (given and received) for workload fairness monitoring
-**Plans**: TBD
+**Plans**: 6 plans
 **UI hint**: yes
 
 Plans:
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
-- [ ] 06-03: TBD
-- [ ] 06-04: TBD
-- [ ] 06-05: TBD
-- [ ] 06-06: TBD
+- [x] 06-01-PLAN.md -- Wave 0: Prisma schema (5 models + 5 enums + ClassBookEntry.substitutionId), shared types, SubstitutionModule scaffold, 12 spec stubs
+- [ ] 06-02-PLAN.md -- TeacherAbsenceService with range expansion (ab-week util) + SubstitutionService lifecycle (assign/respond/entfall/stillarbeit) with ClassBookEntry linkage
+- [ ] 06-03-PLAN.md -- RankingService (D-05 weighted scoring) + NotificationService+Gateway (JWT handshake, per-user rooms, dedup) + HandoverService (reuses Phase 5 multipart)
+- [ ] 06-04-PLAN.md -- Overlay-aware getView() rewrite + SubstitutionStatsService + ranking controller + CASL seeds + retention extension + module assembly
+- [ ] 06-05-PLAN.md -- Admin /admin/substitutions page (3-tab layout: AbsenceForm, OpenSubstitutionsPanel, FairnessStatsPanel) + TanStack Query hooks
+- [ ] 06-06-PLAN.md -- NotificationBell + Popover primitive + useNotificationSocket + Lehrer /teacher/substitutions + HandoverNote components + stillarbeit ChangeIndicator variant + human verification
 
 ### Phase 7: Communication
 **Goal**: Teachers, parents, and admins can communicate within the platform -- replacing SchoolFox/email chains with role-scoped messaging, read tracking, and file sharing

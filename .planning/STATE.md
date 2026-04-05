@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 6 context gathered
-last_updated: "2026-04-04T21:37:19.524Z"
-last_activity: 2026-04-04
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-04-05T09:12:00.620Z"
+last_activity: 2026-04-05
 progress:
   total_phases: 9
   completed_phases: 5
-  total_plans: 46
-  completed_plans: 46
+  total_plans: 52
+  completed_plans: 47
   percent: 83
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenplanerstellung, die sie selbst hosten koennen -- ohne Vendor Lock-in, mit offenen APIs und DSGVO-Konformitaet von Tag 1.
-**Current focus:** Phase 05 — digital-class-book
+**Current focus:** Phase 06 — substitution-planning
 
 ## Current Position
 
-Phase: 6
-Plan: Not started
+Phase: 06 (substitution-planning) — EXECUTING
+Plan: 2 of 6
 Status: Ready to execute
-Last activity: 2026-04-04
+Last activity: 2026-04-05
 
 Progress: [========..] 83%
 
@@ -91,6 +91,7 @@ Progress: [========..] 83%
 | Phase 05 P07 | 16min | 2 tasks | 10 files |
 | Phase 05 P08 | 7min | 2 tasks | 6 files |
 | Phase 05 P09 | 8min | 2 tasks | 8 files |
+| Phase 06 P01 | 7min | 3 tasks tasks | 18 files files |
 
 ## Accumulated Context
 
@@ -200,6 +201,10 @@ Recent decisions affecting current work:
 - [Phase 05]: ScrollArea created manually following shadcn pattern (consistent with Phase 5 decision for Textarea/Input/Label)
 - [Phase 05]: Direct apiFetch for file upload in ExcuseForm instead of useUploadAttachment hook (excuseId not available at hook call time)
 - [Phase 05]: Native HTML date inputs for excuse/statistics date pickers instead of Calendar+Popover (component not installed)
+- [Phase 06]: Followed Phase 4 Nyquist Wave 0 pattern — all 12 it.todo() stubs created before any business logic
+- [Phase 06]: Denormalized lesson identity on Substitution (classSubjectId + dayOfWeek + periodNumber + weekType) — soft reference survives TimetableRun churn (Pitfall 1)
+- [Phase 06]: ClassBookEntry.substitutionId uses SetNull cascade (not Cascade) to preserve audit trail of past substitutions — mirrors Phase 4 TimetableLessonEdit pattern
+- [Phase 06]: HandoverNote.substitutionId is @unique — DB-level enforcement of D-20 exactly one handover note per substitution
 
 ### Pending Todos
 
@@ -213,6 +218,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-04T21:37:19.520Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-substitution-planning/06-CONTEXT.md
+Last session: 2026-04-05T09:12:00.617Z
+Stopped at: Completed 06-01-PLAN.md
+Resume file: None
