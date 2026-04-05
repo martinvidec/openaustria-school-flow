@@ -220,6 +220,7 @@ describe('SubstitutionService (SUBST-03 / SUBST-05 / D-04 / D-14)', () => {
         id: 'teacher-2',
         person: { keycloakUserId: 'kc-sub-teacher' },
       });
+      prisma.teacherAbsence.findUniqueOrThrow.mockResolvedValue({ schoolId: 'school-1' });
       prisma.substitution.update.mockResolvedValue({
         ...offeredSub,
         status: 'CONFIRMED',
@@ -326,6 +327,7 @@ describe('SubstitutionService (SUBST-03 / SUBST-05 / D-04 / D-14)', () => {
   describe('setStillarbeit()', () => {
     it('creates a ClassBookEntry with thema="Stillarbeit" when a supervisor is provided (D-14 + Open Question 4)', async () => {
       prisma.substitution.findUniqueOrThrow.mockResolvedValue({ ...baseSubstitution });
+      prisma.teacherAbsence.findUniqueOrThrow.mockResolvedValue({ schoolId: 'school-1' });
       prisma.substitution.update.mockResolvedValue({
         ...baseSubstitution,
         type: 'STILLARBEIT',
@@ -352,6 +354,7 @@ describe('SubstitutionService (SUBST-03 / SUBST-05 / D-04 / D-14)', () => {
 
     it('falls back to originalTeacherId for the ClassBookEntry.teacherId FK when no supervisor is supplied', async () => {
       prisma.substitution.findUniqueOrThrow.mockResolvedValue({ ...baseSubstitution });
+      prisma.teacherAbsence.findUniqueOrThrow.mockResolvedValue({ schoolId: 'school-1' });
       prisma.substitution.update.mockResolvedValue({
         ...baseSubstitution,
         type: 'STILLARBEIT',
