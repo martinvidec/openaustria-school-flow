@@ -225,7 +225,7 @@ describe('NotificationService (SUBST-03)', () => {
       person: { keycloakUserId: 'kc-substitute' },
     });
     prismaMock.classSubject.findUnique.mockResolvedValue({
-      class: {
+      schoolClass: {
         klassenvorstand: { person: { keycloakUserId: 'kc-kv' } },
       },
     });
@@ -260,7 +260,7 @@ describe('NotificationService (SUBST-03)', () => {
       person: { keycloakUserId: 'kc-substitute' },
     });
     prismaMock.classSubject.findUnique.mockResolvedValue({
-      class: { klassenvorstand: null },
+      schoolClass: { klassenvorstand: null },
     });
 
     const recipients = await service.resolveRecipientsForSubstitutionEvent(
