@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-02-PLAN.md
-last_updated: "2026-04-05T09:30:04.825Z"
+stopped_at: Completed 06-03-PLAN.md
+last_updated: "2026-04-05T09:34:05.265Z"
 last_activity: 2026-04-05
 progress:
   total_phases: 9
   completed_phases: 5
   total_plans: 52
-  completed_plans: 48
+  completed_plans: 49
   percent: 83
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 ## Current Position
 
 Phase: 06 (substitution-planning) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 Status: Ready to execute
 Last activity: 2026-04-05
 
@@ -93,6 +93,7 @@ Progress: [========..] 83%
 | Phase 05 P09 | 8min | 2 tasks | 8 files |
 | Phase 06 P01 | 7min | 3 tasks tasks | 18 files files |
 | Phase 06 P02 | 10min | 2 tasks | 10 files |
+| Phase 06 P03 | 12min | 3 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -210,6 +211,11 @@ Recent decisions affecting current work:
 - [Phase 06]: Stillarbeit without supervisor falls back to originalTeacherId for CBE.teacherId FK (required field); audit trail stays with originally scheduled teacher + Stillarbeit marker
 - [Phase 06]: Pitfall 2 stale-candidate re-check inlined in SubstitutionService.assignSubstitute (minimal: conflicting TimetableLesson + conflicting OFFERED/CONFIRMED Substitution) — full RankingService.passesHardFilters arrives in Plan 06-03
 - [Phase 06]: CBE upsert helpers resolve schoolId via teacherAbsence.findUniqueOrThrow inside the same transaction rather than denormalizing schoolId onto Substitution
+- [Phase 06]: RankingService.estimateCurrentWeeklyHours uses day-lesson count as conservative floor -- full WE-per-subject math lives in SubstitutionStatsService (Plan 04)
+- [Phase 06]: Ranking MAX_HOURS_PER_DAY enforced via MAX_DAYS_PER_WEEK availability rule -- schema has no dedicated MAX_PERIODS_PER_DAY enum value
+- [Phase 06]: NotificationGateway uses JwtService (contract-only), mock in tests provides verifyAsync, Plan 04 wires real JwtModule with Keycloak JWKS during module assembly
+- [Phase 06]: NotificationService walks ClassSubject.schoolClass (not .class) to reach klassenvorstand -- schema relation name differs from plan draft
+- [Phase 06]: markRead returns 404 (not 403) on foreign-user notification access to prevent user enumeration via error shape
 
 ### Pending Todos
 
@@ -223,6 +229,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-05T09:30:04.822Z
-Stopped at: Completed 06-02-PLAN.md
+Last session: 2026-04-05T09:34:05.262Z
+Stopped at: Completed 06-03-PLAN.md
 Resume file: None
