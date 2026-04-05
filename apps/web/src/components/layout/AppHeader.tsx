@@ -1,6 +1,7 @@
 import { Menu, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 interface AppHeaderProps {
   onMobileMenuToggle?: () => void;
@@ -26,7 +27,8 @@ export function AppHeader({ onMobileMenuToggle }: AppHeaderProps) {
         </span>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
+        <NotificationBell />
         {user && (
           <span className="text-sm text-muted-foreground hidden sm:inline">
             {user.firstName} {user.lastName}

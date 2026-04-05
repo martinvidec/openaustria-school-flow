@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router';
 import { keycloak } from '@/lib/keycloak';
 import { useTimetableSocket } from '@/hooks/useSocket';
+import { useNotificationSocket } from '@/hooks/useNotificationSocket';
 import { useUserContext } from '@/hooks/useUserContext';
 import { useSchoolContext } from '@/stores/school-context-store';
 
@@ -22,6 +23,12 @@ function AuthenticatedLayout() {
   // Mounted here (not on /timetable page) so that ROOM-05 room change
   // events also propagate to /rooms and /admin/* pages.
   const { isConnected: _isConnected } = useTimetableSocket(schoolId ?? '');
+
+  // SUBST-03 — App-wide notification socket. Single mount per authenticated
+  // session per the 06-RESEARCH Pattern 4 anti-pattern guidance (multiple
+  // mounts would duplicate every notification event).
+  const jwt = keycloak.token ?? null;
+  useNotificationSocket(jwt);
 
   if (!isLoaded) {
     return (
