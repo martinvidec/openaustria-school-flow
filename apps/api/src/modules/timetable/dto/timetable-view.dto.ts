@@ -1,9 +1,13 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsEnum, IsOptional, IsString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
  * Query parameters for GET /timetable/view
  * Filters the timetable view by perspective (teacher, class, or room).
+ *
+ * SUBST-05: the optional `date` param activates overlay-aware rendering —
+ * Substitution rows (CONFIRMED/OFFERED) for the ISO week containing `date`
+ * are joined and applied to the returned lessons.
  */
 export class TimetableViewQueryDto {
   @IsEnum(['teacher', 'class', 'room'])
@@ -28,11 +32,22 @@ export class TimetableViewQueryDto {
     enum: ['A', 'B', 'BOTH'],
   })
   weekType?: string;
+
+  @IsOptional()
+  @IsDateString()
+  @ApiPropertyOptional({
+    description:
+      'Optional date (YYYY-MM-DD) for overlay-aware view. Substitutions in the ISO week of this date are merged on top of the recurring plan (SUBST-05).',
+  })
+  date?: string;
 }
 
 /**
  * Single lesson in the timetable view response.
  * Contains joined data from ClassSubject -> Subject, Teacher -> Person, and Room.
+ *
+ * SUBST-05: changeType='stillarbeit' is a new legitimate value when an overlaid
+ * Substitution has type=STILLARBEIT.
  */
 export class TimetableViewLessonDto {
   @ApiProperty() id!: string;
@@ -48,7 +63,13 @@ export class TimetableViewLessonDto {
   @ApiProperty() periodNumber!: number;
   @ApiProperty() weekType!: string;
   @ApiProperty() isManualEdit!: boolean;
-  @ApiPropertyOptional() changeType?: 'substitution' | 'cancelled' | 'room-swap' | null;
+  @ApiPropertyOptional()
+  changeType?:
+    | 'substitution'
+    | 'cancelled'
+    | 'room-swap'
+    | 'stillarbeit'
+    | null;
   @ApiPropertyOptional() originalTeacherSurname?: string;
   @ApiPropertyOptional() originalRoomName?: string;
 }

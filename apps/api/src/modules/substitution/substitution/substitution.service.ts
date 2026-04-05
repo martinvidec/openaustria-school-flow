@@ -4,6 +4,8 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { PrismaService } from '../../../config/database/prisma.service';
+import { NotificationService } from '../notification/notification.service';
+import { TimetableEventsGateway } from '../../timetable/timetable-events.gateway';
 import type { SubstitutionDto } from '@schoolflow/shared';
 
 /**
@@ -20,11 +22,9 @@ import type { SubstitutionDto } from '@schoolflow/shared';
  * inside a Serializable transaction. Two admins racing to assign the same
  * candidate will get one success and one 409 Conflict.
  *
- * Plan 06-03 injects RankingService + NotificationService into this class
- * later. For Plan 06-02 the hard-filter re-check is inlined to avoid a
- * placeholder dependency — the minimal conflict query is enough to satisfy
- * Pitfall 2 and is exactly what RankingService.passesHardFilters will call
- * when it lands.
+ * Plan 06-04: wires NotificationService + TimetableEventsGateway so every
+ * successful lifecycle transition produces the correct real-time events AND
+ * persisted in-app notifications for the relevant recipient cohort (D-11).
  */
 
 export interface AssignSubstituteInput {
@@ -53,13 +53,17 @@ export interface SetStillarbeitInput {
 
 @Injectable()
 export class SubstitutionService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationService,
+    private readonly timetableGateway: TimetableEventsGateway,
+  ) {}
 
   // ---------------------------------------------------------------------------
   // assignSubstitute — PENDING/DECLINED → OFFERED (Pitfall 2 guard)
   // ---------------------------------------------------------------------------
   async assignSubstitute(input: AssignSubstituteInput): Promise<SubstitutionDto> {
-    return this.prisma.$transaction(
+    const { dto, schoolId, updated } = await this.prisma.$transaction(
       async (tx: any) => {
         const sub = await tx.substitution.findUniqueOrThrow({
           where: { id: input.substitutionId },
@@ -124,121 +128,285 @@ export class SubstitutionService {
           },
         });
 
-        return this.toDto(updated);
+        return {
+          dto: this.toDto(updated),
+          schoolId: absence.schoolId,
+          updated,
+        };
       },
       { isolationLevel: 'Serializable' },
     );
+
+    // --- Plan 06-04 wiring: notifications + real-time event ---
+    // (Runs AFTER the Serializable transaction commits so clients don't see
+    // events for a rollback.)
+    try {
+      const substitute = await this.prisma.teacher.findUniqueOrThrow({
+        where: { id: input.candidateTeacherId },
+        include: { person: { select: { keycloakUserId: true } } },
+      });
+      const kcId = (substitute as any).person?.keycloakUserId;
+      if (kcId) {
+        await this.notifications.create({
+          userId: kcId,
+          type: 'SUBSTITUTION_OFFER',
+          title: 'Neue Vertretungsanfrage',
+          body: `Vertretung am ${this.formatDate(updated.date)}`,
+          payload: {
+            substitutionId: updated.id,
+            lessonId: updated.lessonId,
+            date: this.isoDate(updated.date),
+          },
+        });
+      }
+    } catch {
+      // Notification failure must not roll back an already-committed
+      // assignment. Logged implicitly via NotificationService.
+    }
+
+    this.timetableGateway.emitSubstitutionCreated(schoolId, {
+      substitutionId: updated.id,
+      lessonId: updated.lessonId,
+      date: this.isoDate(updated.date),
+      changeType: 'substitution',
+    });
+
+    return dto;
   }
 
   // ---------------------------------------------------------------------------
   // respondToOffer — OFFERED → CONFIRMED or DECLINED (D-14 ClassBookEntry)
   // ---------------------------------------------------------------------------
   async respondToOffer(input: RespondToOfferInput): Promise<SubstitutionDto> {
-    return this.prisma.$transaction(async (tx: any) => {
-      const sub = await tx.substitution.findUniqueOrThrow({
-        where: { id: input.substitutionId },
-      });
+    const { dto, schoolId, updated, accepted } = await this.prisma.$transaction(
+      async (tx: any) => {
+        const sub = await tx.substitution.findUniqueOrThrow({
+          where: { id: input.substitutionId },
+        });
 
-      if (sub.status !== 'OFFERED') {
-        throw new ConflictException(
-          'Vertretung ist nicht in einem Status, der beantwortet werden kann.',
+        if (sub.status !== 'OFFERED') {
+          throw new ConflictException(
+            'Vertretung ist nicht in einem Status, der beantwortet werden kann.',
+          );
+        }
+        if (!sub.substituteTeacherId) {
+          // Defensive — an OFFERED row must have a substitute assigned.
+          throw new ConflictException(
+            'Vertretung hat keinen zugewiesenen Vertretungslehrer.',
+          );
+        }
+
+        // Verify the responding user actually IS the assigned substitute.
+        const substitute = await tx.teacher.findUniqueOrThrow({
+          where: { id: sub.substituteTeacherId },
+          include: { person: { select: { keycloakUserId: true } } },
+        });
+
+        if (substitute.person?.keycloakUserId !== input.userId) {
+          throw new ForbiddenException(
+            'Nur der zugewiesene Vertretungslehrer kann auf dieses Angebot antworten.',
+          );
+        }
+
+        const newStatus = input.accept ? 'CONFIRMED' : 'DECLINED';
+        const updated = await tx.substitution.update({
+          where: { id: sub.id },
+          data: {
+            status: newStatus,
+            respondedAt: new Date(),
+          },
+        });
+
+        // D-14: On accept of a SUBSTITUTED type, create/update the ClassBookEntry
+        // with teacherId pointing to the substitute and the substitutionId FK.
+        let schoolIdResolved: string | null = null;
+        if (input.accept && updated.type === 'SUBSTITUTED') {
+          schoolIdResolved = await this.upsertClassBookEntryForSubstitution(
+            tx,
+            updated,
+          );
+        }
+
+        return {
+          dto: this.toDto(updated),
+          schoolId: schoolIdResolved,
+          updated,
+          accepted: input.accept,
+        };
+      },
+    );
+
+    // --- Plan 06-04 wiring: notifications + real-time events ---
+    const eventType = accepted ? 'SUBSTITUTION_CONFIRMED' : 'SUBSTITUTION_DECLINED';
+    try {
+      const recipients =
+        await this.notifications.resolveRecipientsForSubstitutionEvent(
+          updated.id,
+          eventType,
         );
+      for (const userId of recipients) {
+        await this.notifications.create({
+          userId,
+          type: eventType as any,
+          title: accepted ? 'Vertretung bestätigt' : 'Vertretung abgelehnt',
+          body: accepted
+            ? `Vertretung am ${this.formatDate(updated.date)} wurde bestätigt`
+            : `Vertretung am ${this.formatDate(updated.date)} wurde abgelehnt`,
+          payload: {
+            substitutionId: updated.id,
+            declineReason: input.declineReason ?? null,
+          },
+        });
       }
-      if (!sub.substituteTeacherId) {
-        // Defensive — an OFFERED row must have a substitute assigned.
-        throw new ConflictException(
-          'Vertretung hat keinen zugewiesenen Vertretungslehrer.',
-        );
-      }
+    } catch {
+      // swallow — notification failure must not block the committed response
+    }
 
-      // Verify the responding user actually IS the assigned substitute.
-      const substitute = await tx.teacher.findUniqueOrThrow({
-        where: { id: sub.substituteTeacherId },
-        include: { person: { select: { keycloakUserId: true } } },
+    if (accepted && schoolId) {
+      this.timetableGateway.emitSubstitutionCreated(schoolId, {
+        substitutionId: updated.id,
+        lessonId: updated.lessonId,
+        date: this.isoDate(updated.date),
+        changeType: 'substitution',
       });
+    }
 
-      if (substitute.person?.keycloakUserId !== input.userId) {
-        throw new ForbiddenException(
-          'Nur der zugewiesene Vertretungslehrer kann auf dieses Angebot antworten.',
-        );
-      }
-
-      const newStatus = input.accept ? 'CONFIRMED' : 'DECLINED';
-      const updated = await tx.substitution.update({
-        where: { id: sub.id },
-        data: {
-          status: newStatus,
-          respondedAt: new Date(),
-        },
-      });
-
-      // D-14: On accept of a SUBSTITUTED type, create/update the ClassBookEntry
-      // with teacherId pointing to the substitute and the substitutionId FK.
-      if (input.accept && updated.type === 'SUBSTITUTED') {
-        await this.upsertClassBookEntryForSubstitution(tx, updated);
-      }
-
-      return this.toDto(updated);
-    });
+    return dto;
   }
 
   // ---------------------------------------------------------------------------
   // setEntfall — PENDING/... → CONFIRMED (type=ENTFALL), no ClassBookEntry
   // ---------------------------------------------------------------------------
   async setEntfall(input: SetEntfallInput): Promise<SubstitutionDto> {
-    return this.prisma.$transaction(async (tx: any) => {
-      const sub = await tx.substitution.findUniqueOrThrow({
-        where: { id: input.substitutionId },
-      });
+    const { dto, schoolId, updated } = await this.prisma.$transaction(
+      async (tx: any) => {
+        const sub = await tx.substitution.findUniqueOrThrow({
+          where: { id: input.substitutionId },
+        });
 
-      const updated = await tx.substitution.update({
-        where: { id: sub.id },
-        data: {
-          type: 'ENTFALL',
-          status: 'CONFIRMED',
-          respondedAt: new Date(),
-        },
-      });
+        const absence = await tx.teacherAbsence.findUniqueOrThrow({
+          where: { id: sub.absenceId },
+          select: { schoolId: true },
+        });
 
-      // D-14: ENTFALL produces no ClassBookEntry. If one existed from a
-      // previous transition (e.g. we flipped STILLARBEIT → ENTFALL), clean it
-      // up to avoid a dangling audit record.
-      await tx.classBookEntry.deleteMany({ where: { substitutionId: sub.id } });
+        const updated = await tx.substitution.update({
+          where: { id: sub.id },
+          data: {
+            type: 'ENTFALL',
+            status: 'CONFIRMED',
+            respondedAt: new Date(),
+          },
+        });
 
-      return this.toDto(updated);
+        // D-14: ENTFALL produces no ClassBookEntry. If one existed from a
+        // previous transition (e.g. we flipped STILLARBEIT → ENTFALL), clean it
+        // up to avoid a dangling audit record.
+        await tx.classBookEntry.deleteMany({ where: { substitutionId: sub.id } });
+
+        return { dto: this.toDto(updated), schoolId: absence.schoolId, updated };
+      },
+    );
+
+    // --- Plan 06-04 wiring ---
+    this.timetableGateway.emitSubstitutionCancelled(schoolId, {
+      substitutionId: updated.id,
+      lessonId: updated.lessonId,
+      date: this.isoDate(updated.date),
     });
+
+    try {
+      const recipients =
+        await this.notifications.resolveRecipientsForSubstitutionEvent(
+          updated.id,
+          'LESSON_CANCELLED',
+        );
+      for (const userId of recipients) {
+        await this.notifications.create({
+          userId,
+          type: 'LESSON_CANCELLED',
+          title: 'Stunde fällt aus',
+          body: `Stunde am ${this.formatDate(updated.date)} wurde als Entfall markiert`,
+          payload: { substitutionId: updated.id },
+        });
+      }
+    } catch {
+      // notification failures are non-fatal
+    }
+
+    return dto;
   }
 
   // ---------------------------------------------------------------------------
   // setStillarbeit — PENDING/... → CONFIRMED (type=STILLARBEIT, thema='Stillarbeit')
   // ---------------------------------------------------------------------------
   async setStillarbeit(input: SetStillarbeitInput): Promise<SubstitutionDto> {
-    return this.prisma.$transaction(async (tx: any) => {
-      const sub = await tx.substitution.findUniqueOrThrow({
-        where: { id: input.substitutionId },
-      });
+    const { dto, schoolId, updated } = await this.prisma.$transaction(
+      async (tx: any) => {
+        const sub = await tx.substitution.findUniqueOrThrow({
+          where: { id: input.substitutionId },
+        });
 
-      const updated = await tx.substitution.update({
-        where: { id: sub.id },
-        data: {
-          type: 'STILLARBEIT',
-          status: 'CONFIRMED',
-          substituteTeacherId: input.supervisorTeacherId ?? null,
-          respondedAt: new Date(),
-        },
-      });
+        const absence = await tx.teacherAbsence.findUniqueOrThrow({
+          where: { id: sub.absenceId },
+          select: { schoolId: true },
+        });
 
-      // D-14 + Open Question 4 resolution: thema='Stillarbeit', lehrstoff=null.
-      // ClassBookEntry.teacherId is required (not nullable in schema), so when
-      // no supervisor is supplied we fall back to the originalTeacherId of
-      // this substitution. This keeps the FK valid and the audit trail honest:
-      // the "owning" teacher for record-keeping is still the originally
-      // scheduled one, just with a Stillarbeit marker.
-      const teacherIdForEntry = input.supervisorTeacherId ?? sub.originalTeacherId;
-      await this.upsertStillarbeitClassBookEntry(tx, updated, teacherIdForEntry);
+        const updated = await tx.substitution.update({
+          where: { id: sub.id },
+          data: {
+            type: 'STILLARBEIT',
+            status: 'CONFIRMED',
+            substituteTeacherId: input.supervisorTeacherId ?? null,
+            respondedAt: new Date(),
+          },
+        });
 
-      return this.toDto(updated);
+        // D-14 + Open Question 4 resolution: thema='Stillarbeit', lehrstoff=null.
+        // ClassBookEntry.teacherId is required (not nullable in schema), so when
+        // no supervisor is supplied we fall back to the originalTeacherId of
+        // this substitution. This keeps the FK valid and the audit trail honest:
+        // the "owning" teacher for record-keeping is still the originally
+        // scheduled one, just with a Stillarbeit marker.
+        const teacherIdForEntry = input.supervisorTeacherId ?? sub.originalTeacherId;
+        await this.upsertStillarbeitClassBookEntry(
+          tx,
+          updated,
+          teacherIdForEntry,
+          absence.schoolId,
+        );
+
+        return { dto: this.toDto(updated), schoolId: absence.schoolId, updated };
+      },
+    );
+
+    // --- Plan 06-04 wiring ---
+    this.timetableGateway.emitSubstitutionCreated(schoolId, {
+      substitutionId: updated.id,
+      lessonId: updated.lessonId,
+      date: this.isoDate(updated.date),
+      changeType: 'stillarbeit',
     });
+
+    try {
+      const recipients =
+        await this.notifications.resolveRecipientsForSubstitutionEvent(
+          updated.id,
+          'STILLARBEIT_ASSIGNED',
+        );
+      for (const userId of recipients) {
+        await this.notifications.create({
+          userId,
+          type: 'STILLARBEIT_ASSIGNED',
+          title: 'Stillarbeit eingerichtet',
+          body: `Stillarbeit am ${this.formatDate(updated.date)}`,
+          payload: { substitutionId: updated.id },
+        });
+      }
+    } catch {
+      // notification failures are non-fatal
+    }
+
+    return dto;
   }
 
   // ---------------------------------------------------------------------------
@@ -271,8 +439,14 @@ export class SubstitutionService {
    * The entry's teacherId points to the substitute; thema/lehrstoff are left
    * empty because the substitute fills them in during the lesson via the
    * normal classbook UI.
+   *
+   * Returns the schoolId resolved via the absence relation so the caller can
+   * reuse it for post-transaction event emission without a second lookup.
    */
-  private async upsertClassBookEntryForSubstitution(tx: any, sub: any) {
+  private async upsertClassBookEntryForSubstitution(
+    tx: any,
+    sub: any,
+  ): Promise<string> {
     // The schoolId for the ClassBookEntry must come from the absence (which
     // carries the authoritative schoolId for this substitution chain).
     const absence = await tx.teacherAbsence.findUniqueOrThrow({
@@ -280,7 +454,7 @@ export class SubstitutionService {
       select: { schoolId: true },
     });
 
-    return tx.classBookEntry.upsert({
+    await tx.classBookEntry.upsert({
       where: { substitutionId: sub.id },
       create: {
         classSubjectId: sub.classSubjectId,
@@ -296,6 +470,7 @@ export class SubstitutionService {
         teacherId: sub.substituteTeacherId,
       },
     });
+    return absence.schoolId;
   }
 
   /**
@@ -307,12 +482,8 @@ export class SubstitutionService {
     tx: any,
     sub: any,
     teacherIdForEntry: string,
+    schoolId: string,
   ) {
-    const absence = await tx.teacherAbsence.findUniqueOrThrow({
-      where: { id: sub.absenceId },
-      select: { schoolId: true },
-    });
-
     return tx.classBookEntry.upsert({
       where: { substitutionId: sub.id },
       create: {
@@ -322,7 +493,7 @@ export class SubstitutionService {
         weekType: sub.weekType,
         date: sub.date,
         teacherId: teacherIdForEntry,
-        schoolId: absence.schoolId,
+        schoolId,
         substitutionId: sub.id,
         thema: 'Stillarbeit',
         lehrstoff: null,
@@ -371,5 +542,15 @@ export class SubstitutionService {
       subjectName: '',
       className: '',
     };
+  }
+
+  private isoDate(d: Date | string): string {
+    if (d instanceof Date) return d.toISOString();
+    return d;
+  }
+
+  private formatDate(d: Date | string): string {
+    const iso = this.isoDate(d);
+    return iso.slice(0, 10);
   }
 }

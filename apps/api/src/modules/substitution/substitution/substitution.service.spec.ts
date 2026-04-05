@@ -331,6 +331,7 @@ describe('SubstitutionService (SUBST-03 / SUBST-05 / D-04 / D-14)', () => {
   describe('setEntfall()', () => {
     it('transitions to type=ENTFALL, status=CONFIRMED, and does NOT create a ClassBookEntry (deletes any existing link)', async () => {
       prisma.substitution.findUniqueOrThrow.mockResolvedValue({ ...baseSubstitution });
+      prisma.teacherAbsence.findUniqueOrThrow.mockResolvedValue({ schoolId: 'school-1' });
       prisma.substitution.update.mockResolvedValue({
         ...baseSubstitution,
         type: 'ENTFALL',

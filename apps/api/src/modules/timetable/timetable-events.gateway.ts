@@ -88,4 +88,43 @@ export class TimetableEventsGateway implements OnGatewayConnection, OnGatewayDis
       `Emitted timetable:room-swap (${payload.action}) for room ${payload.roomName} to school:${schoolId}`,
     );
   }
+
+  /**
+   * Phase 6 (SUBST-05): Emit a substitution-created event for a school.
+   * Called by SubstitutionService on successful assign/respond/stillarbeit
+   * transitions so any open timetable view refreshes with the overlay.
+   */
+  emitSubstitutionCreated(
+    schoolId: string,
+    payload: {
+      substitutionId: string;
+      lessonId: string;
+      date: string;
+      changeType: 'substitution' | 'stillarbeit';
+    },
+  ): void {
+    this.server.to(`school:${schoolId}`).emit('timetable:substitution', payload);
+    this.logger.debug(
+      `Emitted timetable:substitution (${payload.changeType}) for lesson ${payload.lessonId} to school:${schoolId}`,
+    );
+  }
+
+  /**
+   * Phase 6 (SUBST-05): Emit a lesson-cancelled event for a school.
+   * Called by SubstitutionService.setEntfall so any open timetable view
+   * renders the affected slot with strikethrough styling.
+   */
+  emitSubstitutionCancelled(
+    schoolId: string,
+    payload: {
+      substitutionId: string;
+      lessonId: string;
+      date: string;
+    },
+  ): void {
+    this.server.to(`school:${schoolId}`).emit('timetable:cancelled', payload);
+    this.logger.debug(
+      `Emitted timetable:cancelled for lesson ${payload.lessonId} to school:${schoolId}`,
+    );
+  }
 }

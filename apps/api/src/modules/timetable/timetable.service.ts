@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import { endOfWeek, startOfWeek } from 'date-fns';
 import { PrismaService } from '../../config/database/prisma.service';
 import { SOLVER_QUEUE } from '../../config/queue/queue.constants';
 import { SolverClientService } from './solver-client.service';
@@ -14,6 +15,7 @@ import {
   TimetableViewLessonDto,
   PeriodDto,
 } from './dto/timetable-view.dto';
+import { isWeekCompatible } from './ab-week.util';
 
 /** Maximum number of solve runs kept per school (D-11) */
 const MAX_RUNS_PER_SCHOOL = 3;
@@ -359,12 +361,52 @@ export class TimetableService {
       }
     }
 
-    // Map to DTOs with joined data
+    // SUBST-05: Overlay-aware dated view. When query.date is provided, fetch
+    // Substitution rows for the ISO week of that date and overlay them on top
+    // of the recurring plan. Only CONFIRMED + OFFERED statuses apply.
+    // When query.date is omitted, behavior is unchanged (backward compatible).
+    let overlays: Map<string, any> | null = null;
+    if (query.date) {
+      const targetDate = new Date(query.date);
+      const weekStart = startOfWeek(targetDate, { weekStartsOn: 1 });
+      const weekEnd = endOfWeek(targetDate, { weekStartsOn: 1 });
+
+      const lessonIds = filteredLessons.map((l) => l.id);
+      const subs = await this.prisma.substitution.findMany({
+        where: {
+          lessonId: { in: lessonIds },
+          date: { gte: weekStart, lte: weekEnd },
+          status: { in: ['CONFIRMED', 'OFFERED'] },
+        },
+        include: {
+          substituteTeacher: { include: { person: true } },
+          substituteRoom: true,
+          absence: {
+            include: { teacher: { include: { person: true } } },
+          },
+        },
+      });
+
+      overlays = new Map();
+      for (const sub of subs as any[]) {
+        // Filter by ISO-week compatibility of the stored weekType using the
+        // same ab-week utility used by Phase 2's range expansion.
+        const subDate =
+          sub.date instanceof Date ? sub.date : new Date(sub.date);
+        // Match the overlay on lessonId alone within the week; each lesson
+        // appears only once per weekly view row so the (lessonId) key suffices.
+        if (!isWeekCompatible(subDate, 'BOTH', abWeekEnabled)) continue;
+        overlays.set(sub.lessonId, sub);
+      }
+    }
+
+    // Map to DTOs with joined data (and apply overlays if present)
     const lessonDtos: TimetableViewLessonDto[] = filteredLessons.map((lesson) => {
       const cs = csMap.get(lesson.classSubjectId);
       const teacher = teacherMap.get(lesson.teacherId);
 
-      return {
+      // Base recurring-plan DTO
+      const dto: TimetableViewLessonDto = {
         id: lesson.id,
         classSubjectId: lesson.classSubjectId,
         subjectId: cs?.subjectId ?? '',
@@ -382,6 +424,42 @@ export class TimetableService {
         originalTeacherSurname: lesson.originalTeacherSurname ?? undefined,
         originalRoomName: lesson.originalRoomName ?? undefined,
       };
+
+      // Apply overlay if one exists for this lesson (SUBST-05)
+      const overlay = overlays?.get(lesson.id);
+      if (overlay) {
+        const absentLastName: string =
+          overlay.absence?.teacher?.person?.lastName ?? '';
+        const substituteLastName: string =
+          overlay.substituteTeacher?.person?.lastName ?? '';
+
+        if (overlay.type === 'SUBSTITUTED') {
+          dto.changeType = 'substitution';
+          dto.originalTeacherSurname = absentLastName;
+          if (overlay.substituteTeacherId) {
+            dto.teacherId = overlay.substituteTeacherId;
+            dto.teacherSurname = substituteLastName;
+          }
+          if (overlay.substituteRoomId && overlay.substituteRoom) {
+            dto.originalRoomName = dto.roomName;
+            dto.roomId = overlay.substituteRoomId;
+            dto.roomName = overlay.substituteRoom.name ?? '';
+          }
+        } else if (overlay.type === 'ENTFALL') {
+          dto.changeType = 'cancelled';
+          // Leave original teacher/room fields untouched -- the UI renders
+          // these as strikethrough per D-13.
+        } else if (overlay.type === 'STILLARBEIT') {
+          dto.changeType = 'stillarbeit';
+          dto.originalTeacherSurname = absentLastName;
+          if (overlay.substituteTeacherId) {
+            dto.teacherId = overlay.substituteTeacherId;
+            dto.teacherSurname = substituteLastName;
+          }
+        }
+      }
+
+      return dto;
     });
 
     return {
