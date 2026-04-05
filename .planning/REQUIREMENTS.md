@@ -49,8 +49,8 @@
 - [x] **SUBST-02**: System schlägt automatisch passende Vertretungen vor (Verfügbarkeit, Qualifikation, Auslastungs-Fairness)
 - [x] **SUBST-03**: Vertretungslehrer kann Vertretung per Push-Notification bestätigen/ablehnen
 - [x] **SUBST-04**: Abwesender Lehrer kann Übergabenotizen pro Stunde hinterlassen
-- [ ] **SUBST-05**: Vertretungsänderungen propagieren sofort in alle Stundenplan-Ansichten
-- [ ] **SUBST-06**: System erfasst Vertretungsstatistiken pro Lehrer (gegeben/erhalten)
+- [x] **SUBST-05**: Vertretungsänderungen propagieren sofort in alle Stundenplan-Ansichten
+- [x] **SUBST-06**: System erfasst Vertretungsstatistiken pro Lehrer (gegeben/erhalten)
 
 ### Room & Resource Management
 
@@ -193,8 +193,8 @@
 | SUBST-02 | Phase 6 | Complete |
 | SUBST-03 | Phase 6 | Complete |
 | SUBST-04 | Phase 6 | Complete |
-| SUBST-05 | Phase 6 | Pending |
-| SUBST-06 | Phase 6 | Pending |
+| SUBST-05 | Phase 6 | Complete |
+| SUBST-06 | Phase 6 | Complete |
 | ROOM-01 | Phase 3 | Complete |
 | ROOM-02 | Phase 3 | Complete |
 | ROOM-03 | Phase 4 | Complete |

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-03-PLAN.md
-last_updated: "2026-04-05T09:34:05.265Z"
+stopped_at: Completed 06-04-PLAN.md
+last_updated: "2026-04-05T19:50:48.117Z"
 last_activity: 2026-04-05
 progress:
   total_phases: 9
   completed_phases: 5
   total_plans: 52
-  completed_plans: 49
+  completed_plans: 50
   percent: 83
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 ## Current Position
 
 Phase: 06 (substitution-planning) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 Status: Ready to execute
 Last activity: 2026-04-05
 
@@ -94,6 +94,7 @@ Progress: [========..] 83%
 | Phase 06 P01 | 7min | 3 tasks tasks | 18 files files |
 | Phase 06 P02 | 10min | 2 tasks | 10 files |
 | Phase 06 P03 | 12min | 3 tasks | 13 files |
+| Phase 06 P04 | 125min | 2 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -216,6 +217,9 @@ Recent decisions affecting current work:
 - [Phase 06]: NotificationGateway uses JwtService (contract-only), mock in tests provides verifyAsync, Plan 04 wires real JwtModule with Keycloak JWKS during module assembly
 - [Phase 06]: NotificationService walks ClassSubject.schoolClass (not .class) to reach klassenvorstand -- schema relation name differs from plan draft
 - [Phase 06]: markRead returns 404 (not 403) on foreign-user notification access to prevent user enumeration via error shape
+- [Phase 06]: Overlay-aware getView() uses date query param for backward compatibility — omitted date = pure recurring plan; provided date = ISO week overlay with CONFIRMED/OFFERED substitutions
+- [Phase 06]: SubstitutionService uses post-transaction event emission — collects data out of tx callback then emits notifications + gateway events AFTER commit so rolled-back tx never leak events
+- [Phase 06]: stillarbeit added as literal wire value in changeType union rather than sibling field — frontend ChangeIndicator handles as new visual variant with zero breaking change
 
 ### Pending Todos
 
@@ -229,6 +233,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-05T09:34:05.262Z
-Stopped at: Completed 06-03-PLAN.md
+Last session: 2026-04-05T19:50:48.111Z
+Stopped at: Completed 06-04-PLAN.md
 Resume file: None
