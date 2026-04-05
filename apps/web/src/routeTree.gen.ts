@@ -14,6 +14,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedTimetableIndexRouteImport } from './routes/_authenticated/timetable/index'
 import { Route as AuthenticatedRoomsIndexRouteImport } from './routes/_authenticated/rooms/index'
 import { Route as AuthenticatedExcusesIndexRouteImport } from './routes/_authenticated/excuses/index'
+import { Route as AuthenticatedTeacherSubstitutionsRouteImport } from './routes/_authenticated/teacher/substitutions'
 import { Route as AuthenticatedStatisticsAbsenceRouteImport } from './routes/_authenticated/statistics/absence'
 import { Route as AuthenticatedClassbookLessonIdRouteImport } from './routes/_authenticated/classbook/$lessonId'
 import { Route as AuthenticatedAdminTimetableHistoryRouteImport } from './routes/_authenticated/admin/timetable-history'
@@ -45,6 +46,12 @@ const AuthenticatedExcusesIndexRoute =
   AuthenticatedExcusesIndexRouteImport.update({
     id: '/excuses/',
     path: '/excuses/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedTeacherSubstitutionsRoute =
+  AuthenticatedTeacherSubstitutionsRouteImport.update({
+    id: '/teacher/substitutions',
+    path: '/teacher/substitutions',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedStatisticsAbsenceRoute =
@@ -92,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/admin/timetable-history': typeof AuthenticatedAdminTimetableHistoryRoute
   '/classbook/$lessonId': typeof AuthenticatedClassbookLessonIdRoute
   '/statistics/absence': typeof AuthenticatedStatisticsAbsenceRoute
+  '/teacher/substitutions': typeof AuthenticatedTeacherSubstitutionsRoute
   '/excuses/': typeof AuthenticatedExcusesIndexRoute
   '/rooms/': typeof AuthenticatedRoomsIndexRoute
   '/timetable/': typeof AuthenticatedTimetableIndexRoute
@@ -104,6 +112,7 @@ export interface FileRoutesByTo {
   '/admin/timetable-history': typeof AuthenticatedAdminTimetableHistoryRoute
   '/classbook/$lessonId': typeof AuthenticatedClassbookLessonIdRoute
   '/statistics/absence': typeof AuthenticatedStatisticsAbsenceRoute
+  '/teacher/substitutions': typeof AuthenticatedTeacherSubstitutionsRoute
   '/excuses': typeof AuthenticatedExcusesIndexRoute
   '/rooms': typeof AuthenticatedRoomsIndexRoute
   '/timetable': typeof AuthenticatedTimetableIndexRoute
@@ -118,6 +127,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/timetable-history': typeof AuthenticatedAdminTimetableHistoryRoute
   '/_authenticated/classbook/$lessonId': typeof AuthenticatedClassbookLessonIdRoute
   '/_authenticated/statistics/absence': typeof AuthenticatedStatisticsAbsenceRoute
+  '/_authenticated/teacher/substitutions': typeof AuthenticatedTeacherSubstitutionsRoute
   '/_authenticated/excuses/': typeof AuthenticatedExcusesIndexRoute
   '/_authenticated/rooms/': typeof AuthenticatedRoomsIndexRoute
   '/_authenticated/timetable/': typeof AuthenticatedTimetableIndexRoute
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
     | '/admin/timetable-history'
     | '/classbook/$lessonId'
     | '/statistics/absence'
+    | '/teacher/substitutions'
     | '/excuses/'
     | '/rooms/'
     | '/timetable/'
@@ -144,6 +155,7 @@ export interface FileRouteTypes {
     | '/admin/timetable-history'
     | '/classbook/$lessonId'
     | '/statistics/absence'
+    | '/teacher/substitutions'
     | '/excuses'
     | '/rooms'
     | '/timetable'
@@ -157,6 +169,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/timetable-history'
     | '/_authenticated/classbook/$lessonId'
     | '/_authenticated/statistics/absence'
+    | '/_authenticated/teacher/substitutions'
     | '/_authenticated/excuses/'
     | '/_authenticated/rooms/'
     | '/_authenticated/timetable/'
@@ -202,6 +215,13 @@ declare module '@tanstack/react-router' {
       path: '/excuses'
       fullPath: '/excuses/'
       preLoaderRoute: typeof AuthenticatedExcusesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/teacher/substitutions': {
+      id: '/_authenticated/teacher/substitutions'
+      path: '/teacher/substitutions'
+      fullPath: '/teacher/substitutions'
+      preLoaderRoute: typeof AuthenticatedTeacherSubstitutionsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/statistics/absence': {
@@ -256,6 +276,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminTimetableHistoryRoute: typeof AuthenticatedAdminTimetableHistoryRoute
   AuthenticatedClassbookLessonIdRoute: typeof AuthenticatedClassbookLessonIdRoute
   AuthenticatedStatisticsAbsenceRoute: typeof AuthenticatedStatisticsAbsenceRoute
+  AuthenticatedTeacherSubstitutionsRoute: typeof AuthenticatedTeacherSubstitutionsRoute
   AuthenticatedExcusesIndexRoute: typeof AuthenticatedExcusesIndexRoute
   AuthenticatedRoomsIndexRoute: typeof AuthenticatedRoomsIndexRoute
   AuthenticatedTimetableIndexRoute: typeof AuthenticatedTimetableIndexRoute
@@ -269,6 +290,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
     AuthenticatedAdminTimetableHistoryRoute,
   AuthenticatedClassbookLessonIdRoute: AuthenticatedClassbookLessonIdRoute,
   AuthenticatedStatisticsAbsenceRoute: AuthenticatedStatisticsAbsenceRoute,
+  AuthenticatedTeacherSubstitutionsRoute:
+    AuthenticatedTeacherSubstitutionsRoute,
   AuthenticatedExcusesIndexRoute: AuthenticatedExcusesIndexRoute,
   AuthenticatedRoomsIndexRoute: AuthenticatedRoomsIndexRoute,
   AuthenticatedTimetableIndexRoute: AuthenticatedTimetableIndexRoute,

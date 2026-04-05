@@ -10,6 +10,7 @@ import {
   History,
   PanelLeftClose,
   PanelLeft,
+  UserCheck,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUIStore } from '@/stores/ui-store';
@@ -71,6 +72,12 @@ const navItems: NavItem[] = [
     href: '/admin/substitutions',
     icon: CalendarClock,
     roles: ['admin', 'schulleitung'],
+  },
+  {
+    label: 'Meine Vertretungen',
+    href: '/teacher/substitutions',
+    icon: UserCheck,
+    roles: ['lehrer'],
   },
 ];
 
