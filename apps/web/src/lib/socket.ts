@@ -93,3 +93,59 @@ export function disconnectClassbookSocket(): void {
     classbookSocket = null;
   }
 }
+
+// --- Notifications namespace (SUBST-03, D-23) ---
+
+let notificationSocket: Socket | null = null;
+
+/**
+ * Creates (or reconnects) a Socket.IO client for the /notifications namespace.
+ *
+ * Per-user rooms are joined on the server side via the JWT handshake.token
+ * (see NotificationGateway.handleConnection). The gateway verifies the
+ * Keycloak RS256 token via JwksClient and joins `user:{sub}` rooms.
+ *
+ * Per Pitfall 6 in 06-RESEARCH.md: transports ['websocket', 'polling'] for
+ * school-network proxy fallback. Per the 06-RESEARCH Pattern 4 gateway guide,
+ * the JWT is passed via the Socket.IO handshake auth payload (not the query
+ * string) so tokens never land in server access logs.
+ */
+export function createNotificationSocket(jwt: string): Socket {
+  if (notificationSocket) {
+    notificationSocket.disconnect();
+  }
+
+  notificationSocket = io(`${API_URL}/notifications`, {
+    auth: { token: `Bearer ${jwt}` },
+    transports: ['websocket', 'polling'],
+    autoConnect: true,
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionAttempts: 5,
+  });
+
+  return notificationSocket;
+}
+
+/**
+ * Returns the current notification socket instance, or null if not connected.
+ */
+export function getNotificationSocket(): Socket | null {
+  return notificationSocket;
+}
+
+/**
+ * Disconnects and cleans up the notification socket. Accepts an optional
+ * socket argument so the hook can dispose the exact instance it captured
+ * during mount (avoids race conditions on rapid unmount/remount).
+ */
+export function disconnectNotificationSocket(socket?: Socket | null): void {
+  const target = socket ?? notificationSocket;
+  if (target) {
+    target.removeAllListeners();
+    target.disconnect();
+  }
+  if (!socket || socket === notificationSocket) {
+    notificationSocket = null;
+  }
+}

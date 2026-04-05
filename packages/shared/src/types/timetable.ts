@@ -13,7 +13,7 @@ export interface TimetableViewLesson {
   periodNumber: number;
   weekType: string;
   isManualEdit: boolean;
-  changeType?: 'substitution' | 'cancelled' | 'room-swap' | null;
+  changeType?: 'substitution' | 'cancelled' | 'room-swap' | 'stillarbeit' | null;
   originalTeacherSurname?: string;
   originalRoomName?: string;
 }
