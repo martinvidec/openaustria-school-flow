@@ -1,6 +1,7 @@
 import { Link, useRouterState } from '@tanstack/react-router';
 import {
   Calendar,
+  CalendarClock,
   DoorOpen,
   FileText,
   BarChart3,
@@ -63,6 +64,12 @@ const navItems: NavItem[] = [
     label: 'Aenderungsverlauf',
     href: '/admin/timetable-history',
     icon: History,
+    roles: ['admin', 'schulleitung'],
+  },
+  {
+    label: 'Vertretungsplanung',
+    href: '/admin/substitutions',
+    icon: CalendarClock,
     roles: ['admin', 'schulleitung'],
   },
 ];

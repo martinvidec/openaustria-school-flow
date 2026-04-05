@@ -18,6 +18,7 @@ import { Route as AuthenticatedStatisticsAbsenceRouteImport } from './routes/_au
 import { Route as AuthenticatedClassbookLessonIdRouteImport } from './routes/_authenticated/classbook/$lessonId'
 import { Route as AuthenticatedAdminTimetableHistoryRouteImport } from './routes/_authenticated/admin/timetable-history'
 import { Route as AuthenticatedAdminTimetableEditRouteImport } from './routes/_authenticated/admin/timetable-edit'
+import { Route as AuthenticatedAdminSubstitutionsRouteImport } from './routes/_authenticated/admin/substitutions'
 import { Route as AuthenticatedAdminResourcesRouteImport } from './routes/_authenticated/admin/resources'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
@@ -70,6 +71,12 @@ const AuthenticatedAdminTimetableEditRoute =
     path: '/admin/timetable-edit',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminSubstitutionsRoute =
+  AuthenticatedAdminSubstitutionsRouteImport.update({
+    id: '/admin/substitutions',
+    path: '/admin/substitutions',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminResourcesRoute =
   AuthenticatedAdminResourcesRouteImport.update({
     id: '/admin/resources',
@@ -80,6 +87,7 @@ const AuthenticatedAdminResourcesRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin/resources': typeof AuthenticatedAdminResourcesRoute
+  '/admin/substitutions': typeof AuthenticatedAdminSubstitutionsRoute
   '/admin/timetable-edit': typeof AuthenticatedAdminTimetableEditRoute
   '/admin/timetable-history': typeof AuthenticatedAdminTimetableHistoryRoute
   '/classbook/$lessonId': typeof AuthenticatedClassbookLessonIdRoute
@@ -91,6 +99,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin/resources': typeof AuthenticatedAdminResourcesRoute
+  '/admin/substitutions': typeof AuthenticatedAdminSubstitutionsRoute
   '/admin/timetable-edit': typeof AuthenticatedAdminTimetableEditRoute
   '/admin/timetable-history': typeof AuthenticatedAdminTimetableHistoryRoute
   '/classbook/$lessonId': typeof AuthenticatedClassbookLessonIdRoute
@@ -104,6 +113,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/_authenticated/admin/resources': typeof AuthenticatedAdminResourcesRoute
+  '/_authenticated/admin/substitutions': typeof AuthenticatedAdminSubstitutionsRoute
   '/_authenticated/admin/timetable-edit': typeof AuthenticatedAdminTimetableEditRoute
   '/_authenticated/admin/timetable-history': typeof AuthenticatedAdminTimetableHistoryRoute
   '/_authenticated/classbook/$lessonId': typeof AuthenticatedClassbookLessonIdRoute
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin/resources'
+    | '/admin/substitutions'
     | '/admin/timetable-edit'
     | '/admin/timetable-history'
     | '/classbook/$lessonId'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin/resources'
+    | '/admin/substitutions'
     | '/admin/timetable-edit'
     | '/admin/timetable-history'
     | '/classbook/$lessonId'
@@ -140,6 +152,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/_authenticated/admin/resources'
+    | '/_authenticated/admin/substitutions'
     | '/_authenticated/admin/timetable-edit'
     | '/_authenticated/admin/timetable-history'
     | '/_authenticated/classbook/$lessonId'
@@ -219,6 +232,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminTimetableEditRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/substitutions': {
+      id: '/_authenticated/admin/substitutions'
+      path: '/admin/substitutions'
+      fullPath: '/admin/substitutions'
+      preLoaderRoute: typeof AuthenticatedAdminSubstitutionsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin/resources': {
       id: '/_authenticated/admin/resources'
       path: '/admin/resources'
@@ -231,6 +251,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminResourcesRoute: typeof AuthenticatedAdminResourcesRoute
+  AuthenticatedAdminSubstitutionsRoute: typeof AuthenticatedAdminSubstitutionsRoute
   AuthenticatedAdminTimetableEditRoute: typeof AuthenticatedAdminTimetableEditRoute
   AuthenticatedAdminTimetableHistoryRoute: typeof AuthenticatedAdminTimetableHistoryRoute
   AuthenticatedClassbookLessonIdRoute: typeof AuthenticatedClassbookLessonIdRoute
@@ -242,6 +263,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminResourcesRoute: AuthenticatedAdminResourcesRoute,
+  AuthenticatedAdminSubstitutionsRoute: AuthenticatedAdminSubstitutionsRoute,
   AuthenticatedAdminTimetableEditRoute: AuthenticatedAdminTimetableEditRoute,
   AuthenticatedAdminTimetableHistoryRoute:
     AuthenticatedAdminTimetableHistoryRoute,
