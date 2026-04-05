@@ -3,6 +3,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConflictException, ForbiddenException } from '@nestjs/common';
 import { SubstitutionService } from './substitution.service';
 import { PrismaService } from '../../../config/database/prisma.service';
+import { NotificationService } from '../notification/notification.service';
+import { TimetableEventsGateway } from '../../timetable/timetable-events.gateway';
 
 /**
  * SUBST-03 / SUBST-05 / D-04 / D-14 — Substitution lifecycle tests.
@@ -80,13 +82,34 @@ const baseSubstitution = {
 describe('SubstitutionService (SUBST-03 / SUBST-05 / D-04 / D-14)', () => {
   let service: SubstitutionService;
   let prisma: ReturnType<typeof buildMockPrisma>;
+  let notifications: {
+    create: ReturnType<typeof vi.fn>;
+    resolveRecipientsForSubstitutionEvent: ReturnType<typeof vi.fn>;
+  };
+  let timetableGateway: {
+    emitSubstitutionCreated: ReturnType<typeof vi.fn>;
+    emitSubstitutionCancelled: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(async () => {
     prisma = buildMockPrisma();
+    notifications = {
+      create: vi.fn().mockResolvedValue({ id: 'notif-1' }),
+      resolveRecipientsForSubstitutionEvent: vi
+        .fn()
+        .mockResolvedValue(['user-admin', 'user-kv']),
+    };
+    timetableGateway = {
+      emitSubstitutionCreated: vi.fn(),
+      emitSubstitutionCancelled: vi.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         SubstitutionService,
         { provide: PrismaService, useValue: prisma },
+        { provide: NotificationService, useValue: notifications },
+        { provide: TimetableEventsGateway, useValue: timetableGateway },
       ],
     }).compile();
 
@@ -100,6 +123,10 @@ describe('SubstitutionService (SUBST-03 / SUBST-05 / D-04 / D-14)', () => {
       prisma.substitution.findFirst.mockResolvedValue(null);
       prisma.teacherAbsence.findUniqueOrThrow.mockResolvedValue(baseSubstitution.absence);
       prisma.timetableRun.findMany.mockResolvedValue([{ id: 'run-1' }]);
+      prisma.teacher.findUniqueOrThrow.mockResolvedValue({
+        id: 'teacher-2',
+        person: { keycloakUserId: 'kc-teacher-2' },
+      });
       prisma.substitution.update.mockResolvedValue({
         ...baseSubstitution,
         substituteTeacherId: 'teacher-2',
@@ -127,6 +154,10 @@ describe('SubstitutionService (SUBST-03 / SUBST-05 / D-04 / D-14)', () => {
       prisma.substitution.findFirst.mockResolvedValue(null);
       prisma.teacherAbsence.findUniqueOrThrow.mockResolvedValue(baseSubstitution.absence);
       prisma.timetableRun.findMany.mockResolvedValue([{ id: 'run-1' }]);
+      prisma.teacher.findUniqueOrThrow.mockResolvedValue({
+        id: 'teacher-2',
+        person: { keycloakUserId: 'kc-teacher-2' },
+      });
       prisma.substitution.update.mockResolvedValue({
         ...baseSubstitution,
         status: 'OFFERED',
@@ -390,6 +421,160 @@ describe('SubstitutionService (SUBST-03 / SUBST-05 / D-04 / D-14)', () => {
       const whereArg = prisma.substitution.findMany.mock.calls[0][0].where;
       expect(whereArg.status.in).toEqual(['PENDING', 'OFFERED', 'DECLINED']);
       expect(whereArg.absence.schoolId).toBe('school-1');
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Plan 06-04 wiring tests: SubstitutionService -> NotificationService + gateway
+  // ---------------------------------------------------------------------------
+  describe('NotificationService + TimetableEventsGateway wiring (Plan 06-04)', () => {
+    const offeredSub = {
+      ...baseSubstitution,
+      status: 'OFFERED',
+      type: 'SUBSTITUTED',
+      substituteTeacherId: 'teacher-2',
+      offeredAt: new Date('2026-04-05T10:00:00Z'),
+    };
+
+    it('assignSubstitute emits timetable:substitution on the gateway and creates a SUBSTITUTION_OFFER notification', async () => {
+      prisma.substitution.findUniqueOrThrow.mockResolvedValue({ ...baseSubstitution });
+      prisma.timetableLesson.findFirst.mockResolvedValue(null);
+      prisma.substitution.findFirst.mockResolvedValue(null);
+      prisma.teacherAbsence.findUniqueOrThrow.mockResolvedValue(baseSubstitution.absence);
+      prisma.timetableRun.findMany.mockResolvedValue([{ id: 'run-1' }]);
+      prisma.teacher.findUniqueOrThrow.mockResolvedValue({
+        id: 'teacher-2',
+        person: { keycloakUserId: 'kc-teacher-2' },
+      });
+      prisma.substitution.update.mockResolvedValue({
+        ...baseSubstitution,
+        substituteTeacherId: 'teacher-2',
+        type: 'SUBSTITUTED',
+        status: 'OFFERED',
+        offeredAt: new Date('2026-04-05T10:00:00Z'),
+      });
+
+      await service.assignSubstitute({
+        substitutionId: 'sub-1',
+        candidateTeacherId: 'teacher-2',
+        assignedBy: 'admin-1',
+      });
+
+      // SUBSTITUTION_OFFER notification to the substitute's keycloakUserId
+      expect(notifications.create).toHaveBeenCalled();
+      const createArg = notifications.create.mock.calls[0][0];
+      expect(createArg.type).toBe('SUBSTITUTION_OFFER');
+      expect(createArg.userId).toBe('kc-teacher-2');
+
+      // Timetable gateway emits substitution-created event for the school
+      expect(timetableGateway.emitSubstitutionCreated).toHaveBeenCalled();
+      const emitArg = timetableGateway.emitSubstitutionCreated.mock.calls[0];
+      expect(emitArg[0]).toBe('school-1');
+      expect(emitArg[1].changeType).toBe('substitution');
+    });
+
+    it('respondToOffer(accept=true) creates SUBSTITUTION_CONFIRMED notifications for resolved recipients', async () => {
+      prisma.substitution.findUniqueOrThrow.mockResolvedValue(offeredSub);
+      prisma.teacher.findUniqueOrThrow.mockResolvedValue({
+        id: 'teacher-2',
+        person: { keycloakUserId: 'kc-sub-teacher' },
+      });
+      prisma.teacherAbsence.findUniqueOrThrow.mockResolvedValue({ schoolId: 'school-1' });
+      prisma.substitution.update.mockResolvedValue({
+        ...offeredSub,
+        status: 'CONFIRMED',
+        respondedAt: new Date(),
+      });
+      prisma.classBookEntry.upsert.mockResolvedValue({ id: 'cbe-1' });
+
+      await service.respondToOffer({
+        substitutionId: 'sub-1',
+        userId: 'kc-sub-teacher',
+        accept: true,
+      });
+
+      expect(notifications.resolveRecipientsForSubstitutionEvent).toHaveBeenCalledWith(
+        'sub-1',
+        'SUBSTITUTION_CONFIRMED',
+      );
+      // One create per resolved recipient (2 mocked above)
+      expect(notifications.create).toHaveBeenCalledTimes(2);
+      const types = notifications.create.mock.calls.map((c) => c[0].type);
+      expect(types.every((t) => t === 'SUBSTITUTION_CONFIRMED')).toBe(true);
+    });
+
+    it('respondToOffer(accept=false) creates SUBSTITUTION_DECLINED notifications', async () => {
+      prisma.substitution.findUniqueOrThrow.mockResolvedValue(offeredSub);
+      prisma.teacher.findUniqueOrThrow.mockResolvedValue({
+        id: 'teacher-2',
+        person: { keycloakUserId: 'kc-sub-teacher' },
+      });
+      prisma.substitution.update.mockResolvedValue({
+        ...offeredSub,
+        status: 'DECLINED',
+        respondedAt: new Date(),
+      });
+
+      await service.respondToOffer({
+        substitutionId: 'sub-1',
+        userId: 'kc-sub-teacher',
+        accept: false,
+        declineReason: 'Krank',
+      });
+
+      expect(notifications.create).toHaveBeenCalled();
+      const types = notifications.create.mock.calls.map((c) => c[0].type);
+      expect(types.every((t) => t === 'SUBSTITUTION_DECLINED')).toBe(true);
+    });
+
+    it('setEntfall emits timetable:cancelled and creates LESSON_CANCELLED notifications', async () => {
+      prisma.substitution.findUniqueOrThrow.mockResolvedValue({ ...baseSubstitution });
+      prisma.teacherAbsence.findUniqueOrThrow.mockResolvedValue({ schoolId: 'school-1' });
+      prisma.substitution.update.mockResolvedValue({
+        ...baseSubstitution,
+        type: 'ENTFALL',
+        status: 'CONFIRMED',
+        respondedAt: new Date(),
+      });
+      prisma.classBookEntry.deleteMany.mockResolvedValue({ count: 0 });
+
+      await service.setEntfall({
+        substitutionId: 'sub-1',
+        actorUserId: 'admin-1',
+      });
+
+      expect(timetableGateway.emitSubstitutionCancelled).toHaveBeenCalled();
+      const emitArg = timetableGateway.emitSubstitutionCancelled.mock.calls[0];
+      expect(emitArg[0]).toBe('school-1');
+
+      const types = notifications.create.mock.calls.map((c) => c[0].type);
+      expect(types).toContain('LESSON_CANCELLED');
+    });
+
+    it('setStillarbeit emits timetable:substitution with changeType=stillarbeit AND creates STILLARBEIT_ASSIGNED notifications', async () => {
+      prisma.substitution.findUniqueOrThrow.mockResolvedValue({ ...baseSubstitution });
+      prisma.teacherAbsence.findUniqueOrThrow.mockResolvedValue({ schoolId: 'school-1' });
+      prisma.substitution.update.mockResolvedValue({
+        ...baseSubstitution,
+        type: 'STILLARBEIT',
+        status: 'CONFIRMED',
+        substituteTeacherId: 'supervisor-1',
+        respondedAt: new Date(),
+      });
+      prisma.classBookEntry.upsert.mockResolvedValue({ id: 'cbe-stillarbeit' });
+
+      await service.setStillarbeit({
+        substitutionId: 'sub-1',
+        supervisorTeacherId: 'supervisor-1',
+        actorUserId: 'admin-1',
+      });
+
+      expect(timetableGateway.emitSubstitutionCreated).toHaveBeenCalled();
+      const emitArg = timetableGateway.emitSubstitutionCreated.mock.calls[0];
+      expect(emitArg[1].changeType).toBe('stillarbeit');
+
+      const types = notifications.create.mock.calls.map((c) => c[0].type);
+      expect(types).toContain('STILLARBEIT_ASSIGNED');
     });
   });
 });
