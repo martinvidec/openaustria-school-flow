@@ -161,7 +161,7 @@ Plans:
 - [x] 06-03-PLAN.md -- RankingService (D-05 weighted scoring) + NotificationService+Gateway (JWT handshake, per-user rooms, dedup) + HandoverService (reuses Phase 5 multipart)
 - [x] 06-04-PLAN.md -- Overlay-aware getView() rewrite + SubstitutionStatsService + ranking controller + CASL seeds + retention extension + module assembly
 - [x] 06-05-PLAN.md -- Admin /admin/substitutions page (3-tab layout: AbsenceForm, OpenSubstitutionsPanel, FairnessStatsPanel) + TanStack Query hooks
-- [ ] 06-06-PLAN.md -- NotificationBell + Popover primitive + useNotificationSocket + Lehrer /teacher/substitutions + HandoverNote components + stillarbeit ChangeIndicator variant + human verification
+- [x] 06-06-PLAN.md -- NotificationBell + Popover primitive + useNotificationSocket + Lehrer /teacher/substitutions + HandoverNote components + stillarbeit ChangeIndicator variant + human verification
 
 ### Phase 7: Communication
 **Goal**: Teachers, parents, and admins can communicate within the platform -- replacing SchoolFox/email chains with role-scoped messaging, read tracking, and file sharing

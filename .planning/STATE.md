@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 06-05-PLAN.md
-last_updated: "2026-04-05T21:41:34.201Z"
+status: verifying
+stopped_at: Completed 06-06-PLAN.md autonomous tasks (awaiting human verification)
+last_updated: "2026-04-05T22:24:05.799Z"
 last_activity: 2026-04-05
 progress:
   total_phases: 9
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 52
-  completed_plans: 51
+  completed_plans: 52
   percent: 83
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 
 Phase: 06 (substitution-planning) — EXECUTING
 Plan: 6 of 6
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-05
 
 Progress: [========..] 83%
@@ -96,6 +96,7 @@ Progress: [========..] 83%
 | Phase 06 P03 | 12min | 3 tasks | 13 files |
 | Phase 06 P04 | 125min | 2 tasks | 13 files |
 | Phase 06 P05 | 100min | 2 tasks tasks | 13 files files |
+| Phase 06-substitution-planning P06 | 17min | 2 tasks tasks | 21 files files |
 
 ## Accumulated Context
 
@@ -226,6 +227,10 @@ Recent decisions affecting current work:
 - [Phase 06]: [Phase 06]: TanStack Router search updater uses function form (search: () => ({tab}))  — sidesteps pre-existing TS2353 error in classbook route from the object-literal form
 - [Phase 06]: [Phase 06]: Plan examples referenced a fictional apiFetch<T>() generic signature — all hooks rewritten to use raw Response / await res.json() pattern from Phase 4 useClassbook/useResources
 - [Phase 06]: [Phase 06]: Stillarbeit supervisor picker deferred to v2 — v1 submits supervisorTeacherId=undefined relying on backend fallback to originalTeacherId documented in 06-02
+- [Phase 06]: ChangeIndicator stillarbeit variant reuses substitution orange palette per 06-UI-SPEC D-11 rationale — Stillarbeit is a class of substitution, differentiation via text label not new color
+- [Phase 06]: useNotificationSocket mounted exactly once at _authenticated layout level (never in page components) — prevents duplicate notification events per 06-RESEARCH Pattern 4
+- [Phase 06]: useOfferedSubstitutions filters admin /substitutions endpoint client-side by current teacherId instead of adding backend ?mine=true param — bounded result set makes O(n) filter cheaper than new endpoint
+- [Phase 06]: Popover installed via pnpm + hand-authored shadcn wrapper (not CLI) — Phase 5 precedent for components.json-incompatible shadcn CLI
 
 ### Pending Todos
 
@@ -239,6 +244,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-05T21:41:09.154Z
-Stopped at: Completed 06-05-PLAN.md
+Last session: 2026-04-05T22:23:52.123Z
+Stopped at: Completed 06-06-PLAN.md autonomous tasks (awaiting human verification)
 Resume file: None
