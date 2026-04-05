@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-04-PLAN.md
-last_updated: "2026-04-05T19:50:48.117Z"
+stopped_at: Completed 06-05-PLAN.md
+last_updated: "2026-04-05T21:41:34.201Z"
 last_activity: 2026-04-05
 progress:
   total_phases: 9
   completed_phases: 5
   total_plans: 52
-  completed_plans: 50
+  completed_plans: 51
   percent: 83
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 ## Current Position
 
 Phase: 06 (substitution-planning) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-04-05
 
@@ -95,6 +95,7 @@ Progress: [========..] 83%
 | Phase 06 P02 | 10min | 2 tasks | 10 files |
 | Phase 06 P03 | 12min | 3 tasks | 13 files |
 | Phase 06 P04 | 125min | 2 tasks | 13 files |
+| Phase 06 P05 | 100min | 2 tasks tasks | 13 files files |
 
 ## Accumulated Context
 
@@ -220,6 +221,11 @@ Recent decisions affecting current work:
 - [Phase 06]: Overlay-aware getView() uses date query param for backward compatibility — omitted date = pure recurring plan; provided date = ISO week overlay with CONFIRMED/OFFERED substitutions
 - [Phase 06]: SubstitutionService uses post-transaction event emission — collects data out of tx callback then emits notifications + gateway events AFTER commit so rolled-back tx never leak events
 - [Phase 06]: stillarbeit added as literal wire value in changeType union rather than sibling field — frontend ChangeIndicator handles as new visual variant with zero breaking change
+- [Phase 06]: [Phase 06]: Frontend hook signatures take schoolId as first argument (matches Phase 4 useResources pattern) — opt-in school-scoping keeps hooks pure of store coupling
+- [Phase 06]: [Phase 06]: SubstitutionConflictError typed error subclass for 409 detection — route handler uses instanceof instead of string matching, robust against i18n drift
+- [Phase 06]: [Phase 06]: TanStack Router search updater uses function form (search: () => ({tab}))  — sidesteps pre-existing TS2353 error in classbook route from the object-literal form
+- [Phase 06]: [Phase 06]: Plan examples referenced a fictional apiFetch<T>() generic signature — all hooks rewritten to use raw Response / await res.json() pattern from Phase 4 useClassbook/useResources
+- [Phase 06]: [Phase 06]: Stillarbeit supervisor picker deferred to v2 — v1 submits supervisorTeacherId=undefined relying on backend fallback to originalTeacherId documented in 06-02
 
 ### Pending Todos
 
@@ -233,6 +239,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-05T19:50:48.111Z
-Stopped at: Completed 06-04-PLAN.md
+Last session: 2026-04-05T21:41:09.154Z
+Stopped at: Completed 06-05-PLAN.md
 Resume file: None
