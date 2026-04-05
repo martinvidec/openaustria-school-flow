@@ -13,6 +13,7 @@ import { EncryptionModule } from './modules/dsgvo/encryption/encryption.module';
 import { DsgvoModule } from './modules/dsgvo/dsgvo.module';
 import { TeacherModule } from './modules/teacher/teacher.module';
 import { StudentModule } from './modules/student/student.module';
+import { SubstitutionModule } from './modules/substitution/substitution.module';
 import { ClassModule } from './modules/class/class.module';
 import { SubjectModule } from './modules/subject/subject.module';
 import { RoomModule } from './modules/room/room.module';
@@ -37,6 +38,7 @@ import { ClassBookModule } from './modules/classbook/classbook.module';
     DsgvoModule,
     TeacherModule,
     StudentModule,
+    SubstitutionModule,
     ClassModule,
     SubjectModule,
     RoomModule,
