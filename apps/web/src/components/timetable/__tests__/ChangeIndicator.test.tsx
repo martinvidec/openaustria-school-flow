@@ -3,37 +3,28 @@ import { describe, it, expect } from 'vitest';
 import { ChangeIndicator } from '../ChangeIndicator';
 
 /**
- * Phase 6 Plan 06 — ChangeIndicator extended with `stillarbeit` variant.
+ * ChangeIndicator is a pure styling wrapper after the UAT refactor:
+ * - Applies border color + background per changeType
+ * - Renders "Entfall" badge for cancelled
+ * - Passes children through unchanged
  *
- * These tests cover the three Phase 4 variants that were previously stubbed as
- * `it.todo`, plus the new Phase 6 `stillarbeit` variant required by SUBST-05.
- *
- * Note: the current ChangeIndicator API uses `children` (it wraps a cell) plus
- * `originalValue` / `newValue` for the existing substitution + room-swap
- * variants. The plan contract uses `'room-swap'` (not `'room-change'`) to
- * match the Phase 4 shared DTO union. The stillarbeit variant takes an
- * optional `supervisingTeacher` prop.
+ * Text rendering (teacher names, "Stillarbeit" label) now lives in
+ * TimetableCell which builds the inline content before wrapping.
  */
-describe('ChangeIndicator Phase 6 variants (SUBST-05)', () => {
-  it('renders orange border + strikethrough for changeType="substitution"', () => {
+describe('ChangeIndicator styling wrapper (SUBST-05)', () => {
+  it('applies orange border+bg for changeType="substitution"', () => {
     const { container } = render(
-      <ChangeIndicator
-        changeType="substitution"
-        originalValue="Mueller"
-        newValue="Schmidt"
-      >
+      <ChangeIndicator changeType="substitution">
         <div>content</div>
       </ChangeIndicator>,
     );
     const root = container.firstChild as HTMLElement;
-    expect(root).not.toBeNull();
-    // Orange border token (hsl(25,95%,53%) is the substitution orange)
-    expect(root.className).toMatch(/orange|25[, ]+95%/);
-    expect(screen.getByText('Mueller')).toBeInTheDocument();
-    expect(screen.getByText('Schmidt')).toBeInTheDocument();
+    expect(root.className).toMatch(/border-l-4/);
+    expect(root.className).toMatch(/25[, ]+95%/);
+    expect(screen.getByText('content')).toBeInTheDocument();
   });
 
-  it('renders red border + "Entfall" label for changeType="cancelled"', () => {
+  it('applies red border+bg and renders "Entfall" badge for changeType="cancelled"', () => {
     const { container } = render(
       <ChangeIndicator changeType="cancelled">
         <div>content</div>
@@ -41,44 +32,42 @@ describe('ChangeIndicator Phase 6 variants (SUBST-05)', () => {
     );
     expect(screen.getByText('Entfall')).toBeInTheDocument();
     const root = container.firstChild as HTMLElement;
-    expect(root.className).toMatch(/red|0[, ]+84%/);
+    expect(root.className).toMatch(/border-l-4/);
+    expect(root.className).toMatch(/0[, ]+84%/);
   });
 
-  it('renders blue border for changeType="room-swap"', () => {
+  it('applies blue border+bg for changeType="room-swap"', () => {
     const { container } = render(
-      <ChangeIndicator
-        changeType="room-swap"
-        originalValue="A1"
-        newValue="B2"
-      >
+      <ChangeIndicator changeType="room-swap">
         <div>content</div>
       </ChangeIndicator>,
     );
     const root = container.firstChild as HTMLElement;
-    expect(root.className).toMatch(/blue|221[, ]+83%/);
-    expect(screen.getByText('A1')).toBeInTheDocument();
-    expect(screen.getByText('B2')).toBeInTheDocument();
+    expect(root.className).toMatch(/border-l-4/);
+    expect(root.className).toMatch(/221[, ]+83%/);
+    expect(screen.getByText('content')).toBeInTheDocument();
   });
 
-  it('renders orange border + "Stillarbeit" label + "Aufsicht:" prefix for changeType="stillarbeit" (NEW Phase 6)', () => {
+  it('applies orange border+bg for changeType="stillarbeit"', () => {
     const { container } = render(
-      <ChangeIndicator changeType="stillarbeit" supervisingTeacher="Wagner">
-        <div>content</div>
-      </ChangeIndicator>,
-    );
-    expect(screen.getByText('Stillarbeit')).toBeInTheDocument();
-    expect(screen.getByText(/Aufsicht:\s*Wagner/)).toBeInTheDocument();
-    const root = container.firstChild as HTMLElement;
-    expect(root.className).toMatch(/orange|25[, ]+95%/);
-  });
-
-  it('renders "Stillarbeit" label without supervisor line when supervisingTeacher is absent', () => {
-    render(
       <ChangeIndicator changeType="stillarbeit">
         <div>content</div>
       </ChangeIndicator>,
     );
-    expect(screen.getByText('Stillarbeit')).toBeInTheDocument();
-    expect(screen.queryByText(/Aufsicht:/)).not.toBeInTheDocument();
+    const root = container.firstChild as HTMLElement;
+    expect(root.className).toMatch(/border-l-4/);
+    expect(root.className).toMatch(/25[, ]+95%/);
+    expect(screen.getByText('content')).toBeInTheDocument();
+  });
+
+  it('renders children without wrapper when changeType is null', () => {
+    const { container } = render(
+      <ChangeIndicator changeType={null}>
+        <div>bare content</div>
+      </ChangeIndicator>,
+    );
+    expect(screen.getByText('bare content')).toBeInTheDocument();
+    // No border wrapper — children rendered directly
+    expect(container.querySelector('.border-l-4')).toBeNull();
   });
 });
