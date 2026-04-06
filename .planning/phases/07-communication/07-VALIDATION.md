@@ -7,7 +7,7 @@ wave_0_complete: false
 created: 2026-04-06
 ---
 
-# Phase 07 — Validation Strategy
+# Phase 07 -- Validation Strategy
 
 > Per-phase validation contract for feedback sampling during execution.
 
@@ -20,7 +20,7 @@ created: 2026-04-06
 | **Framework** | Vitest 4.x (backend + frontend) |
 | **Config file** | `apps/api/vitest.config.ts`, `apps/web/vitest.config.ts` |
 | **Quick run command** | `cd apps/api && pnpm test` |
-| **Full suite command** | `pnpm test` (root — runs all workspace tests) |
+| **Full suite command** | `pnpm test` (root -- runs all workspace tests) |
 | **Estimated runtime** | ~30 seconds |
 
 ---
@@ -38,21 +38,30 @@ created: 2026-04-06
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 07-01-01 | 01 | 0 | COMM-* | unit stubs | `cd apps/api && pnpm test` | ❌ W0 | ⬜ pending |
-| 07-02-01 | 02 | 1 | COMM-01, COMM-02 | unit | `cd apps/api && pnpm test` | ❌ W0 | ⬜ pending |
-| 07-03-01 | 03 | 1 | COMM-03 | unit | `cd apps/api && pnpm test` | ❌ W0 | ⬜ pending |
-| 07-04-01 | 04 | 2 | COMM-04 | unit | `cd apps/api && pnpm test` | ❌ W0 | ⬜ pending |
-| 07-05-01 | 05 | 2 | COMM-06 | unit | `cd apps/api && pnpm test` | ❌ W0 | ⬜ pending |
-| 07-06-01 | 06 | 3 | COMM-01-06 | integration | `cd apps/web && pnpm test` | ❌ W0 | ⬜ pending |
+| 07-01-01 | 01 | 1 | COMM-* | schema + stubs | `cd apps/api && pnpm test` | W0 stubs | pending |
+| 07-01-02 | 01 | 1 | COMM-* | unit stubs | `cd apps/api && pnpm test` | W0 stubs | pending |
+| 07-02-01 | 02 | 2 | COMM-01, COMM-02 | unit | `cd apps/api && pnpm test` | W0 stubs | pending |
+| 07-02-02 | 02 | 2 | COMM-01, COMM-02, COMM-03 | unit | `cd apps/api && pnpm test` | W0 stubs | pending |
+| 07-03-01 | 03 | 3 | COMM-04, COMM-05 | unit | `cd apps/api && pnpm test` | W0 stubs | pending |
+| 07-03-02 | 03 | 3 | COMM-06 | unit | `cd apps/api && pnpm test` | W0 stubs | pending |
+| 07-04-01 | 04 | 4 | COMM-01-03, COMM-06 | unit | `cd apps/api && pnpm test` | W0 stubs | pending |
+| 07-04-02 | 04 | 4 | COMM-01-06 | unit + seed | `cd apps/api && pnpm test` | existing | pending |
+| 07-05-01 | 05 | 5 | COMM-01, COMM-02 | TSC | `npx tsc --noEmit -p apps/web/tsconfig.json` | new files | pending |
+| 07-05-02 | 05 | 5 | COMM-01, COMM-02, COMM-03 | TSC | `npx tsc --noEmit -p apps/web/tsconfig.json` | new files | pending |
+| 07-06-01 | 06 | 6 | COMM-03 | TSC | `npx tsc --noEmit -p apps/web/tsconfig.json` | new files | pending |
+| 07-06-02 | 06 | 6 | COMM-03 | TSC | `npx tsc --noEmit -p apps/web/tsconfig.json` | new files | pending |
+| 07-07-01 | 07 | 7 | COMM-04, COMM-05, COMM-06 | TSC | `npx tsc --noEmit -p apps/web/tsconfig.json` | new files | pending |
+| 07-07-02 | 07 | 7 | COMM-04, COMM-05, COMM-06 | TSC | `npx tsc --noEmit -p apps/web/tsconfig.json` | new files | pending |
+| 07-07-03 | 07 | 7 | COMM-01-06 | manual | Human verification | N/A | pending |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+*Status: pending / green / red / flaky*
 
 ---
 
 ## Wave 0 Requirements
 
-- [ ] `apps/api/src/modules/communication/**/*.spec.ts` — stubs for COMM-01 through COMM-06
-- [ ] `apps/web/src/hooks/__tests__/useMessages.test.ts` — frontend hook stubs
+- [ ] `apps/api/src/modules/communication/**/*.spec.ts` -- stubs for COMM-01 through COMM-06
+- [ ] `apps/web/src/hooks/__tests__/useMessages.test.ts` -- frontend hook stubs
 - [ ] Existing test infrastructure covers framework install
 
 *Existing Vitest infrastructure from Phases 1-6 is reused.*
