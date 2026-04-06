@@ -341,7 +341,7 @@ Inherited from Phase 4 UI-SPEC. Phase 7 specific behavior:
 | Viewport | Row Layout | Touch Target | Unread Badge |
 |----------|-----------|-------------|--------------|
 | Mobile (< 640px) | Full-width row. Avatar 40px, title + preview stacked, timestamp top-right, unread badge bottom-right. 72px row height. | 44x44px minimum row tap target | 20px diameter, top-right of avatar |
-| Tablet (640-1023px) | Narrower panel (280px). Avatar 36px. Title truncated aggressively. Preview 1 line. | 44x44px | 18px diameter |
+| Tablet (640-1023px) | Narrower panel (280px). Avatar 36px. Title truncated aggressively. Preview 1 line. | 44x44px | 20px diameter |
 | Desktop (>= 1024px) | 360px panel. Full avatar 40px, title + preview, timestamp, scope badge visible. | Standard click target | 20px diameter |
 
 ### Message Bubble Responsive
@@ -356,7 +356,7 @@ Inherited from Phase 4 UI-SPEC. Phase 7 specific behavior:
 
 | Viewport | Presentation | Layout |
 |----------|-------------|--------|
-| Mobile (< 640px) | Full-screen overlay (no close X -- use "Abbrechen" button) | Stacked fields, full-width. Poll options stack. Send button full-width at bottom. |
+| Mobile (< 640px) | Full-screen overlay (no close X -- use "Entwurf verwerfen" button) | Stacked fields, full-width. Poll options stack. Send button full-width at bottom. |
 | Tablet (640-1023px) | Centered modal, max-width 560px | Two-column for scope+target selectors. Otherwise stacked. |
 | Desktop (>= 1024px) | Centered modal, max-width 640px | Two-column for scope+target. Subject full-width. Body full-width. |
 
@@ -420,7 +420,7 @@ All user-facing copy is in German (formal "Sie"). API endpoints and code in Engl
 | Attachment button label | "Datei anfuegen" |
 | Poll toggle label | "Umfrage anfuegen" |
 | Submit CTA | "Nachricht senden" |
-| Cancel button | "Abbrechen" |
+| Cancel button | "Entwurf verwerfen" |
 | Toast: message sent | "Nachricht gesendet" |
 | Toast: message send failed | "Nachricht konnte nicht gesendet werden. Bitte versuchen Sie es erneut." |
 | Validation: subject required | "Bitte geben Sie einen Betreff ein." |
@@ -489,11 +489,11 @@ All user-facing copy is in German (formal "Sie"). API endpoints and code in Engl
 | Dropdown: unmute | "Stummschaltung aufheben" |
 | Delete confirmation heading | "Unterhaltung loeschen" |
 | Delete confirmation body | "Moechten Sie diese Unterhaltung unwiderruflich loeschen? Alle Nachrichten werden entfernt." |
-| Delete confirmation CTA | "Loeschen" |
+| Delete confirmation CTA | "Unterhaltung loeschen" |
 | Toast: conversation deleted | "Unterhaltung geloescht" |
 | Delete message confirmation heading | "Nachricht loeschen" |
 | Delete message confirmation body | "Moechten Sie diese Nachricht loeschen?" |
-| Delete message confirmation CTA | "Loeschen" |
+| Delete message confirmation CTA | "Nachricht loeschen" |
 | Toast: message deleted | "Nachricht geloescht" |
 | **Scope badges** | |
 | Scope: direct | "Direkt" |
