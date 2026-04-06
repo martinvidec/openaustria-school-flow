@@ -209,15 +209,17 @@ describe('NotificationService (SUBST-03)', () => {
     expect(gatewayMock.emitNewNotification).toHaveBeenCalled();
   });
 
-  it('resolveRecipientsForSubstitutionEvent returns substitute, absent teacher, KV, and admin for SUBSTITUTION_CONFIRMED', async () => {
+  it('resolveRecipientsForSubstitutionEvent returns substitute, absent teacher, KV, and creator for SUBSTITUTION_CONFIRMED', async () => {
     const { service, prismaMock } = createService();
 
     prismaMock.substitution.findUniqueOrThrow.mockResolvedValue({
       id: 'sub-1',
       substituteTeacherId: 'teacher-sub',
       classSubjectId: 'cs-1',
+      createdBy: 'kc-admin',
       absence: {
         schoolId: 'school-1',
+        teacherId: 'teacher-absent',
         teacher: { person: { keycloakUserId: 'kc-absent' } },
       },
     });
@@ -229,9 +231,6 @@ describe('NotificationService (SUBST-03)', () => {
         klassenvorstand: { person: { keycloakUserId: 'kc-kv' } },
       },
     });
-    prismaMock.person.findMany.mockResolvedValue([
-      { keycloakUserId: 'kc-admin' },
-    ]);
 
     const recipients = await service.resolveRecipientsForSubstitutionEvent(
       'sub-1',
@@ -242,6 +241,8 @@ describe('NotificationService (SUBST-03)', () => {
     expect(recipients).toContain('kc-absent');
     expect(recipients).toContain('kc-kv');
     expect(recipients).toContain('kc-admin');
+    // person.findMany is no longer used for admin resolution
+    expect(prismaMock.person.findMany).not.toHaveBeenCalled();
   });
 
   it('resolveRecipientsForSubstitutionEvent omits admin for SUBSTITUTION_OFFER (substitute-only scope)', async () => {

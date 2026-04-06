@@ -32,6 +32,13 @@ const buildMockPrisma = () => {
     },
     teacher: {
       findUniqueOrThrow: vi.fn(),
+      findMany: vi.fn().mockResolvedValue([]),
+    },
+    classSubject: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
+    person: {
+      findFirst: vi.fn().mockResolvedValue(null),
     },
     teacherAbsence: {
       findUniqueOrThrow: vi.fn(),
@@ -497,6 +504,7 @@ describe('SubstitutionService (SUBST-03 / SUBST-05 / D-04 / D-14)', () => {
       expect(notifications.resolveRecipientsForSubstitutionEvent).toHaveBeenCalledWith(
         'sub-1',
         'SUBSTITUTION_CONFIRMED',
+        'kc-sub-teacher',
       );
       // One create per resolved recipient (2 mocked above)
       expect(notifications.create).toHaveBeenCalledTimes(2);

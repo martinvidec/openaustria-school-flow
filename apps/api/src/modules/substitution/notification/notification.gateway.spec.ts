@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { NotificationGateway } from './notification.gateway';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -7,25 +7,59 @@ import { join } from 'node:path';
 /**
  * SUBST-03 -- NotificationGateway handshake-auth + per-user rooms tests.
  *
+ * The gateway now uses direct jsonwebtoken + JwksClient + ConfigService instead
+ * of NestJS JwtService. We mock the internal jwt reference and JwksClient on
+ * the gateway instance after construction.
+ *
  * Pitfall 3: JWT validated on connect, userId derived from jwt.sub (NOT client-supplied).
  * Pitfall 6: transports include both websocket and polling for school network proxies.
  */
+
+/**
+ * Import the same jsonwebtoken module that the gateway captured at load time
+ * and spy on its `decode` and `verify` methods.
+ */
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const jwt = require('jsonwebtoken');
+
 describe('NotificationGateway (SUBST-03)', () => {
   let gateway: NotificationGateway;
-  let jwtService: { verifyAsync: ReturnType<typeof vi.fn> };
   let serverMock: { to: ReturnType<typeof vi.fn> };
   let emitMock: ReturnType<typeof vi.fn>;
+  let jwksClientMock: { getSigningKey: ReturnType<typeof vi.fn> };
+  let jwtDecodeSpy: ReturnType<typeof vi.spyOn>;
+  let jwtVerifySpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    jwtService = { verifyAsync: vi.fn() };
+    vi.restoreAllMocks();
+    jwtDecodeSpy = vi.spyOn(jwt, 'decode');
+    jwtVerifySpy = vi.spyOn(jwt, 'verify');
+
+    const configMock = {
+      get: vi.fn((key: string, defaultVal?: string) => {
+        if (key === 'KEYCLOAK_URL') return 'http://localhost:8080';
+        if (key === 'KEYCLOAK_REALM') return 'schoolflow';
+        return defaultVal;
+      }),
+    };
+
     emitMock = vi.fn();
     serverMock = { to: vi.fn(() => ({ emit: emitMock })) };
-    gateway = new NotificationGateway(jwtService as unknown as JwtService);
+    gateway = new NotificationGateway(configMock as unknown as ConfigService);
     (gateway as any).server = serverMock;
+
+    // Replace the internally-constructed JwksClient with our mock
+    jwksClientMock = {
+      getSigningKey: vi.fn().mockResolvedValue({
+        getPublicKey: () => 'mock-public-key',
+      }),
+    };
+    (gateway as any).jwksClient = jwksClientMock;
   });
 
   it('accepts connection with valid JWT in handshake.auth.token and joins user:{sub} room', async () => {
-    jwtService.verifyAsync.mockResolvedValue({ sub: 'user-123' });
+    jwtDecodeSpy.mockReturnValue({ header: { kid: 'key-1' }, payload: {} });
+    jwtVerifySpy.mockReturnValue({ sub: 'user-123' });
     const client: any = {
       id: 'socket-1',
       handshake: { auth: { token: 'valid.jwt.token' }, headers: {} },
@@ -35,7 +69,12 @@ describe('NotificationGateway (SUBST-03)', () => {
 
     await gateway.handleConnection(client);
 
-    expect(jwtService.verifyAsync).toHaveBeenCalledWith('valid.jwt.token');
+    expect(jwtDecodeSpy).toHaveBeenCalledWith('valid.jwt.token', { complete: true });
+    expect(jwksClientMock.getSigningKey).toHaveBeenCalledWith('key-1');
+    expect(jwtVerifySpy).toHaveBeenCalledWith('valid.jwt.token', 'mock-public-key', {
+      algorithms: ['RS256'],
+      issuer: 'http://localhost:8080/realms/schoolflow',
+    });
     expect(client.join).toHaveBeenCalledWith('user:user-123');
     expect(client.disconnect).not.toHaveBeenCalled();
   });
@@ -52,11 +91,12 @@ describe('NotificationGateway (SUBST-03)', () => {
 
     expect(client.disconnect).toHaveBeenCalledWith(true);
     expect(client.join).not.toHaveBeenCalled();
-    expect(jwtService.verifyAsync).not.toHaveBeenCalled();
+    expect(jwtDecodeSpy).not.toHaveBeenCalled();
   });
 
   it('rejects connection with invalid/expired JWT', async () => {
-    jwtService.verifyAsync.mockRejectedValue(new Error('jwt expired'));
+    jwtDecodeSpy.mockReturnValue({ header: { kid: 'key-1' }, payload: {} });
+    jwtVerifySpy.mockImplementation(() => { throw new Error('jwt expired'); });
     const client: any = {
       id: 'socket-3',
       handshake: { auth: { token: 'bad.jwt' }, headers: {} },
@@ -71,7 +111,8 @@ describe('NotificationGateway (SUBST-03)', () => {
   });
 
   it('joins client to user:{payload.sub} room -- never a client-supplied userId (Pitfall 3)', async () => {
-    jwtService.verifyAsync.mockResolvedValue({ sub: 'real-sub-from-token' });
+    jwtDecodeSpy.mockReturnValue({ header: { kid: 'key-1' }, payload: {} });
+    jwtVerifySpy.mockReturnValue({ sub: 'real-sub-from-token' });
     const client: any = {
       id: 'socket-4',
       handshake: {
@@ -89,7 +130,8 @@ describe('NotificationGateway (SUBST-03)', () => {
   });
 
   it('rejects connection when jwt.sub is missing even if verify succeeds', async () => {
-    jwtService.verifyAsync.mockResolvedValue({ other: 'claim' });
+    jwtDecodeSpy.mockReturnValue({ header: { kid: 'key-1' }, payload: {} });
+    jwtVerifySpy.mockReturnValue({ other: 'claim' });
     const client: any = {
       id: 'socket-5',
       handshake: { auth: { token: 'weird.jwt' }, headers: {} },
@@ -108,7 +150,7 @@ describe('NotificationGateway (SUBST-03)', () => {
     gateway.emitNewNotification('user-123', dto, 5);
 
     expect(serverMock.to).toHaveBeenCalledWith('user:user-123');
-    expect(emitMock).toHaveBeenCalledWith('notification:new', dto);
+    expect(emitMock).toHaveBeenCalledWith('notification:new', { notification: dto, unreadCount: 5 });
   });
 
   it('emitNewNotification also pushes a badge update with fresh unreadCount', () => {

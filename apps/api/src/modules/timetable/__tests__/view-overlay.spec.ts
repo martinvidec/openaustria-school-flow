@@ -27,7 +27,7 @@ const buildPrismaMock = () => ({
   classSubject: { findMany: vi.fn() },
   teacher: { findMany: vi.fn() },
   schoolClass: { findUnique: vi.fn() },
-  room: { findUnique: vi.fn() },
+  room: { findUnique: vi.fn(), findMany: vi.fn().mockResolvedValue([]) },
   substitution: { findMany: vi.fn() },
 });
 
@@ -143,19 +143,21 @@ describe('TimetableService.getView overlay behavior (SUBST-05)', () => {
         status: 'CONFIRMED',
         substituteTeacherId: 'teacher-sub',
         substituteRoomId: null,
-        substituteTeacher: {
-          id: 'teacher-sub',
-          person: { firstName: 'Anna', lastName: 'Lehrerin' },
-        },
-        substituteRoom: null,
         absence: {
-          teacher: {
-            id: 'teacher-orig',
-            person: { firstName: 'Maria', lastName: 'Huber' },
-          },
+          teacherId: 'teacher-orig',
         },
       },
     ]);
+    // Batch-lookup for overlay teachers: the code collects substituteTeacherId
+    // and absence.teacherId, then calls teacher.findMany for both. The first
+    // teacher.findMany call is for the recurring-plan lesson teachers; the
+    // second is for the overlay. We use mockResolvedValueOnce to separate them.
+    prisma.teacher.findMany
+      .mockResolvedValueOnce([teacherOrig]) // recurring-plan teachers
+      .mockResolvedValueOnce([
+        { id: 'teacher-sub', person: { firstName: 'Anna', lastName: 'Lehrerin' } },
+        { id: 'teacher-orig', person: { firstName: 'Maria', lastName: 'Huber' } },
+      ]); // overlay teachers
 
     const result = await service.getView(SCHOOL_ID, {
       perspective: 'class',
@@ -181,16 +183,17 @@ describe('TimetableService.getView overlay behavior (SUBST-05)', () => {
         status: 'CONFIRMED',
         substituteTeacherId: null,
         substituteRoomId: null,
-        substituteTeacher: null,
-        substituteRoom: null,
         absence: {
-          teacher: {
-            id: 'teacher-orig',
-            person: { firstName: 'Maria', lastName: 'Huber' },
-          },
+          teacherId: 'teacher-orig',
         },
       },
     ]);
+    // Batch-lookup: first call for recurring-plan, second for overlay teachers
+    prisma.teacher.findMany
+      .mockResolvedValueOnce([teacherOrig]) // recurring-plan teachers
+      .mockResolvedValueOnce([
+        { id: 'teacher-orig', person: { firstName: 'Maria', lastName: 'Huber' } },
+      ]); // overlay teachers (absent teacher only, no substitute)
 
     const result = await service.getView(SCHOOL_ID, {
       perspective: 'class',
@@ -216,19 +219,18 @@ describe('TimetableService.getView overlay behavior (SUBST-05)', () => {
         status: 'CONFIRMED',
         substituteTeacherId: 'teacher-supervisor',
         substituteRoomId: null,
-        substituteTeacher: {
-          id: 'teacher-supervisor',
-          person: { firstName: 'Peter', lastName: 'Sportlich' },
-        },
-        substituteRoom: null,
         absence: {
-          teacher: {
-            id: 'teacher-orig',
-            person: { firstName: 'Maria', lastName: 'Huber' },
-          },
+          teacherId: 'teacher-orig',
         },
       },
     ]);
+    // Batch-lookup: first call for recurring-plan, second for overlay teachers
+    prisma.teacher.findMany
+      .mockResolvedValueOnce([teacherOrig]) // recurring-plan teachers
+      .mockResolvedValueOnce([
+        { id: 'teacher-supervisor', person: { firstName: 'Peter', lastName: 'Sportlich' } },
+        { id: 'teacher-orig', person: { firstName: 'Maria', lastName: 'Huber' } },
+      ]); // overlay teachers
 
     const result = await service.getView(SCHOOL_ID, {
       perspective: 'class',
@@ -254,18 +256,21 @@ describe('TimetableService.getView overlay behavior (SUBST-05)', () => {
         status: 'CONFIRMED',
         substituteTeacherId: 'teacher-sub',
         substituteRoomId: 'room-202',
-        substituteTeacher: {
-          id: 'teacher-sub',
-          person: { firstName: 'Anna', lastName: 'Lehrerin' },
-        },
-        substituteRoom: { id: 'room-202', name: '202' },
         absence: {
-          teacher: {
-            id: 'teacher-orig',
-            person: { firstName: 'Maria', lastName: 'Huber' },
-          },
+          teacherId: 'teacher-orig',
         },
       },
+    ]);
+    // Batch-lookup: first call for recurring-plan, second for overlay teachers
+    prisma.teacher.findMany
+      .mockResolvedValueOnce([teacherOrig]) // recurring-plan teachers
+      .mockResolvedValueOnce([
+        { id: 'teacher-sub', person: { firstName: 'Anna', lastName: 'Lehrerin' } },
+        { id: 'teacher-orig', person: { firstName: 'Maria', lastName: 'Huber' } },
+      ]); // overlay teachers
+    // Batch-lookup for overlay rooms
+    prisma.room.findMany.mockResolvedValue([
+      { id: 'room-202', name: '202' },
     ]);
 
     const result = await service.getView(SCHOOL_ID, {
