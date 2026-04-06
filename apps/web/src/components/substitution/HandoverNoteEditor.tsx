@@ -12,14 +12,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { FileUploadField } from '@/components/classbook/FileUploadField';
 import {
+  useHandoverNote,
   useCreateOrUpdateHandoverNote,
   useUploadHandoverAttachment,
 } from '@/hooks/useHandoverNote';
-import type { HandoverNoteDto } from '@schoolflow/shared';
 
 interface HandoverNoteEditorProps {
   substitutionId: string;
-  existingNote: HandoverNoteDto | null;
+  existingNote?: null; // deprecated — editor now fetches internally
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -37,16 +37,16 @@ interface HandoverNoteEditorProps {
  */
 export function HandoverNoteEditor({
   substitutionId,
-  existingNote,
   open,
   onOpenChange,
 }: HandoverNoteEditorProps) {
-  const [content, setContent] = useState(existingNote?.content ?? '');
+  const { data: existingNote } = useHandoverNote(open ? substitutionId : null);
+  const [content, setContent] = useState('');
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const createOrUpdate = useCreateOrUpdateHandoverNote();
   const uploadAttachment = useUploadHandoverAttachment();
 
-  // Reset local state when the dialog opens/closes or the existing note changes
+  // Sync local state when existing note loads or dialog opens
   useEffect(() => {
     if (open) {
       setContent(existingNote?.content ?? '');
@@ -100,6 +100,16 @@ export function HandoverNoteEditor({
           </div>
           <div className="space-y-2">
             <Label>Anhaenge (optional)</Label>
+            {existingNote?.attachments && existingNote.attachments.length > 0 && (
+              <div className="space-y-1">
+                {existingNote.attachments.map((a: any) => (
+                  <div key={a.id} className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>📎 {a.filename}</span>
+                    <span className="text-xs">({Math.round((a.sizeBytes ?? 0) / 1024)} KB)</span>
+                  </div>
+                ))}
+              </div>
+            )}
             <p className="text-xs text-muted-foreground">
               PDF, JPG oder PNG (max. 5 MB pro Datei)
             </p>

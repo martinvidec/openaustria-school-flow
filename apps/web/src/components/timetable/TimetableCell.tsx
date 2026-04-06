@@ -51,28 +51,44 @@ export function TimetableCell({
     newValue = lesson.roomName;
   }
 
+  // For change types, build the 3 lines inline with change info
+  // instead of adding a 4th line that overflows the fixed cell height.
+  const hasChange = !!lesson.changeType;
+  const isSubstitution = lesson.changeType === 'substitution';
+  const isStillarbeit = lesson.changeType === 'stillarbeit';
+  const isCancelled = lesson.changeType === 'cancelled';
+
   const cellContent = (
     <div
       className={cn(
         'flex flex-col justify-center px-1.5 py-1 h-full w-full rounded-sm overflow-hidden',
         editable && 'cursor-grab hover:ring-2 hover:ring-primary/30',
-        lesson.changeType === 'cancelled' && 'line-through',
       )}
       style={{
-        backgroundColor: lesson.changeType ? undefined : color.bg,
-        color: lesson.changeType ? undefined : color.text,
+        backgroundColor: hasChange ? undefined : color.bg,
+        color: hasChange ? undefined : color.text,
       }}
     >
       {/* Line 1: Subject abbreviation */}
-      <span className="text-sm font-semibold leading-[1.2] truncate">
+      <span className={cn('text-sm font-semibold leading-[1.2] truncate', isCancelled && 'line-through opacity-60')}>
         {lesson.subjectAbbreviation}
+        {isStillarbeit && (
+          <span className="text-[10px] font-normal ml-1">Stillarbeit</span>
+        )}
       </span>
-      {/* Line 2: Teacher surname */}
-      <span className="text-xs leading-[1.3] truncate">
-        {lesson.teacherSurname}
+      {/* Line 2: Teacher — show change inline */}
+      <span className={cn('text-xs leading-[1.3] truncate', isCancelled && 'line-through opacity-60')}>
+        {isSubstitution && originalValue ? (
+          <>
+            <span className="line-through opacity-50">{originalValue}</span>
+            {newValue && <span className="ml-0.5 font-medium">{newValue}</span>}
+          </>
+        ) : (
+          lesson.teacherSurname
+        )}
       </span>
-      {/* Line 3: Room name */}
-      <span className="text-xs leading-[1.3] truncate">
+      {/* Line 3: Room (or supervisor for stillarbeit) */}
+      <span className={cn('text-xs leading-[1.3] truncate', isCancelled && 'line-through opacity-60')}>
         {lesson.roomName}
       </span>
     </div>
@@ -92,12 +108,8 @@ export function TimetableCell({
       }}
       className="h-full w-full"
     >
-      {lesson.changeType ? (
-        <ChangeIndicator
-          changeType={lesson.changeType}
-          originalValue={originalValue}
-          newValue={newValue}
-        >
+      {hasChange ? (
+        <ChangeIndicator changeType={lesson.changeType}>
           {cellContent}
         </ChangeIndicator>
       ) : (

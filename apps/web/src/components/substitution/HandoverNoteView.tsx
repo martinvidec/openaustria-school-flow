@@ -1,7 +1,20 @@
 import { Download } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { apiFetch } from '@/lib/api';
 import type { HandoverNoteDto } from '@schoolflow/shared';
+
+async function downloadAttachment(id: string, filename: string) {
+  const res = await apiFetch(`/api/v1/handover-notes/attachments/${id}`);
+  if (!res.ok) return;
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 interface HandoverNoteViewProps {
   note: HandoverNoteDto | null;
@@ -64,16 +77,11 @@ export function HandoverNoteView({
                 <Button
                   variant="ghost"
                   size="sm"
-                  asChild
                   className="shrink-0 h-8"
+                  onClick={() => downloadAttachment(a.id, a.filename)}
                 >
-                  <a
-                    href={`/api/v1/handover-notes/attachments/${a.id}`}
-                    download={a.filename}
-                  >
-                    <Download className="h-3 w-3 mr-1" />
-                    Download
-                  </a>
+                  <Download className="h-3 w-3 mr-1" />
+                  Download
                 </Button>
               </li>
             ))}

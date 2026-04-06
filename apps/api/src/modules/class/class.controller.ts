@@ -4,7 +4,7 @@ import { ClassService } from './class.service';
 import { CreateClassDto } from './dto/create-class.dto';
 import { UpdateClassDto } from './dto/update-class.dto';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator';
-import { PaginationQueryDto } from '../../common/dto/pagination.dto';
+import { SchoolPaginationQueryDto } from '../../common/dto/pagination.dto';
 
 @ApiTags('classes')
 @ApiBearerAuth()
@@ -26,8 +26,8 @@ export class ClassController {
   @ApiOperation({ summary: 'List classes by school, paginated' })
   @ApiQuery({ name: 'schoolId', required: true, type: String })
   @ApiResponse({ status: 200, description: 'Paginated list of classes' })
-  async findAll(@Query('schoolId') schoolId: string, @Query() pagination: PaginationQueryDto) {
-    return this.classService.findAll(schoolId, pagination);
+  async findAll(@Query() query: SchoolPaginationQueryDto) {
+    return this.classService.findAll(query.schoolId!, query);
   }
 
   @Get(':id')

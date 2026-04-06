@@ -4,7 +4,7 @@ import { StudentService } from './student.service';
 import { CreateStudentDto } from './dto/create-student.dto';
 import { UpdateStudentDto } from './dto/update-student.dto';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator';
-import { PaginationQueryDto } from '../../common/dto/pagination.dto';
+import { SchoolPaginationQueryDto } from '../../common/dto/pagination.dto';
 
 @ApiTags('students')
 @ApiBearerAuth()
@@ -26,8 +26,8 @@ export class StudentController {
   @ApiOperation({ summary: 'List students by school, paginated' })
   @ApiQuery({ name: 'schoolId', required: true, type: String })
   @ApiResponse({ status: 200, description: 'Paginated list of students' })
-  async findAll(@Query('schoolId') schoolId: string, @Query() pagination: PaginationQueryDto) {
-    return this.studentService.findAll(schoolId, pagination);
+  async findAll(@Query() query: SchoolPaginationQueryDto) {
+    return this.studentService.findAll(query.schoolId!, query);
   }
 
   @Get(':id')

@@ -151,32 +151,29 @@ export class HandoverService {
     noteId: string,
     file: { filename: string; mimeType: string; buffer: Buffer },
   ) {
-    // 1. MIME allow-list
-    if (!ALLOWED_MIME_TYPES.includes(file.mimeType as AllowedMime)) {
-      throw new BadRequestException(
-        `Dateityp nicht unterstuetzt. Erlaubt: ${ALLOWED_MIME_TYPES.join(', ')}`,
-      );
-    }
-
-    // 2. Size ceiling (secondary check; primary enforcement is @fastify/multipart)
+    // 1. Size ceiling (secondary check; primary enforcement is @fastify/multipart)
     if (file.buffer.length > MAX_FILE_SIZE_BYTES) {
       throw new BadRequestException(
         'Die Datei ist zu gross. Maximale Dateigroesse: 5 MB.',
       );
     }
 
-    // 3. Magic byte match
-    const expected = MAGIC_BYTES[file.mimeType];
-    if (!expected) {
-      throw new BadRequestException('Unbekannter Dateityp');
-    }
-    for (let i = 0; i < expected.length; i++) {
-      if (file.buffer[i] !== expected[i]) {
-        throw new BadRequestException(
-          'Dateiinhalt stimmt nicht mit dem angegebenen Dateityp ueberein',
-        );
+    // 2. Detect actual MIME from magic bytes (browser MIME can be wrong after
+    //    download+re-upload, e.g. application/octet-stream instead of image/png)
+    let resolvedMime: AllowedMime | null = null;
+    for (const [mime, sig] of Object.entries(MAGIC_BYTES)) {
+      if (file.buffer.length >= sig.length && sig.every((b, i) => file.buffer[i] === b)) {
+        resolvedMime = mime as AllowedMime;
+        break;
       }
     }
+    if (!resolvedMime) {
+      throw new BadRequestException(
+        `Dateityp nicht unterstuetzt. Erlaubt: ${ALLOWED_MIME_TYPES.join(', ')}`,
+      );
+    }
+    // Use the magic-byte-detected MIME for storage
+    file.mimeType = resolvedMime;
 
     // 4. Resolve schoolId and build storage path
     const note = await this.prisma.handoverNote.findUniqueOrThrow({

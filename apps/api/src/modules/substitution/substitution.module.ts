@@ -1,7 +1,5 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwksClient } from 'jwks-rsa';
+import { ConfigModule } from '@nestjs/config';
 
 // Absence (Plan 06-02)
 import { TeacherAbsenceController } from './absence/teacher-absence.controller';
@@ -53,42 +51,7 @@ import { ClassBookModule } from '../classbook/classbook.module';
   imports: [
     TimetableModule,
     ClassBookModule,
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
-        const keycloakUrl = config.get<string>('KEYCLOAK_URL');
-        const realm = config.get<string>('KEYCLOAK_REALM');
-        const jwksClient = new JwksClient({
-          cache: true,
-          rateLimit: true,
-          jwksRequestsPerMinute: 5,
-          jwksUri: `${keycloakUrl}/realms/${realm}/protocol/openid-connect/certs`,
-        });
-        return {
-          // Verify using the Keycloak JWKS (RS256 public keys). No signing
-          // secret — we never mint tokens ourselves. Gateway calls
-          // jwtService.verifyAsync(token) which invokes this provider per token.
-          verifyOptions: {
-            algorithms: ['RS256'],
-            issuer: `${keycloakUrl}/realms/${realm}`,
-          },
-          secretOrKeyProvider: (
-            _requestType: unknown,
-            token: unknown,
-            done: (err: unknown, key?: string) => void,
-          ) => {
-            const header = (token as { header?: { kid?: string } })?.header;
-            const kid = header?.kid;
-            if (!kid) return done(new Error('jwt header.kid missing'));
-            jwksClient
-              .getSigningKey(kid)
-              .then((key) => done(null, key.getPublicKey()))
-              .catch((err) => done(err));
-          },
-        } as any;
-      },
-    }),
+    ConfigModule,
   ],
   controllers: [
     TeacherAbsenceController,

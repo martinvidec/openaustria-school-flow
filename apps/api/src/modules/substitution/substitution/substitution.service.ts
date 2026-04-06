@@ -243,6 +243,7 @@ export class SubstitutionService {
         await this.notifications.resolveRecipientsForSubstitutionEvent(
           updated.id,
           eventType,
+          input.userId, // exclude the responding teacher from their own notification
         );
       for (const userId of recipients) {
         await this.notifications.create({
@@ -420,7 +421,111 @@ export class SubstitutionService {
       },
       orderBy: [{ date: 'asc' }, { periodNumber: 'asc' }],
     });
-    return rows.map((r: any) => this.toDto(r));
+
+    // Batch-resolve denormalized IDs to display names
+    const teacherIds = [
+      ...new Set(
+        rows.flatMap((r: any) =>
+          [r.originalTeacherId, r.substituteTeacherId].filter(Boolean),
+        ),
+      ),
+    ];
+    const csIds = [...new Set(rows.map((r: any) => r.classSubjectId))];
+
+    const [teachers, classSubjects] = await Promise.all([
+      teacherIds.length > 0
+        ? this.prisma.teacher.findMany({
+            where: { id: { in: teacherIds } },
+            select: { id: true, person: { select: { firstName: true, lastName: true } } },
+          })
+        : [],
+      csIds.length > 0
+        ? this.prisma.classSubject.findMany({
+            where: { id: { in: csIds } },
+            select: {
+              id: true,
+              subject: { select: { shortName: true, name: true } },
+              schoolClass: { select: { name: true } },
+            },
+          })
+        : [],
+    ]);
+
+    const teacherMap = new Map(
+      teachers.map((t: any) => [t.id, `${t.person.firstName} ${t.person.lastName}`]),
+    );
+    const csMap = new Map(
+      classSubjects.map((cs: any) => [
+        cs.id,
+        {
+          shortName: cs.subject?.shortName ?? '',
+          name: cs.subject?.name ?? '',
+          className: cs.schoolClass?.name ?? '',
+        },
+      ]),
+    );
+
+    return rows.map((r: any) => this.toDto(r, teacherMap, csMap));
+  }
+
+  async findByAbsentUser(schoolId: string, keycloakUserId: string): Promise<SubstitutionDto[]> {
+    // Find the teacher record linked to this Keycloak user
+    const person = await this.prisma.person.findFirst({
+      where: { keycloakUserId, schoolId },
+      select: { teacher: { select: { id: true } } },
+    });
+    const teacherId = (person as any)?.teacher?.id;
+    if (!teacherId) return [];
+
+    const rows = await this.prisma.substitution.findMany({
+      where: {
+        originalTeacherId: teacherId,
+        status: { in: ['PENDING', 'OFFERED', 'CONFIRMED'] },
+        absence: { schoolId },
+      },
+      include: { handoverNote: true },
+      orderBy: [{ date: 'asc' }, { periodNumber: 'asc' }],
+    });
+
+    // Reuse batch-resolve pattern from findManyPending
+    const allTeacherIds = [...new Set(
+      rows.flatMap((r: any) => [r.originalTeacherId, r.substituteTeacherId].filter(Boolean)),
+    )];
+    const csIds = [...new Set(rows.map((r: any) => r.classSubjectId))];
+
+    const [teachers, classSubjects] = await Promise.all([
+      allTeacherIds.length > 0
+        ? this.prisma.teacher.findMany({
+            where: { id: { in: allTeacherIds } },
+            select: { id: true, person: { select: { firstName: true, lastName: true } } },
+          })
+        : [],
+      csIds.length > 0
+        ? this.prisma.classSubject.findMany({
+            where: { id: { in: csIds } },
+            select: {
+              id: true,
+              subject: { select: { shortName: true, name: true } },
+              schoolClass: { select: { name: true } },
+            },
+          })
+        : [],
+    ]);
+
+    const teacherMap = new Map(
+      teachers.map((t: any) => [t.id, `${t.person.firstName} ${t.person.lastName}`]),
+    );
+    const csMap = new Map(
+      classSubjects.map((cs: any) => [
+        cs.id,
+        { shortName: cs.subject?.shortName ?? '', name: cs.subject?.name ?? '', className: cs.schoolClass?.name ?? '' },
+      ]),
+    );
+
+    return rows.map((r: any) => ({
+      ...this.toDto(r, teacherMap, csMap),
+      hasHandoverNote: !!r.handoverNote,
+    }));
   }
 
   async findOne(id: string): Promise<SubstitutionDto> {
@@ -508,7 +613,12 @@ export class SubstitutionService {
   // ---------------------------------------------------------------------------
   // DTO mapping
   // ---------------------------------------------------------------------------
-  private toDto(row: any): SubstitutionDto {
+  private toDto(
+    row: any,
+    teacherMap?: Map<string, string>,
+    csMap?: Map<string, { shortName: string; name: string; className: string }>,
+  ): SubstitutionDto {
+    const cs = csMap?.get(row.classSubjectId);
     return {
       id: row.id,
       absenceId: row.absenceId,
@@ -521,10 +631,11 @@ export class SubstitutionService {
       type: row.type,
       status: row.status,
       originalTeacherId: row.originalTeacherId,
-      // Fields below are filled by Plan 04 view-layer joins.
-      originalTeacherName: '',
+      originalTeacherName: teacherMap?.get(row.originalTeacherId) ?? '',
       substituteTeacherId: row.substituteTeacherId ?? null,
-      substituteTeacherName: null,
+      substituteTeacherName: row.substituteTeacherId
+        ? (teacherMap?.get(row.substituteTeacherId) ?? null)
+        : null,
       substituteRoomId: row.substituteRoomId ?? null,
       offeredAt:
         row.offeredAt instanceof Date
@@ -538,9 +649,9 @@ export class SubstitutionService {
         row.createdAt instanceof Date ? row.createdAt.toISOString() : row.createdAt,
       updatedAt:
         row.updatedAt instanceof Date ? row.updatedAt.toISOString() : row.updatedAt,
-      subjectAbbreviation: '',
-      subjectName: '',
-      className: '',
+      subjectAbbreviation: cs?.shortName ?? '',
+      subjectName: cs?.name ?? '',
+      className: cs?.className ?? '',
     };
   }
 

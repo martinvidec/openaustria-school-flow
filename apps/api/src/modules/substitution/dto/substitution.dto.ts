@@ -2,14 +2,14 @@ import {
   IsBoolean,
   IsOptional,
   IsString,
-  IsUUID,
+  IsNotEmpty,
   MaxLength,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class AssignSubstituteDto {
   @ApiProperty({ description: 'Candidate teacher ID to assign as substitute' })
-  @IsUUID()
+  @IsNotEmpty()
   candidateTeacherId!: string;
 }
 
@@ -28,6 +28,6 @@ export class RespondToOfferDto {
 export class SetStillarbeitDto {
   @ApiPropertyOptional({ description: 'Optional supervisor teacher ID (D-04)' })
   @IsOptional()
-  @IsUUID()
+  @IsNotEmpty()
   supervisorTeacherId?: string;
 }

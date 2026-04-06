@@ -155,6 +155,7 @@ export class NotificationService {
   async resolveRecipientsForSubstitutionEvent(
     substitutionId: string,
     eventType: string,
+    excludeUserId?: string,
   ): Promise<string[]> {
     const sub: any = await this.prisma.substitution.findUniqueOrThrow({
       where: { id: substitutionId },
@@ -206,20 +207,14 @@ export class NotificationService {
         classSubject?.schoolClass?.klassenvorstand?.person?.keycloakUserId;
       if (kvKcId) recipients.add(kvKcId);
 
-      // Admin / Schulleitung of the school
-      const admins = await this.prisma.person.findMany({
-        where: {
-          schoolId: sub.absence.schoolId,
-          // Note: role filtering happens in a later plan once the Person<->Role
-          // linkage is wired. For now we return all persons in the school and
-          // the caller can post-filter. Tests mock this list directly.
-        },
-        select: { keycloakUserId: true },
-      });
-      for (const p of admins) {
-        if (p.keycloakUserId) recipients.add(p.keycloakUserId);
+      // Creator of the substitution (admin who assigned it)
+      if (sub.createdBy) {
+        recipients.add(sub.createdBy);
       }
     }
+
+    // Exclude the acting user — they already know what they did
+    if (excludeUserId) recipients.delete(excludeUserId);
 
     return Array.from(recipients);
   }

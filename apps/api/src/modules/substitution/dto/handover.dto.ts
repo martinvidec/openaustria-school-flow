@@ -1,4 +1,4 @@
-import { IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
+import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
 
 /**
  * Phase 6 -- SUBST-04 handover note DTOs.
@@ -11,6 +11,7 @@ export class CreateHandoverNoteDto {
 }
 
 export class HandoverNoteParamsDto {
-  @IsUUID()
+  @IsString()
+  @IsNotEmpty()
   substitutionId!: string;
 }

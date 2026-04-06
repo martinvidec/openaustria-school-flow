@@ -379,23 +379,43 @@ export class TimetableService {
           status: { in: ['CONFIRMED', 'OFFERED'] },
         },
         include: {
-          substituteTeacher: { include: { person: true } },
-          substituteRoom: true,
-          absence: {
-            include: { teacher: { include: { person: true } } },
-          },
+          absence: true,
         },
       });
 
+      // Batch-resolve denormalized IDs (no Prisma relations on substituteTeacherId/substituteRoomId)
+      const subTeacherIds = [...new Set(subs.map((s: any) => s.substituteTeacherId).filter(Boolean))];
+      const absentTeacherIds = [...new Set(subs.map((s: any) => s.absence?.teacherId).filter(Boolean))];
+      const allTeacherIds = [...new Set([...subTeacherIds, ...absentTeacherIds])];
+      const subRoomIds = [...new Set(subs.map((s: any) => s.substituteRoomId).filter(Boolean))];
+
+      const [overlayTeachers, overlayRooms] = await Promise.all([
+        allTeacherIds.length > 0
+          ? this.prisma.teacher.findMany({
+              where: { id: { in: allTeacherIds } },
+              select: { id: true, person: { select: { firstName: true, lastName: true } } },
+            })
+          : [],
+        subRoomIds.length > 0
+          ? this.prisma.room.findMany({
+              where: { id: { in: subRoomIds } },
+              select: { id: true, name: true },
+            })
+          : [],
+      ]);
+
+      const overlayTeacherMap = new Map(overlayTeachers.map((t: any) => [t.id, t]));
+      const overlayRoomMap = new Map(overlayRooms.map((r: any) => [r.id, r]));
+
       overlays = new Map();
       for (const sub of subs as any[]) {
-        // Filter by ISO-week compatibility of the stored weekType using the
-        // same ab-week utility used by Phase 2's range expansion.
         const subDate =
           sub.date instanceof Date ? sub.date : new Date(sub.date);
-        // Match the overlay on lessonId alone within the week; each lesson
-        // appears only once per weekly view row so the (lessonId) key suffices.
         if (!isWeekCompatible(subDate, 'BOTH', abWeekEnabled)) continue;
+        // Attach resolved data for the overlay application step
+        sub._substituteTeacher = overlayTeacherMap.get(sub.substituteTeacherId);
+        sub._absentTeacher = overlayTeacherMap.get(sub.absence?.teacherId);
+        sub._substituteRoom = overlayRoomMap.get(sub.substituteRoomId);
         overlays.set(sub.lessonId, sub);
       }
     }
@@ -429,9 +449,9 @@ export class TimetableService {
       const overlay = overlays?.get(lesson.id);
       if (overlay) {
         const absentLastName: string =
-          overlay.absence?.teacher?.person?.lastName ?? '';
+          overlay._absentTeacher?.person?.lastName ?? '';
         const substituteLastName: string =
-          overlay.substituteTeacher?.person?.lastName ?? '';
+          overlay._substituteTeacher?.person?.lastName ?? '';
 
         if (overlay.type === 'SUBSTITUTED') {
           dto.changeType = 'substitution';
@@ -440,10 +460,10 @@ export class TimetableService {
             dto.teacherId = overlay.substituteTeacherId;
             dto.teacherSurname = substituteLastName;
           }
-          if (overlay.substituteRoomId && overlay.substituteRoom) {
+          if (overlay.substituteRoomId && overlay._substituteRoom) {
             dto.originalRoomName = dto.roomName;
             dto.roomId = overlay.substituteRoomId;
-            dto.roomName = overlay.substituteRoom.name ?? '';
+            dto.roomName = overlay._substituteRoom.name ?? '';
           }
         } else if (overlay.type === 'ENTFALL') {
           dto.changeType = 'cancelled';

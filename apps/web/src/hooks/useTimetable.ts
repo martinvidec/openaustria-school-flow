@@ -43,6 +43,7 @@ export function useTimetableView(
         perspective,
         perspectiveId: perspectiveId ?? '',
         weekType,
+        date: new Date().toISOString().slice(0, 10),
       });
       const res = await apiFetch(
         `/api/v1/schools/${schoolId}/timetable/view?${params}`,

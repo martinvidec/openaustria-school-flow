@@ -1,4 +1,4 @@
-import { IsUUID } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 /**
  * Phase 6 -- SUBST-02 ranking endpoint params.
@@ -8,6 +8,7 @@ import { IsUUID } from 'class-validator';
  * slot directly from the Substitution row, so only :substitutionId is needed.
  */
 export class RankingQueryDto {
-  @IsUUID()
+  @IsString()
+  @IsNotEmpty()
   substitutionId!: string;
 }

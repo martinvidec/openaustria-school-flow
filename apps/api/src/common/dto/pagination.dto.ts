@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, Max, Min } from 'class-validator';
+import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class PaginationQueryDto {
   @ApiPropertyOptional({ default: 1, minimum: 1 })
@@ -21,6 +21,18 @@ export class PaginationQueryDto {
   get skip(): number {
     return (this.page - 1) * this.limit;
   }
+}
+
+/**
+ * Pagination with mandatory schoolId filter.
+ * Fixes forbidNonWhitelisted rejection when @Query('schoolId') is used
+ * alongside @Query() PaginationQueryDto in controllers.
+ */
+export class SchoolPaginationQueryDto extends PaginationQueryDto {
+  @ApiPropertyOptional({ description: 'Filter by school ID' })
+  @IsOptional()
+  @IsString()
+  schoolId?: string;
 }
 
 export class PaginatedResponseDto<T> {

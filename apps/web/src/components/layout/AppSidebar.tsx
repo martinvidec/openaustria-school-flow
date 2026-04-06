@@ -77,7 +77,7 @@ const navItems: NavItem[] = [
     label: 'Meine Vertretungen',
     href: '/teacher/substitutions',
     icon: UserCheck,
-    roles: ['lehrer'],
+    roles: ['lehrer', 'schulleitung'],
   },
 ];
 

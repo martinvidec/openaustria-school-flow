@@ -131,7 +131,7 @@ export class RankingService {
   ): Promise<PreloadedCommitments> {
     // Resolve active TimetableRun (latest for the school).
     const activeRun = await (this.prisma as any).timetableRun?.findFirst?.({
-      where: { schoolId: input.schoolId, status: 'ACTIVE' },
+      where: { schoolId: input.schoolId, status: 'COMPLETED' },
       orderBy: { createdAt: 'desc' },
       select: { id: true },
     });

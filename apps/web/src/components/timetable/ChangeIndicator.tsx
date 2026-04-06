@@ -50,12 +50,7 @@ export function ChangeIndicator({
         styles.bgClass,
       )}
     >
-      {/* Main content with possible strikethrough for cancelled */}
-      <div className={cn(changeType === 'cancelled' && 'line-through opacity-60')}>
-        {children}
-      </div>
-
-      {/* Change-specific content overlay */}
+      {children}
       {changeType === 'cancelled' && (
         <Badge
           variant="destructive"
@@ -63,34 +58,6 @@ export function ChangeIndicator({
         >
           Entfall
         </Badge>
-      )}
-
-      {changeType === 'substitution' && originalValue && (
-        <div className="absolute bottom-0.5 left-1 text-[10px] leading-tight">
-          <span className="line-through opacity-60">{originalValue}</span>
-          {newValue && (
-            <span className="ml-1 font-medium">{newValue}</span>
-          )}
-        </div>
-      )}
-
-      {changeType === 'room-swap' && originalValue && (
-        <div className="absolute bottom-0.5 left-1 text-[10px] leading-tight">
-          <span className="line-through opacity-60">{originalValue}</span>
-          <span className="mx-0.5">{'->'}</span>
-          <span className="font-medium">{newValue}</span>
-        </div>
-      )}
-
-      {changeType === 'stillarbeit' && (
-        <div className="absolute inset-x-1 bottom-0.5 text-[10px] leading-tight">
-          <div className="font-semibold text-[12px]">Stillarbeit</div>
-          {supervisingTeacher && (
-            <div className="text-muted-foreground truncate">
-              Aufsicht: {supervisingTeacher}
-            </div>
-          )}
-        </div>
       )}
     </div>
   );

@@ -81,6 +81,10 @@ export function useCreateOrUpdateHandoverNote() {
       queryClient.invalidateQueries({
         queryKey: handoverKeys.bySubstitution(vars.substitutionId),
       });
+      // Also refresh the my-absences list so hasHandoverNote updates
+      queryClient.invalidateQueries({
+        queryKey: ['substitutions'],
+      });
     },
   });
 }
@@ -110,7 +114,8 @@ export function useUploadHandoverAttachment() {
         },
       );
       if (!res.ok) {
-        throw new Error('Anhang konnte nicht hochgeladen werden.');
+        const detail = await res.json().then((b) => b?.detail ?? b?.message).catch(() => null);
+        throw new Error(detail ?? 'Anhang konnte nicht hochgeladen werden.');
       }
       return res.json();
     },

@@ -15,13 +15,12 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
-  ApiQuery,
 } from '@nestjs/swagger';
 import { TeacherService } from './teacher.service';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateTeacherDto } from './dto/update-teacher.dto';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator';
-import { PaginationQueryDto } from '../../common/dto/pagination.dto';
+import { SchoolPaginationQueryDto } from '../../common/dto/pagination.dto';
 
 @ApiTags('teachers')
 @ApiBearerAuth()
@@ -42,13 +41,9 @@ export class TeacherController {
   @Get()
   @CheckPermissions({ action: 'read', subject: 'teacher' })
   @ApiOperation({ summary: 'List teachers for a school with pagination' })
-  @ApiQuery({ name: 'schoolId', required: true, description: 'Filter by school ID' })
   @ApiResponse({ status: 200, description: 'Paginated list of teachers' })
-  async findAll(
-    @Query('schoolId') schoolId: string,
-    @Query() pagination: PaginationQueryDto,
-  ) {
-    return this.teacherService.findAll(schoolId, pagination);
+  async findAll(@Query() query: SchoolPaginationQueryDto) {
+    return this.teacherService.findAll(query.schoolId!, query);
   }
 
   @Get(':id')

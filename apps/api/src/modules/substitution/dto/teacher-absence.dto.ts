@@ -2,9 +2,9 @@ import {
   IsEnum,
   IsDateString,
   IsInt,
+  IsNotEmpty,
   IsOptional,
   IsString,
-  IsUUID,
   Max,
   Min,
 } from 'class-validator';
@@ -31,7 +31,8 @@ export type AbsenceStatusLiteral = (typeof ABSENCE_STATUS_VALUES)[number];
 
 export class CreateTeacherAbsenceDto {
   @ApiProperty({ description: 'Teacher ID (Teacher.id, not Person.id)' })
-  @IsUUID()
+  @IsString()
+  @IsNotEmpty()
   teacherId!: string;
 
   @ApiProperty({ description: 'First absent date (inclusive, ISO-8601)' })

@@ -40,6 +40,16 @@ export class SubstitutionController {
     return this.service.findManyPending(schoolId);
   }
 
+  @Get('my-absences')
+  @CheckPermissions({ action: 'read', subject: 'substitution' })
+  @ApiOperation({ summary: 'List substitutions for the current user\'s absences (for handover notes)' })
+  async myAbsences(
+    @Param('schoolId') schoolId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.service.findByAbsentUser(schoolId, user.id);
+  }
+
   @Get(':id')
   @CheckPermissions({ action: 'read', subject: 'substitution' })
   @ApiOperation({ summary: 'Get a single substitution by id' })

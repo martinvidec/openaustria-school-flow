@@ -17,7 +17,7 @@ import { CreateSubjectDto } from './dto/create-subject.dto';
 import { UpdateSubjectDto } from './dto/update-subject.dto';
 import { ApplyStundentafelDto } from './dto/apply-stundentafel.dto';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator';
-import { PaginationQueryDto } from '../../common/dto/pagination.dto';
+import { SchoolPaginationQueryDto } from '../../common/dto/pagination.dto';
 
 @ApiTags('subjects')
 @ApiBearerAuth()
@@ -42,13 +42,10 @@ export class SubjectController {
   @ApiOperation({ summary: 'List subjects by school, paginated' })
   @ApiResponse({ status: 200, description: 'Paginated list of subjects' })
   @ApiQuery({ name: 'schoolId', required: true, type: String })
-  async findAll(
-    @Query('schoolId') schoolId: string,
-    @Query() pagination: PaginationQueryDto,
-  ) {
-    return this.subjectService.findAll(schoolId, {
-      skip: pagination.skip,
-      limit: pagination.limit,
+  async findAll(@Query() query: SchoolPaginationQueryDto) {
+    return this.subjectService.findAll(query.schoolId!, {
+      skip: query.skip,
+      limit: query.limit,
     });
   }
 

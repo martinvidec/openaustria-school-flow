@@ -37,8 +37,7 @@ export function useTeachers(schoolId: string | undefined) {
     queryKey: teachersKeys.all(schoolId ?? ''),
     queryFn: async (): Promise<TeacherOption[]> => {
       const params = new URLSearchParams({
-        schoolId: schoolId!,
-        limit: '500',
+        limit: '100',
         page: '1',
       });
       const res = await apiFetch(`/api/v1/teachers?${params}`);
