@@ -7,3 +7,6 @@ export * from './types/room';
 export * from './types/substitution';
 export * from './types/timetable';
 export * from './types/messaging';
+export * from './types/homework';
+export * from './types/import';
+export * from './types/calendar';
