@@ -24,12 +24,12 @@ Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenp
 - [x] Drag-and-Drop Stundenplanbearbeitung mit Constraint-Validierung — Validated in Phase 4: Timetable Viewing, Editing & Room Management
 - [x] Raumbuchung und Ressourcenverwaltung (Ad-hoc Buchung, Verfügbarkeitsgrid) — Validated in Phase 4: Timetable Viewing, Editing & Room Management
 - [x] Stundenplan-Export (PDF/iCal) — Validated in Phase 4: Timetable Viewing, Editing & Room Management
+- [x] Digitales Klassenbuch (Anwesenheit, Unterrichtsinhalte, Noten, Abwesenheiten) — Validated in Phase 5: Digital Class Book
+- [x] Vertretungsplanung (automatische Vorschläge basierend auf Verfügbarkeit) — Validated in Phase 6: Substitution Planning
+- [x] Schulkommunikation (Lehrer-Eltern, Lehrer-Schüler, Mitteilungen, Lesebestätigungen) — Validated in Phase 7: Communication
 
 ### Active
 
-- [ ] Digitales Klassenbuch (Anwesenheit, Unterrichtsinhalte, Noten, Abwesenheiten)
-- [ ] Schulkommunikation (Lehrer-Eltern, Lehrer-Schüler, Mitteilungen, Lesebestätigungen)
-- [ ] Vertretungsplanung (automatische Vorschläge basierend auf Verfügbarkeit)
 - [ ] Plugin-/Konnektor-System mit offener API (MS Teams, Google Calendar, Outlook, etc.)
 - [ ] Multi-Plattform UI (Web + Mobile) mit modernem, responsivem Design
 
