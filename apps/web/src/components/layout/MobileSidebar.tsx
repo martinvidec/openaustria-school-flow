@@ -8,10 +8,14 @@ import {
   PencilRuler,
   History,
   X,
+  MessageSquare,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useSchoolContext } from '@/stores/school-context-store';
+import { useUnreadCount } from '@/hooks/useConversations';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 interface NavItem {
   label: string;
@@ -26,6 +30,12 @@ const navItems: NavItem[] = [
     href: '/timetable',
     icon: Calendar,
     roles: 'all',
+  },
+  {
+    label: 'Nachrichten',
+    href: '/messages',
+    icon: MessageSquare,
+    roles: 'all' as const,
   },
   {
     label: 'Raeume',
@@ -79,6 +89,8 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
   const { user } = useAuth();
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
+  const schoolId = useSchoolContext((s) => s.schoolId) ?? '';
+  const unreadCount = useUnreadCount(schoolId);
 
   const userRoles = user?.roles ?? [];
 
@@ -135,6 +147,11 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
               >
                 <Icon className="h-5 w-5 shrink-0" />
                 <span>{item.label}</span>
+                {item.href === '/messages' && unreadCount > 0 && (
+                  <Badge className="ml-auto text-[10px] px-1.5 py-0 min-w-[18px] justify-center">
+                    {unreadCount}
+                  </Badge>
+                )}
               </Link>
             );
           })}

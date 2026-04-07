@@ -11,11 +11,15 @@ import {
   PanelLeftClose,
   PanelLeft,
   UserCheck,
+  MessageSquare,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUIStore } from '@/stores/ui-store';
+import { useSchoolContext } from '@/stores/school-context-store';
+import { useUnreadCount } from '@/hooks/useConversations';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 interface NavItem {
   label: string;
@@ -30,6 +34,12 @@ const navItems: NavItem[] = [
     href: '/timetable',
     icon: Calendar,
     roles: 'all',
+  },
+  {
+    label: 'Nachrichten',
+    href: '/messages',
+    icon: MessageSquare,
+    roles: 'all' as const,
   },
   {
     label: 'Raeume',
@@ -92,6 +102,8 @@ export function AppSidebar() {
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
+  const schoolId = useSchoolContext((s) => s.schoolId) ?? '';
+  const unreadCount = useUnreadCount(schoolId);
 
   const userRoles = user?.roles ?? [];
 
@@ -136,7 +148,16 @@ export function AppSidebar() {
               title={sidebarCollapsed ? item.label : undefined}
             >
               <Icon className="h-5 w-5 shrink-0" />
-              {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
+              {!sidebarCollapsed && (
+                <>
+                  <span className="truncate">{item.label}</span>
+                  {item.href === '/messages' && unreadCount > 0 && (
+                    <Badge className="ml-auto text-[10px] px-1.5 py-0 min-w-[18px] justify-center">
+                      {unreadCount}
+                    </Badge>
+                  )}
+                </>
+              )}
             </Link>
           );
         })}
