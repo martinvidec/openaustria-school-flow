@@ -1140,6 +1140,8 @@ enum PollType {
   MULTIPLE_CHOICE
 }
 
+// DSGVO retention: kommunikation (365d) -- see Phase 2 DsgvoModule
+// Entities: Conversation, Message, MessageRecipient, MessageAttachment, Poll, PollOption, PollVote
 model Conversation {
   id            String            @id @default(uuid())
   schoolId      String            @map("school_id")

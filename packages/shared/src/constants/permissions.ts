@@ -17,4 +17,8 @@ export enum PermissionSubject {
   USER = 'user',
   AUDIT = 'audit',
   PERMISSION = 'permission',
+  // Phase 7: Communication (COMM-01..COMM-06)
+  CONVERSATION = 'conversation',
+  MESSAGE = 'message',
+  POLL = 'poll',
 }

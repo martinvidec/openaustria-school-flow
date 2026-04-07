@@ -44,6 +44,7 @@ export class ConversationController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @CheckPermissions({ action: 'create', subject: 'conversation' })
   @ApiOperation({ summary: 'Create a conversation (COMM-01/02), optionally with inline poll (COMM-06)' })
   @ApiResponse({ status: 201, description: 'Conversation created with scope expansion' })
   @ApiResponse({ status: 400, description: 'Invalid scope or missing required fields' })
@@ -76,6 +77,7 @@ export class ConversationController {
   }
 
   @Get()
+  @CheckPermissions({ action: 'read', subject: 'conversation' })
   @ApiOperation({ summary: 'List conversations for current user' })
   @ApiResponse({ status: 200, description: 'Array of ConversationDto' })
   async findAll(
@@ -87,6 +89,7 @@ export class ConversationController {
   }
 
   @Get(':conversationId')
+  @CheckPermissions({ action: 'read', subject: 'conversation' })
   @ApiOperation({ summary: 'Get a single conversation' })
   @ApiResponse({ status: 200, description: 'ConversationDto' })
   @ApiResponse({ status: 404, description: 'Not found or not a member' })

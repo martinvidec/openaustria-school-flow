@@ -49,6 +49,10 @@ async function main() {
     { action: 'manage', subject: 'absence' },
     { action: 'manage', subject: 'handover' },
     { action: 'manage', subject: 'notification' },
+    // Phase 7: Communication (COMM-01..COMM-06)
+    { action: 'manage', subject: 'conversation' },
+    { action: 'manage', subject: 'message' },
+    { action: 'manage', subject: 'poll' },
   ];
 
   // Schulleitung: pedagogical management (D-03) + Phase 2 subjects
@@ -118,6 +122,10 @@ async function main() {
     { action: 'manage', subject: 'absence' },
     { action: 'manage', subject: 'handover' },
     { action: 'manage', subject: 'notification' },
+    // Phase 7: Communication (COMM-01..COMM-06)
+    { action: 'manage', subject: 'conversation' },
+    { action: 'manage', subject: 'message' },
+    { action: 'manage', subject: 'poll' },
   ];
 
   // Lehrer: own classes, own grades (AUTH-03) + Phase 2 subjects
@@ -170,6 +178,13 @@ async function main() {
     // Phase 6: notification (read + mark-read own notifications)
     { action: 'read', subject: 'notification' },
     { action: 'update', subject: 'notification' },
+    // Phase 7: Communication (COMM-01..COMM-06)
+    { action: 'read', subject: 'conversation' },
+    { action: 'create', subject: 'conversation' },
+    { action: 'read', subject: 'message' },
+    { action: 'create', subject: 'message' },
+    { action: 'create', subject: 'poll' },
+    { action: 'read', subject: 'poll' },
   ];
 
   // Eltern: own child only (AUTH-03) + Phase 2 subjects
@@ -201,6 +216,10 @@ async function main() {
     // Phase 6: notification (read + mark-read own notifications)
     { action: 'read', subject: 'notification' },
     { action: 'update', subject: 'notification' },
+    // Phase 7: Communication (COMM-01..COMM-06)
+    { action: 'read', subject: 'conversation' },
+    { action: 'read', subject: 'message' },
+    { action: 'create', subject: 'message' },
   ];
 
   // Schueler: own data only (AUTH-03) + Phase 2 subjects
@@ -224,6 +243,9 @@ async function main() {
     // Phase 6: notification (read + mark-read own notifications)
     { action: 'read', subject: 'notification' },
     { action: 'update', subject: 'notification' },
+    // Phase 7: Communication (read-only for schueler)
+    { action: 'read', subject: 'conversation' },
+    { action: 'read', subject: 'message' },
   ];
 
   const allPermissions = [

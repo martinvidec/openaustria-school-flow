@@ -15,6 +15,7 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { CheckPermissions } from '../../auth/decorators/check-permissions.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../auth/types/authenticated-user';
 import { CastVoteDto } from '../dto/poll.dto';
@@ -35,6 +36,7 @@ export class PollController {
 
   @Post(':pollId/votes')
   @HttpCode(HttpStatus.OK)
+  @CheckPermissions({ action: 'create', subject: 'poll' })
   @ApiOperation({ summary: 'Cast vote on a poll (COMM-06, D-09)' })
   @ApiResponse({ status: 200, description: 'Vote cast, updated poll returned' })
   @ApiResponse({ status: 400, description: 'Poll closed or invalid option' })
@@ -50,6 +52,7 @@ export class PollController {
 
   @Delete(':pollId/votes')
   @HttpCode(HttpStatus.OK)
+  @CheckPermissions({ action: 'create', subject: 'poll' })
   @ApiOperation({ summary: 'Retract all votes from a poll' })
   @ApiResponse({ status: 200, description: 'Votes retracted, updated poll returned' })
   @ApiResponse({ status: 400, description: 'Poll is closed' })
@@ -63,6 +66,7 @@ export class PollController {
 
   @Patch(':pollId/close')
   @HttpCode(HttpStatus.OK)
+  @CheckPermissions({ action: 'manage', subject: 'poll' })
   @ApiOperation({ summary: 'Close a poll manually (D-11)' })
   @ApiResponse({ status: 200, description: 'Poll closed, final results returned' })
   @ApiResponse({ status: 403, description: 'Only sender or admin can close' })
@@ -75,6 +79,7 @@ export class PollController {
   }
 
   @Get(':pollId/results')
+  @CheckPermissions({ action: 'read', subject: 'poll' })
   @ApiOperation({ summary: 'Get poll results: named for sender/admin, anonymous for others (D-10)' })
   @ApiResponse({ status: 200, description: 'Poll results with vote counts' })
   @ApiResponse({ status: 404, description: 'Poll not found' })

@@ -20,6 +20,7 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { createReadStream } from 'node:fs';
+import { CheckPermissions } from '../../auth/decorators/check-permissions.decorator';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../auth/types/authenticated-user';
 import { SendMessageDto, ReportAbsenceDto } from '../dto/message.dto';
@@ -39,6 +40,7 @@ export class MessageController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @CheckPermissions({ action: 'create', subject: 'message' })
   @ApiOperation({ summary: 'Send a message to a conversation (COMM-01/02)' })
   @ApiResponse({ status: 201, description: 'Message sent with recipient expansion' })
   @ApiResponse({ status: 403, description: 'Not a member of the conversation' })
@@ -51,6 +53,7 @@ export class MessageController {
   }
 
   @Get()
+  @CheckPermissions({ action: 'read', subject: 'message' })
   @ApiOperation({ summary: 'List messages with cursor-based pagination' })
   @ApiResponse({ status: 200, description: 'Paginated messages with nextCursor' })
   async findAll(
@@ -68,6 +71,7 @@ export class MessageController {
   }
 
   @Get(':messageId/recipients')
+  @CheckPermissions({ action: 'read', subject: 'message' })
   @ApiOperation({ summary: 'Get per-user read status for read receipt detail (COMM-03)' })
   @ApiResponse({ status: 200, description: 'Array of recipient read status with names' })
   @ApiResponse({ status: 403, description: 'Only sender or admin can view recipients' })
@@ -87,6 +91,7 @@ export class MessageController {
 
   @Post(':messageId/attachments')
   @HttpCode(HttpStatus.CREATED)
+  @CheckPermissions({ action: 'create', subject: 'message' })
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload a file attachment to a message (COMM-04)' })
   @ApiResponse({ status: 201, description: 'Attachment uploaded with metadata' })
@@ -118,6 +123,7 @@ export class MessageController {
   }
 
   @Get(':messageId/attachments/:attachmentId/download')
+  @CheckPermissions({ action: 'read', subject: 'message' })
   @ApiOperation({ summary: 'Download a file attachment (COMM-04)' })
   @ApiResponse({ status: 200, description: 'File stream with Content-Disposition' })
   @ApiResponse({ status: 403, description: 'Not a member of the conversation' })
@@ -142,6 +148,7 @@ export class MessageController {
 
   @Delete(':messageId')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @CheckPermissions({ action: 'delete', subject: 'message' })
   @ApiOperation({ summary: 'Delete a message (sender or admin only)' })
   @ApiResponse({ status: 204, description: 'Message deleted' })
   @ApiResponse({ status: 403, description: 'Not authorized to delete' })
@@ -166,6 +173,7 @@ export class ConversationReadController {
 
   @Patch('read')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @CheckPermissions({ action: 'read', subject: 'message' })
   @ApiOperation({ summary: 'Mark all messages in conversation as read (COMM-03)' })
   @ApiResponse({ status: 204, description: 'Messages marked as read' })
   async markRead(
@@ -188,6 +196,7 @@ export class AbsenceReportController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  @CheckPermissions({ action: 'create', subject: 'message' })
   @ApiOperation({ summary: 'Report student absence via messaging (COMM-05)' })
   @ApiResponse({
     status: 201,
