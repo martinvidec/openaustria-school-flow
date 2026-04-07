@@ -173,7 +173,7 @@ Plans:
   3. Senders see read receipts (who has read, who has not) for every message
   4. Messages support file attachments (photos, PDFs, documents) and parents can report a child's absence via message
   5. Teachers can create polls/surveys (event planning, feedback) and see aggregated results
-**Plans**: 7 plans
+**Plans**: 8 plans
 **UI hint**: yes
 
 Plans:
@@ -184,6 +184,7 @@ Plans:
 - [x] 07-05-PLAN.md -- Frontend core: Socket.IO client, TanStack Query hooks, /messages route with list-detail split view, ConversationList, ConversationView, ComposeDialog, sidebar navigation
 - [x] 07-06-PLAN.md -- ReadReceiptIndicator + ReadReceiptDetail Popover + useReadReceipts hook wired to backend recipients endpoint
 - [x] 07-07-PLAN.md -- MessageAttachmentUpload/Display, PollCreator/Display/ResultBar, AbsenceQuickAction, component wiring, human verification
+- [ ] 07-08-PLAN.md -- Gap closure: rewire AbsenceQuickAction to /absence-report endpoint (COMM-05) + wire file attachment upload in ConversationView and ComposeDialog (COMM-04)
 
 ### Phase 8: Homework, Exams & Data Import
 **Goal**: Homework and exams are visible in the timetable with collision detection, and schools can migrate their existing data from Untis or CSV files into SchoolFlow
@@ -239,6 +240,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 4. Timetable Viewing, Editing & Room Management | 12/15 | UAT gap closure | - |
 | 5. Digital Class Book | 0/10 | Not started | - |
 | 6. Substitution Planning | 0/6 | Not started | - |
-| 7. Communication | 0/7 | Not started | - |
+| 7. Communication | 7/8 | Gap closure | - |
 | 8. Homework, Exams & Data Import | 0/6 | Not started | - |
 | 9. Mobile, PWA & Production Readiness | 0/5 | Not started | - |
