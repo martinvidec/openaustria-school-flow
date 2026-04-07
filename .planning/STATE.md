@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 07-05-PLAN.md
-last_updated: "2026-04-07T06:04:48.117Z"
+stopped_at: Completed 07-06-PLAN.md
+last_updated: "2026-04-07T06:09:33.352Z"
 last_activity: 2026-04-07
 progress:
   total_phases: 9
   completed_phases: 6
   total_plans: 59
-  completed_plans: 57
+  completed_plans: 58
   percent: 83
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 ## Current Position
 
 Phase: 07 (communication) — EXECUTING
-Plan: 6 of 7
+Plan: 7 of 7
 Status: Ready to execute
 Last activity: 2026-04-07
 
@@ -102,6 +102,7 @@ Progress: [========..] 83%
 | Phase 07-communication P03 | 14min | 2 tasks | 10 files |
 | Phase 07-communication P04 | 10min | 2 tasks | 15 files |
 | Phase 07-communication PP05 | 10min | 2 tasks | 17 files |
+| Phase 07-communication P06 | 2min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -254,6 +255,8 @@ Recent decisions affecting current work:
 - [Phase 07-communication]: useMessagingSocket mounted at _authenticated layout level (same pattern as useNotificationSocket) to prevent duplicate connections
 - [Phase 07-communication]: Mobile messages uses separate route (/messages/$conversationId) while desktop uses search param (?id=) for list-detail split view
 - [Phase 07-communication]: D-07 user-profile entry point deferred -- ComposeDialog Direktnachricht tab satisfies COMM-02
+- [Phase 07-communication]: ReadReceiptDetail always enabled when Popover is mounted -- useReadReceipts fetches on mount with 10s staleTime for socket-driven cache invalidation
+- [Phase 07-communication]: schoolId added as explicit prop to MessageBubble (not useSchoolContext store) for component purity and testability
 
 ### Pending Todos
 
@@ -267,6 +270,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-07T06:04:48.113Z
-Stopped at: Completed 07-05-PLAN.md
+Last session: 2026-04-07T06:09:33.336Z
+Stopped at: Completed 07-06-PLAN.md
 Resume file: None
