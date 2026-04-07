@@ -196,16 +196,16 @@ Plans:
   3. Admin can import teachers, classes, rooms, and timetables from Untis XML format
   4. Admin can import student lists, teacher lists, and room lists from CSV files
   5. Users can export personal calendars as iCal/ICS, and external SIS systems can sync data via the API
-**Plans**: TBD
+**Plans**: 6 plans
 **UI hint**: yes
 
 Plans:
-- [ ] 08-01: TBD
-- [ ] 08-02: TBD
-- [ ] 08-03: TBD
-- [ ] 08-04: TBD
-- [ ] 08-05: TBD
-- [ ] 08-06: TBD
+- [ ] 08-01-PLAN.md -- Prisma schema (6 models, 4 enums, 2 NotificationType values), shared types, Wave 0 test stubs, fast-xml-parser + papaparse install
+- [ ] 08-02-PLAN.md -- HomeworkService + ExamService (CRUD, collision detection, notifications), HomeworkController + ExamController, HomeworkModule
+- [ ] 08-03-PLAN.md -- Untis XML/DIF + CSV parsers, ImportService + BullMQ processor + Socket.IO /import gateway, ImportController, ImportModule
+- [ ] 08-04-PLAN.md -- CalendarService (iCal generation with homework/exams), token-auth CalendarController, SisService + SisApiKeyGuard, CASL seeds
+- [ ] 08-05-PLAN.md -- Frontend homework/exam: TanStack Query hooks, HomeworkDialog, ExamDialog with collision warning, TimetableCellBadges, classbook integration
+- [ ] 08-06-PLAN.md -- Frontend import wizard (5-step), ICalSettings card, admin /import route, sidebar navigation, human verification checkpoint
 
 ### Phase 9: Mobile, PWA & Production Readiness
 **Goal**: The platform works seamlessly on mobile devices with push notifications and offline access, and the deployment is production-grade with backup/restore and zero-downtime updates
@@ -241,5 +241,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 5. Digital Class Book | 0/10 | Not started | - |
 | 6. Substitution Planning | 0/6 | Not started | - |
 | 7. Communication | 7/8 | Gap closure | - |
-| 8. Homework, Exams & Data Import | 0/6 | Not started | - |
+| 8. Homework, Exams & Data Import | 0/6 | Planning complete | - |
 | 9. Mobile, PWA & Production Readiness | 0/5 | Not started | - |
