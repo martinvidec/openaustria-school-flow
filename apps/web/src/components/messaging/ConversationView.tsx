@@ -171,6 +171,7 @@ export function ConversationView({
             message={msg}
             isOwn={msg.senderId === userId}
             isGroupChat={isGroupChat}
+            schoolId={schoolId}
           />
         ))}
 

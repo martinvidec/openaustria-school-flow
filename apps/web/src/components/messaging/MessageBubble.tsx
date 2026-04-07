@@ -1,6 +1,14 @@
+import { useState } from 'react';
 import type { MessageDto } from '@schoolflow/shared';
-import { UserInitialsAvatar } from './UserInitialsAvatar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { UserInitialsAvatar } from './UserInitialsAvatar';
+import { ReadReceiptIndicator } from './ReadReceiptIndicator';
+import { ReadReceiptDetail } from './ReadReceiptDetail';
 
 /**
  * Per UI-SPEC message bubble colors:
@@ -14,6 +22,7 @@ interface MessageBubbleProps {
   message: MessageDto;
   isOwn: boolean;
   isGroupChat: boolean;
+  schoolId: string;
 }
 
 function formatTime(dateStr: string): string {
@@ -27,7 +36,9 @@ export function MessageBubble({
   message,
   isOwn,
   isGroupChat,
+  schoolId,
 }: MessageBubbleProps) {
+  const [receiptOpen, setReceiptOpen] = useState(false);
   // System messages: centered, italic, no bubble
   if (message.type === 'SYSTEM') {
     return (
@@ -89,15 +100,40 @@ export function MessageBubble({
           </div>
         )}
 
-        {/* Timestamp */}
-        <p
+        {/* Timestamp + Read receipt */}
+        <div
           className={cn(
-            'text-[12px] leading-[1.3] mt-1',
-            isOwn ? 'text-muted-foreground text-right' : 'text-muted-foreground',
+            'flex items-center gap-1 mt-1',
+            isOwn ? 'justify-end' : 'justify-start',
           )}
         >
-          {formatTime(message.createdAt)}
-        </p>
+          <span className="text-[12px] leading-[1.3] text-muted-foreground">
+            {formatTime(message.createdAt)}
+          </span>
+
+          {isOwn && message.readCount !== undefined && (
+            <Popover open={receiptOpen} onOpenChange={setReceiptOpen}>
+              <PopoverTrigger asChild>
+                <span>
+                  <ReadReceiptIndicator
+                    readCount={message.readCount ?? 0}
+                    totalRecipients={message.totalRecipients ?? 0}
+                    isOwn={isOwn}
+                    messageId={message.id}
+                    onShowDetail={() => setReceiptOpen(true)}
+                  />
+                </span>
+              </PopoverTrigger>
+              <PopoverContent className="w-72">
+                <ReadReceiptDetail
+                  messageId={message.id}
+                  schoolId={schoolId}
+                  conversationId={message.conversationId}
+                />
+              </PopoverContent>
+            </Popover>
+          )}
+        </div>
       </div>
     </div>
   );
