@@ -95,16 +95,16 @@
 
 ### Data Import/Export
 
-- [ ] **IMPORT-01**: Admin kann Daten aus Untis XML-Format importieren (Lehrer, Klassen, Räume, Stundenpläne)
-- [ ] **IMPORT-02**: Admin kann CSV-Dateien importieren (Schülerlisten, Lehrerlisten, Raumlisten)
-- [ ] **IMPORT-03**: System bietet iCal/ICS-Export für persönliche Kalender
-- [ ] **IMPORT-04**: API ermöglicht Datenanbindung an externe SIS-Systeme
+- [x] **IMPORT-01**: Admin kann Daten aus Untis XML-Format importieren (Lehrer, Klassen, Räume, Stundenpläne)
+- [x] **IMPORT-02**: Admin kann CSV-Dateien importieren (Schülerlisten, Lehrerlisten, Raumlisten)
+- [x] **IMPORT-03**: System bietet iCal/ICS-Export für persönliche Kalender
+- [x] **IMPORT-04**: API ermöglicht Datenanbindung an externe SIS-Systeme
 
 ### Homework & Exams
 
-- [ ] **HW-01**: Lehrer kann Hausaufgaben einer Unterrichtsstunde zuordnen (sichtbar im Stundenplan)
-- [ ] **HW-02**: Lehrer kann Prüfungstermine eintragen mit Kollisionserkennung (keine 2 Prüfungen am selben Tag für eine Klasse)
-- [ ] **HW-03**: Schüler/Eltern sehen Hausaufgaben und Prüfungen im Stundenplan und per Push-Notification
+- [x] **HW-01**: Lehrer kann Hausaufgaben einer Unterrichtsstunde zuordnen (sichtbar im Stundenplan)
+- [x] **HW-02**: Lehrer kann Prüfungstermine eintragen mit Kollisionserkennung (keine 2 Prüfungen am selben Tag für eine Klasse)
+- [x] **HW-03**: Schüler/Eltern sehen Hausaufgaben und Prüfungen im Stundenplan und per Push-Notification
 
 ### Open API
 
@@ -221,13 +221,13 @@
 | MOBILE-01 | Phase 9 | Pending |
 | MOBILE-02 | Phase 9 | Pending |
 | MOBILE-03 | Phase 9 | Pending |
-| IMPORT-01 | Phase 8 | Pending |
-| IMPORT-02 | Phase 8 | Pending |
-| IMPORT-03 | Phase 8 | Pending |
-| IMPORT-04 | Phase 8 | Pending |
-| HW-01 | Phase 8 | Pending |
-| HW-02 | Phase 8 | Pending |
-| HW-03 | Phase 8 | Pending |
+| IMPORT-01 | Phase 8 | Complete |
+| IMPORT-02 | Phase 8 | Complete |
+| IMPORT-03 | Phase 8 | Complete |
+| IMPORT-04 | Phase 8 | Complete |
+| HW-01 | Phase 8 | Complete |
+| HW-02 | Phase 8 | Complete |
+| HW-03 | Phase 8 | Complete |
 | API-01 | Phase 1 | Complete |
 | API-02 | Phase 1 | Complete |
 | API-03 | Phase 1 | Complete |

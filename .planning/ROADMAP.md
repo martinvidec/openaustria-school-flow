@@ -200,7 +200,7 @@ Plans:
 **UI hint**: yes
 
 Plans:
-- [ ] 08-01-PLAN.md -- Prisma schema (6 models, 4 enums, 2 NotificationType values), shared types, Wave 0 test stubs, fast-xml-parser + papaparse install
+- [x] 08-01-PLAN.md -- Prisma schema (6 models, 4 enums, 2 NotificationType values), shared types, Wave 0 test stubs, fast-xml-parser + papaparse install
 - [ ] 08-02-PLAN.md -- HomeworkService + ExamService (CRUD, collision detection, notifications), HomeworkController + ExamController, HomeworkModule
 - [ ] 08-03-PLAN.md -- Untis XML/DIF + CSV parsers, ImportService + BullMQ processor + Socket.IO /import gateway, ImportController, ImportModule
 - [ ] 08-04-PLAN.md -- CalendarService (iCal generation with homework/exams), token-auth CalendarController, SisService + SisApiKeyGuard, CASL seeds
