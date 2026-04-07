@@ -18,6 +18,12 @@ export interface CreateConversationInput {
   subject: string;
   body: string;
   recipientUserIds?: string[];
+  poll?: {
+    question: string;
+    type: 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE';
+    options: string[];
+    deadline?: string;
+  };
 }
 
 // --- Hooks ---

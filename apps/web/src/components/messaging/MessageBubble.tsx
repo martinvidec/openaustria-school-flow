@@ -6,9 +6,12 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
 import { UserInitialsAvatar } from './UserInitialsAvatar';
 import { ReadReceiptIndicator } from './ReadReceiptIndicator';
 import { ReadReceiptDetail } from './ReadReceiptDetail';
+import { MessageAttachmentDisplay } from './MessageAttachmentDisplay';
+import { PollDisplay } from './PollDisplay';
 
 /**
  * Per UI-SPEC message bubble colors:
@@ -39,6 +42,7 @@ export function MessageBubble({
   schoolId,
 }: MessageBubbleProps) {
   const [receiptOpen, setReceiptOpen] = useState(false);
+  const { user } = useAuth();
   // System messages: centered, italic, no bubble
   if (message.type === 'SYSTEM') {
     return (
@@ -86,18 +90,24 @@ export function MessageBubble({
           {message.body}
         </p>
 
-        {/* Attachments placeholder (wired in Plan 06) */}
+        {/* File attachments (COMM-04) */}
         {message.attachments.length > 0 && (
-          <div className="mt-1 space-y-1">
-            {message.attachments.map((att) => (
-              <div
-                key={att.id}
-                className="text-[12px] text-muted-foreground underline truncate"
-              >
-                {att.filename}
-              </div>
-            ))}
-          </div>
+          <MessageAttachmentDisplay
+            attachments={message.attachments}
+            schoolId={schoolId}
+            conversationId={message.conversationId}
+            messageId={message.id}
+          />
+        )}
+
+        {/* Inline poll (COMM-06) */}
+        {message.type === 'POLL' && message.poll && (
+          <PollDisplay
+            poll={message.poll}
+            currentUserId={user?.id ?? ''}
+            isSender={isOwn}
+            schoolId={schoolId}
+          />
         )}
 
         {/* Timestamp + Read receipt */}

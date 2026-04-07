@@ -5,6 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { ConversationListItem } from './ConversationListItem';
 import { ComposeDialog } from './ComposeDialog';
+import { AbsenceQuickAction } from './AbsenceQuickAction';
 
 /**
  * Per D-05, D-06, UI-SPEC: Scrollable conversation list. Search Input at top
@@ -54,13 +55,16 @@ export function ConversationList({
           />
         </div>
 
-        <Button
-          className="w-full"
-          onClick={() => setComposeOpen(true)}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Neue Nachricht
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            className="flex-1"
+            onClick={() => setComposeOpen(true)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Neue Nachricht
+          </Button>
+          <AbsenceQuickAction schoolId={schoolId} />
+        </div>
       </div>
 
       {/* Conversation list */}

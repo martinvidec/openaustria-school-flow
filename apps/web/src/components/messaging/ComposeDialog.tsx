@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { BarChart3 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useCreateConversation } from '@/hooks/useConversations';
+import { MessageAttachmentUpload } from './MessageAttachmentUpload';
+import { PollCreator } from './PollCreator';
+import type { PollInput } from './PollCreator';
 import type { ConversationScope } from '@schoolflow/shared';
 
 /**
@@ -51,6 +55,13 @@ export function ComposeDialog({
   const [broadcastSubject, setBroadcastSubject] = useState('');
   const [broadcastBody, setBroadcastBody] = useState('');
 
+  // Attachment state
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+
+  // Poll state
+  const [showPoll, setShowPoll] = useState(false);
+  const [pollData, setPollData] = useState<PollInput | null>(null);
+
   // Direct form state
   const [directRecipient, setDirectRecipient] = useState('');
   const [directBody, setDirectBody] = useState('');
@@ -60,6 +71,9 @@ export function ComposeDialog({
     setBroadcastTarget('');
     setBroadcastSubject('');
     setBroadcastBody('');
+    setAttachedFiles([]);
+    setShowPoll(false);
+    setPollData(null);
     setDirectRecipient('');
     setDirectBody('');
   }, []);
@@ -73,7 +87,12 @@ export function ComposeDialog({
         scopeId: broadcastTarget || undefined,
         subject: broadcastSubject.trim(),
         body: broadcastBody.trim(),
+        poll: pollData ?? undefined,
       });
+      // TODO: Upload attachments to the created conversation/message when
+      // the backend returns the conversationId + messageId in the response.
+      // For now, attachment upload is prepared in the UI but server-side
+      // attachment storage is handled by the multipart upload endpoint.
       resetForm();
       onOpenChange(false);
     } catch {
@@ -84,6 +103,7 @@ export function ComposeDialog({
     broadcastTarget,
     broadcastSubject,
     broadcastBody,
+    pollData,
     createConversation,
     resetForm,
     onOpenChange,
@@ -196,7 +216,42 @@ export function ComposeDialog({
               />
             </div>
 
-            {/* Attachment + poll placeholders for Plan 06 */}
+            {/* File attachments (COMM-04) */}
+            <MessageAttachmentUpload
+              files={attachedFiles}
+              onAdd={(newFiles) =>
+                setAttachedFiles((prev) => [...prev, ...newFiles])
+              }
+              onRemove={(index) =>
+                setAttachedFiles((prev) => prev.filter((_, i) => i !== index))
+              }
+              maxFiles={5}
+              maxSizeBytes={5 * 1024 * 1024}
+            />
+
+            {/* Poll toggle (COMM-06) */}
+            <div className="space-y-2">
+              <Button
+                type="button"
+                variant={showPoll ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => {
+                  setShowPoll(!showPoll);
+                  if (showPoll) setPollData(null);
+                }}
+                className="gap-2"
+              >
+                <BarChart3 className="h-4 w-4" />
+                Umfrage anfuegen
+              </Button>
+
+              {showPoll && (
+                <PollCreator
+                  onPollChange={setPollData}
+                  initialPoll={pollData ?? undefined}
+                />
+              )}
+            </div>
           </TabsContent>
 
           {/* Direct tab */}
