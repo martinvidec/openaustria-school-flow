@@ -5,7 +5,8 @@ export type NotificationType =
   | 'SUBSTITUTION_DECLINED'
   | 'ABSENCE_RECORDED'
   | 'LESSON_CANCELLED'
-  | 'STILLARBEIT_ASSIGNED';
+  | 'STILLARBEIT_ASSIGNED'
+  | 'MESSAGE_RECEIVED';
 
 // --- DTOs ---
 export interface NotificationDto {

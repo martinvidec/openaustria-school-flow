@@ -62,6 +62,9 @@ model School {
   // Phase 6 relations
   teacherAbsences TeacherAbsence[]
 
+  // Phase 7 relations
+  conversations Conversation[]
+
   @@map("schools")
 }
 
@@ -1010,6 +1013,7 @@ enum NotificationType {
   ABSENCE_RECORDED
   LESSON_CANCELLED
   STILLARBEIT_ASSIGNED
+  MESSAGE_RECEIVED
 }
 
 model TeacherAbsence {
@@ -1111,4 +1115,142 @@ model Notification {
   @@index([userId, readAt])
   @@index([userId, createdAt])
   @@map("notifications")
+}
+
+// ============================================================================
+// Phase 7 — Communication (COMM-01..COMM-06)
+// D-01, D-02, D-03, D-04, D-05, D-08, D-10
+// ============================================================================
+
+enum ConversationScope {
+  DIRECT
+  CLASS
+  YEAR_GROUP
+  SCHOOL
+}
+
+enum MessageType {
+  TEXT
+  POLL
+  SYSTEM
+}
+
+enum PollType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+}
+
+model Conversation {
+  id            String            @id @default(uuid())
+  schoolId      String            @map("school_id")
+  school        School            @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  scope         ConversationScope
+  scopeId       String?           @map("scope_id") // classId for CLASS, yearLevel string for YEAR_GROUP, null for SCHOOL/DIRECT
+  subject       String?           // required for broadcasts
+  createdBy     String            @map("created_by") // keycloakUserId
+  directPairKey String?           @unique @map("direct_pair_key") // sorted "userId1:userId2" for DIRECT dedup (Pitfall 5)
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+
+  messages            Message[]
+  conversationMembers ConversationMember[]
+
+  @@index([schoolId, scope])
+  @@index([createdBy])
+  @@map("conversations")
+}
+
+model ConversationMember {
+  id             String       @id @default(uuid())
+  conversationId String       @map("conversation_id")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String       @map("user_id") // keycloakUserId
+  unreadCount    Int          @default(0) @map("unread_count")
+  joinedAt       DateTime     @default(now()) @map("joined_at")
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@map("conversation_members")
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String       @map("conversation_id")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String       @map("sender_id") // keycloakUserId
+  body           String
+  type           MessageType  @default(TEXT)
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  recipients  MessageRecipient[]
+  attachments MessageAttachment[]
+  poll        Poll?
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
+}
+
+model MessageRecipient {
+  id          String    @id @default(uuid())
+  messageId   String    @map("message_id")
+  message     Message   @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  userId      String    @map("user_id") // keycloakUserId
+  deliveredAt DateTime? @map("delivered_at")
+  readAt      DateTime? @map("read_at")
+
+  @@unique([messageId, userId])
+  @@index([userId, readAt])
+  @@map("message_recipients")
+}
+
+model MessageAttachment {
+  id          String   @id @default(uuid())
+  messageId   String   @map("message_id")
+  message     Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  filename    String
+  storagePath String   @map("storage_path")
+  mimeType    String   @map("mime_type")
+  sizeBytes   Int      @map("size_bytes")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("message_attachments")
+}
+
+model Poll {
+  id        String   @id @default(uuid())
+  messageId String   @unique @map("message_id")
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  question  String
+  type      PollType
+  deadline  DateTime?
+  isClosed  Boolean  @default(false) @map("is_closed")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  options PollOption[]
+
+  @@map("polls")
+}
+
+model PollOption {
+  id     String @id @default(uuid())
+  pollId String @map("poll_id")
+  poll   Poll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  text   String
+  order  Int    @default(0)
+
+  votes PollVote[]
+
+  @@map("poll_options")
+}
+
+model PollVote {
+  id           String     @id @default(uuid())
+  pollOptionId String     @map("poll_option_id")
+  pollOption   PollOption @relation(fields: [pollOptionId], references: [id], onDelete: Cascade)
+  userId       String     @map("user_id") // keycloakUserId
+  createdAt    DateTime   @default(now()) @map("created_at")
+
+  @@unique([pollOptionId, userId])
+  @@index([userId])
+  @@map("poll_votes")
 }

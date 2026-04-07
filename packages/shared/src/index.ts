@@ -6,3 +6,4 @@ export * from './types/notification';
 export * from './types/room';
 export * from './types/substitution';
 export * from './types/timetable';
+export * from './types/messaging';
