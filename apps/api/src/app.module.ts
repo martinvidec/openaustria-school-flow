@@ -23,6 +23,7 @@ import { UserContextModule } from './modules/user-context/user-context.module';
 import { ClassBookModule } from './modules/classbook/classbook.module';
 import { CommunicationModule } from './modules/communication/communication.module';
 import { HomeworkModule } from './modules/homework/homework.module';
+import { ImportModule } from './modules/import/import.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { HomeworkModule } from './modules/homework/homework.module';
     ClassBookModule,
     CommunicationModule,
     HomeworkModule,
+    ImportModule,
   ],
   providers: [
     {
