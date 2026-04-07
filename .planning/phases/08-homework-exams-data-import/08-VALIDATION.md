@@ -2,12 +2,12 @@
 phase: 08
 slug: homework-exams-data-import
 status: draft
-nyquist_compliant: false
+nyquist_compliant: true
 wave_0_complete: false
 created: 2026-04-07
 ---
 
-# Phase 08 — Validation Strategy
+# Phase 08 -- Validation Strategy
 
 > Per-phase validation contract for feedback sampling during execution.
 
@@ -20,7 +20,7 @@ created: 2026-04-07
 | **Framework** | Vitest 4.x (backend + frontend) |
 | **Config file** | `apps/api/vitest.config.ts`, `apps/web/vitest.config.ts` |
 | **Quick run command** | `cd apps/api && pnpm test` |
-| **Full suite command** | `pnpm test` (root — runs all workspace tests) |
+| **Full suite command** | `pnpm test` (root -- runs all workspace tests) |
 | **Estimated runtime** | ~35 seconds |
 
 ---
@@ -42,14 +42,15 @@ created: 2026-04-07
 | 08-01-02 | 01 | 1 | HW-*, IMPORT-* | unit stubs | `cd apps/api && pnpm test` | W0 stubs | pending |
 | 08-02-01 | 02 | 2 | HW-01, HW-02 | unit | `cd apps/api && pnpm test` | W0 stubs | pending |
 | 08-02-02 | 02 | 2 | HW-01, HW-02, HW-03 | unit | `cd apps/api && pnpm test` | W0 stubs | pending |
-| 08-03-01 | 03 | 3 | IMPORT-01, IMPORT-02 | unit | `cd apps/api && pnpm test` | W0 stubs | pending |
-| 08-03-02 | 03 | 3 | IMPORT-01, IMPORT-02 | unit | `cd apps/api && pnpm test` | W0 stubs | pending |
-| 08-04-01 | 04 | 4 | IMPORT-03, IMPORT-04 | unit | `cd apps/api && pnpm test` | W0 stubs | pending |
-| 08-04-02 | 04 | 4 | IMPORT-03, IMPORT-04 | unit | `cd apps/api && pnpm test` | W0 stubs | pending |
-| 08-05-01 | 05 | 5 | HW-01, HW-02, HW-03 | TSC | `npx tsc --noEmit -p apps/web/tsconfig.json` | new files | pending |
-| 08-05-02 | 05 | 5 | HW-01, HW-02 | TSC | `npx tsc --noEmit -p apps/web/tsconfig.json` | new files | pending |
-| 08-06-01 | 06 | 6 | IMPORT-01, IMPORT-02 | TSC | `npx tsc --noEmit -p apps/web/tsconfig.json` | new files | pending |
-| 08-06-02 | 06 | 6 | IMPORT-01-04 | manual | Human verification | N/A | pending |
+| 08-03-01 | 03 | 2 | IMPORT-01, IMPORT-02 | unit | `cd apps/api && pnpm test` | W0 stubs | pending |
+| 08-03-02 | 03 | 2 | IMPORT-01, IMPORT-02 | unit | `cd apps/api && pnpm test` | W0 stubs | pending |
+| 08-04-01 | 04 | 3 | IMPORT-03, IMPORT-04 | unit | `cd apps/api && pnpm test` | W0 stubs | pending |
+| 08-04-02 | 04 | 3 | IMPORT-03, IMPORT-04 | unit | `cd apps/api && pnpm test` | W0 stubs | pending |
+| 08-05-01 | 05 | 3 | HW-01, HW-02, HW-03 | TSC | `pnpm --filter @schoolflow/web tsc --noEmit` | new files | pending |
+| 08-05-02 | 05 | 3 | HW-01, HW-02, HW-03 | TSC | `pnpm --filter @schoolflow/web tsc --noEmit` | new files | pending |
+| 08-06-01 | 06 | 4 | IMPORT-01, IMPORT-02 | TSC | `pnpm --filter @schoolflow/web tsc --noEmit` | new files | pending |
+| 08-06-02 | 06 | 4 | IMPORT-01-04 | TSC | `pnpm --filter @schoolflow/web tsc --noEmit` | new files | pending |
+| 08-06-03 | 06 | 4 | ALL | manual | Human verification | N/A | pending |
 
 *Status: pending / green / red / flaky*
 
@@ -57,9 +58,9 @@ created: 2026-04-07
 
 ## Wave 0 Requirements
 
-- [ ] `apps/api/src/modules/homework/**/*.spec.ts` — stubs for HW-01 through HW-03
-- [ ] `apps/api/src/modules/import/**/*.spec.ts` — stubs for IMPORT-01 through IMPORT-04
-- [ ] `apps/api/src/modules/calendar/**/*.spec.ts` — stubs for IMPORT-03
+- [ ] `apps/api/src/modules/homework/**/*.spec.ts` -- stubs for HW-01 through HW-03
+- [ ] `apps/api/src/modules/import/**/*.spec.ts` -- stubs for IMPORT-01 through IMPORT-04 (including `csv.parser.spec.ts`)
+- [ ] `apps/api/src/modules/calendar/**/*.spec.ts` -- stubs for IMPORT-03
 - [ ] Existing test infrastructure covers framework install
 
 *Existing Vitest infrastructure from Phases 1-7 is reused.*
@@ -81,11 +82,11 @@ created: 2026-04-07
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 35s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references (including csv.parser.spec.ts)
+- [x] No watch-mode flags
+- [x] Feedback latency < 35s
+- [x] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending
