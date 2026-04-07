@@ -1,6 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api';
-import type { ConversationDto, ConversationScope } from '@schoolflow/shared';
+import type { ConversationDto, ConversationScope, MessageDto } from '@schoolflow/shared';
+
+/**
+ * Backend POST /conversations returns the conversation with the firstMessage embedded.
+ * This extended type reflects that response shape for attachment upload after creation.
+ */
+export type CreateConversationResponse = ConversationDto & {
+  firstMessage?: MessageDto;
+};
 
 // --- Query key factory ---
 
@@ -57,7 +65,7 @@ export function useConversations(schoolId: string, search?: string) {
 export function useCreateConversation(schoolId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (dto: CreateConversationInput): Promise<ConversationDto> => {
+    mutationFn: async (dto: CreateConversationInput): Promise<CreateConversationResponse> => {
       const res = await apiFetch(
         `/api/v1/schools/${schoolId}/conversations`,
         {

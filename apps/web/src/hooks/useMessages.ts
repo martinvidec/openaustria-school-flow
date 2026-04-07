@@ -81,6 +81,29 @@ export function useSendMessage(schoolId: string, conversationId: string) {
 }
 
 /**
+ * Uploads files as attachments to a message. Called after message creation.
+ * Each file is uploaded individually (backend expects single file per request via @fastify/multipart).
+ */
+export async function uploadMessageAttachments(
+  schoolId: string,
+  conversationId: string,
+  messageId: string,
+  files: File[],
+): Promise<void> {
+  for (const file of files) {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await apiFetch(
+      `/api/v1/schools/${schoolId}/conversations/${conversationId}/messages/${messageId}/attachments`,
+      { method: 'POST', body: formData },
+    );
+    if (!res.ok) {
+      throw new Error(`Datei "${file.name}" konnte nicht hochgeladen werden.`);
+    }
+  }
+}
+
+/**
  * Marks a conversation as read for the current user.
  * Invalidates conversations to update unread count badges.
  */

@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { BarChart3 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useCreateConversation } from '@/hooks/useConversations';
+import { uploadMessageAttachments } from '@/hooks/useMessages';
 import { MessageAttachmentUpload } from './MessageAttachmentUpload';
 import { PollCreator } from './PollCreator';
 import type { PollInput } from './PollCreator';
@@ -82,17 +84,28 @@ export function ComposeDialog({
     if (!broadcastSubject.trim() || !broadcastBody.trim()) return;
 
     try {
-      await createConversation.mutateAsync({
+      const result = await createConversation.mutateAsync({
         scope: broadcastScope,
         scopeId: broadcastTarget || undefined,
         subject: broadcastSubject.trim(),
         body: broadcastBody.trim(),
         poll: pollData ?? undefined,
       });
-      // TODO: Upload attachments to the created conversation/message when
-      // the backend returns the conversationId + messageId in the response.
-      // For now, attachment upload is prepared in the UI but server-side
-      // attachment storage is handled by the multipart upload endpoint.
+
+      // Upload attachments to the first message after conversation creation
+      if (attachedFiles.length > 0 && result.firstMessage?.id) {
+        try {
+          await uploadMessageAttachments(
+            schoolId,
+            result.id,
+            result.firstMessage.id,
+            attachedFiles,
+          );
+        } catch {
+          toast.error('Nachricht gesendet, aber Anhaenge konnten nicht hochgeladen werden.');
+        }
+      }
+
       resetForm();
       onOpenChange(false);
     } catch {
@@ -104,6 +117,8 @@ export function ComposeDialog({
     broadcastSubject,
     broadcastBody,
     pollData,
+    attachedFiles,
+    schoolId,
     createConversation,
     resetForm,
     onOpenChange,

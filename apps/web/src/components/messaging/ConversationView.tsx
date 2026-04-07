@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Users } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { useMessages, useSendMessage, useMarkRead } from '@/hooks/useMessages';
+import { useMessages, useSendMessage, useMarkRead, uploadMessageAttachments } from '@/hooks/useMessages';
 import type { MessageDto } from '@schoolflow/shared';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -89,12 +90,23 @@ export function ConversationView({
     }
   }, []);
 
-  // Handle send
+  // Handle send with optional file attachments
   const handleSend = useCallback(
-    (body: string) => {
-      sendMessage.mutate(body);
+    async (body: string, files?: File[]) => {
+      try {
+        const message = await sendMessage.mutateAsync(body);
+        if (files && files.length > 0) {
+          try {
+            await uploadMessageAttachments(schoolId, conversationId, message.id, files);
+          } catch {
+            toast.error('Nachricht gesendet, aber Anhaenge konnten nicht hochgeladen werden.');
+          }
+        }
+      } catch {
+        // sendMessage error handled by TanStack Query
+      }
     },
-    [sendMessage],
+    [sendMessage, schoolId, conversationId],
   );
 
   // Scroll to bottom helper
