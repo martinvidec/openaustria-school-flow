@@ -44,7 +44,7 @@ Declared values inherited from Phase 4 UI-SPEC (multiples of 4):
 
 Exceptions (Phase 8 specific):
 - Touch targets on mobile: minimum 44x44px (WCAG 2.5.5 AAA). Applies to homework/exam badge tap targets on timetable cells, import file drop zone, column mapping drag handles, iCal copy-URL button.
-- Timetable cell badge area: 16x16px icon badges positioned in the top-right corner of the TimetableCell with 2px offset from edge. Multiple badges (homework + exam) stack horizontally with 2px gap.
+- Timetable cell badge area: 16x16px icon badges positioned in the top-right corner of the TimetableCell with 4px offset from edge. Multiple badges (homework + exam) stack horizontally with 4px gap.
 - Import file drop zone: minimum 200px height for comfortable drag-and-drop on desktop and tablet.
 - Column mapping table row height: 48px per row (accommodates source column label + dropdown selector at 44px touch target).
 - Import progress bar height: 8px (consistent with standard shadcn progress bar sizing).
@@ -93,7 +93,7 @@ Inherited from Phase 4 UI-SPEC. No new roles added. Phase 8 assigns existing rol
 | Destructive | `--color-destructive` | hsl(0 84% 60%) | Destructive actions only (see list) |
 
 **Accent reserved for (exhaustive list for Phase 8):**
-1. Primary CTA buttons: "Hausaufgabe erstellen", "Pruefung eintragen", "Import starten", "Importieren", "URL kopieren", "Token erneuern"
+1. Primary CTA buttons: "Hausaufgabe erstellen", "Pruefung eintragen", "Import starten", "Daten importieren", "URL kopieren", "Token erneuern"
 2. Active step indicator in import wizard (current step number/icon)
 3. Import progress bar fill color
 4. Form focus rings (homework/exam dialogs, import column mapping selectors)
@@ -117,7 +117,7 @@ Inherited from Phase 4 UI-SPEC. No new roles added. Phase 8 assigns existing rol
 | Homework | BookOpen (Lucide) | transparent (overlay on cell) | `--color-primary` hsl(221 83% 53%) | Small badge in top-right corner of timetable cell indicating homework is assigned for this lesson |
 | Exam | ClipboardList (Lucide) | transparent (overlay on cell) | `--color-warning` hsl(38 92% 50%) | Small badge in top-right corner of timetable cell indicating an exam is scheduled. Warning color for visual urgency differentiation from homework. |
 
-**Badge rendering rule:** Badges are 16x16px Lucide icons positioned absolutely in the top-right of the TimetableCell container. When both homework and exam exist for the same lesson, homework badge is leftmost, exam badge is rightmost, separated by 2px horizontal gap. Badges do not alter the cell's subject color background. On hover/tap, a tooltip shows the homework title/due date or exam title/date.
+**Badge rendering rule:** Badges are 16x16px Lucide icons positioned absolutely in the top-right of the TimetableCell container. When both homework and exam exist for the same lesson, homework badge is leftmost, exam badge is rightmost, separated by 4px horizontal gap. Badges do not alter the cell's subject color background. On hover/tap, a tooltip shows the homework title/due date or exam title/date.
 
 ### Import State Colors (Phase 8 specific)
 
@@ -157,7 +157,7 @@ Inherited from Phase 4 UI-SPEC. No new roles added. Phase 8 assigns existing rol
 | Element | Copy |
 |---------|------|
 | Primary CTA (import start) | "Import starten" |
-| Primary CTA (import commit) | "Importieren" |
+| Primary CTA (import commit) | "Daten importieren" |
 | Import page title | "Datenimport" |
 | Import empty state heading | "Noch keine Importe durchgefuehrt" |
 | Import empty state body | "Importieren Sie Daten aus Untis (XML) oder CSV-Dateien. Ziehen Sie eine Datei hierher oder klicken Sie zum Auswaehlen." |
@@ -206,7 +206,7 @@ Inherited from Phase 4 UI-SPEC. No new roles added. Phase 8 assigns existing rol
 
 | Component | Status | Phase 8 Usage | Priority |
 |-----------|--------|---------------|----------|
-| Button | Installed | "Hausaufgabe erstellen", "Pruefung eintragen", "Import starten", "Importieren", "URL kopieren", "Token erneuern", all form submit/cancel actions | P0 |
+| Button | Installed | "Hausaufgabe erstellen", "Pruefung eintragen", "Import starten", "Daten importieren", "URL kopieren", "Token erneuern", all form submit/cancel actions | P0 |
 | Card | Installed | Homework detail card, exam detail card, iCal settings card, import history cards, import result summary card | P0 |
 | Dialog | Installed | HomeworkDialog (create/edit), ExamDialog (create/edit), delete confirmations, exam collision warning dialog, token revoke confirmation | P0 |
 | Select | Installed | Import conflict mode selector (skip/update/fail), column mapping target field dropdowns, subject selector in homework/exam dialogs | P0 |
@@ -235,7 +235,7 @@ Inherited from Phase 4 UI-SPEC. No new roles added. Phase 8 assigns existing rol
 | Component | Description | Key Props |
 |-----------|-------------|-----------|
 | `HomeworkBadge` | 16x16px BookOpen icon overlay on TimetableCell top-right corner. Rendered via TimetableGrid renderCell prop. On click/tap opens Popover showing homework title, description excerpt (2 lines), and due date. Primary color fill. (D-04, HW-01) | `homework`, `onClick` |
-| `ExamBadge` | 16x16px ClipboardList icon overlay on TimetableCell top-right corner. Positioned next to HomeworkBadge if both present (2px gap). Warning color fill for urgency differentiation. On click/tap opens Popover showing exam title, date, and subject. (D-04, HW-02) | `exam`, `onClick` |
+| `ExamBadge` | 16x16px ClipboardList icon overlay on TimetableCell top-right corner. Positioned next to HomeworkBadge if both present (4px gap). Warning color fill for urgency differentiation. On click/tap opens Popover showing exam title, date, and subject. (D-04, HW-02) | `exam`, `onClick` |
 | `TimetableCellBadges` | Wrapper that positions HomeworkBadge and ExamBadge in top-right of a TimetableCell. Absolute positioning within cell. Handles stacking of multiple badges. Passed into TimetableGrid renderCell as enhancement around existing TimetableCell. (D-04) | `homework?`, `exam?`, `onHomeworkClick`, `onExamClick` |
 | `HomeworkDialog` | Dialog for creating/editing homework. Fields: title (Input, required), description (Textarea, optional), due date (native date input, required), class subject (Select, pre-filled from lesson context). Submit CTA: "Hausaufgabe erstellen" / "Speichern". Cancel button. Opened from classbook lesson detail page. (D-01, HW-01) | `mode: 'create' \| 'edit'`, `lessonId?`, `classSubjectId?`, `homework?`, `onSave`, `onClose` |
 | `ExamDialog` | Dialog for scheduling exams. Fields: title (Input, required), date (native date input, required), class (Select, pre-filled from context), subject (Select, pre-filled from context), duration (Input number, optional, in minutes), description (Textarea, optional). Shows collision warning inline when date conflicts with existing exams. Submit CTA: "Pruefung eintragen" / "Speichern". (D-02, D-03, HW-02) | `mode: 'create' \| 'edit'`, `classId?`, `classSubjectId?`, `exam?`, `onSave`, `onClose` |
@@ -245,7 +245,7 @@ Inherited from Phase 4 UI-SPEC. No new roles added. Phase 8 assigns existing rol
 | `ImportFileUpload` | Step 1 of ImportWizard. Drop zone (dashed border, 200px min height) accepting .xml and .csv files. Drag-and-drop or click-to-browse. Shows filename and size after selection. Detects file type (Untis XML vs CSV) and advances to appropriate step 2. (D-05, D-06) | `onFileSelect`, `acceptedTypes` |
 | `ImportColumnMapper` | Step 2 for CSV imports. Table layout: left column shows detected CSV headers with sample data (first 3 rows), right column has Select dropdowns mapping to SchoolFlow fields. Required fields marked with asterisk. "Ueberspringen" option in each dropdown. Conflict mode selector at bottom (skip/update/fail). (D-06, D-07) | `headers`, `sampleData`, `targetFields`, `onMappingChange`, `onConflictModeChange` |
 | `ImportUntisPreview` | Step 2 for Untis XML imports. Shows parsed entity counts (teachers, classes, rooms, lessons) in a summary card. Expandable sections per entity type showing first 5 records as preview. Conflict mode selector at bottom. (D-05, D-07) | `parsedData`, `onConflictModeChange` |
-| `ImportDryRunPreview` | Step 3 of ImportWizard. Shows validation results before committing. Summary: total rows, new records, duplicates (per conflict mode), validation errors. Error rows highlighted in destructive color with expandable error details. "Importieren" CTA to commit. "Zurueck" to adjust mapping. (D-05, D-06) | `dryRunResult`, `onCommit`, `onBack` |
+| `ImportDryRunPreview` | Step 3 of ImportWizard. Shows validation results before committing. Summary: total rows, new records, duplicates (per conflict mode), validation errors. Error rows highlighted in destructive color with expandable error details. "Daten importieren" CTA to commit. "Zurueck" to adjust mapping. (D-05, D-06) | `dryRunResult`, `onCommit`, `onBack` |
 | `ImportProgressPanel` | Step 4 of ImportWizard. Progress bar (8px height, accent fill, animated). Percentage text. Current row counter. Socket.IO driven real-time updates. No user action needed during this step. (D-05) | `jobId`, `progress`, `total` |
 | `ImportResultSummary` | Step 5 of ImportWizard. Summary card showing: imported count, skipped count, error count, duration. Status badge (success/partial/failed). Download import report as CSV (errors only) button. "Neuer Import" button to restart wizard. (D-05, D-06, D-08) | `result`, `onNewImport` |
 | `ImportHistoryList` | List of past imports on the import admin page. Each row: date, file name, file type (XML/CSV), entity type, record count, status badge, action dropdown (view report, delete imported data). Sorted by date descending. (D-08) | `imports`, `onViewReport`, `onDelete` |
@@ -300,7 +300,7 @@ Inherited from Phase 4 UI-SPEC. No new roles added. Phase 8 assigns existing rol
 | Interaction | Behavior |
 |-------------|----------|
 | Badge rendering | TimetableCellBadges component wraps TimetableCell via renderCell prop. Badges are 16x16px Lucide icons positioned absolutely in top-right corner. HomeworkBadge uses BookOpen icon in primary color. ExamBadge uses ClipboardList icon in warning color. |
-| Multiple badges | When both homework and exam exist for a lesson, badges stack horizontally: homework left, exam right, 2px gap. Total badge area: max 34x16px. |
+| Multiple badges | When both homework and exam exist for a lesson, badges stack horizontally: homework left, exam right, 4px gap. Total badge area: max 36x16px. |
 | Badge interaction | Click/tap on badge opens Popover with detail (title, date, description excerpt). On desktop, Popover appears on click (not hover). On mobile, same tap behavior. |
 | Badge visibility | All roles see badges. Teachers, students, parents, admin, schulleitung. Badge content is read-only for students/parents. Teachers and admin see "Bearbeiten" and "Loeschen" links in the popover. |
 | No badges | Lessons without homework or exams render as standard TimetableCell with no overlay. |
@@ -312,7 +312,7 @@ Inherited from Phase 4 UI-SPEC. No new roles added. Phase 8 assigns existing rol
 | Entry point | Admin navigates to "/import" via sidebar. Page title: "Datenimport" (28px). ImportWizard component below page header. Import history list below wizard. |
 | Step 1: File upload | ImportFileUpload component. Dashed border drop zone (200px height). Accepts .xml and .csv. On file drop/select: detects file type by extension and magic bytes. For .xml containing Untis markers: advances to Untis-specific step 2. |
 | Step 2: Untis preview | ImportUntisPreview shows parsed summary: teacher count, class count, room count, lesson count. Expandable sections show first 5 records per entity. Conflict mode selector: "Ueberspringen" (default) / "Aktualisieren" / "Import abbrechen". "Weiter" button advances to step 3. |
-| Step 3: Dry-run | Backend runs dry-run import (no DB writes). ImportDryRunPreview shows: total records, new, duplicates, errors. Error rows in destructive color with expandable detail. "Importieren" CTA (accent, primary) or "Zurueck" (secondary). |
+| Step 3: Dry-run | Backend runs dry-run import (no DB writes). ImportDryRunPreview shows: total records, new, duplicates, errors. Error rows in destructive color with expandable detail. "Daten importieren" CTA (accent, primary) or "Zurueck" (secondary). |
 | Step 4: Progress | ImportProgressPanel. POST triggers BullMQ job. Socket.IO delivers progress events. Progress bar animates (0-100%). Row counter: "Importiere... 127 von 350 (36%)". No user action during this step. |
 | Step 5: Result | ImportResultSummary. Status badge. Summary card with counts. "Importbericht herunterladen" for error CSV. "Neuer Import" button resets wizard. Import logged in history (D-08). |
 | Cancel during import | No cancel once step 4 starts (background job). User can navigate away; job continues. Result appears in import history on return. |
