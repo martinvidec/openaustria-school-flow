@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 08-03-PLAN.md
-last_updated: "2026-04-07T21:47:32.778Z"
+stopped_at: Completed 08-04-PLAN.md
+last_updated: "2026-04-07T22:01:40.412Z"
 last_activity: 2026-04-07
 progress:
   total_phases: 9
   completed_phases: 7
   total_plans: 66
-  completed_plans: 63
+  completed_plans: 64
   percent: 83
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 ## Current Position
 
 Phase: 08 (homework-exams-data-import) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 Status: Ready to execute
 Last activity: 2026-04-07
 
@@ -108,6 +108,7 @@ Progress: [========..] 83%
 | Phase 08 P01 | 13min | 2 tasks | 15 files |
 | Phase 08 P02 | 9min | 2 tasks | 16 files |
 | Phase 08 P03 | 14min | 2 tasks | 16 files |
+| Phase 08 P04 | 10min | 2 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -272,6 +273,8 @@ Recent decisions affecting current work:
 - [Phase 08]: Room import defaults roomType to KLASSENZIMMER -- admin can update post-import
 - [Phase 08]: ImportProcessor chunks rows at 50 per batch with per-chunk Socket.IO progress emission
 - [Phase 08]: ImportEventsGateway uses school-scoped rooms (not user-scoped) so all admins see import progress
+- [Phase 08]: CalendarService queries timetable/homework/exams directly via Prisma (not service imports) to avoid circular dependency with HomeworkModule
+- [Phase 08]: CASL Phase 8 seed hierarchy: Lehrer gets full homework/exam CRUD + calendar-token; Eltern/Schueler get read-only homework/exam + calendar-token management
 
 ### Pending Todos
 
@@ -285,6 +288,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-07T21:47:32.774Z
-Stopped at: Completed 08-03-PLAN.md
+Last session: 2026-04-07T22:01:40.407Z
+Stopped at: Completed 08-04-PLAN.md
 Resume file: None
