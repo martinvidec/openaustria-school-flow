@@ -183,7 +183,7 @@ Plans:
 - [x] 07-04-PLAN.md -- MessagingGateway (Socket.IO /messaging namespace, JWT JWKS auth) + wire real-time events into services + CASL permissions + DSGVO retention
 - [x] 07-05-PLAN.md -- Frontend core: Socket.IO client, TanStack Query hooks, /messages route with list-detail split view, ConversationList, ConversationView, ComposeDialog, sidebar navigation
 - [x] 07-06-PLAN.md -- ReadReceiptIndicator + ReadReceiptDetail Popover + useReadReceipts hook wired to backend recipients endpoint
-- [ ] 07-07-PLAN.md -- MessageAttachmentUpload/Display, PollCreator/Display/ResultBar, AbsenceQuickAction, component wiring, human verification
+- [x] 07-07-PLAN.md -- MessageAttachmentUpload/Display, PollCreator/Display/ResultBar, AbsenceQuickAction, component wiring, human verification
 
 ### Phase 8: Homework, Exams & Data Import
 **Goal**: Homework and exams are visible in the timetable with collision detection, and schools can migrate their existing data from Untis or CSV files into SchoolFlow
