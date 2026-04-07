@@ -184,7 +184,7 @@ Plans:
 - [x] 07-05-PLAN.md -- Frontend core: Socket.IO client, TanStack Query hooks, /messages route with list-detail split view, ConversationList, ConversationView, ComposeDialog, sidebar navigation
 - [x] 07-06-PLAN.md -- ReadReceiptIndicator + ReadReceiptDetail Popover + useReadReceipts hook wired to backend recipients endpoint
 - [x] 07-07-PLAN.md -- MessageAttachmentUpload/Display, PollCreator/Display/ResultBar, AbsenceQuickAction, component wiring, human verification
-- [ ] 07-08-PLAN.md -- Gap closure: rewire AbsenceQuickAction to /absence-report endpoint (COMM-05) + wire file attachment upload in ConversationView and ComposeDialog (COMM-04)
+- [x] 07-08-PLAN.md -- Gap closure: rewire AbsenceQuickAction to /absence-report endpoint (COMM-05) + wire file attachment upload in ConversationView and ComposeDialog (COMM-04)
 
 ### Phase 8: Homework, Exams & Data Import
 **Goal**: Homework and exams are visible in the timetable with collision detection, and schools can migrate their existing data from Untis or CSV files into SchoolFlow
