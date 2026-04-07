@@ -9,23 +9,27 @@ import {
   Patch,
   Post,
   Query,
+  Req,
+  Res,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiConsumes,
   ApiOperation,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { createReadStream } from 'node:fs';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../auth/types/authenticated-user';
-import { SendMessageDto } from '../dto/message.dto';
+import { SendMessageDto, ReportAbsenceDto } from '../dto/message.dto';
 import { MessageService } from './message.service';
 
 /**
- * Phase 7 Plan 02 -- Message REST API.
+ * Phase 7 Plan 02+03 -- Message REST API.
  *
- * Handles message send, list, read receipts, recipient detail, and delete.
- * Includes PATCH /read for marking all conversation messages as read (COMM-03).
+ * Handles message send, list, read receipts, recipient detail, delete,
+ * file attachments (COMM-04), and absence reporting (COMM-05).
  */
 @ApiTags('Communication')
 @ApiBearerAuth()
@@ -81,6 +85,61 @@ export class MessageController {
     );
   }
 
+  @Post(':messageId/attachments')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Upload a file attachment to a message (COMM-04)' })
+  @ApiResponse({ status: 201, description: 'Attachment uploaded with metadata' })
+  @ApiResponse({ status: 400, description: 'Invalid file type or size exceeded' })
+  @ApiResponse({ status: 403, description: 'Only sender can upload attachments' })
+  async uploadAttachment(
+    @Param('schoolId') schoolId: string,
+    @Param('messageId') messageId: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Req() request: any,
+  ) {
+    const data = await request.file();
+    if (!data) {
+      return { statusCode: 400, message: 'No file provided' };
+    }
+
+    // Read file to buffer (same pattern as excuse.controller.ts)
+    const chunks: Buffer[] = [];
+    for await (const chunk of data.file) {
+      chunks.push(chunk);
+    }
+    const buffer = Buffer.concat(chunks);
+
+    return this.messageService.uploadAttachment(schoolId, messageId, user.id, {
+      filename: data.filename,
+      mimetype: data.mimetype,
+      buffer,
+    });
+  }
+
+  @Get(':messageId/attachments/:attachmentId/download')
+  @ApiOperation({ summary: 'Download a file attachment (COMM-04)' })
+  @ApiResponse({ status: 200, description: 'File stream with Content-Disposition' })
+  @ApiResponse({ status: 403, description: 'Not a member of the conversation' })
+  @ApiResponse({ status: 404, description: 'Attachment not found' })
+  async downloadAttachment(
+    @Param('attachmentId') attachmentId: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Res() reply: any,
+  ) {
+    const { path, filename, mimeType } =
+      await this.messageService.downloadAttachment(attachmentId, user.id);
+
+    reply.header('Content-Type', mimeType);
+    reply.header(
+      'Content-Disposition',
+      `attachment; filename="${encodeURIComponent(filename)}"`,
+    );
+
+    const stream = createReadStream(path);
+    return reply.send(stream);
+  }
+
   @Delete(':messageId')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a message (sender or admin only)' })
@@ -114,5 +173,32 @@ export class ConversationReadController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     await this.messageService.markRead(conversationId, user.id);
+  }
+}
+
+/**
+ * Absence report controller (COMM-05).
+ * Restricted to 'eltern' role via RBAC guards.
+ */
+@ApiTags('Communication')
+@ApiBearerAuth()
+@Controller('schools/:schoolId/absence-report')
+export class AbsenceReportController {
+  constructor(private readonly messageService: MessageService) {}
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Report student absence via messaging (COMM-05)' })
+  @ApiResponse({
+    status: 201,
+    description: 'Absence reported, ExcuseService record created, SYSTEM message sent to KV',
+  })
+  async reportAbsence(
+    @Param('schoolId') schoolId: string,
+    @Body() dto: ReportAbsenceDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    await this.messageService.reportAbsence(schoolId, user.id, dto);
+    return { message: 'Abwesenheit erfolgreich gemeldet' };
   }
 }

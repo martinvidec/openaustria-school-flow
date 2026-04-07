@@ -1,13 +1,17 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { MessageDto } from '@schoolflow/shared';
+import type { MessageAttachmentDto, MessageDto } from '@schoolflow/shared';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { PrismaService } from '../../../config/database/prisma.service';
 import { ConversationService } from '../conversation/conversation.service';
 import { NotificationService } from '../../substitution/notification/notification.service';
-import { SendMessageDto } from '../dto/message.dto';
+import { ExcuseService } from '../../classbook/excuse.service';
+import { SendMessageDto, ReportAbsenceDto } from '../dto/message.dto';
 
 export interface RecipientDetailDto {
   userId: string;
@@ -16,8 +20,31 @@ export interface RecipientDetailDto {
   readAt: string | null;
 }
 
+/** Allowed MIME types for message attachments (COMM-04) */
+const ALLOWED_MIME_TYPES = [
+  'application/pdf',
+  'image/jpeg',
+  'image/png',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+];
+
+/** Magic byte signatures for file type validation */
+const MAGIC_BYTES: Record<string, number[][]> = {
+  'application/pdf': [[0x25, 0x50, 0x44, 0x46]], // %PDF
+  'image/jpeg': [[0xff, 0xd8, 0xff]],
+  'image/png': [[0x89, 0x50, 0x4e, 0x47]],
+  'application/msword': [[0xd0, 0xcf, 0x11, 0xe0]], // OLE compound
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [
+    [0x50, 0x4b, 0x03, 0x04], // ZIP/DOCX
+  ],
+};
+
+/** Maximum file size: 5MB */
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
 /**
- * Phase 7 Plan 02 -- MessageService.
+ * Phase 7 Plan 02+03 -- MessageService.
  *
  * Responsibilities:
  *  - Send message with MessageRecipient expansion + unreadCount increment
@@ -26,6 +53,8 @@ export interface RecipientDetailDto {
  *  - Recipient detail for read receipt Popover (COMM-03)
  *  - MESSAGE_RECEIVED notifications via NotificationService (D-04)
  *  - Message deletion
+ *  - File attachment upload/download (COMM-04)
+ *  - Absence reporting via messaging (COMM-05)
  */
 @Injectable()
 export class MessageService {
@@ -33,6 +62,7 @@ export class MessageService {
     private readonly prisma: PrismaService,
     private readonly conversationService: ConversationService,
     private readonly notificationService: NotificationService,
+    private readonly excuseService: ExcuseService,
   ) {}
 
   /**
@@ -393,5 +423,273 @@ export class MessageService {
     await this.prisma.message.delete({
       where: { id: messageId },
     });
+  }
+
+  // =====================================================================
+  // COMM-04: File Attachments
+  // =====================================================================
+
+  /**
+   * Upload a file attachment to an existing message (COMM-04).
+   *
+   * Validates: sender ownership, file size <= 5MB, MIME whitelist, magic byte check.
+   * Stores file at uploads/{schoolId}/messages/{messageId}/{sanitizedFilename}.
+   */
+  async uploadAttachment(
+    schoolId: string,
+    messageId: string,
+    userId: string,
+    file: { filename: string; mimetype: string; buffer: Buffer },
+  ): Promise<MessageAttachmentDto> {
+    // Verify user is the sender of the message
+    const message = await this.prisma.message.findUnique({
+      where: { id: messageId },
+      select: { senderId: true, conversationId: true },
+    });
+    if (!message) {
+      throw new NotFoundException('Nachricht nicht gefunden');
+    }
+    if (message.senderId !== userId) {
+      throw new ForbiddenException('Nur der Absender kann Anhaenge hinzufuegen');
+    }
+
+    const sizeBytes = file.buffer.length;
+
+    // Validate file size <= 5MB
+    if (sizeBytes > MAX_FILE_SIZE) {
+      throw new BadRequestException(
+        `Datei zu gross: ${sizeBytes} Bytes. Maximal ${MAX_FILE_SIZE} Bytes (5MB) erlaubt.`,
+      );
+    }
+
+    // Validate MIME type against whitelist
+    if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+      throw new BadRequestException(
+        `Ungueltiger Dateityp: ${file.mimetype}. Erlaubt: ${ALLOWED_MIME_TYPES.join(', ')}`,
+      );
+    }
+
+    // Magic byte validation
+    const expectedSignatures = MAGIC_BYTES[file.mimetype];
+    if (expectedSignatures) {
+      const matches = expectedSignatures.some((sig) => {
+        const fileMagic = Array.from(file.buffer.subarray(0, sig.length));
+        return sig.every((byte, i) => fileMagic[i] === byte);
+      });
+      if (!matches) {
+        throw new BadRequestException(
+          'Dateiinhalt stimmt nicht mit dem angegebenen MIME-Typ ueberein',
+        );
+      }
+    }
+
+    // Sanitize filename: keep only alphanumeric, dots, hyphens, underscores
+    const sanitizedFilename = file.filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+
+    // Storage path
+    const storagePath = join('uploads', schoolId, 'messages', messageId, sanitizedFilename);
+    const fullPath = join(process.cwd(), storagePath);
+
+    // Create directory if needed
+    const dir = join(process.cwd(), 'uploads', schoolId, 'messages', messageId);
+    await mkdir(dir, { recursive: true });
+
+    // Write file to disk
+    await writeFile(fullPath, file.buffer);
+
+    // Create database record
+    const attachment = await this.prisma.messageAttachment.create({
+      data: {
+        messageId,
+        filename: sanitizedFilename,
+        storagePath,
+        mimeType: file.mimetype,
+        sizeBytes,
+      },
+    });
+
+    return {
+      id: attachment.id,
+      filename: attachment.filename,
+      mimeType: attachment.mimeType,
+      sizeBytes: attachment.sizeBytes,
+    };
+  }
+
+  /**
+   * Download a file attachment (COMM-04).
+   *
+   * Verifies user is a ConversationMember before allowing download.
+   * Returns path, filename, mimeType for controller to stream.
+   */
+  async downloadAttachment(
+    attachmentId: string,
+    userId: string,
+  ): Promise<{ path: string; filename: string; mimeType: string }> {
+    const attachment = await this.prisma.messageAttachment.findUnique({
+      where: { id: attachmentId },
+      include: {
+        message: {
+          include: {
+            conversation: {
+              include: {
+                conversationMembers: {
+                  where: { userId },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!attachment) {
+      throw new NotFoundException('Anhang nicht gefunden');
+    }
+
+    // Verify user is a conversation member
+    const isMember = attachment.message.conversation.conversationMembers.length > 0;
+    if (!isMember) {
+      throw new ForbiddenException('Kein Zugriff auf diesen Anhang');
+    }
+
+    return {
+      path: join(process.cwd(), attachment.storagePath),
+      filename: attachment.filename,
+      mimeType: attachment.mimeType,
+    };
+  }
+
+  // =====================================================================
+  // COMM-05: Absence Reporting via Messaging
+  // =====================================================================
+
+  /**
+   * Report absence via messaging (COMM-05).
+   *
+   * 1. Creates AbsenceExcuse via ExcuseService (D-13).
+   * 2. Resolves the student's Klassenvorstand.
+   * 3. Finds or creates a DIRECT conversation between parent and KV.
+   * 4. Posts a SYSTEM message with absence details (D-15).
+   * 5. Creates MESSAGE_RECEIVED notification for KV.
+   */
+  async reportAbsence(
+    schoolId: string,
+    parentUserId: string,
+    dto: ReportAbsenceDto,
+  ): Promise<void> {
+    // 1. Create AbsenceExcuse via ExcuseService
+    await this.excuseService.createExcuse(schoolId, parentUserId, {
+      studentId: dto.studentId,
+      startDate: dto.dateFrom,
+      endDate: dto.dateTo,
+      reason: dto.reason,
+      note: dto.note,
+    });
+
+    // 2. Resolve student and their Klassenvorstand
+    const student = await this.prisma.student.findUniqueOrThrow({
+      where: { id: dto.studentId },
+      include: {
+        person: { select: { firstName: true, lastName: true } },
+        schoolClass: {
+          include: {
+            klassenvorstand: {
+              include: {
+                person: { select: { keycloakUserId: true, firstName: true, lastName: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const kvKeycloakId = student.schoolClass?.klassenvorstand?.person?.keycloakUserId;
+    if (!kvKeycloakId) {
+      // No Klassenvorstand assigned -- excuse is created, but no messaging
+      return;
+    }
+
+    const studentName = `${student.person.firstName} ${student.person.lastName}`;
+
+    // 3. Find or create DIRECT conversation between parent and KV
+    const directPairKey = [parentUserId, kvKeycloakId].sort().join(':');
+    let conversation = await this.prisma.conversation.findUnique({
+      where: { directPairKey },
+    });
+
+    if (!conversation) {
+      conversation = await this.prisma.conversation.create({
+        data: {
+          schoolId,
+          scope: 'DIRECT',
+          directPairKey,
+          createdBy: parentUserId,
+          conversationMembers: {
+            createMany: {
+              data: [
+                { userId: parentUserId },
+                { userId: kvKeycloakId },
+              ],
+            },
+          },
+        },
+      });
+    }
+
+    // 4. Create SYSTEM message with absence details
+    const systemBody = `Abwesenheit gemeldet: ${studentName}, ${dto.dateFrom} - ${dto.dateTo}, Grund: ${dto.reason}`;
+
+    const message = await this.prisma.$transaction(async (tx) => {
+      const msg = await tx.message.create({
+        data: {
+          conversationId: conversation!.id,
+          senderId: parentUserId,
+          body: systemBody,
+          type: 'SYSTEM',
+        },
+      });
+
+      // Create MessageRecipient for KV
+      await tx.messageRecipient.create({
+        data: {
+          messageId: msg.id,
+          userId: kvKeycloakId!,
+          deliveredAt: new Date(),
+        },
+      });
+
+      // Increment unreadCount for KV
+      await tx.conversationMember.updateMany({
+        where: {
+          conversationId: conversation!.id,
+          userId: kvKeycloakId!,
+        },
+        data: {
+          unreadCount: { increment: 1 },
+        },
+      });
+
+      // Update conversation updatedAt
+      await tx.conversation.update({
+        where: { id: conversation!.id },
+        data: { updatedAt: new Date() },
+      });
+
+      return msg;
+    });
+
+    // 5. Create MESSAGE_RECEIVED notification for KV
+    try {
+      await this.notificationService.create({
+        userId: kvKeycloakId,
+        type: 'MESSAGE_RECEIVED',
+        title: 'Abwesenheitsmeldung',
+        body: systemBody.substring(0, 100),
+        payload: { conversationId: conversation.id, messageId: message.id },
+      });
+    } catch {
+      // Non-critical: notification failure should not fail absence report
+    }
   }
 }
