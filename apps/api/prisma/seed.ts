@@ -126,6 +126,10 @@ async function main() {
     { action: 'manage', subject: 'conversation' },
     { action: 'manage', subject: 'message' },
     { action: 'manage', subject: 'poll' },
+    // Phase 8: Homework, Exams, Import (HW-01..03, IMPORT-01..04)
+    { action: 'manage', subject: 'homework' },
+    { action: 'manage', subject: 'exam' },
+    { action: 'read', subject: 'import' },
   ];
 
   // Lehrer: own classes, own grades (AUTH-03) + Phase 2 subjects
@@ -185,6 +189,18 @@ async function main() {
     { action: 'create', subject: 'message' },
     { action: 'create', subject: 'poll' },
     { action: 'read', subject: 'poll' },
+    // Phase 8: Homework, Exam CRUD + Calendar token (HW-01..03, IMPORT-03)
+    { action: 'create', subject: 'homework' },
+    { action: 'read', subject: 'homework' },
+    { action: 'update', subject: 'homework' },
+    { action: 'delete', subject: 'homework' },
+    { action: 'create', subject: 'exam' },
+    { action: 'read', subject: 'exam' },
+    { action: 'update', subject: 'exam' },
+    { action: 'delete', subject: 'exam' },
+    { action: 'create', subject: 'calendar-token' },
+    { action: 'read', subject: 'calendar-token' },
+    { action: 'delete', subject: 'calendar-token' },
   ];
 
   // Eltern: own child only (AUTH-03) + Phase 2 subjects
@@ -220,6 +236,12 @@ async function main() {
     { action: 'read', subject: 'conversation' },
     { action: 'read', subject: 'message' },
     { action: 'create', subject: 'message' },
+    // Phase 8: Homework + Exam read, Calendar token (IMPORT-03)
+    { action: 'read', subject: 'homework' },
+    { action: 'read', subject: 'exam' },
+    { action: 'create', subject: 'calendar-token' },
+    { action: 'read', subject: 'calendar-token' },
+    { action: 'delete', subject: 'calendar-token' },
   ];
 
   // Schueler: own data only (AUTH-03) + Phase 2 subjects
@@ -246,6 +268,12 @@ async function main() {
     // Phase 7: Communication (read-only for schueler)
     { action: 'read', subject: 'conversation' },
     { action: 'read', subject: 'message' },
+    // Phase 8: Homework + Exam read, Calendar token (IMPORT-03)
+    { action: 'read', subject: 'homework' },
+    { action: 'read', subject: 'exam' },
+    { action: 'create', subject: 'calendar-token' },
+    { action: 'read', subject: 'calendar-token' },
+    { action: 'delete', subject: 'calendar-token' },
   ];
 
   const allPermissions = [

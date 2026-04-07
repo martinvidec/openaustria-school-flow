@@ -24,6 +24,7 @@ import { ClassBookModule } from './modules/classbook/classbook.module';
 import { CommunicationModule } from './modules/communication/communication.module';
 import { HomeworkModule } from './modules/homework/homework.module';
 import { ImportModule } from './modules/import/import.module';
+import { CalendarModule } from './modules/calendar/calendar.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { ImportModule } from './modules/import/import.module';
     CommunicationModule,
     HomeworkModule,
     ImportModule,
+    CalendarModule,
   ],
   providers: [
     {
