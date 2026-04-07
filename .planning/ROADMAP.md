@@ -179,7 +179,7 @@ Plans:
 Plans:
 - [x] 07-01-PLAN.md -- Prisma schema (7 models, 3 enums, MESSAGE_RECEIVED notification type), shared messaging types, CommunicationModule scaffold, Wave 0 test stubs
 - [x] 07-02-PLAN.md -- ConversationService (scope expansion for CLASS/YEAR_GROUP/SCHOOL/DIRECT, RBAC) + MessageService (send, cursor pagination, read receipts, recipient detail endpoint)
-- [ ] 07-03-PLAN.md -- File attachments with magic byte validation (COMM-04) + PollService (single/multi choice, deadline, named/anonymous results) + absence reporting via ExcuseService (COMM-05)
+- [x] 07-03-PLAN.md -- File attachments with magic byte validation (COMM-04) + PollService (single/multi choice, deadline, named/anonymous results) + absence reporting via ExcuseService (COMM-05)
 - [ ] 07-04-PLAN.md -- MessagingGateway (Socket.IO /messaging namespace, JWT JWKS auth) + wire real-time events into services + CASL permissions + DSGVO retention
 - [ ] 07-05-PLAN.md -- Frontend core: Socket.IO client, TanStack Query hooks, /messages route with list-detail split view, ConversationList, ConversationView, ComposeDialog, sidebar navigation
 - [ ] 07-06-PLAN.md -- ReadReceiptIndicator + ReadReceiptDetail Popover + useReadReceipts hook wired to backend recipients endpoint
