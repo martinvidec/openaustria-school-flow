@@ -32,6 +32,11 @@ export class CreateConversationDto {
   @IsString()
   subject?: string;
 
+  @ApiPropertyOptional({ description: 'Recipient keycloakUserId for DIRECT scope' })
+  @IsOptional()
+  @IsString()
+  recipientId?: string;
+
   @ApiProperty({ description: 'First message body' })
   @IsString()
   @IsNotEmpty()
