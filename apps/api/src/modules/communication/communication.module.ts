@@ -10,6 +10,8 @@ import {
   ConversationReadController,
   AbsenceReportController,
 } from './message/message.controller';
+import { PollService } from './poll/poll.service';
+import { PollController } from './poll/poll.controller';
 
 /**
  * Phase 7 -- Communication module.
@@ -18,7 +20,7 @@ import {
  * Plan 07-02 wires ConversationService, ConversationController,
  *   MessageService, MessageController, ConversationReadController.
  * Plan 07-03 adds file attachments (COMM-04), absence reporting (COMM-05),
- *   AbsenceReportController, ClassBookModule import for ExcuseService.
+ *   PollService + PollController (COMM-06), ClassBookModule import for ExcuseService.
  *
  * Imports SubstitutionModule to access NotificationService + NotificationGateway
  * (exported by SubstitutionModule) for messaging notifications.
@@ -32,8 +34,9 @@ import {
     MessageController,
     ConversationReadController,
     AbsenceReportController,
+    PollController,
   ],
-  providers: [ConversationService, MessageService],
-  exports: [ConversationService, MessageService],
+  providers: [ConversationService, MessageService, PollService],
+  exports: [ConversationService, MessageService, PollService],
 })
 export class CommunicationModule {}
