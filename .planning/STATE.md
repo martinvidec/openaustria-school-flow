@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 06-06-PLAN.md autonomous tasks (awaiting human verification)
-last_updated: "2026-04-06T12:32:45.613Z"
-last_activity: 2026-04-06
+status: executing
+stopped_at: Completed 07-01-PLAN.md
+last_updated: "2026-04-07T05:11:36.049Z"
+last_activity: 2026-04-07
 progress:
   total_phases: 9
   completed_phases: 6
-  total_plans: 52
-  completed_plans: 52
+  total_plans: 59
+  completed_plans: 53
   percent: 83
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenplanerstellung, die sie selbst hosten koennen -- ohne Vendor Lock-in, mit offenen APIs und DSGVO-Konformitaet von Tag 1.
-**Current focus:** Phase 06 — substitution-planning
+**Current focus:** Phase 07 — communication
 
 ## Current Position
 
-Phase: 7
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-04-06
+Phase: 07 (communication) — EXECUTING
+Plan: 2 of 7
+Status: Ready to execute
+Last activity: 2026-04-07
 
 Progress: [========..] 83%
 
@@ -97,6 +97,7 @@ Progress: [========..] 83%
 | Phase 06 P04 | 125min | 2 tasks | 13 files |
 | Phase 06 P05 | 100min | 2 tasks tasks | 13 files files |
 | Phase 06-substitution-planning P06 | 17min | 2 tasks tasks | 21 files files |
+| Phase 07-communication P01 | 6min | 2 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -231,6 +232,10 @@ Recent decisions affecting current work:
 - [Phase 06]: useNotificationSocket mounted exactly once at _authenticated layout level (never in page components) — prevents duplicate notification events per 06-RESEARCH Pattern 4
 - [Phase 06]: useOfferedSubstitutions filters admin /substitutions endpoint client-side by current teacherId instead of adding backend ?mine=true param — bounded result set makes O(n) filter cheaper than new endpoint
 - [Phase 06]: Popover installed via pnpm + hand-authored shadcn wrapper (not CLI) — Phase 5 precedent for components.json-incompatible shadcn CLI
+- [Phase 07-communication]: directPairKey unique constraint for DIRECT conversation dedup using sorted userId pair
+- [Phase 07-communication]: ConversationMember.unreadCount denormalized counter for efficient unread badge queries
+- [Phase 07-communication]: Poll as 1:1 relation to Message via messageId @unique -- polls are message-embedded, not standalone
+- [Phase 07-communication]: Wave 0 Nyquist: 27 it.todo() stubs covering all COMM-01..COMM-06 requirements before implementation
 
 ### Pending Todos
 
@@ -244,6 +249,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-05T22:23:52.123Z
-Stopped at: Completed 06-06-PLAN.md autonomous tasks (awaiting human verification)
+Last session: 2026-04-07T05:11:36.046Z
+Stopped at: Completed 07-01-PLAN.md
 Resume file: None

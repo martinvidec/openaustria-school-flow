@@ -62,12 +62,12 @@
 
 ### Communication
 
-- [ ] **COMM-01**: Lehrer/Admin kann Nachrichten an Klasse, Jahrgang oder gesamte Schule senden
-- [ ] **COMM-02**: Lehrer und Eltern können private Einzelnachrichten austauschen
-- [ ] **COMM-03**: Empfänger sehen Lesebestätigungen (wer hat gelesen, wer nicht)
-- [ ] **COMM-04**: Nachrichten unterstützen Dateianhänge (Fotos, PDFs, Dokumente)
-- [ ] **COMM-05**: Eltern können Abwesenheit des Kindes per Nachricht melden
-- [ ] **COMM-06**: Lehrer kann Umfragen/Abstimmungen erstellen (Veranstaltungsplanung, Feedback)
+- [x] **COMM-01**: Lehrer/Admin kann Nachrichten an Klasse, Jahrgang oder gesamte Schule senden
+- [x] **COMM-02**: Lehrer und Eltern können private Einzelnachrichten austauschen
+- [x] **COMM-03**: Empfänger sehen Lesebestätigungen (wer hat gelesen, wer nicht)
+- [x] **COMM-04**: Nachrichten unterstützen Dateianhänge (Fotos, PDFs, Dokumente)
+- [x] **COMM-05**: Eltern können Abwesenheit des Kindes per Nachricht melden
+- [x] **COMM-06**: Lehrer kann Umfragen/Abstimmungen erstellen (Veranstaltungsplanung, Feedback)
 
 ### RBAC & Security
 
@@ -200,12 +200,12 @@
 | ROOM-03 | Phase 4 | Complete |
 | ROOM-04 | Phase 4 | Complete |
 | ROOM-05 | Phase 4 | Complete |
-| COMM-01 | Phase 7 | Pending |
-| COMM-02 | Phase 7 | Pending |
-| COMM-03 | Phase 7 | Pending |
-| COMM-04 | Phase 7 | Pending |
-| COMM-05 | Phase 7 | Pending |
-| COMM-06 | Phase 7 | Pending |
+| COMM-01 | Phase 7 | Complete |
+| COMM-02 | Phase 7 | Complete |
+| COMM-03 | Phase 7 | Complete |
+| COMM-04 | Phase 7 | Complete |
+| COMM-05 | Phase 7 | Complete |
+| COMM-06 | Phase 7 | Complete |
 | AUTH-01 | Phase 1 | Complete |
 | AUTH-02 | Phase 1 | Complete |
 | AUTH-03 | Phase 1 | Complete |
