@@ -65,6 +65,13 @@ model School {
   // Phase 7 relations
   conversations Conversation[]
 
+  // Phase 8 relations
+  homework       Homework[]
+  exams          Exam[]
+  importJobs     ImportJob[]
+  calendarTokens CalendarToken[]
+  sisApiKeys     SisApiKey[]
+
   @@map("schools")
 }
 
@@ -446,6 +453,7 @@ model SchoolClass {
   students        Student[]
   groups          Group[]
   classSubjects   ClassSubject[]
+  exams           Exam[]
 
   @@unique([schoolId, name, schoolYearId])
   @@map("school_classes")
@@ -515,6 +523,10 @@ model ClassSubject {
   weeklyHours        Int         @map("weekly_hours")
   isCustomized       Boolean     @default(false) @map("is_customized")
   preferDoublePeriod Boolean     @default(false) @map("prefer_double_period")
+
+  // Phase 8 relations
+  homework Homework[]
+  exams    Exam[]
 
   @@unique([classId, subjectId, groupId])
   @@map("class_subjects")
@@ -853,6 +865,7 @@ model ClassBookEntry {
 
   attendanceRecords AttendanceRecord[]
   studentNotes      StudentNote[]
+  homework          Homework[]
 
   @@unique([classSubjectId, date, periodNumber, weekType])
   @@index([schoolId, date])
@@ -1014,6 +1027,8 @@ enum NotificationType {
   LESSON_CANCELLED
   STILLARBEIT_ASSIGNED
   MESSAGE_RECEIVED
+  HOMEWORK_ASSIGNED
+  EXAM_SCHEDULED
 }
 
 model TeacherAbsence {
@@ -1255,4 +1270,151 @@ model PollVote {
   @@unique([pollOptionId, userId])
   @@index([userId])
   @@map("poll_votes")
+}
+
+// ============================================================================
+// Phase 8 — Homework, Exams, Data Import (HW-01..HW-03, IMPORT-01..IMPORT-04)
+// D-01, D-02, D-03, D-05, D-06, D-07, D-08, D-09, D-10
+// ============================================================================
+
+// --- Enums ---
+
+enum ImportFileType {
+  UNTIS_XML
+  UNTIS_DIF
+  CSV
+}
+
+enum ImportStatus {
+  QUEUED
+  DRY_RUN
+  PROCESSING
+  COMPLETED
+  PARTIAL
+  FAILED
+}
+
+enum ImportEntityType {
+  TEACHERS
+  CLASSES
+  ROOMS
+  STUDENTS
+  TIMETABLE
+  MIXED
+}
+
+enum ImportConflictMode {
+  SKIP
+  UPDATE
+  FAIL
+}
+
+// --- Homework (D-01, HW-01) ---
+
+model Homework {
+  id               String         @id @default(uuid())
+  title            String
+  description      String?
+  dueDate          DateTime       @map("due_date")
+  classSubjectId   String         @map("class_subject_id")
+  classBookEntryId String?        @map("class_book_entry_id")
+  schoolId         String         @map("school_id")
+  createdBy        String         @map("created_by")
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+
+  classSubject     ClassSubject   @relation(fields: [classSubjectId], references: [id])
+  classBookEntry   ClassBookEntry? @relation(fields: [classBookEntryId], references: [id], onDelete: SetNull)
+  school           School         @relation(fields: [schoolId], references: [id])
+
+  @@index([classSubjectId, dueDate])
+  @@index([schoolId])
+  @@map("homework")
+}
+
+// --- Exam (D-02, HW-02) ---
+
+model Exam {
+  id             String       @id @default(uuid())
+  title          String
+  date           DateTime
+  classSubjectId String       @map("class_subject_id")
+  classId        String       @map("class_id")
+  duration       Int?
+  description    String?
+  schoolId       String       @map("school_id")
+  createdBy      String       @map("created_by")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  classSubject   ClassSubject @relation(fields: [classSubjectId], references: [id])
+  schoolClass    SchoolClass  @relation(fields: [classId], references: [id])
+  school         School       @relation(fields: [schoolId], references: [id])
+
+  @@index([classId, date])
+  @@index([classSubjectId])
+  @@index([schoolId])
+  @@map("exams")
+}
+
+// --- ImportJob (D-05, D-06, D-07, D-08, IMPORT-01, IMPORT-02) ---
+
+model ImportJob {
+  id             String             @id @default(uuid())
+  schoolId       String             @map("school_id")
+  fileType       ImportFileType     @map("file_type")
+  entityType     ImportEntityType   @map("entity_type")
+  fileName       String             @map("file_name")
+  conflictMode   ImportConflictMode @default(SKIP) @map("conflict_mode")
+  columnMapping  Json?              @map("column_mapping")
+  status         ImportStatus       @default(QUEUED)
+  bullmqJobId    String?            @map("bullmq_job_id")
+  totalRows      Int?               @map("total_rows")
+  importedRows   Int?               @map("imported_rows")
+  skippedRows    Int?               @map("skipped_rows")
+  errorRows      Int?               @map("error_rows")
+  errorDetails   Json?              @map("error_details")
+  dryRunResult   Json?              @map("dry_run_result")
+  createdBy      String             @map("created_by")
+  startedAt      DateTime?          @map("started_at")
+  completedAt    DateTime?          @map("completed_at")
+  createdAt      DateTime           @default(now()) @map("created_at")
+
+  school         School             @relation(fields: [schoolId], references: [id])
+
+  @@index([schoolId, createdAt])
+  @@map("import_jobs")
+}
+
+// --- CalendarToken (D-09, IMPORT-03) ---
+
+model CalendarToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  schoolId  String   @map("school_id")
+  token     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+
+  school    School   @relation(fields: [schoolId], references: [id])
+
+  @@index([userId])
+  @@map("calendar_tokens")
+}
+
+// --- SisApiKey (D-10, IMPORT-04) ---
+
+model SisApiKey {
+  id        String    @id @default(uuid())
+  schoolId  String    @map("school_id")
+  key       String    @unique
+  name      String
+  isActive  Boolean   @default(true) @map("is_active")
+  lastUsed  DateTime? @map("last_used")
+  createdBy String    @map("created_by")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  school    School    @relation(fields: [schoolId], references: [id])
+
+  @@index([schoolId])
+  @@map("sis_api_keys")
 }
