@@ -1,11 +1,13 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TimetableGrid } from '@/components/timetable/TimetableGrid';
+import { TimetableCell } from '@/components/timetable/TimetableCell';
 import { DayWeekToggle } from '@/components/timetable/DayWeekToggle';
 import { ABWeekTabs } from '@/components/timetable/ABWeekTabs';
 import { PerspectiveSelector } from '@/components/timetable/PerspectiveSelector';
 import { ExportMenu } from '@/components/export/ExportMenu';
+import { TimetableCellBadges } from '@/components/homework/TimetableCellBadges';
 import {
   useTimetableView,
   useTeachers,
@@ -13,10 +15,13 @@ import {
   useRooms,
 } from '@/hooks/useTimetable';
 import { exportTimetable } from '@/hooks/useExport';
+import { useHomework } from '@/hooks/useHomework';
+import { useExams } from '@/hooks/useExams';
 import { useTimetableStore } from '@/stores/timetable-store';
 import { useSchoolContext } from '@/stores/school-context-store';
 import { useAuth } from '@/hooks/useAuth';
 import { getSubjectColorWithOverride } from '@/lib/colors';
+import type { TimetableViewLesson, SubjectColorPair } from '@schoolflow/shared';
 
 export const Route = createFileRoute('/_authenticated/timetable/')({
   component: TimetablePage,
@@ -111,6 +116,64 @@ function TimetablePage() {
     isLoading,
     isError,
   } = useTimetableView(schoolId, perspective, perspectiveId, weekType);
+
+  // Fetch homework and exams for badge overlay on timetable cells (HW-01, D-04)
+  const { data: allHomework = [] } = useHomework(schoolId);
+  const { data: allExams = [] } = useExams(schoolId);
+
+  // Build lookup maps: classSubjectId -> homework/exam for badge rendering
+  const homeworkByClassSubject = useMemo(() => {
+    const map = new Map<string, typeof allHomework>();
+    for (const hw of allHomework) {
+      const list = map.get(hw.classSubjectId) ?? [];
+      list.push(hw);
+      map.set(hw.classSubjectId, list);
+    }
+    return map;
+  }, [allHomework]);
+
+  const examsByClassSubject = useMemo(() => {
+    const map = new Map<string, typeof allExams>();
+    for (const exam of allExams) {
+      const list = map.get(exam.classSubjectId) ?? [];
+      list.push(exam);
+      map.set(exam.classSubjectId, list);
+    }
+    return map;
+  }, [allExams]);
+
+  /**
+   * renderCell wraps each TimetableCell with TimetableCellBadges overlay.
+   * Shows homework (BookOpen, primary) and exam (ClipboardList, warning) badges.
+   * Per UI-SPEC D-04: No modification to TimetableGrid itself.
+   */
+  const renderCellWithBadges = useCallback(
+    (lesson: TimetableViewLesson, color: SubjectColorPair) => {
+      const homeworkList = homeworkByClassSubject.get(lesson.classSubjectId);
+      const examList = examsByClassSubject.get(lesson.classSubjectId);
+      // Show the first homework/exam as badge (most recent)
+      const hw = homeworkList?.[0];
+      const exam = examList?.[0];
+
+      return (
+        <TimetableCellBadges homework={hw} exam={exam}>
+          <TimetableCell
+            lesson={lesson}
+            color={color}
+            editable={false}
+            onClick={
+              isTeacher
+                ? () => {
+                    navigate({ to: '/classbook/$lessonId', params: { lessonId: lesson.id } });
+                  }
+                : undefined
+            }
+          />
+        </TimetableCellBadges>
+      );
+    },
+    [homeworkByClassSubject, examsByClassSubject, isTeacher, navigate],
+  );
 
   return (
     <div className="space-y-6">
@@ -225,13 +288,7 @@ function TimetablePage() {
           viewMode={viewMode}
           selectedDay={selectedDay ?? undefined}
           editable={false}
-          onCellClick={
-            isTeacher
-              ? (lesson) => {
-                  navigate({ to: '/classbook/$lessonId', params: { lessonId: lesson.id } });
-                }
-              : undefined
-          }
+          renderCell={renderCellWithBadges}
         />
       )}
     </div>

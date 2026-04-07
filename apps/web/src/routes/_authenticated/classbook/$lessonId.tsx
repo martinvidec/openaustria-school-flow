@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClassBookHeader } from '@/components/classbook/ClassBookHeader';
@@ -5,9 +6,13 @@ import { AttendanceGrid } from '@/components/classbook/AttendanceGrid';
 import { LessonContentForm } from '@/components/classbook/LessonContentForm';
 import { GradeMatrix } from '@/components/classbook/GradeMatrix';
 import { StudentNoteList } from '@/components/classbook/StudentNoteList';
+import { HomeworkDialog } from '@/components/homework/HomeworkDialog';
+import { ExamDialog } from '@/components/homework/ExamDialog';
+import { HomeworkExamList } from '@/components/homework/HomeworkExamList';
 import { useClassbookSocket } from '@/hooks/useClassbookSocket';
 import { useSchoolContext } from '@/stores/school-context-store';
 import { useClassbookEntryByTimetableLesson } from '@/hooks/useClassbook';
+import { useAuth } from '@/hooks/useAuth';
 
 /** Search params for tab persistence in URL */
 type ClassbookSearch = { tab?: string };
@@ -31,11 +36,27 @@ export const Route = createFileRoute('/_authenticated/classbook/$lessonId')({
  * - Default tab: Anwesenheit
  * - ClassBookHeader shows lesson context with back-link to timetable
  */
+function getPrimaryRole(roles: string[]): string {
+  if (roles.includes('admin')) return 'admin';
+  if (roles.includes('schulleitung')) return 'schulleitung';
+  if (roles.includes('lehrer')) return 'lehrer';
+  if (roles.includes('schueler')) return 'schueler';
+  if (roles.includes('eltern')) return 'eltern';
+  return 'unknown';
+}
+
 function ClassBookLessonPage() {
   const { lessonId } = Route.useParams();
   const { tab } = Route.useSearch();
   const navigate = useNavigate();
   const schoolId = useSchoolContext((s) => s.schoolId) ?? '';
+  const { user } = useAuth();
+  const roles = user?.roles ?? [];
+  const primaryRole = getPrimaryRole(roles);
+  const canCreate = ['lehrer', 'admin', 'schulleitung'].includes(primaryRole);
+
+  const [homeworkDialogOpen, setHomeworkDialogOpen] = useState(false);
+  const [examDialogOpen, setExamDialogOpen] = useState(false);
 
   // Connect classbook WebSocket for real-time updates
   useClassbookSocket(schoolId || undefined);
@@ -104,6 +125,9 @@ function ClassBookLessonPage() {
           <TabsTrigger value="notizen" className="min-w-[44px]">
             Notizen
           </TabsTrigger>
+          <TabsTrigger value="aufgaben" className="min-w-[44px]">
+            Aufgaben
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="anwesenheit" className="mt-4">
@@ -129,7 +153,52 @@ function ClassBookLessonPage() {
         <TabsContent value="notizen" className="mt-4">
           <StudentNoteList entryId={entry.id} schoolId={schoolId} />
         </TabsContent>
+
+        <TabsContent value="aufgaben" className="mt-4">
+          <div className="space-y-4">
+            {canCreate && (
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setHomeworkDialogOpen(true)}
+                  className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+                >
+                  Hausaufgabe erstellen
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setExamDialogOpen(true)}
+                  className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+                >
+                  Pruefung eintragen
+                </button>
+              </div>
+            )}
+            <HomeworkExamList
+              schoolId={schoolId}
+              classSubjectId={entry.classSubjectId}
+              role={primaryRole}
+            />
+          </div>
+        </TabsContent>
       </Tabs>
+
+      {/* Homework/Exam dialogs */}
+      <HomeworkDialog
+        open={homeworkDialogOpen}
+        mode="create"
+        schoolId={schoolId}
+        classSubjectId={entry.classSubjectId}
+        classBookEntryId={entry.id}
+        onClose={() => setHomeworkDialogOpen(false)}
+      />
+      <ExamDialog
+        open={examDialogOpen}
+        mode="create"
+        schoolId={schoolId}
+        classSubjectId={entry.classSubjectId}
+        onClose={() => setExamDialogOpen(false)}
+      />
     </div>
   );
 }
