@@ -22,6 +22,7 @@ import { TimetableModule } from './modules/timetable/timetable.module';
 import { UserContextModule } from './modules/user-context/user-context.module';
 import { ClassBookModule } from './modules/classbook/classbook.module';
 import { CommunicationModule } from './modules/communication/communication.module';
+import { HomeworkModule } from './modules/homework/homework.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { CommunicationModule } from './modules/communication/communication.modul
     UserContextModule,
     ClassBookModule,
     CommunicationModule,
+    HomeworkModule,
   ],
   providers: [
     {
