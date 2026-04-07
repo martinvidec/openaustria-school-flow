@@ -17,6 +17,7 @@ interface UserContextResponse {
   childClassId?: string;
   childClassName?: string;
   childStudentName?: string;
+  children?: Array<{ studentId: string; studentName: string; classId: string; className: string }>;
 }
 
 export function useUserContext() {
