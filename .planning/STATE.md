@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 07-04-PLAN.md
-last_updated: "2026-04-07T05:51:37.816Z"
+stopped_at: Completed 07-05-PLAN.md
+last_updated: "2026-04-07T06:04:48.117Z"
 last_activity: 2026-04-07
 progress:
   total_phases: 9
   completed_phases: 6
   total_plans: 59
-  completed_plans: 56
+  completed_plans: 57
   percent: 83
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 ## Current Position
 
 Phase: 07 (communication) — EXECUTING
-Plan: 5 of 7
+Plan: 6 of 7
 Status: Ready to execute
 Last activity: 2026-04-07
 
@@ -101,6 +101,7 @@ Progress: [========..] 83%
 | Phase 07-communication PP02 | 7min | 2 tasks | 8 files |
 | Phase 07-communication P03 | 14min | 2 tasks | 10 files |
 | Phase 07-communication P04 | 10min | 2 tasks | 15 files |
+| Phase 07-communication PP05 | 10min | 2 tasks | 17 files |
 
 ## Accumulated Context
 
@@ -250,6 +251,9 @@ Recent decisions affecting current work:
 - [Phase 07-communication]: MessagingGateway replicates NotificationGateway JWT JWKS pattern for /messaging namespace with post-transaction event emission
 - [Phase 07-communication]: CASL coarse subject-level gate (conversation/message/poll) + service-level ConversationMember fine-grained access
 - [Phase 07-communication]: Schueler get read-only conversation/message access (no create) per school communication policy
+- [Phase 07-communication]: useMessagingSocket mounted at _authenticated layout level (same pattern as useNotificationSocket) to prevent duplicate connections
+- [Phase 07-communication]: Mobile messages uses separate route (/messages/$conversationId) while desktop uses search param (?id=) for list-detail split view
+- [Phase 07-communication]: D-07 user-profile entry point deferred -- ComposeDialog Direktnachricht tab satisfies COMM-02
 
 ### Pending Todos
 
@@ -263,6 +267,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-07T05:51:37.812Z
-Stopped at: Completed 07-04-PLAN.md
+Last session: 2026-04-07T06:04:48.113Z
+Stopped at: Completed 07-05-PLAN.md
 Resume file: None
