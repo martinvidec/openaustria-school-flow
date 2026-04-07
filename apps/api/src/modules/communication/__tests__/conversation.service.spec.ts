@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { ConversationService } from '../conversation/conversation.service';
+import { MessagingGateway } from '../messaging.gateway';
 import { PrismaService } from '../../../config/database/prisma.service';
 import { ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
 
@@ -68,6 +69,12 @@ describe('ConversationService', () => {
       providers: [
         ConversationService,
         { provide: PrismaService, useValue: prisma },
+        { provide: MessagingGateway, useValue: {
+          emitNewMessage: vi.fn(),
+          emitReadReceipt: vi.fn(),
+          emitPollVote: vi.fn(),
+          emitNewConversation: vi.fn(),
+        }},
       ],
     }).compile();
 

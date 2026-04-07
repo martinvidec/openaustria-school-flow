@@ -12,6 +12,7 @@ import {
 } from './message/message.controller';
 import { PollService } from './poll/poll.service';
 import { PollController } from './poll/poll.controller';
+import { MessagingGateway } from './messaging.gateway';
 
 /**
  * Phase 7 -- Communication module.
@@ -36,7 +37,7 @@ import { PollController } from './poll/poll.controller';
     AbsenceReportController,
     PollController,
   ],
-  providers: [ConversationService, MessageService, PollService],
-  exports: [ConversationService, MessageService, PollService],
+  providers: [ConversationService, MessageService, PollService, MessagingGateway],
+  exports: [ConversationService, MessageService, PollService, MessagingGateway],
 })
 export class CommunicationModule {}

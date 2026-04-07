@@ -4,6 +4,7 @@ import { MessageService } from '../message/message.service';
 import { ConversationService } from '../conversation/conversation.service';
 import { NotificationService } from '../../substitution/notification/notification.service';
 import { ExcuseService } from '../../classbook/excuse.service';
+import { MessagingGateway } from '../messaging.gateway';
 import { PrismaService } from '../../../config/database/prisma.service';
 import { BadRequestException, ForbiddenException } from '@nestjs/common';
 
@@ -131,6 +132,12 @@ describe('MessageService', () => {
         { provide: ConversationService, useValue: conversationService },
         { provide: NotificationService, useValue: notificationService },
         { provide: ExcuseService, useValue: excuseService },
+        { provide: MessagingGateway, useValue: {
+          emitNewMessage: vi.fn(),
+          emitReadReceipt: vi.fn(),
+          emitPollVote: vi.fn(),
+          emitNewConversation: vi.fn(),
+        }},
       ],
     }).compile();
 

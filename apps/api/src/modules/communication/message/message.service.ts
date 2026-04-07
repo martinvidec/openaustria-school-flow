@@ -11,6 +11,7 @@ import { PrismaService } from '../../../config/database/prisma.service';
 import { ConversationService } from '../conversation/conversation.service';
 import { NotificationService } from '../../substitution/notification/notification.service';
 import { ExcuseService } from '../../classbook/excuse.service';
+import { MessagingGateway } from '../messaging.gateway';
 import { SendMessageDto, ReportAbsenceDto } from '../dto/message.dto';
 
 export interface RecipientDetailDto {
@@ -63,6 +64,7 @@ export class MessageService {
     private readonly conversationService: ConversationService,
     private readonly notificationService: NotificationService,
     private readonly excuseService: ExcuseService,
+    private readonly messagingGateway: MessagingGateway,
   ) {}
 
   /**
@@ -164,7 +166,7 @@ export class MessageService {
       }
     }
 
-    return {
+    const messageDto: MessageDto = {
       id: message.id,
       conversationId: message.conversationId,
       senderId: message.senderId,
@@ -177,6 +179,11 @@ export class MessageService {
       readCount: 0,
       totalRecipients: recipientIds.length,
     };
+
+    // Post-transaction Socket.IO emission (D-08, Pitfall: emit AFTER commit)
+    this.messagingGateway.emitNewMessage(recipientIds, messageDto);
+
+    return messageDto;
   }
 
   /**
@@ -317,7 +324,7 @@ export class MessageService {
         userId,
         readAt: null,
       },
-      select: { id: true },
+      select: { id: true, messageId: true },
     });
 
     if (unreadRecipients.length === 0) return;
@@ -340,6 +347,32 @@ export class MessageService {
         data: { unreadCount: 0 },
       });
     });
+
+    // Post-transaction: emit read receipts per message to each sender
+    const uniqueMessageIds = [...new Set(unreadRecipients.map((r: any) => r.messageId))];
+    for (const messageId of uniqueMessageIds) {
+      const message = await this.prisma.message.findUnique({
+        where: { id: messageId },
+        select: { senderId: true },
+      });
+      if (!message) continue;
+
+      // Compute read stats for this message
+      const recipients = await this.prisma.messageRecipient.findMany({
+        where: { messageId },
+        select: { readAt: true },
+      });
+      const totalRecipients = recipients.length;
+      const readCount = recipients.filter((r: any) => r.readAt !== null).length;
+
+      this.messagingGateway.emitReadReceipt(
+        message.senderId,
+        messageId,
+        userId,
+        readCount,
+        totalRecipients,
+      );
+    }
   }
 
   /**

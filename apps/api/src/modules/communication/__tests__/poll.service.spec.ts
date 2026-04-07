@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { PollService } from '../poll/poll.service';
 import { NotificationService } from '../../substitution/notification/notification.service';
+import { MessagingGateway } from '../messaging.gateway';
 import { PrismaService } from '../../../config/database/prisma.service';
 import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 
@@ -11,7 +12,7 @@ function createMockPrisma() {
   return {
     conversationMember: {
       findUnique: vi.fn(),
-      findMany: vi.fn(),
+      findMany: vi.fn().mockResolvedValue([]),
       updateMany: vi.fn(),
     },
     person: {
@@ -66,6 +67,12 @@ describe('PollService', () => {
         PollService,
         { provide: PrismaService, useValue: prisma },
         { provide: NotificationService, useValue: notificationService },
+        { provide: MessagingGateway, useValue: {
+          emitNewMessage: vi.fn(),
+          emitReadReceipt: vi.fn(),
+          emitPollVote: vi.fn(),
+          emitNewConversation: vi.fn(),
+        }},
       ],
     }).compile();
 

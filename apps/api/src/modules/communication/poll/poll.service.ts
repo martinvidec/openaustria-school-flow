@@ -7,6 +7,7 @@ import {
 import type { MessageDto, PollDto, PollOptionDto } from '@schoolflow/shared';
 import { PrismaService } from '../../../config/database/prisma.service';
 import { NotificationService } from '../../substitution/notification/notification.service';
+import { MessagingGateway } from '../messaging.gateway';
 import { CreatePollDto, CastVoteDto } from '../dto/poll.dto';
 
 /**
@@ -24,6 +25,7 @@ export class PollService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notificationService: NotificationService,
+    private readonly messagingGateway: MessagingGateway,
   ) {}
 
   /**
@@ -295,7 +297,17 @@ export class PollService {
     });
 
     // Return updated poll
-    return this.getResults(pollId, userId);
+    const updatedResults = await this.getResults(pollId, userId);
+
+    // Post-transaction: emit poll:vote to all conversation members
+    const allMembers = await this.prisma.conversationMember.findMany({
+      where: { conversationId: poll.message.conversationId },
+      select: { userId: true },
+    });
+    const memberUserIds = allMembers.map((m: any) => m.userId);
+    this.messagingGateway.emitPollVote(memberUserIds, pollId, updatedResults.options);
+
+    return updatedResults;
   }
 
   /**

@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import type { ConversationDto, MessagePreviewDto } from '@schoolflow/shared';
 import { PrismaService } from '../../../config/database/prisma.service';
+import { MessagingGateway } from '../messaging.gateway';
 import { CreateConversationDto } from '../dto/conversation.dto';
 
 /**
@@ -20,7 +21,10 @@ import { CreateConversationDto } from '../dto/conversation.dto';
  */
 @Injectable()
 export class ConversationService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly messagingGateway: MessagingGateway,
+  ) {}
 
   /**
    * Create a conversation with scope expansion.
@@ -54,8 +58,8 @@ export class ConversationService {
     // Ensure sender is included
     const allMemberIds = new Set([userId, ...recipientUserIds]);
 
-    return this.prisma.$transaction(async (tx) => {
-      const conversation = await tx.conversation.create({
+    const conversation = await this.prisma.$transaction(async (tx) => {
+      return tx.conversation.create({
         data: {
           schoolId,
           scope: dto.scope,
@@ -75,9 +79,17 @@ export class ConversationService {
           conversationMembers: true,
         },
       });
-
-      return this.toDto(conversation, userId);
     });
+
+    const conversationDto = this.toDto(conversation, userId);
+
+    // Post-transaction: emit conversation:new to all members
+    this.messagingGateway.emitNewConversation(
+      Array.from(allMemberIds),
+      conversationDto,
+    );
+
+    return conversationDto;
   }
 
   /**
@@ -246,7 +258,15 @@ export class ConversationService {
       });
     });
 
-    return this.toDto(conversation, userId);
+    const conversationDto = this.toDto(conversation, userId);
+
+    // Post-transaction: emit conversation:new to both members
+    this.messagingGateway.emitNewConversation(
+      [userId, dto.recipientId!],
+      conversationDto,
+    );
+
+    return conversationDto;
   }
 
   /**
