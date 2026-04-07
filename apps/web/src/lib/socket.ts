@@ -149,3 +149,58 @@ export function disconnectNotificationSocket(socket?: Socket | null): void {
     notificationSocket = null;
   }
 }
+
+// --- Messaging namespace (COMM-01/02/03, D-08) ---
+
+let messagingSocket: Socket | null = null;
+
+/**
+ * Creates (or reconnects) a Socket.IO client for the /messaging namespace.
+ *
+ * Per-user rooms are joined on the server side via the JWT handshake.token
+ * (see MessagingGateway.handleConnection). The gateway verifies the
+ * Keycloak RS256 token via JwksClient and joins `user:{sub}` rooms.
+ *
+ * Per Phase 7 D-08: follows the exact createNotificationSocket pattern --
+ * JWT in handshake auth payload (not query string), dual transports for
+ * school-network proxy fallback.
+ */
+export function createMessagingSocket(jwt: string): Socket {
+  if (messagingSocket) {
+    messagingSocket.disconnect();
+  }
+
+  messagingSocket = io(`${API_URL}/messaging`, {
+    auth: { token: `Bearer ${jwt}` },
+    transports: ['websocket', 'polling'],
+    autoConnect: true,
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionAttempts: 5,
+  });
+
+  return messagingSocket;
+}
+
+/**
+ * Returns the current messaging socket instance, or null if not connected.
+ */
+export function getMessagingSocket(): Socket | null {
+  return messagingSocket;
+}
+
+/**
+ * Disconnects and cleans up the messaging socket. Accepts an optional
+ * socket argument so the hook can dispose the exact instance it captured
+ * during mount (avoids race conditions on rapid unmount/remount).
+ */
+export function disconnectMessagingSocket(socket?: Socket | null): void {
+  const target = socket ?? messagingSocket;
+  if (target) {
+    target.removeAllListeners();
+    target.disconnect();
+  }
+  if (!socket || socket === messagingSocket) {
+    messagingSocket = null;
+  }
+}

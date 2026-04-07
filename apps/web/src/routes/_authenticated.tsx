@@ -2,6 +2,7 @@ import { createFileRoute, Outlet } from '@tanstack/react-router';
 import { keycloak } from '@/lib/keycloak';
 import { useTimetableSocket } from '@/hooks/useSocket';
 import { useNotificationSocket } from '@/hooks/useNotificationSocket';
+import { useMessagingSocket } from '@/hooks/useMessagingSocket';
 import { useUserContext } from '@/hooks/useUserContext';
 import { useSchoolContext } from '@/stores/school-context-store';
 
@@ -29,6 +30,10 @@ function AuthenticatedLayout() {
   // mounts would duplicate every notification event).
   const jwt = keycloak.token ?? null;
   useNotificationSocket(jwt);
+
+  // COMM-01/02/03 -- App-wide messaging socket. Single mount per authenticated
+  // session per D-08 (same pattern as notification socket above).
+  useMessagingSocket(jwt);
 
   if (!isLoaded) {
     return (
