@@ -11,16 +11,20 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedTimetableIndexRouteImport } from './routes/_authenticated/timetable/index'
 import { Route as AuthenticatedRoomsIndexRouteImport } from './routes/_authenticated/rooms/index'
+import { Route as AuthenticatedMessagesIndexRouteImport } from './routes/_authenticated/messages/index'
 import { Route as AuthenticatedExcusesIndexRouteImport } from './routes/_authenticated/excuses/index'
 import { Route as AuthenticatedTeacherSubstitutionsRouteImport } from './routes/_authenticated/teacher/substitutions'
 import { Route as AuthenticatedStatisticsAbsenceRouteImport } from './routes/_authenticated/statistics/absence'
+import { Route as AuthenticatedMessagesConversationIdRouteImport } from './routes/_authenticated/messages/$conversationId'
 import { Route as AuthenticatedClassbookLessonIdRouteImport } from './routes/_authenticated/classbook/$lessonId'
 import { Route as AuthenticatedAdminTimetableHistoryRouteImport } from './routes/_authenticated/admin/timetable-history'
 import { Route as AuthenticatedAdminTimetableEditRouteImport } from './routes/_authenticated/admin/timetable-edit'
 import { Route as AuthenticatedAdminSubstitutionsRouteImport } from './routes/_authenticated/admin/substitutions'
 import { Route as AuthenticatedAdminResourcesRouteImport } from './routes/_authenticated/admin/resources'
+import { Route as AuthenticatedAdminImportRouteImport } from './routes/_authenticated/admin/import'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -30,6 +34,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedTimetableIndexRoute =
   AuthenticatedTimetableIndexRouteImport.update({
@@ -42,6 +51,12 @@ const AuthenticatedRoomsIndexRoute = AuthenticatedRoomsIndexRouteImport.update({
   path: '/rooms/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedMessagesIndexRoute =
+  AuthenticatedMessagesIndexRouteImport.update({
+    id: '/messages/',
+    path: '/messages/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedExcusesIndexRoute =
   AuthenticatedExcusesIndexRouteImport.update({
     id: '/excuses/',
@@ -58,6 +73,12 @@ const AuthenticatedStatisticsAbsenceRoute =
   AuthenticatedStatisticsAbsenceRouteImport.update({
     id: '/statistics/absence',
     path: '/statistics/absence',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedMessagesConversationIdRoute =
+  AuthenticatedMessagesConversationIdRouteImport.update({
+    id: '/messages/$conversationId',
+    path: '/messages/$conversationId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedClassbookLessonIdRoute =
@@ -90,30 +111,44 @@ const AuthenticatedAdminResourcesRoute =
     path: '/admin/resources',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminImportRoute =
+  AuthenticatedAdminImportRouteImport.update({
+    id: '/admin/import',
+    path: '/admin/import',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/admin/import': typeof AuthenticatedAdminImportRoute
   '/admin/resources': typeof AuthenticatedAdminResourcesRoute
   '/admin/substitutions': typeof AuthenticatedAdminSubstitutionsRoute
   '/admin/timetable-edit': typeof AuthenticatedAdminTimetableEditRoute
   '/admin/timetable-history': typeof AuthenticatedAdminTimetableHistoryRoute
   '/classbook/$lessonId': typeof AuthenticatedClassbookLessonIdRoute
+  '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/statistics/absence': typeof AuthenticatedStatisticsAbsenceRoute
   '/teacher/substitutions': typeof AuthenticatedTeacherSubstitutionsRoute
   '/excuses/': typeof AuthenticatedExcusesIndexRoute
+  '/messages/': typeof AuthenticatedMessagesIndexRoute
   '/rooms/': typeof AuthenticatedRoomsIndexRoute
   '/timetable/': typeof AuthenticatedTimetableIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/admin/import': typeof AuthenticatedAdminImportRoute
   '/admin/resources': typeof AuthenticatedAdminResourcesRoute
   '/admin/substitutions': typeof AuthenticatedAdminSubstitutionsRoute
   '/admin/timetable-edit': typeof AuthenticatedAdminTimetableEditRoute
   '/admin/timetable-history': typeof AuthenticatedAdminTimetableHistoryRoute
   '/classbook/$lessonId': typeof AuthenticatedClassbookLessonIdRoute
+  '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/statistics/absence': typeof AuthenticatedStatisticsAbsenceRoute
   '/teacher/substitutions': typeof AuthenticatedTeacherSubstitutionsRoute
   '/excuses': typeof AuthenticatedExcusesIndexRoute
+  '/messages': typeof AuthenticatedMessagesIndexRoute
   '/rooms': typeof AuthenticatedRoomsIndexRoute
   '/timetable': typeof AuthenticatedTimetableIndexRoute
 }
@@ -121,14 +156,18 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/admin/import': typeof AuthenticatedAdminImportRoute
   '/_authenticated/admin/resources': typeof AuthenticatedAdminResourcesRoute
   '/_authenticated/admin/substitutions': typeof AuthenticatedAdminSubstitutionsRoute
   '/_authenticated/admin/timetable-edit': typeof AuthenticatedAdminTimetableEditRoute
   '/_authenticated/admin/timetable-history': typeof AuthenticatedAdminTimetableHistoryRoute
   '/_authenticated/classbook/$lessonId': typeof AuthenticatedClassbookLessonIdRoute
+  '/_authenticated/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/_authenticated/statistics/absence': typeof AuthenticatedStatisticsAbsenceRoute
   '/_authenticated/teacher/substitutions': typeof AuthenticatedTeacherSubstitutionsRoute
   '/_authenticated/excuses/': typeof AuthenticatedExcusesIndexRoute
+  '/_authenticated/messages/': typeof AuthenticatedMessagesIndexRoute
   '/_authenticated/rooms/': typeof AuthenticatedRoomsIndexRoute
   '/_authenticated/timetable/': typeof AuthenticatedTimetableIndexRoute
 }
@@ -136,41 +175,53 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/settings'
+    | '/admin/import'
     | '/admin/resources'
     | '/admin/substitutions'
     | '/admin/timetable-edit'
     | '/admin/timetable-history'
     | '/classbook/$lessonId'
+    | '/messages/$conversationId'
     | '/statistics/absence'
     | '/teacher/substitutions'
     | '/excuses/'
+    | '/messages/'
     | '/rooms/'
     | '/timetable/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/settings'
+    | '/admin/import'
     | '/admin/resources'
     | '/admin/substitutions'
     | '/admin/timetable-edit'
     | '/admin/timetable-history'
     | '/classbook/$lessonId'
+    | '/messages/$conversationId'
     | '/statistics/absence'
     | '/teacher/substitutions'
     | '/excuses'
+    | '/messages'
     | '/rooms'
     | '/timetable'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/_authenticated/settings'
+    | '/_authenticated/admin/import'
     | '/_authenticated/admin/resources'
     | '/_authenticated/admin/substitutions'
     | '/_authenticated/admin/timetable-edit'
     | '/_authenticated/admin/timetable-history'
     | '/_authenticated/classbook/$lessonId'
+    | '/_authenticated/messages/$conversationId'
     | '/_authenticated/statistics/absence'
     | '/_authenticated/teacher/substitutions'
     | '/_authenticated/excuses/'
+    | '/_authenticated/messages/'
     | '/_authenticated/rooms/'
     | '/_authenticated/timetable/'
   fileRoutesById: FileRoutesById
@@ -196,6 +247,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/timetable/': {
       id: '/_authenticated/timetable/'
       path: '/timetable'
@@ -208,6 +266,13 @@ declare module '@tanstack/react-router' {
       path: '/rooms'
       fullPath: '/rooms/'
       preLoaderRoute: typeof AuthenticatedRoomsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/messages/': {
+      id: '/_authenticated/messages/'
+      path: '/messages'
+      fullPath: '/messages/'
+      preLoaderRoute: typeof AuthenticatedMessagesIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/excuses/': {
@@ -229,6 +294,13 @@ declare module '@tanstack/react-router' {
       path: '/statistics/absence'
       fullPath: '/statistics/absence'
       preLoaderRoute: typeof AuthenticatedStatisticsAbsenceRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/messages/$conversationId': {
+      id: '/_authenticated/messages/$conversationId'
+      path: '/messages/$conversationId'
+      fullPath: '/messages/$conversationId'
+      preLoaderRoute: typeof AuthenticatedMessagesConversationIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/classbook/$lessonId': {
@@ -266,33 +338,49 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminResourcesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/import': {
+      id: '/_authenticated/admin/import'
+      path: '/admin/import'
+      fullPath: '/admin/import'
+      preLoaderRoute: typeof AuthenticatedAdminImportRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedAdminImportRoute: typeof AuthenticatedAdminImportRoute
   AuthenticatedAdminResourcesRoute: typeof AuthenticatedAdminResourcesRoute
   AuthenticatedAdminSubstitutionsRoute: typeof AuthenticatedAdminSubstitutionsRoute
   AuthenticatedAdminTimetableEditRoute: typeof AuthenticatedAdminTimetableEditRoute
   AuthenticatedAdminTimetableHistoryRoute: typeof AuthenticatedAdminTimetableHistoryRoute
   AuthenticatedClassbookLessonIdRoute: typeof AuthenticatedClassbookLessonIdRoute
+  AuthenticatedMessagesConversationIdRoute: typeof AuthenticatedMessagesConversationIdRoute
   AuthenticatedStatisticsAbsenceRoute: typeof AuthenticatedStatisticsAbsenceRoute
   AuthenticatedTeacherSubstitutionsRoute: typeof AuthenticatedTeacherSubstitutionsRoute
   AuthenticatedExcusesIndexRoute: typeof AuthenticatedExcusesIndexRoute
+  AuthenticatedMessagesIndexRoute: typeof AuthenticatedMessagesIndexRoute
   AuthenticatedRoomsIndexRoute: typeof AuthenticatedRoomsIndexRoute
   AuthenticatedTimetableIndexRoute: typeof AuthenticatedTimetableIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedAdminImportRoute: AuthenticatedAdminImportRoute,
   AuthenticatedAdminResourcesRoute: AuthenticatedAdminResourcesRoute,
   AuthenticatedAdminSubstitutionsRoute: AuthenticatedAdminSubstitutionsRoute,
   AuthenticatedAdminTimetableEditRoute: AuthenticatedAdminTimetableEditRoute,
   AuthenticatedAdminTimetableHistoryRoute:
     AuthenticatedAdminTimetableHistoryRoute,
   AuthenticatedClassbookLessonIdRoute: AuthenticatedClassbookLessonIdRoute,
+  AuthenticatedMessagesConversationIdRoute:
+    AuthenticatedMessagesConversationIdRoute,
   AuthenticatedStatisticsAbsenceRoute: AuthenticatedStatisticsAbsenceRoute,
   AuthenticatedTeacherSubstitutionsRoute:
     AuthenticatedTeacherSubstitutionsRoute,
   AuthenticatedExcusesIndexRoute: AuthenticatedExcusesIndexRoute,
+  AuthenticatedMessagesIndexRoute: AuthenticatedMessagesIndexRoute,
   AuthenticatedRoomsIndexRoute: AuthenticatedRoomsIndexRoute,
   AuthenticatedTimetableIndexRoute: AuthenticatedTimetableIndexRoute,
 }
