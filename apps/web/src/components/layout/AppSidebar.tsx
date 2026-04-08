@@ -12,6 +12,7 @@ import {
   PanelLeft,
   UserCheck,
   MessageSquare,
+  Upload,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUIStore } from '@/stores/ui-store';
@@ -40,6 +41,12 @@ const navItems: NavItem[] = [
     href: '/messages',
     icon: MessageSquare,
     roles: 'all' as const,
+  },
+  {
+    label: 'Datenimport',
+    href: '/admin/import',
+    icon: Upload,
+    roles: ['admin'],
   },
   {
     label: 'Raeume',

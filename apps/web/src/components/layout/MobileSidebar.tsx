@@ -9,6 +9,7 @@ import {
   History,
   X,
   MessageSquare,
+  Upload,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSchoolContext } from '@/stores/school-context-store';
@@ -36,6 +37,12 @@ const navItems: NavItem[] = [
     href: '/messages',
     icon: MessageSquare,
     roles: 'all' as const,
+  },
+  {
+    label: 'Datenimport',
+    href: '/admin/import',
+    icon: Upload,
+    roles: ['admin'],
   },
   {
     label: 'Raeume',
