@@ -205,7 +205,7 @@ Plans:
 - [x] 08-03-PLAN.md -- Untis XML/DIF + CSV parsers, ImportService + BullMQ processor + Socket.IO /import gateway, ImportController, ImportModule
 - [x] 08-04-PLAN.md -- CalendarService (iCal generation with homework/exams), token-auth CalendarController, SisService + SisApiKeyGuard, CASL seeds
 - [x] 08-05-PLAN.md -- Frontend homework/exam: TanStack Query hooks, HomeworkDialog, ExamDialog with collision warning, TimetableCellBadges, classbook integration
-- [ ] 08-06-PLAN.md -- Frontend import wizard (5-step), ICalSettings card, admin /import route, sidebar navigation, human verification checkpoint
+- [x] 08-06-PLAN.md -- Frontend import wizard (5-step), ICalSettings card, admin /import route, sidebar navigation, human verification checkpoint
 
 ### Phase 9: Mobile, PWA & Production Readiness
 **Goal**: The platform works seamlessly on mobile devices with push notifications and offline access, and the deployment is production-grade with backup/restore and zero-downtime updates
