@@ -17,16 +17,22 @@ import type { ConfigService } from '@nestjs/config';
 
 // Hoist the ioredis mock so it installs before HealthController imports it.
 // The mock exposes a single shared Redis constructor whose `ping()` and
-// `quit()` methods tests can rewrite per-case.
+// `quit()` methods tests can rewrite per-case. A plain class is used (not
+// `vi.fn()`) so `new Redis(...)` works as a constructor without the
+// "is not a constructor" TypeError that arrow-function factories produce.
 const ioredisMock = vi.hoisted(() => {
   const pingFn = vi.fn().mockResolvedValue('PONG');
   const quitFn = vi.fn().mockResolvedValue('OK');
-  const RedisCtor = vi.fn(() => ({
-    ping: pingFn,
-    quit: quitFn,
-    on: vi.fn(),
-  }));
-  return { pingFn, quitFn, RedisCtor };
+  const onFn = vi.fn();
+  class RedisCtor {
+    ping = pingFn;
+    quit = quitFn;
+    on = onFn;
+    constructor(_opts?: unknown) {
+      // no-op
+    }
+  }
+  return { pingFn, quitFn, onFn, RedisCtor };
 });
 
 vi.mock('ioredis', () => ({
@@ -91,8 +97,9 @@ function createReplyMock() {
 
 describe('HealthController', () => {
   beforeEach(() => {
-    ioredisMock.RedisCtor.mockClear();
     ioredisMock.pingFn.mockClear();
+    ioredisMock.quitFn.mockClear();
+    ioredisMock.onFn.mockClear();
     fetchMock.mockClear();
   });
 
