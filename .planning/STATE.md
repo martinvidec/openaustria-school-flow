@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 09-02-PLAN.md
-last_updated: "2026-04-09T07:33:19.173Z"
+stopped_at: Completed 09-03-PLAN.md
+last_updated: "2026-04-09T10:39:06.613Z"
 last_activity: 2026-04-09
 progress:
   total_phases: 9
   completed_phases: 8
   total_plans: 71
-  completed_plans: 68
+  completed_plans: 69
   percent: 83
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 ## Current Position
 
 Phase: 09 (mobile-pwa-production-readiness) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-04-09
 
@@ -114,6 +114,7 @@ Progress: [========..] 83%
 | Phase 08-homework-exams-data-import P06 | 2min | 3 tasks | 17 files |
 | Phase 09-mobile-pwa-production-readiness P01 | 10min | 2 tasks tasks | 18 files files |
 | Phase 09-mobile-pwa-production-readiness P02 | 25min | 2 tasks tasks | 16 files files |
+| Phase 09-mobile-pwa-production-readiness P03 | 70min | 2 tasks tasks | 20 files files |
 
 ## Accumulated Context
 
@@ -298,6 +299,13 @@ Recent decisions affecting current work:
 - [Phase 09-mobile-pwa-production-readiness]: PWA install banner uses sessionStorage (not localStorage) for dismissal so it reappears on next session
 - [Phase 09-mobile-pwa-production-readiness]: Service worker update toast uses duration:Infinity with useRef guard to prevent duplicate toasts on re-renders
 - [Phase 09-mobile-pwa-production-readiness]: Placeholder PWA icons generated with ImageMagick shape primitives (no font dependency) -- valid 24-bit RGB PNGs sufficient for Chrome install prompt, must be replaced with real branding before production
+- [Phase 09-mobile-pwa-production-readiness]: web-push 3.6.7 with VAPID for DSGVO-compliant self-hosted push (no OneSignal/Firebase)
+- [Phase 09-mobile-pwa-production-readiness]: PushSubscription endpoint as @unique key enables upsert dedup across browser re-subscribes
+- [Phase 09-mobile-pwa-production-readiness]: PUSH_QUEUE registered globally in QueueModule AND locally in PushModule + SubstitutionModule (Phase 8 ImportModule pattern) for BullMQ worker provider graph resolution
+- [Phase 09-mobile-pwa-production-readiness]: PushProcessor swallows errors — BullMQ retry is pointless on 410 and compounds 5xx failures
+- [Phase 09-mobile-pwa-production-readiness]: GET /push/vapid-key is @Public() — SW needs key before login, VAPID public key is not a secret
+- [Phase 09-mobile-pwa-production-readiness]: NotificationService push enqueue wrapped in try/catch + log — push is best-effort side effect, must never block notification creation or Socket.IO emit
+- [Phase 09-mobile-pwa-production-readiness]: vi.hoisted() pattern required for shared mock objects in Vitest 4 (vi.mock() factories are hoisted above top-level const)
 
 ### Pending Todos
 
@@ -311,6 +319,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-09T07:33:19.169Z
-Stopped at: Completed 09-02-PLAN.md
+Last session: 2026-04-09T10:39:06.610Z
+Stopped at: Completed 09-03-PLAN.md
 Resume file: None
