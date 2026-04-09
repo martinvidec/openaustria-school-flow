@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 08-06-PLAN.md (Task 3 checkpoint approved, Phase 8 complete)
-last_updated: "2026-04-09T05:38:58.925Z"
+status: executing
+stopped_at: Completed 09-01-PLAN.md
+last_updated: "2026-04-09T06:56:05.524Z"
 last_activity: 2026-04-09
 progress:
   total_phases: 9
   completed_phases: 8
-  total_plans: 66
-  completed_plans: 66
+  total_plans: 71
+  completed_plans: 67
   percent: 83
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-29)
 
 **Core value:** Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenplanerstellung, die sie selbst hosten koennen -- ohne Vendor Lock-in, mit offenen APIs und DSGVO-Konformitaet von Tag 1.
-**Current focus:** Phase 08 — homework-exams-data-import
+**Current focus:** Phase 09 — mobile-pwa-production-readiness
 
 ## Current Position
 
-Phase: 9
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 09 (mobile-pwa-production-readiness) — EXECUTING
+Plan: 2 of 5
+Status: Ready to execute
 Last activity: 2026-04-09
 
 Progress: [========..] 83%
@@ -112,6 +112,7 @@ Progress: [========..] 83%
 | Phase 08 P05 | 7min | 2 tasks | 11 files |
 | Phase 08-homework-exams-data-import P06 | 10min | 2 tasks | 17 files |
 | Phase 08-homework-exams-data-import P06 | 2min | 3 tasks | 17 files |
+| Phase 09-mobile-pwa-production-readiness P01 | 10min | 2 tasks tasks | 18 files files |
 
 ## Accumulated Context
 
@@ -281,6 +282,11 @@ Recent decisions affecting current work:
 - [Phase 08]: TimetableCellBadges wraps TimetableCell via renderCell prop -- zero modification to TimetableGrid or TimetableCell per UI-SPEC
 - [Phase 08-homework-exams-data-import]: useImportSocket creates inline Socket.IO connection for page-scoped /import namespace (not via socket.ts helper)
 - [Phase 08-homework-exams-data-import]: Phase 8 human verification checkpoint approved: all 7 requirements (HW-01..03, IMPORT-01..04) verified end-to-end
+- [Phase 09]: useIsMobile hook with matchMedia for viewport-dependent behavior (__root.tsx toast position, timetable effectiveViewMode)
+- [Phase 09]: Force day view on mobile via effectiveViewMode computed value (no store mutation, preserves user preference)
+- [Phase 09]: Dual-layout sm:hidden + hidden sm:block pattern for ImportColumnMapper (cards on mobile, table on desktop)
+- [Phase 09]: Dialog full-screen via h-[100dvh] sm:h-auto sm:max-w-lg (uses dynamic viewport height for mobile browser chrome)
+- [Phase 09]: 44px min touch targets standard (WCAG 2.5.5) applied to all interactive elements at mobile breakpoints
 
 ### Pending Todos
 
@@ -294,6 +300,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-08T19:57:41.965Z
-Stopped at: Completed 08-06-PLAN.md (Task 3 checkpoint approved, Phase 8 complete)
+Last session: 2026-04-09T06:56:05.521Z
+Stopped at: Completed 09-01-PLAN.md
 Resume file: None
