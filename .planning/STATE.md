@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 09-04-PLAN.md
-last_updated: "2026-04-09T12:27:13.975Z"
+stopped_at: Completed 9.1-01-PLAN.md
+last_updated: "2026-04-09T13:01:19.121Z"
 last_activity: 2026-04-09
 progress:
-  total_phases: 9
-  completed_phases: 9
-  total_plans: 71
-  completed_plans: 71
-  percent: 83
+  total_phases: 12
+  completed_phases: 10
+  total_plans: 72
+  completed_plans: 72
+  percent: 100
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 
 ## Current Position
 
-Phase: 09
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 09.1
+Plan: 9.1-01 complete
+Status: Gap-closure phase 09.1 complete — ready for re-audit of runtime blockers
 Last activity: 2026-04-09
 
-Progress: [========..] 83%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -117,6 +117,7 @@ Progress: [========..] 83%
 | Phase 09-mobile-pwa-production-readiness P03 | 70min | 2 tasks tasks | 20 files files |
 | Phase 09-mobile-pwa-production-readiness P05 | 8min | 2 tasks | 12 files |
 | Phase 09-mobile-pwa-production-readiness P04 | 240min | 2 tasks | 3 files |
+| Phase 09.1-runtime-blockers-fix P01 | 5 min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -320,6 +321,9 @@ Recent decisions affecting current work:
 - [Phase 09-mobile-pwa-production-readiness]: 404 from DELETE /push-subscriptions tolerated as success — backend may have already pruned via PushService 410 auto-cleanup (Plan 03 D-08)
 - [Phase 09-mobile-pwa-production-readiness]: Notification.requestPermission() invoked only inside button click handler (D-07 user-gesture rule) — never on mount or module load
 - [Phase 09-mobile-pwa-production-readiness]: Phase 9 human verification checkpoint approved — all 5 requirements (MOBILE-01..03, DEPLOY-02, DEPLOY-03) verified end-to-end across responsive layouts, PWA install/offline, push notification settings, backup/restore dry-run, and health/ready endpoints
+- [Phase 09.1-runtime-blockers-fix]: [Phase 09.1]: Dev docker-compose.yml has no api service (API runs locally for hot-reload); API_INTERNAL_URL lives only in docker-compose.prod.yml with explanatory comment in dev compose
+- [Phase 09.1-runtime-blockers-fix]: [Phase 09.1]: API_INTERNAL_URL uses default-with-override form ${API_INTERNAL_URL:-http://api:3000/api/v1/api/internal/solver} so prod deployments can override from docker/.env without editing compose files
+- [Phase 09.1-runtime-blockers-fix]: [Phase 09.1]: Documentation drift resolution pattern: gap-closure plans that update a single truth must also refresh adjacent stale references in the same report (Status, Score, behavioral rows, Anti-patterns, Gaps Summary) to preserve internal consistency
 
 ### Pending Todos
 
@@ -333,6 +337,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-09T11:34:16.698Z
-Stopped at: Completed 09-04-PLAN.md
+Last session: 2026-04-09T13:00:42.631Z
+Stopped at: Completed 9.1-01-PLAN.md
 Resume file: None

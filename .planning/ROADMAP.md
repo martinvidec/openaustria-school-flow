@@ -21,7 +21,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 7: Communication** - Messaging (direct, group, broadcast), read receipts, file attachments, polls
 - [ ] **Phase 8: Homework, Exams & Data Import** - Homework/exam management in timetable, Untis XML import, CSV import, API integration
 - [ ] **Phase 9: Mobile, PWA & Production Readiness** - Push notifications, offline timetable, backup/restore, rolling updates
-- [ ] **Phase 9.1: Runtime Blockers Fix** (GAP CLOSURE) - ImportController prefix, solver callback URL, minor cleanups
+- [x] **Phase 9.1: Runtime Blockers Fix** (GAP CLOSURE) - ImportController prefix, solver callback URL, minor cleanups
 - [ ] **Phase 9.2: DSGVO Compliance Closure** (GAP CLOSURE) - Extend export/deletion/retention for Phase 5-8 data
 - [ ] **Phase 9.3: Solver Frontend Wiring** (GAP CLOSURE) - /solver Socket.IO consumer, admin solve trigger UI
 
@@ -280,3 +280,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 7. Communication | 7/8 | Gap closure | - |
 | 8. Homework, Exams & Data Import | 0/6 | Planning complete | - |
 | 9. Mobile, PWA & Production Readiness | 0/5 | Planning complete | - |
+| 9.1. Runtime Blockers Fix (GAP CLOSURE) | 1/1 | Complete | 2026-04-09 |

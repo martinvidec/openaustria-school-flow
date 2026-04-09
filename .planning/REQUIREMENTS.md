@@ -95,8 +95,8 @@
 
 ### Data Import/Export
 
-- [ ] **IMPORT-01**: Admin kann Daten aus Untis XML-Format importieren (Lehrer, Klassen, Räume, Stundenpläne) — gap closure: ImportController double API prefix breaks all routes
-- [ ] **IMPORT-02**: Admin kann CSV-Dateien importieren (Schülerlisten, Lehrerlisten, Raumlisten) — gap closure: same double prefix issue
+- [x] **IMPORT-01**: Admin kann Daten aus Untis XML-Format importieren (Lehrer, Klassen, Räume, Stundenpläne) — gap closure: ImportController double API prefix breaks all routes
+- [x] **IMPORT-02**: Admin kann CSV-Dateien importieren (Schülerlisten, Lehrerlisten, Raumlisten) — gap closure: same double prefix issue
 - [x] **IMPORT-03**: System bietet iCal/ICS-Export für persönliche Kalender
 - [x] **IMPORT-04**: API ermöglicht Datenanbindung an externe SIS-Systeme
 
