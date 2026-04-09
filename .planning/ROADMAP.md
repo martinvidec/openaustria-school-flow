@@ -224,7 +224,7 @@ Plans:
 - [x] 09-01-PLAN.md -- Responsive audit across all pages (timetable day-view on mobile, classbook list layout, horizontal scroll on tables, full-screen dialogs, 44px touch targets)
 - [x] 09-02-PLAN.md -- PWA setup with vite-plugin-pwa, custom service worker (injectManifest), offline timetable cache, OfflineBanner, PwaInstallBanner, settings card
 - [x] 09-03-PLAN.md -- Push notification backend (PushSubscription Prisma model, PushModule with web-push, BullMQ processor, NotificationService push integration)
-- [ ] 09-04-PLAN.md -- Push notification frontend (usePushSubscription hook, PushNotificationSettings card, settings page wiring, human verification checkpoint)
+- [x] 09-04-PLAN.md -- Push notification frontend (usePushSubscription hook, PushNotificationSettings card, settings page wiring, human verification checkpoint)
 - [x] 09-05-PLAN.md -- Production readiness (health/ready endpoints, backup/restore scripts, multi-stage Dockerfiles, Docker Compose production profile, .env.example)
 
 ## Progress

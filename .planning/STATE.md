@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 09-05-PLAN.md
-last_updated: "2026-04-09T11:23:17.958Z"
+status: verifying
+stopped_at: Completed 09-04-PLAN.md
+last_updated: "2026-04-09T11:34:34.297Z"
 last_activity: 2026-04-09
 progress:
   total_phases: 9
-  completed_phases: 8
+  completed_phases: 9
   total_plans: 71
-  completed_plans: 70
+  completed_plans: 71
   percent: 83
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 
 Phase: 09 (mobile-pwa-production-readiness) — EXECUTING
 Plan: 5 of 5
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-09
 
 Progress: [========..] 83%
@@ -116,6 +116,7 @@ Progress: [========..] 83%
 | Phase 09-mobile-pwa-production-readiness P02 | 25min | 2 tasks tasks | 16 files files |
 | Phase 09-mobile-pwa-production-readiness P03 | 70min | 2 tasks tasks | 20 files files |
 | Phase 09-mobile-pwa-production-readiness P05 | 8min | 2 tasks | 12 files |
+| Phase 09-mobile-pwa-production-readiness P04 | 240min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -313,6 +314,12 @@ Recent decisions affecting current work:
 - [Phase 09-mobile-pwa-production-readiness]: docker-compose.prod.yml overrides only services requiring production tuning (build, restart, deploy.resources, healthcheck); volumes/networks inherited from dev compose to avoid duplication
 - [Phase 09-mobile-pwa-production-readiness]: e2e test uses local PrismaStubModule @Global instead of overrideProvider -- overrideProvider requires the provider to already exist in the module tree
 - [Phase 09-mobile-pwa-production-readiness]: Nginx explicit no-cache Cache-Control for sw.js/manifest.webmanifest/workbox-*.js to propagate PWA updates immediately (complements 09-01 navigateFallbackDenylist /api/*)
+- [Phase 09-mobile-pwa-production-readiness]: usePushSubscription hook owns the imperative SW + PushManager state machine, PushNotificationSettings is a pure renderer of (permissionState, isSubscribed, isLoading, error)
+- [Phase 09-mobile-pwa-production-readiness]: isPushSupported() feature-detect (Notification + serviceWorker + PushManager) called inside every public hook method to guard iOS Safari (Pitfall 1) instead of only on mount
+- [Phase 09-mobile-pwa-production-readiness]: Server DELETE before browser pushSubscription.unsubscribe() — failed delete is recoverable; reverse order would leave dangling backend rows on partial failure
+- [Phase 09-mobile-pwa-production-readiness]: 404 from DELETE /push-subscriptions tolerated as success — backend may have already pruned via PushService 410 auto-cleanup (Plan 03 D-08)
+- [Phase 09-mobile-pwa-production-readiness]: Notification.requestPermission() invoked only inside button click handler (D-07 user-gesture rule) — never on mount or module load
+- [Phase 09-mobile-pwa-production-readiness]: Phase 9 human verification checkpoint approved — all 5 requirements (MOBILE-01..03, DEPLOY-02, DEPLOY-03) verified end-to-end across responsive layouts, PWA install/offline, push notification settings, backup/restore dry-run, and health/ready endpoints
 
 ### Pending Todos
 
@@ -326,6 +333,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-09T11:23:17.954Z
-Stopped at: Completed 09-05-PLAN.md
+Last session: 2026-04-09T11:34:16.698Z
+Stopped at: Completed 09-04-PLAN.md
 Resume file: None
