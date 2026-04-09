@@ -217,14 +217,15 @@ Plans:
   3. Today's timetable is viewable offline via PWA cache
   4. Admin can run documented backup/restore scripts and verify data integrity
   5. System supports rolling updates without downtime
-**Plans**: TBD
+**Plans**: 5 plans
+**UI hint**: yes
 
 Plans:
-- [ ] 09-01: TBD
-- [ ] 09-02: TBD
-- [ ] 09-03: TBD
-- [ ] 09-04: TBD
-- [ ] 09-05: TBD
+- [ ] 09-01-PLAN.md -- Responsive audit across all pages (timetable day-view on mobile, classbook list layout, horizontal scroll on tables, full-screen dialogs, 44px touch targets)
+- [ ] 09-02-PLAN.md -- PWA setup with vite-plugin-pwa, custom service worker (injectManifest), offline timetable cache, OfflineBanner, PwaInstallBanner, settings card
+- [ ] 09-03-PLAN.md -- Push notification backend (PushSubscription Prisma model, PushModule with web-push, BullMQ processor, NotificationService push integration)
+- [ ] 09-04-PLAN.md -- Push notification frontend (usePushSubscription hook, PushNotificationSettings card, settings page wiring, human verification checkpoint)
+- [ ] 09-05-PLAN.md -- Production readiness (health/ready endpoints, backup/restore scripts, multi-stage Dockerfiles, Docker Compose production profile, .env.example)
 
 ## Progress
 
@@ -242,4 +243,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 6. Substitution Planning | 0/6 | Not started | - |
 | 7. Communication | 7/8 | Gap closure | - |
 | 8. Homework, Exams & Data Import | 0/6 | Planning complete | - |
-| 9. Mobile, PWA & Production Readiness | 0/5 | Not started | - |
+| 9. Mobile, PWA & Production Readiness | 0/5 | Planning complete | - |
