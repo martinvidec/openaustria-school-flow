@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 9.1-01-PLAN.md
-last_updated: "2026-04-09T13:01:19.121Z"
+status: completed
+stopped_at: Completed 9.2-01-PLAN.md
+last_updated: "2026-04-09T13:27:49.847Z"
 last_activity: 2026-04-09
 progress:
   total_phases: 12
-  completed_phases: 10
-  total_plans: 72
-  completed_plans: 72
+  completed_phases: 11
+  total_plans: 73
+  completed_plans: 73
   percent: 100
 ---
 
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 
 ## Current Position
 
-Phase: 09.1
-Plan: 9.1-01 complete
-Status: Gap-closure phase 09.1 complete — ready for re-audit of runtime blockers
+Phase: 09.2
+Plan: 9.2-01 complete
+Status: Gap-closure phase 09.2 (DSGVO compliance) complete — all v1.0 audit findings closed, ready for milestone re-audit
 Last activity: 2026-04-09
 
 Progress: [██████████] 100%
@@ -118,6 +118,7 @@ Progress: [██████████] 100%
 | Phase 09-mobile-pwa-production-readiness P05 | 8min | 2 tasks | 12 files |
 | Phase 09-mobile-pwa-production-readiness P04 | 240min | 2 tasks | 3 files |
 | Phase 09.1-runtime-blockers-fix P01 | 5 min | 2 tasks | 6 files |
+| Phase 09.2-dsgvo-compliance-closure P9.2-01 | 26 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -324,6 +325,10 @@ Recent decisions affecting current work:
 - [Phase 09.1-runtime-blockers-fix]: [Phase 09.1]: Dev docker-compose.yml has no api service (API runs locally for hot-reload); API_INTERNAL_URL lives only in docker-compose.prod.yml with explanatory comment in dev compose
 - [Phase 09.1-runtime-blockers-fix]: [Phase 09.1]: API_INTERNAL_URL uses default-with-override form ${API_INTERNAL_URL:-http://api:3000/api/v1/api/internal/solver} so prod deployments can override from docker/.env without editing compose files
 - [Phase 09.1-runtime-blockers-fix]: [Phase 09.1]: Documentation drift resolution pattern: gap-closure plans that update a single truth must also refresh adjacent stale references in the same report (Status, Score, behavioral rows, Anti-patterns, Gaps Summary) to preserve internal consistency
+- [Phase 09.2-dsgvo-compliance-closure]: [Phase 09.2]: Phase 5 grades/attendance NOT row-anonymized -- studentId already points to anonymized Person row; preserves Schulunterrichtsgesetz statistical value
+- [Phase 09.2-dsgvo-compliance-closure]: [Phase 09.2]: kommunikation retention deletion uses explicit transaction with MessageRecipient deleted before Message (FK-safe order; schema does not declare onDelete: Cascade on every relation)
+- [Phase 09.2-dsgvo-compliance-closure]: [Phase 09.2]: Per-category 50-row cap on Phase 5-8 export sections matches existing Phase 2 D-14 cap on audit log entries -- prevents oversized DSGVO Art. 15 PDFs
+- [Phase 09.2-dsgvo-compliance-closure]: [Phase 09.2]: Anonymization splits user-only data (PushSubscription, CalendarToken, SisApiKey -- cascade-delete) from cross-phase classroom data (StudentNote.content, Message.body -- placeholder anonymization)
 
 ### Pending Todos
 
@@ -337,6 +342,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-09T13:00:42.631Z
-Stopped at: Completed 9.1-01-PLAN.md
+Last session: 2026-04-09T13:27:49.843Z
+Stopped at: Completed 9.2-01-PLAN.md
 Resume file: None

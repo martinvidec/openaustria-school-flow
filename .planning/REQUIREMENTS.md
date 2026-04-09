@@ -83,9 +83,9 @@
 - [x] **DSGVO-01**: System trackt Einwilligungen pro Datenverarbeitungszweck
 - [x] **DSGVO-02**: Personenbezogene Daten können vollständig gelöscht werden (Recht auf Vergessenwerden)
 - [x] **DSGVO-03**: Nutzer können Export aller eigenen Daten anfordern (Art. 15 DSGVO)
-- [ ] **DSGVO-04**: Datenbank-Felder mit sensiblen Daten sind verschlüsselt (at rest + in transit) — gap closure: data export missing Phase 5-8 personal data tables
-- [ ] **DSGVO-05**: Automatisierte Aufbewahrungsfristen mit konfigurierbarer Ablaufzeit — gap closure: anonymizePerson missing cross-phase linked records
-- [ ] **DSGVO-06**: System liefert DSFA-Template und Verarbeitungsverzeichnis-Export — gap closure: retention.service performs no actual deletion for noten/anwesenheit/kommunikation
+- [x] **DSGVO-04**: Datenbank-Felder mit sensiblen Daten sind verschlüsselt (at rest + in transit) — gap closure: data export missing Phase 5-8 personal data tables
+- [x] **DSGVO-05**: Automatisierte Aufbewahrungsfristen mit konfigurierbarer Ablaufzeit — gap closure: anonymizePerson missing cross-phase linked records
+- [x] **DSGVO-06**: System liefert DSFA-Template und Verarbeitungsverzeichnis-Export — gap closure: retention.service performs no actual deletion for noten/anwesenheit/kommunikation
 
 ### Mobile Access
 
