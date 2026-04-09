@@ -1,3 +1,10 @@
+# NOTE: The `api` service is not defined in this dev compose file -- the
+# NestJS API runs locally on the host for hot-reload during development
+# (see docker/.env.example). The production stack defines the `api`
+# container in docker-compose.prod.yml and sources API_INTERNAL_URL from
+# docker/.env (TIME-04 solver callback -- see docker/.env.example for
+# full documentation). For local dev, export API_INTERNAL_URL in your
+# shell env or apps/api/.env before starting the API.
 services:
   postgres:
     image: postgres:17

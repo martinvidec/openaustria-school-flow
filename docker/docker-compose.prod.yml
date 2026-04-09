@@ -57,6 +57,8 @@ services:
       KEYCLOAK_URL: http://keycloak:8080
       KEYCLOAK_REALM: schoolflow
       KEYCLOAK_CLIENT_ID: schoolflow-api
+      # TIME-04: Solver callback URL (see docker/.env.example for details)
+      API_INTERNAL_URL: "${API_INTERNAL_URL:-http://api:3000/api/v1/api/internal/solver}"
       VAPID_PUBLIC_KEY: "${VAPID_PUBLIC_KEY}"
       VAPID_PRIVATE_KEY: "${VAPID_PRIVATE_KEY}"
       VAPID_SUBJECT: "${VAPID_SUBJECT:-mailto:admin@schoolflow.example}"

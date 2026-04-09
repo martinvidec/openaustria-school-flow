@@ -40,7 +40,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
  */
 @ApiTags('import')
 @ApiBearerAuth()
-@Controller('api/v1/schools/:schoolId/import')
+@Controller('schools/:schoolId/import')
 export class ImportController {
   constructor(private readonly importService: ImportService) {}
 
