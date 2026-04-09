@@ -1,6 +1,7 @@
 import { Link, useRouterState } from '@tanstack/react-router';
 import {
   Calendar,
+  CalendarCog,
   DoorOpen,
   FileText,
   BarChart3,
@@ -66,6 +67,12 @@ const navItems: NavItem[] = [
     label: 'Ressourcen',
     href: '/admin/resources',
     icon: Package,
+    roles: ['admin', 'schulleitung'],
+  },
+  {
+    label: 'Stundenplan-Generator',
+    href: '/admin/solver',
+    icon: CalendarCog,
     roles: ['admin', 'schulleitung'],
   },
   {

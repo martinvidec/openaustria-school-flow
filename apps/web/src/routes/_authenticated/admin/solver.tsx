@@ -1,0 +1,207 @@
+import { createFileRoute } from '@tanstack/react-router';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useSchoolContext } from '@/stores/school-context-store';
+import { useSolverSocket } from '@/hooks/useSolverSocket';
+import { apiFetch } from '@/lib/api';
+
+export const Route = createFileRoute('/_authenticated/admin/solver')({
+  component: AdminSolverPage,
+});
+
+/**
+ * Admin "Stundenplan-Generator" page (TIME-06, v1.0 audit Finding 3).
+ *
+ * Minimal viable solver UI that exercises the full /solver Socket.IO flow:
+ *  1. POST /api/v1/schools/:schoolId/timetable/solve queues a solve run.
+ *  2. The Timefold sidecar posts progress callbacks to NestJS, which
+ *     rebroadcasts them via the /solver gateway as solve:progress.
+ *  3. This page renders live hard/soft scores and the remaining-violation
+ *     groups while the solver is running.
+ *  4. On solve:complete the hook invalidates the timetable cache and
+ *     shows a success toast; the "Letztes Ergebnis" card displays the
+ *     final score summary.
+ *
+ * Polish items intentionally deferred to v1.1 (see 9.3-CONTEXT.md):
+ *  - Run history list (useTimetableRuns integration)
+ *  - Multi-school selector
+ *  - Constraint weight tuning
+ *  - Score-over-time chart
+ */
+function AdminSolverPage() {
+  const schoolId = useSchoolContext((s) => s.schoolId);
+  const { isConnected, progress, lastResult } = useSolverSocket(schoolId);
+  const [isStarting, setIsStarting] = useState(false);
+
+  const handleGenerate = async () => {
+    if (!schoolId) return;
+    setIsStarting(true);
+    try {
+      const res = await apiFetch(
+        `/api/v1/schools/${schoolId}/timetable/solve`,
+        {
+          method: 'POST',
+          body: JSON.stringify({}),
+        },
+      );
+      if (!res.ok) {
+        throw new Error(`Failed to start solve (HTTP ${res.status})`);
+      }
+      toast.info('Stundenplan-Generierung gestartet', {
+        description: 'Der Solver laeuft. Fortschritt erscheint hier.',
+      });
+    } catch (error) {
+      toast.error('Fehler beim Starten der Generierung', {
+        description: error instanceof Error ? error.message : 'Unbekannter Fehler',
+      });
+    } finally {
+      setIsStarting(false);
+    }
+  };
+
+  const isRunning = progress !== null;
+
+  return (
+    <div className="max-w-[800px] mx-auto space-y-6">
+      {/* Page header */}
+      <div>
+        <h1 className="text-[28px] font-semibold leading-[1.2]">
+          Stundenplan-Generator
+        </h1>
+        <p className="text-sm text-muted-foreground mt-2">
+          Generieren Sie automatisch einen optimalen Stundenplan basierend auf
+          den definierten Constraints. Der Vorgang kann einige Minuten dauern.
+        </p>
+      </div>
+
+      {/* Status + trigger card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between gap-4">
+            <CardTitle className="text-[20px]">Status</CardTitle>
+            <Button
+              onClick={handleGenerate}
+              disabled={!schoolId || isStarting || isRunning}
+            >
+              {isStarting
+                ? 'Wird gestartet...'
+                : isRunning
+                  ? 'Solver laeuft...'
+                  : 'Stundenplan generieren'}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-2 text-sm">
+            <span
+              className={
+                isConnected
+                  ? 'inline-block h-2 w-2 rounded-full bg-green-500'
+                  : 'inline-block h-2 w-2 rounded-full bg-muted-foreground'
+              }
+              aria-hidden="true"
+            />
+            <span className="text-muted-foreground">
+              {isConnected
+                ? 'Live-Updates verbunden'
+                : 'Nicht verbunden (Updates folgen beim Verbinden)'}
+            </span>
+          </div>
+
+          {/* Live progress block -- only while solver is running */}
+          {progress && (
+            <div className="space-y-3 rounded-md border border-border bg-muted/30 p-4">
+              <div className="flex items-baseline justify-between">
+                <span className="text-sm font-semibold">Fortschritt</span>
+                <span className="text-xs text-muted-foreground">
+                  Run: <span className="font-mono">{progress.runId}</span>
+                </span>
+              </div>
+              <dl className="grid grid-cols-3 gap-4 text-sm">
+                <div>
+                  <dt className="text-xs text-muted-foreground">Hard Score</dt>
+                  <dd className="font-semibold">{progress.hardScore}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Soft Score</dt>
+                  <dd className="font-semibold">{progress.softScore}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Laufzeit</dt>
+                  <dd className="font-semibold">
+                    {progress.elapsedSeconds}s
+                  </dd>
+                </div>
+              </dl>
+              <div className="text-xs text-muted-foreground">
+                Verbesserung:{' '}
+                <span className="font-semibold">
+                  {progress.improvementRate}
+                </span>
+              </div>
+              {progress.remainingViolations.length > 0 && (
+                <div className="space-y-1 border-t border-border/60 pt-2">
+                  <div className="text-xs font-semibold text-muted-foreground">
+                    Verbleibende Constraint-Verletzungen
+                  </div>
+                  <ul className="space-y-1 text-xs">
+                    {progress.remainingViolations.slice(0, 5).map((v) => (
+                      <li key={v.type} className="flex justify-between">
+                        <span>{v.type}</span>
+                        <span className="font-mono tabular-nums">
+                          {v.count}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Last result card -- only after a solve:complete event */}
+      {lastResult && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-[20px]">Letztes Ergebnis</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <dl className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Run ID</dt>
+                <dd className="font-mono text-xs">{lastResult.runId}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Status</dt>
+                <dd className="font-semibold">{lastResult.status}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Hard Score</dt>
+                <dd className="font-semibold">{lastResult.hardScore}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Soft Score</dt>
+                <dd className="font-semibold">{lastResult.softScore}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Dauer</dt>
+                <dd className="font-semibold">
+                  {lastResult.elapsedSeconds}s
+                </dd>
+              </div>
+            </dl>
+            <p className="mt-4 text-xs text-muted-foreground">
+              Der generierte Stundenplan ist unter &quot;Stundenplan&quot;
+              verfuegbar. Unter &quot;Stundenplan bearbeiten&quot; koennen Sie
+              einzelne Lektionen manuell verschieben.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
