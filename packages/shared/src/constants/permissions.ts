@@ -21,4 +21,10 @@ export enum PermissionSubject {
   CONVERSATION = 'conversation',
   MESSAGE = 'message',
   POLL = 'poll',
+  // Phase 8: Homework, Exams, Data Import (HW-01..03, IMPORT-01..04)
+  HOMEWORK = 'homework',
+  EXAM = 'exam',
+  IMPORT = 'import',
+  // Phase 9: Push notifications (MOBILE-03)
+  PUSH = 'push',
 }

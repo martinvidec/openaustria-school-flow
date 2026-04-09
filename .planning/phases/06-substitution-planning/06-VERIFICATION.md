@@ -30,7 +30,7 @@ human_verification:
 
 **Phase Goal:** Substitution planning -- absence recording, ranked candidate assignment, teacher response flow, handover notes, timetable overlay, fairness statistics
 **Verified:** 2026-04-06T12:25:48Z
-**Status:** gaps_found
+**Status:** passed (ChangeIndicator gap resolved in d2a5dc9, 2026-04-06)
 **Re-verification:** No -- initial verification
 
 ## Goal Achievement
@@ -45,9 +45,9 @@ human_verification:
 | 4 | Absent teacher can write handover notes with file attachments | VERIFIED | `HandoverService` (308 lines) with `MAGIC_BYTES`/`ALLOWED_MIME_TYPES` copied from Phase 5 excuse pattern. Unique constraint on `HandoverNote.substitutionId`. `HandoverController` with separate JSON (POST /substitutions/:substitutionId) and multipart (POST /:noteId/attachments) endpoints (Pitfall 5). `HandoverNoteEditor.tsx` (138 lines) reuses Phase 5 `FileUploadField`. `HandoverNoteView.tsx` (93 lines). 15 real tests in handover.service.spec.ts. |
 | 5 | Substitution changes propagate to timetable overlay view with substitution/cancelled/stillarbeit indicators | VERIFIED | `TimetableService.getView()` joins Substitution overlay when `date` query param provided, produces `changeType` of `'substitution'`, `'cancelled'`, or `'stillarbeit'` from DB data. `SubstitutionService` lifecycle transitions emit events via `timetableGateway.emitSubstitutionCreated`/`emitSubstitutionCancelled`. `ChangeIndicator.tsx` renders correct border/bg styling per changeType. `TimetableCell.tsx` renders inline text (Stillarbeit label, Aufsicht: prefix, strikethrough). Shared type `TimetableViewLesson.changeType` includes `'stillarbeit'`. 7 real tests in view-overlay.spec.ts. |
 | 6 | System tracks fairness statistics per teacher with configurable window | VERIFIED | `SubstitutionStatsService` (210 lines) with `week/month/semester/schoolYear/custom` windows, Werteinheiten-weighted hours. `SubstitutionStatsController` REST endpoint. `FairnessStatsPanel.tsx` (204 lines) with window selector. `useSubstitutionStats` hook. 8 real tests in substitution-stats.service.spec.ts. |
-| 7 | All ChangeIndicator web tests pass for Phase 6 variants | FAILED | 4 of 5 tests in ChangeIndicator.test.tsx fail. The UAT fix (18a1b29) moved text rendering from ChangeIndicator to TimetableCell, but the tests were not updated. Tests still assert `screen.getByText('Stillarbeit')` and `screen.getByText('Mueller')` on ChangeIndicator which now only renders border/bg styling. |
+| 7 | All ChangeIndicator web tests pass for Phase 6 variants | VERIFIED | Tests fixed in commit d2a5dc9 (2026-04-06) -- ChangeIndicator now verifies styling-only wrapper (border/bg classes per changeType + Entfall badge) and text rendering is covered in TimetableCell tests. All 14 web tests pass. |
 
-**Score:** 6/7 truths verified
+**Score:** 7/7 truths verified (Truth #7 resolved in d2a5dc9, 2026-04-06)
 
 ### Required Artifacts
 
@@ -125,7 +125,7 @@ human_verification:
 | Behavior | Command | Result | Status |
 |----------|---------|--------|--------|
 | API test suite passes | `pnpm --filter @schoolflow/api test -- --run` | 285 passed, 0 failed, 51 todo | PASS |
-| Web test suite passes | `pnpm --filter @schoolflow/web test -- --run` | 10 passed, 4 failed (ChangeIndicator), 31 todo | FAIL |
+| Web test suite passes | `pnpm --filter @schoolflow/web test -- --run` | 14 passed, 0 failed, 31 todo (resolved in d2a5dc9) | PASS |
 | API TypeScript compiles cleanly | `pnpm --filter @schoolflow/api exec tsc --noEmit` | Exit 0, no errors | PASS |
 | Schema contains all Phase 6 models | grep for model names in schema.prisma | All 5 models + 5 enums found | PASS |
 | Shared package exports Phase 6 types | grep for exports in substitution.ts + notification.ts | 12 + 4 exports confirmed | PASS |
@@ -149,7 +149,7 @@ No orphaned requirements found. All 6 SUBST-* IDs appear in both REQUIREMENTS.md
 | File | Line | Pattern | Severity | Impact |
 |------|------|---------|----------|--------|
 | ranking.service.ts | 339 | TODO(v2): 0.5 for related Lehrverpflichtungsgruppe | Info | v2 enhancement note, not a blocker; current implementation uses full 1.0/0.0 subject match |
-| ChangeIndicator.test.tsx | 32, 59, 69, 81 | Tests assert text that component no longer renders | Blocker | 4 of 5 tests fail; tests need to match refactored component API |
+| ChangeIndicator.test.tsx | -- | Tests assert text that component no longer renders | Resolved | Fixed in commit d2a5dc9 (2026-04-06): tests rewritten to verify styling-only wrapper; text rendering covered in TimetableCell tests. |
 
 ### Human Verification Required
 
@@ -185,13 +185,11 @@ No orphaned requirements found. All 6 SUBST-* IDs appear in both REQUIREMENTS.md
 
 ### Gaps Summary
 
-**One gap identified: ChangeIndicator web tests are out of sync with the refactored component.**
+**Resolved 2026-04-06 (commit d2a5dc9): No open gaps.**
 
-The UAT fix commit (18a1b29) correctly refactored ChangeIndicator from a text-rendering component to a pure styling wrapper, moving text labels ("Stillarbeit", originalValue/newValue strikethrough) into TimetableCell where they belong in the 3-line cell layout. However, the test update commit (39fdf7b) only fixed 4 backend spec files and did not update the ChangeIndicator tests to match the new component API.
+The previously-identified ChangeIndicator web test misalignment has been resolved. The UAT fix commit (18a1b29) refactored ChangeIndicator from a text-rendering component to a pure styling wrapper, moving text labels ("Stillarbeit", originalValue/newValue strikethrough) into TimetableCell where they belong in the 3-line cell layout. Commit d2a5dc9 (2026-04-06) updated ChangeIndicator.test.tsx to verify the styling-only contract (border/bg classes per changeType + Entfall badge) and moved text-rendering assertions into TimetableCell tests. All 14 web tests pass.
 
-This is a low-impact gap in terms of functionality -- the UI renders correctly (confirmed by the UAT fix rationale) -- but it means the web test suite has 4 failures. The fix is straightforward: either update ChangeIndicator.test.tsx to test what the component actually does (border/bg styling per changeType) or add TimetableCell tests that cover the text rendering.
-
-All 6 SUBST-* requirements are satisfied at the implementation level. The 285 API tests pass with 0 failures. The only blocker is the 4 misaligned web frontend tests.
+All 6 SUBST-* requirements are satisfied at the implementation level. The 285 API tests pass with 0 failures and 14 web tests pass with 0 failures. Phase 6 verification is complete.
 
 ---
 
