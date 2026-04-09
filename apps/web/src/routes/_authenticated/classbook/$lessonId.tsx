@@ -112,20 +112,20 @@ function ClassBookLessonPage() {
         value={tab ?? 'anwesenheit'}
         onValueChange={handleTabChange}
       >
-        <TabsList className="w-full sm:w-auto overflow-x-auto flex-nowrap">
-          <TabsTrigger value="anwesenheit" className="min-w-[44px]">
+        <TabsList className="w-full sm:w-auto overflow-x-auto flex-nowrap whitespace-nowrap">
+          <TabsTrigger value="anwesenheit" className="min-h-[44px] min-w-[44px] text-xs sm:text-sm">
             Anwesenheit
           </TabsTrigger>
-          <TabsTrigger value="inhalt" className="min-w-[44px]">
+          <TabsTrigger value="inhalt" className="min-h-[44px] min-w-[44px] text-xs sm:text-sm">
             Inhalt
           </TabsTrigger>
-          <TabsTrigger value="noten" className="min-w-[44px]">
+          <TabsTrigger value="noten" className="min-h-[44px] min-w-[44px] text-xs sm:text-sm">
             Noten
           </TabsTrigger>
-          <TabsTrigger value="notizen" className="min-w-[44px]">
+          <TabsTrigger value="notizen" className="min-h-[44px] min-w-[44px] text-xs sm:text-sm">
             Notizen
           </TabsTrigger>
-          <TabsTrigger value="aufgaben" className="min-w-[44px]">
+          <TabsTrigger value="aufgaben" className="min-h-[44px] min-w-[44px] text-xs sm:text-sm">
             Aufgaben
           </TabsTrigger>
         </TabsList>

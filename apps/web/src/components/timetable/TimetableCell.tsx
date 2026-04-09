@@ -76,8 +76,8 @@ export function TimetableCell({
           <span className="text-[10px] font-normal ml-1">Stillarbeit</span>
         )}
       </span>
-      {/* Line 2: Teacher — show change inline */}
-      <span className={cn('text-xs leading-[1.3] truncate', isCancelled && 'line-through opacity-60')}>
+      {/* Line 2: Teacher — hidden on mobile (base/sm), visible on md+ */}
+      <span className={cn('text-xs leading-[1.3] truncate hidden sm:block', isCancelled && 'line-through opacity-60')}>
         {isSubstitution && originalValue ? (
           <>
             <span className="line-through opacity-50">{originalValue}</span>
@@ -87,8 +87,8 @@ export function TimetableCell({
           lesson.teacherSurname
         )}
       </span>
-      {/* Line 3: Room (or supervisor for stillarbeit) */}
-      <span className={cn('text-xs leading-[1.3] truncate', isCancelled && 'line-through opacity-60')}>
+      {/* Line 3: Room — hidden on mobile (base/sm), visible on md+ */}
+      <span className={cn('text-xs leading-[1.3] truncate hidden sm:block', isCancelled && 'line-through opacity-60')}>
         {lesson.roomName}
       </span>
     </div>
@@ -99,6 +99,7 @@ export function TimetableCell({
       role="gridcell"
       aria-label={ariaLabel}
       tabIndex={editable ? 0 : -1}
+      title={`${lesson.subjectName} - ${lesson.teacherSurname} - ${lesson.roomName}`}
       onClick={onClick}
       onKeyDown={(e) => {
         if (onClick && (e.key === 'Enter' || e.key === ' ')) {
@@ -106,10 +107,10 @@ export function TimetableCell({
           onClick();
         }
       }}
-      className="h-full w-full"
+      className="h-full w-full min-h-[44px] sm:min-h-0"
     >
       {hasChange ? (
-        <ChangeIndicator changeType={lesson.changeType}>
+        <ChangeIndicator changeType={lesson.changeType ?? null}>
           {cellContent}
         </ChangeIndicator>
       ) : (

@@ -264,8 +264,9 @@ export function GradeMatrix({ classSubjectId, schoolId }: GradeMatrixProps) {
         />
       )}
 
-      {/* Matrix table with horizontal scroll */}
-      <ScrollArea orientation="horizontal" className="rounded-md border">
+      {/* Matrix table with horizontal scroll -- overflow-x-auto for mobile */}
+      <div className="overflow-x-auto rounded-md border">
+      <ScrollArea orientation="horizontal" className="">
         <div className="min-w-max">
           <table className="w-full border-collapse text-sm" role="grid" aria-label="Notenmatrix">
             <thead>
@@ -351,6 +352,7 @@ export function GradeMatrix({ classSubjectId, schoolId }: GradeMatrixProps) {
           </table>
         </div>
       </ScrollArea>
+      </div>
 
       {/* Add grade dialog */}
       <GradeEntryDialog

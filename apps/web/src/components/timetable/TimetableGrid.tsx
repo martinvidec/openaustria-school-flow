@@ -163,9 +163,11 @@ export function TimetableGrid({
   const gridTemplateCols = `auto repeat(${dayCount}, 1fr)`;
 
   // grid-template-rows: header row + per-period rows
+  // Period rows: 48px on mobile (base/sm), 56px on desktop (md+)
+  // This is set via CSS classes below instead of inline style for responsive support
   const gridTemplateRows = [
     'auto', // header row
-    ...visiblePeriods.map((p) => (p.isBreak ? '24px' : '56px')),
+    ...visiblePeriods.map((p) => (p.isBreak ? '24px' : 'auto')),
   ].join(' ');
 
   return (
@@ -255,16 +257,16 @@ function PeriodRow({
       <>
         {/* Break label cell */}
         <div
-          className="bg-muted flex items-center justify-center text-xs text-muted-foreground"
+          className="bg-muted flex items-center justify-center text-xs text-muted-foreground h-[24px]"
           style={{ gridRow, gridColumn: 1 }}
         >
-          {period.label ?? ''}
+          <span className="hidden sm:inline">{period.label ?? ''}</span>
         </div>
         {/* Break spans across all day columns */}
         {visibleDays.map((_, dayIdx) => (
           <div
             key={dayIdx}
-            className="bg-muted"
+            className="bg-muted h-[24px]"
             style={{ gridRow, gridColumn: dayIdx + 2 }}
           />
         ))}
@@ -274,9 +276,9 @@ function PeriodRow({
 
   return (
     <>
-      {/* Period number label with time tooltip */}
+      {/* Period number label with time tooltip -- responsive height */}
       <div
-        className="bg-background flex items-center justify-center text-sm font-semibold text-muted-foreground"
+        className="bg-background flex items-center justify-center text-sm font-semibold text-muted-foreground h-[48px] md:h-[56px]"
         style={{ gridRow, gridColumn: 1 }}
         title={`${period.startTime} - ${period.endTime}`}
       >
@@ -300,7 +302,7 @@ function PeriodRow({
           return (
             <div
               key={key}
-              className="bg-muted/20"
+              className="bg-muted/20 h-[48px] md:h-[56px]"
               style={{ gridRow, gridColumn: colIndex }}
             >
               {renderEmptySlot?.(day, period.periodNumber)}
@@ -329,7 +331,7 @@ function PeriodRow({
               gridRow: totalGridSpan > 1 ? `${gridRow} / span ${totalGridSpan}` : gridRow,
               gridColumn: colIndex,
             }}
-            className="bg-background"
+            className="bg-background min-h-[48px] md:min-h-[56px]"
           >
             {renderCell ? (
               renderCell(lesson, color)

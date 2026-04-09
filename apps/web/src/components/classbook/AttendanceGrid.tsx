@@ -185,12 +185,12 @@ export function AttendanceGrid({ entryId, schoolId }: AttendanceGridProps) {
         )}
       </div>
 
-      {/* Student rows with scroll container for long lists */}
+      {/* Student rows -- vertical list on mobile (one student per row, tap to cycle) */}
       <div className="max-h-[70vh] overflow-y-auto overflow-x-auto divide-y border rounded-lg" role="list" aria-label="Anwesenheitsliste">
         {localRecords.map((record) => (
           <div
             key={record.studentId}
-            className="flex items-center justify-between h-12 px-3 sm:px-4 rounded-md bg-background"
+            className="flex items-center justify-between min-h-[48px] sm:h-12 px-3 sm:px-4 rounded-md bg-background"
             role="listitem"
           >
             {/* Student name */}

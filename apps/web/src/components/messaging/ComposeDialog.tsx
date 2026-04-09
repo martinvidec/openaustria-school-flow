@@ -148,7 +148,7 @@ export function ComposeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="h-[100dvh] sm:h-auto sm:max-w-lg max-w-full">
         <DialogHeader>
           <DialogTitle>Neue Nachricht</DialogTitle>
           <DialogDescription>

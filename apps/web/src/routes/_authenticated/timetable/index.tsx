@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TimetableGrid } from '@/components/timetable/TimetableGrid';
 import { TimetableCell } from '@/components/timetable/TimetableCell';
@@ -21,7 +21,37 @@ import { useTimetableStore } from '@/stores/timetable-store';
 import { useSchoolContext } from '@/stores/school-context-store';
 import { useAuth } from '@/hooks/useAuth';
 import { getSubjectColorWithOverride } from '@/lib/colors';
-import type { TimetableViewLesson, SubjectColorPair } from '@schoolflow/shared';
+import { cn } from '@/lib/utils';
+import type { TimetableViewLesson, SubjectColorPair, DayOfWeekType } from '@schoolflow/shared';
+
+/** Short German day labels for mobile day selector */
+const DAY_SHORT_LABELS: Record<string, string> = {
+  MONDAY: 'Mo',
+  TUESDAY: 'Di',
+  WEDNESDAY: 'Mi',
+  THURSDAY: 'Do',
+  FRIDAY: 'Fr',
+  SATURDAY: 'Sa',
+};
+
+/**
+ * Hook to detect mobile viewport for forcing day view.
+ */
+function useIsMobile(breakpoint = 640): boolean {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== 'undefined' ? window.innerWidth < breakpoint : false,
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    setIsMobile(mq.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, [breakpoint]);
+
+  return isMobile;
+}
 
 export const Route = createFileRoute('/_authenticated/timetable/')({
   component: TimetablePage,
@@ -62,6 +92,7 @@ function TimetablePage() {
   const roles = user?.roles ?? [];
   const primaryRole = getPrimaryRole(roles);
   const isTeacher = roles.includes('lehrer');
+  const isMobile = useIsMobile();
 
   const schoolId = useSchoolContext((s) => s.schoolId) ?? '';
   const teacherId = useSchoolContext((s) => s.teacherId);
@@ -82,6 +113,9 @@ function TimetablePage() {
     setSelectedDay,
     selectedDay,
   } = useTimetableStore();
+
+  // Force day view on mobile (base/sm) per 09-UI-SPEC
+  const effectiveViewMode = isMobile ? 'day' : viewMode;
 
   // Set initial perspective based on role
   useEffect(() => {
@@ -198,8 +232,10 @@ function TimetablePage() {
           onSelect={setPerspective}
         />
 
-        {/* Day/Week toggle */}
-        <DayWeekToggle value={viewMode} onChange={setViewMode} />
+        {/* Day/Week toggle -- hidden on mobile where day view is forced */}
+        <div className="hidden sm:block">
+          <DayWeekToggle value={viewMode} onChange={setViewMode} />
+        </div>
 
         {/* A/B week tabs (only when school has A/B mode) */}
         <ABWeekTabs
@@ -220,6 +256,29 @@ function TimetablePage() {
           />
         )}
       </div>
+
+      {/* Mobile day selector tabs -- horizontal scroll for day switching */}
+      {isMobile && timetableData && timetableData.lessons.length > 0 && (
+        <div className="sm:hidden overflow-x-auto -mx-4 px-4">
+          <div className="flex gap-1 min-w-max">
+            {(timetableData.activeDays ?? []).map((day: DayOfWeekType) => (
+              <button
+                key={day}
+                type="button"
+                onClick={() => setSelectedDay(day)}
+                className={cn(
+                  'min-h-[44px] min-w-[44px] px-4 py-2 rounded-md text-sm font-medium transition-colors',
+                  selectedDay === day
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80',
+                )}
+              >
+                {DAY_SHORT_LABELS[day] ?? day}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Loading state */}
       {isLoading && (
@@ -285,7 +344,7 @@ function TimetablePage() {
           lessons={timetableData.lessons}
           subjectColors={getSubjectColorWithOverride}
           showBreaks
-          viewMode={viewMode}
+          viewMode={effectiveViewMode}
           selectedDay={selectedDay ?? undefined}
           editable={false}
           renderCell={renderCellWithBadges}
