@@ -26,6 +26,20 @@ export interface PersonExportData {
     resource: string;
     createdAt: string;
   }>;
+  // Phase 5 — digital class book
+  attendanceRecords?: Array<Record<string, unknown>>;
+  gradeEntries?: Array<Record<string, unknown>>;
+  absenceExcuses?: Array<Record<string, unknown>>;
+  studentNotes?: Array<Record<string, unknown>>;
+  // Phase 6 — notifications (also covers Phase 7/8 dispatched events)
+  notifications?: Array<Record<string, unknown>>;
+  // Phase 7 — communication
+  messages?: Array<Record<string, unknown>>;
+  messageRecipients?: Array<Record<string, unknown>>;
+  // Phase 8 — homework / exams / calendar tokens
+  homework?: Array<Record<string, unknown>>;
+  exams?: Array<Record<string, unknown>>;
+  calendarTokens?: Array<Record<string, unknown>>;
   schoolName?: string;
 }
 
@@ -96,6 +110,18 @@ export class PdfExportService {
         }
         doc.moveDown(1);
 
+        // Phase 5-8 personal data sections (DSGVO Art. 15 subject access coverage)
+        this.addRecordSection(doc, 'Anwesenheitsdaten (Klassenbuch)', exportData.attendanceRecords);
+        this.addRecordSection(doc, 'Notendaten', exportData.gradeEntries);
+        this.addRecordSection(doc, 'Entschuldigungen', exportData.absenceExcuses);
+        this.addRecordSection(doc, 'Klassenbuch-Notizen', exportData.studentNotes);
+        this.addRecordSection(doc, 'Benachrichtigungen', exportData.notifications);
+        this.addRecordSection(doc, 'Nachrichten (gesendet)', exportData.messages);
+        this.addRecordSection(doc, 'Nachrichten-Empfaenger', exportData.messageRecipients);
+        this.addRecordSection(doc, 'Hausaufgaben', exportData.homework);
+        this.addRecordSection(doc, 'Pruefungen', exportData.exams);
+        this.addRecordSection(doc, 'Kalender-Tokens', exportData.calendarTokens);
+
         // Footer
         doc.fontSize(8)
           .text('---', { align: 'center' })
@@ -118,5 +144,44 @@ export class PdfExportService {
 
   private addField(doc: PDFKit.PDFDocument, label: string, value: string) {
     doc.fontSize(10).text(`${label}: ${value}`);
+  }
+
+  /**
+   * Render a Phase 5-8 data category to the PDF with the 50-entry cap per
+   * category (Phase 2 D-14 -- prevents oversized DSGVO Art. 15 documents).
+   * Each record is rendered as a compact JSON one-liner so the export is
+   * human-readable without bloating the layout.
+   */
+  private addRecordSection(
+    doc: PDFKit.PDFDocument,
+    title: string,
+    records?: Array<Record<string, unknown>>,
+  ) {
+    if (!records || records.length === 0) {
+      return;
+    }
+
+    this.addSectionHeader(doc, title);
+    const limited = records.slice(0, 50);
+    for (const record of limited) {
+      const summary = this.summarizeRecord(record);
+      doc.fontSize(9).text(summary);
+    }
+    if (records.length > 50) {
+      doc.fontSize(9).text(`... und ${records.length - 50} weitere Eintraege`);
+    }
+    doc.moveDown(1);
+  }
+
+  private summarizeRecord(record: Record<string, unknown>): string {
+    const keys = Object.keys(record).slice(0, 6);
+    const parts = keys.map((k) => {
+      const v = record[k];
+      if (v === null || v === undefined) return `${k}=-`;
+      if (v instanceof Date) return `${k}=${v.toISOString()}`;
+      if (typeof v === 'object') return `${k}=[obj]`;
+      return `${k}=${String(v)}`;
+    });
+    return parts.join(' | ');
   }
 }

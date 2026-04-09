@@ -112,6 +112,84 @@ export class DataExportService {
         take: 100,
       });
 
+      // ---- Phase 5-8 personal data (DSGVO-04, Audit Finding 4) ----
+      //
+      // Subject access requests (DSGVO Art. 15) must return all personal data
+      // the controller processes about the data subject. Phase 2 only covered
+      // entities that existed at that time; Phases 5-8 added grades, attendance,
+      // messages, notifications, homework and exams. Each table is queried by
+      // the person's local id (Phase 5 classroom data) or keycloakUserId
+      // (Phase 6-8 user-scoped events/messaging). 50-row limit per category
+      // matches the existing PDF cap (Phase 2 D-14).
+      const kcUserId: string | undefined = person.keycloakUserId ?? undefined;
+
+      // Phase 5 — class book (student-scoped data always via person.id)
+      const attendanceRecords = await this.prisma.attendanceRecord.findMany({
+        where: { studentId: person.id },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      });
+      const gradeEntries = await this.prisma.gradeEntry.findMany({
+        where: { studentId: person.id },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      });
+      const absenceExcuses = await this.prisma.absenceExcuse.findMany({
+        where: { OR: [{ studentId: person.id }, { parentId: person.id }] },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      });
+      const studentNotes = await this.prisma.studentNote.findMany({
+        where: { OR: [{ studentId: person.id }, { authorId: person.id }] },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      });
+
+      // Phase 6/9 — notifications (user-scoped by keycloakUserId)
+      const notifications = kcUserId
+        ? await this.prisma.notification.findMany({
+            where: { userId: kcUserId },
+            orderBy: { createdAt: 'desc' },
+            take: 50,
+          })
+        : [];
+
+      // Phase 7 — communication (user-scoped by keycloakUserId)
+      const messages = kcUserId
+        ? await this.prisma.message.findMany({
+            where: { senderId: kcUserId },
+            orderBy: { createdAt: 'desc' },
+            take: 50,
+          })
+        : [];
+      const messageRecipients = kcUserId
+        ? await this.prisma.messageRecipient.findMany({
+            where: { userId: kcUserId },
+            take: 50,
+          })
+        : [];
+
+      // Phase 8 — homework / exams / calendar tokens (createdBy = keycloakUserId)
+      const homework = kcUserId
+        ? await this.prisma.homework.findMany({
+            where: { createdBy: kcUserId },
+            orderBy: { createdAt: 'desc' },
+            take: 50,
+          })
+        : [];
+      const exams = kcUserId
+        ? await this.prisma.exam.findMany({
+            where: { createdBy: kcUserId },
+            orderBy: { createdAt: 'desc' },
+            take: 50,
+          })
+        : [];
+      const calendarTokens = kcUserId
+        ? await this.prisma.calendarToken.findMany({
+            where: { userId: kcUserId },
+          })
+        : [];
+
       // Determine role
       let role: 'TEACHER' | 'STUDENT' | 'PARENT';
       let roleData: Record<string, unknown>;
@@ -190,6 +268,17 @@ export class DataExportService {
           resource: e.resource,
           createdAt: e.createdAt.toISOString(),
         })),
+        // Phase 5-8 personal data (DSGVO-04 closure -- Audit Finding 4)
+        attendanceRecords: attendanceRecords as unknown as Array<Record<string, unknown>>,
+        gradeEntries: gradeEntries as unknown as Array<Record<string, unknown>>,
+        absenceExcuses: absenceExcuses as unknown as Array<Record<string, unknown>>,
+        studentNotes: studentNotes as unknown as Array<Record<string, unknown>>,
+        notifications: notifications as unknown as Array<Record<string, unknown>>,
+        messages: messages as unknown as Array<Record<string, unknown>>,
+        messageRecipients: messageRecipients as unknown as Array<Record<string, unknown>>,
+        homework: homework as unknown as Array<Record<string, unknown>>,
+        exams: exams as unknown as Array<Record<string, unknown>>,
+        calendarTokens: calendarTokens as unknown as Array<Record<string, unknown>>,
         schoolName: person.school?.name,
       };
 

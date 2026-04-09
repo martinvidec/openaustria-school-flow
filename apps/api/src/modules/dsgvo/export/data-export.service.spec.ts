@@ -21,6 +21,39 @@ const mockPrisma = {
   auditEntry: {
     findMany: vi.fn(),
   },
+  // Phase 5-8 tables consulted by data-export.service for DSGVO-04
+  // (Audit Finding 4). Default to empty arrays so existing tests focused on
+  // person/teacher/student/audit data continue to pass without per-test stubs.
+  attendanceRecord: {
+    findMany: vi.fn().mockResolvedValue([]),
+  },
+  gradeEntry: {
+    findMany: vi.fn().mockResolvedValue([]),
+  },
+  absenceExcuse: {
+    findMany: vi.fn().mockResolvedValue([]),
+  },
+  studentNote: {
+    findMany: vi.fn().mockResolvedValue([]),
+  },
+  notification: {
+    findMany: vi.fn().mockResolvedValue([]),
+  },
+  message: {
+    findMany: vi.fn().mockResolvedValue([]),
+  },
+  messageRecipient: {
+    findMany: vi.fn().mockResolvedValue([]),
+  },
+  homework: {
+    findMany: vi.fn().mockResolvedValue([]),
+  },
+  exam: {
+    findMany: vi.fn().mockResolvedValue([]),
+  },
+  calendarToken: {
+    findMany: vi.fn().mockResolvedValue([]),
+  },
 };
 
 const mockQueue = {
@@ -36,6 +69,18 @@ describe('DataExportService', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+
+    // Restore Phase 5-8 default empty results after clearAllMocks() resets them
+    mockPrisma.attendanceRecord.findMany.mockResolvedValue([]);
+    mockPrisma.gradeEntry.findMany.mockResolvedValue([]);
+    mockPrisma.absenceExcuse.findMany.mockResolvedValue([]);
+    mockPrisma.studentNote.findMany.mockResolvedValue([]);
+    mockPrisma.notification.findMany.mockResolvedValue([]);
+    mockPrisma.message.findMany.mockResolvedValue([]);
+    mockPrisma.messageRecipient.findMany.mockResolvedValue([]);
+    mockPrisma.homework.findMany.mockResolvedValue([]);
+    mockPrisma.exam.findMany.mockResolvedValue([]);
+    mockPrisma.calendarToken.findMany.mockResolvedValue([]);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -193,6 +238,151 @@ describe('DataExportService', () => {
       expect(resultData.jsonExport.roleData.studentNumber).toBe('S001');
       expect(resultData.jsonExport.roleData.className).toBe('3B');
       expect(resultData.jsonExport.roleData.groupMemberships).toHaveLength(1);
+    });
+
+    // ---- DSGVO-04 closure (Phase 9.2 / Audit Finding 4) ----
+    // Subject access requests must include personal data added by Phases 5-8.
+
+    it('includes Phase 5 attendance records when person is a student', async () => {
+      const mockPerson = {
+        id: personId,
+        firstName: 'Max',
+        lastName: 'Mustermann',
+        email: 'max@test.at',
+        phone: null,
+        address: null,
+        dateOfBirth: null,
+        personType: 'STUDENT',
+        keycloakUserId: 'kc-2',
+        school: { name: 'Testschule' },
+        teacher: null,
+        student: { studentNumber: 'S001', enrollmentDate: null, schoolClass: null, groupMemberships: [] },
+        parent: null,
+        consentRecords: [],
+      };
+      const mockAttendance = [
+        { id: 'att-1', studentId: personId, status: 'ABSENT', createdAt: new Date('2026-03-01') },
+        { id: 'att-2', studentId: personId, status: 'PRESENT', createdAt: new Date('2026-03-02') },
+      ];
+
+      mockPrisma.person.findUnique.mockResolvedValue(mockPerson);
+      mockPrisma.auditEntry.findMany.mockResolvedValue([]);
+      mockPrisma.attendanceRecord.findMany.mockResolvedValue(mockAttendance);
+      mockPrisma.dsgvoJob.update.mockResolvedValue({});
+
+      await service.generateExport(personId, dsgvoJobId);
+
+      expect(mockPrisma.attendanceRecord.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { studentId: personId },
+          take: 50,
+        }),
+      );
+      const completedCall = mockPrisma.dsgvoJob.update.mock.calls.find(
+        (c: any) => c[0].data.status === 'COMPLETED',
+      );
+      const resultData = completedCall![0].data.resultData;
+      expect(resultData.jsonExport.attendanceRecords).toHaveLength(2);
+    });
+
+    it('includes Phase 7 messages when person is a sender', async () => {
+      const mockPerson = {
+        id: personId,
+        firstName: 'Maria',
+        lastName: 'Huber',
+        email: 'maria@test.at',
+        phone: null,
+        address: null,
+        dateOfBirth: null,
+        personType: 'TEACHER',
+        keycloakUserId: 'kc-1',
+        school: { name: 'Testschule' },
+        teacher: {
+          personalNumber: 'T001', yearsOfService: 0, isPermanent: false,
+          employmentPercentage: 100, isShared: false, werteinheitenTarget: 20,
+          qualifications: [], availabilityRules: [], reductions: [],
+        },
+        student: null,
+        parent: null,
+        consentRecords: [],
+      };
+      const mockMessages = [
+        { id: 'msg-1', senderId: 'kc-1', body: 'Hallo Eltern', createdAt: new Date('2026-03-01') },
+      ];
+      const mockRecipients = [
+        { id: 'mr-1', userId: 'kc-1', messageId: 'msg-2' },
+      ];
+
+      mockPrisma.person.findUnique.mockResolvedValue(mockPerson);
+      mockPrisma.auditEntry.findMany.mockResolvedValue([]);
+      mockPrisma.message.findMany.mockResolvedValue(mockMessages);
+      mockPrisma.messageRecipient.findMany.mockResolvedValue(mockRecipients);
+      mockPrisma.dsgvoJob.update.mockResolvedValue({});
+
+      await service.generateExport(personId, dsgvoJobId);
+
+      expect(mockPrisma.message.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { senderId: 'kc-1' } }),
+      );
+      expect(mockPrisma.messageRecipient.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { userId: 'kc-1' } }),
+      );
+      const completedCall = mockPrisma.dsgvoJob.update.mock.calls.find(
+        (c: any) => c[0].data.status === 'COMPLETED',
+      );
+      const resultData = completedCall![0].data.resultData;
+      expect(resultData.jsonExport.messages).toHaveLength(1);
+      expect(resultData.jsonExport.messageRecipients).toHaveLength(1);
+    });
+
+    it('includes Phase 8 homework and exams when person is the creator', async () => {
+      const mockPerson = {
+        id: personId,
+        firstName: 'Maria',
+        lastName: 'Huber',
+        email: 'maria@test.at',
+        phone: null,
+        address: null,
+        dateOfBirth: null,
+        personType: 'TEACHER',
+        keycloakUserId: 'kc-1',
+        school: { name: 'Testschule' },
+        teacher: {
+          personalNumber: 'T001', yearsOfService: 0, isPermanent: false,
+          employmentPercentage: 100, isShared: false, werteinheitenTarget: 20,
+          qualifications: [], availabilityRules: [], reductions: [],
+        },
+        student: null,
+        parent: null,
+        consentRecords: [],
+      };
+      const mockHomework = [
+        { id: 'hw-1', title: 'Mathe Hausuebung', createdBy: 'kc-1', createdAt: new Date('2026-03-01') },
+      ];
+      const mockExams = [
+        { id: 'ex-1', title: 'Schularbeit', createdBy: 'kc-1', createdAt: new Date('2026-03-01') },
+      ];
+
+      mockPrisma.person.findUnique.mockResolvedValue(mockPerson);
+      mockPrisma.auditEntry.findMany.mockResolvedValue([]);
+      mockPrisma.homework.findMany.mockResolvedValue(mockHomework);
+      mockPrisma.exam.findMany.mockResolvedValue(mockExams);
+      mockPrisma.dsgvoJob.update.mockResolvedValue({});
+
+      await service.generateExport(personId, dsgvoJobId);
+
+      expect(mockPrisma.homework.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { createdBy: 'kc-1' } }),
+      );
+      expect(mockPrisma.exam.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { createdBy: 'kc-1' } }),
+      );
+      const completedCall = mockPrisma.dsgvoJob.update.mock.calls.find(
+        (c: any) => c[0].data.status === 'COMPLETED',
+      );
+      const resultData = completedCall![0].data.resultData;
+      expect(resultData.jsonExport.homework).toHaveLength(1);
+      expect(resultData.jsonExport.exams).toHaveLength(1);
     });
   });
 
