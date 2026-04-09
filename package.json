@@ -23,6 +23,11 @@
       "@prisma/engines",
       "prisma",
       "esbuild"
-    ]
+    ],
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "vite-plugin-pwa>vite": "8"
+      }
+    }
   }
 }
