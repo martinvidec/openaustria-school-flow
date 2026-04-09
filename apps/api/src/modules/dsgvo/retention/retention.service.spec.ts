@@ -28,6 +28,26 @@ const mockPrisma = {
     findMany: vi.fn().mockResolvedValue([]),
     delete: vi.fn(),
   },
+  // Phase 9.2 (DSGVO-06, Audit Finding 5): Phase 5 + Phase 7 retention
+  // categories. noten / anwesenheit / kommunikation now perform actual
+  // deleteMany inside checkExpiredRecords. Default to count=0 so the
+  // pre-existing audit-focused tests don't need to stub these per test.
+  gradeEntry: {
+    deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+  },
+  attendanceRecord: {
+    deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+  },
+  message: {
+    findMany: vi.fn().mockResolvedValue([]),
+    deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+  },
+  messageRecipient: {
+    deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+  },
+  $transaction: vi.fn(
+    (cb: (tx: typeof mockPrisma) => Promise<unknown>) => cb(mockPrisma),
+  ),
 };
 
 describe('RetentionService', () => {
@@ -39,6 +59,16 @@ describe('RetentionService', () => {
     mockPrisma.handoverNote.count.mockResolvedValue(0);
     mockPrisma.handoverNote.findFirst.mockResolvedValue(null);
     mockPrisma.handoverNote.findMany.mockResolvedValue([]);
+
+    // Restore Phase 9.2 retention deletion defaults
+    mockPrisma.gradeEntry.deleteMany.mockResolvedValue({ count: 0 });
+    mockPrisma.attendanceRecord.deleteMany.mockResolvedValue({ count: 0 });
+    mockPrisma.message.findMany.mockResolvedValue([]);
+    mockPrisma.message.deleteMany.mockResolvedValue({ count: 0 });
+    mockPrisma.messageRecipient.deleteMany.mockResolvedValue({ count: 0 });
+    mockPrisma.$transaction.mockImplementation(
+      (cb: (tx: typeof mockPrisma) => Promise<unknown>) => cb(mockPrisma),
+    );
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -204,6 +234,82 @@ describe('RetentionService', () => {
 
       const hasPositiveCounts = result.some((r) => r.count > 0);
       expect(hasPositiveCounts).toBe(false);
+    });
+
+    // ---- DSGVO-06 closure (Phase 9.2 / Audit Finding 5) ----
+
+    it('actually deletes expired GradeEntry rows for noten category', async () => {
+      mockPrisma.retentionPolicy.findUnique.mockResolvedValue(null);
+      mockPrisma.auditEntry.count.mockResolvedValue(0);
+      mockPrisma.gradeEntry.deleteMany.mockResolvedValue({ count: 12 });
+
+      const result = await service.checkExpiredRecords('s-1');
+
+      expect(mockPrisma.gradeEntry.deleteMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            createdAt: expect.objectContaining({ lt: expect.any(Date) }),
+          }),
+        }),
+      );
+      const notenResult = result.find((r) => r.category.startsWith('noten:'));
+      expect(notenResult).toBeDefined();
+      expect(notenResult!.count).toBe(12);
+    });
+
+    it('actually deletes expired AttendanceRecord rows for anwesenheit category', async () => {
+      mockPrisma.retentionPolicy.findUnique.mockResolvedValue(null);
+      mockPrisma.auditEntry.count.mockResolvedValue(0);
+      mockPrisma.attendanceRecord.deleteMany.mockResolvedValue({ count: 7 });
+
+      const result = await service.checkExpiredRecords('s-1');
+
+      expect(mockPrisma.attendanceRecord.deleteMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            createdAt: expect.objectContaining({ lt: expect.any(Date) }),
+          }),
+        }),
+      );
+      const anwResult = result.find((r) => r.category.startsWith('anwesenheit:'));
+      expect(anwResult).toBeDefined();
+      expect(anwResult!.count).toBe(7);
+    });
+
+    it('cascade-deletes Message + MessageRecipient for kommunikation category', async () => {
+      mockPrisma.retentionPolicy.findUnique.mockResolvedValue(null);
+      mockPrisma.auditEntry.count.mockResolvedValue(0);
+      mockPrisma.message.findMany.mockResolvedValue([
+        { id: 'm-1' },
+        { id: 'm-2' },
+        { id: 'm-3' },
+      ]);
+      mockPrisma.message.deleteMany.mockResolvedValue({ count: 3 });
+
+      const result = await service.checkExpiredRecords('s-1');
+
+      // MessageRecipient deleted before Message
+      expect(mockPrisma.messageRecipient.deleteMany).toHaveBeenCalledWith({
+        where: { messageId: { in: ['m-1', 'm-2', 'm-3'] } },
+      });
+      expect(mockPrisma.message.deleteMany).toHaveBeenCalledWith({
+        where: { id: { in: ['m-1', 'm-2', 'm-3'] } },
+      });
+      const commResult = result.find((r) => r.category.startsWith('kommunikation:'));
+      expect(commResult).toBeDefined();
+      expect(commResult!.count).toBe(3);
+    });
+
+    it('skips deletion calls inside cleanupExpiredMessages when no rows expired', async () => {
+      mockPrisma.retentionPolicy.findUnique.mockResolvedValue(null);
+      mockPrisma.auditEntry.count.mockResolvedValue(0);
+      mockPrisma.message.findMany.mockResolvedValue([]);
+
+      await service.checkExpiredRecords('s-1');
+
+      // Empty id list -> no follow-up deleteMany calls
+      expect(mockPrisma.messageRecipient.deleteMany).not.toHaveBeenCalled();
+      expect(mockPrisma.message.deleteMany).not.toHaveBeenCalled();
     });
   });
 

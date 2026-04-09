@@ -26,6 +26,24 @@ const mockPrisma = {
     updateMany: vi.fn(),
     update: vi.fn(),
   },
+  // Phase 5-8 anonymization targets (DSGVO-05, Audit Finding 6).
+  // Default to no-op resolved values so the new anonymization steps inside
+  // anonymizePerson() don't crash existing person/audit-focused tests.
+  studentNote: {
+    updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+  },
+  message: {
+    updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+  },
+  pushSubscription: {
+    deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+  },
+  calendarToken: {
+    deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+  },
+  sisApiKey: {
+    deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+  },
   $transaction: vi.fn((cb: (tx: typeof mockPrisma) => Promise<unknown>) => cb(mockPrisma)),
 };
 
@@ -38,6 +56,16 @@ describe('DataDeletionService', () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+
+    // Restore Phase 5-8 anonymization defaults after clearAllMocks() resets them
+    mockPrisma.studentNote.updateMany.mockResolvedValue({ count: 0 });
+    mockPrisma.message.updateMany.mockResolvedValue({ count: 0 });
+    mockPrisma.pushSubscription.deleteMany.mockResolvedValue({ count: 0 });
+    mockPrisma.calendarToken.deleteMany.mockResolvedValue({ count: 0 });
+    mockPrisma.sisApiKey.deleteMany.mockResolvedValue({ count: 0 });
+    mockPrisma.$transaction.mockImplementation(
+      (cb: (tx: typeof mockPrisma) => Promise<unknown>) => cb(mockPrisma),
+    );
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -145,6 +173,96 @@ describe('DataDeletionService', () => {
       mockPrisma.dsgvoJob.update.mockResolvedValue({});
 
       await expect(service.anonymizePerson(personId, dsgvoJobId)).rejects.toThrow(ConflictException);
+    });
+
+    // ---- DSGVO-05 closure (Phase 9.2 / Audit Finding 6) ----
+
+    it('anonymizes student notes (Phase 5) where person is studentId or authorId', async () => {
+      const mockPerson = {
+        id: personId,
+        firstName: 'Maria',
+        lastName: 'Huber',
+        isAnonymized: false,
+        keycloakUserId: null,
+        consentRecords: [],
+      };
+      mockPrisma.person.findUnique.mockResolvedValue(mockPerson);
+      mockPrisma.person.update.mockResolvedValue({ ...mockPerson, isAnonymized: true });
+      mockPrisma.dsgvoJob.update.mockResolvedValue({});
+      mockPrisma.consentRecord.updateMany.mockResolvedValue({ count: 0 });
+      mockPrisma.auditEntry.findMany.mockResolvedValue([]);
+
+      await service.anonymizePerson(personId, dsgvoJobId);
+
+      expect(mockPrisma.studentNote.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { studentId: personId },
+          data: { content: '[Anonymisiert]' },
+        }),
+      );
+      expect(mockPrisma.studentNote.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { authorId: personId },
+          data: { content: '[Anonymisiert]' },
+        }),
+      );
+    });
+
+    it('anonymizes Phase 7 message bodies and deletes user-only data when keycloakUserId present', async () => {
+      const mockPerson = {
+        id: personId,
+        firstName: 'Maria',
+        lastName: 'Huber',
+        isAnonymized: false,
+        keycloakUserId: 'kc-1',
+        consentRecords: [],
+      };
+      mockPrisma.person.findUnique.mockResolvedValue(mockPerson);
+      mockPrisma.person.update.mockResolvedValue({ ...mockPerson, isAnonymized: true });
+      mockPrisma.dsgvoJob.update.mockResolvedValue({});
+      mockPrisma.consentRecord.updateMany.mockResolvedValue({ count: 0 });
+      mockPrisma.auditEntry.findMany.mockResolvedValue([]);
+
+      await service.anonymizePerson(personId, dsgvoJobId);
+
+      expect(mockPrisma.message.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { senderId: 'kc-1' },
+          data: { body: '[Geloeschte Nachricht]' },
+        }),
+      );
+      expect(mockPrisma.pushSubscription.deleteMany).toHaveBeenCalledWith({
+        where: { userId: 'kc-1' },
+      });
+      expect(mockPrisma.calendarToken.deleteMany).toHaveBeenCalledWith({
+        where: { userId: 'kc-1' },
+      });
+      expect(mockPrisma.sisApiKey.deleteMany).toHaveBeenCalledWith({
+        where: { createdBy: 'kc-1' },
+      });
+    });
+
+    it('skips keycloak-scoped cleanup when person has no keycloakUserId', async () => {
+      const mockPerson = {
+        id: personId,
+        firstName: 'Maria',
+        lastName: 'Huber',
+        isAnonymized: false,
+        keycloakUserId: null,
+        consentRecords: [],
+      };
+      mockPrisma.person.findUnique.mockResolvedValue(mockPerson);
+      mockPrisma.person.update.mockResolvedValue({ ...mockPerson, isAnonymized: true });
+      mockPrisma.dsgvoJob.update.mockResolvedValue({});
+      mockPrisma.consentRecord.updateMany.mockResolvedValue({ count: 0 });
+      mockPrisma.auditEntry.findMany.mockResolvedValue([]);
+
+      await service.anonymizePerson(personId, dsgvoJobId);
+
+      expect(mockPrisma.message.updateMany).not.toHaveBeenCalled();
+      expect(mockPrisma.pushSubscription.deleteMany).not.toHaveBeenCalled();
+      expect(mockPrisma.calendarToken.deleteMany).not.toHaveBeenCalled();
+      expect(mockPrisma.sisApiKey.deleteMany).not.toHaveBeenCalled();
     });
   });
 

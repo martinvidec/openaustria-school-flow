@@ -154,6 +154,72 @@ export class RetentionService {
     return deleted;
   }
 
+  /**
+   * Phase 9.2 (DSGVO-06, Audit Finding 5): Delete GradeEntry rows older than
+   * the retention cutoff. Austrian Aufbewahrungspflicht for grades is 60
+   * years (DEFAULT_RETENTION_DAYS.noten = 21900). Returns the deleted count.
+   */
+  async cleanupExpiredGrades(cutoffDate: Date): Promise<number> {
+    const result = await this.prisma.gradeEntry.deleteMany({
+      where: { createdAt: { lt: cutoffDate } },
+    });
+    if (result.count > 0) {
+      this.logger.log(
+        `Deleted ${result.count} expired GradeEntry rows (cutoff: ${cutoffDate.toISOString()})`,
+      );
+    }
+    return result.count;
+  }
+
+  /**
+   * Phase 9.2 (DSGVO-06, Audit Finding 5): Delete AttendanceRecord rows older
+   * than the retention cutoff. Austrian standard for Anwesenheitsdaten is 5
+   * years (DEFAULT_RETENTION_DAYS.anwesenheit = 1825). Returns the deleted
+   * count.
+   */
+  async cleanupExpiredAttendance(cutoffDate: Date): Promise<number> {
+    const result = await this.prisma.attendanceRecord.deleteMany({
+      where: { createdAt: { lt: cutoffDate } },
+    });
+    if (result.count > 0) {
+      this.logger.log(
+        `Deleted ${result.count} expired AttendanceRecord rows (cutoff: ${cutoffDate.toISOString()})`,
+      );
+    }
+    return result.count;
+  }
+
+  /**
+   * Phase 9.2 (DSGVO-06, Audit Finding 5): Delete Message rows (and their
+   * MessageRecipient + MessageAttachment + Poll children via FK cascade)
+   * older than the retention cutoff. Austrian standard for kommunikation is
+   * 1 year (DEFAULT_RETENTION_DAYS.kommunikation = 365). MessageRecipient is
+   * deleted explicitly first because the schema does not declare
+   * onDelete: Cascade on every child reference. Returns the deleted count.
+   */
+  async cleanupExpiredMessages(cutoffDate: Date): Promise<number> {
+    return this.prisma.$transaction(async (tx) => {
+      const expired = await tx.message.findMany({
+        where: { createdAt: { lt: cutoffDate } },
+        select: { id: true },
+      });
+      const ids = expired.map((m) => m.id);
+      if (ids.length === 0) {
+        return 0;
+      }
+
+      await tx.messageRecipient.deleteMany({ where: { messageId: { in: ids } } });
+      const deleted = await tx.message.deleteMany({ where: { id: { in: ids } } });
+
+      if (deleted.count > 0) {
+        this.logger.log(
+          `Deleted ${deleted.count} expired Message rows (cutoff: ${cutoffDate.toISOString()})`,
+        );
+      }
+      return deleted.count;
+    });
+  }
+
   async checkExpiredRecords(schoolId?: string): Promise<ExpiredRecordInfo[]> {
     const results: ExpiredRecordInfo[] = [];
     const now = new Date();
@@ -222,6 +288,43 @@ export class RetentionService {
               category: `${category}:${sid}`,
               count,
               oldestDate: oldest?.createdAt ?? null,
+            });
+          }
+        }
+
+        // Phase 9.2 (DSGVO-06, Audit Finding 5): noten / anwesenheit /
+        // kommunikation now perform actual deletion instead of count-only
+        // reporting. Each helper logs the affected row count and returns it
+        // for inclusion in the dashboard backlog.
+        if (category === 'noten') {
+          const count = await this.cleanupExpiredGrades(cutoffDate);
+          if (count > 0) {
+            results.push({
+              category: `${category}:${sid}`,
+              count,
+              oldestDate: cutoffDate,
+            });
+          }
+        }
+
+        if (category === 'anwesenheit') {
+          const count = await this.cleanupExpiredAttendance(cutoffDate);
+          if (count > 0) {
+            results.push({
+              category: `${category}:${sid}`,
+              count,
+              oldestDate: cutoffDate,
+            });
+          }
+        }
+
+        if (category === 'kommunikation') {
+          const count = await this.cleanupExpiredMessages(cutoffDate);
+          if (count > 0) {
+            results.push({
+              category: `${category}:${sid}`,
+              count,
+              oldestDate: cutoffDate,
             });
           }
         }

@@ -132,6 +132,57 @@ export class DataDeletionService {
             });
           }
         }
+
+        // ---- Phase 5-8 anonymization (DSGVO-05, Audit Finding 6) ----
+        //
+        // Right to erasure (DSGVO Art. 17) requires removing PII from
+        // cross-phase linked records. Strategy:
+        //   - Phase 5 grades/attendance: NOT anonymized at row level. The
+        //     studentId FK now points to an already-anonymized Person row,
+        //     so PII is removed at the source. Statistical/audit value of
+        //     classroom data is preserved (Schulunterrichtsgesetz).
+        //   - Phase 5 student notes: free-text content may include personal
+        //     details. Replace with [Anonymisiert] placeholder.
+        //   - Phase 7 messages: replace body with placeholder. Conversation
+        //     structure preserved for the other party's audit trail.
+        //   - User-only data (push subscriptions, calendar tokens, SIS API
+        //     keys): cascade-delete. These are pure session/credential
+        //     artifacts with no value once the user is gone.
+
+        // Phase 5: anonymize student notes referencing this person
+        await tx.studentNote.updateMany({
+          where: { studentId: personId },
+          data: { content: '[Anonymisiert]' },
+        });
+        await tx.studentNote.updateMany({
+          where: { authorId: personId },
+          data: { content: '[Anonymisiert]' },
+        });
+
+        if (person.keycloakUserId) {
+          const kcId = person.keycloakUserId;
+
+          // Phase 7: anonymize message content
+          await tx.message.updateMany({
+            where: { senderId: kcId },
+            data: { body: '[Geloeschte Nachricht]' },
+          });
+
+          // Phase 9: drop push subscriptions (session-only data)
+          await tx.pushSubscription.deleteMany({
+            where: { userId: kcId },
+          });
+
+          // Phase 8: drop calendar tokens (revocable per-user secrets)
+          await tx.calendarToken.deleteMany({
+            where: { userId: kcId },
+          });
+
+          // Phase 8: drop SIS API keys created by this user
+          await tx.sisApiKey.deleteMany({
+            where: { createdBy: kcId },
+          });
+        }
       });
 
       // Update job status to COMPLETED
