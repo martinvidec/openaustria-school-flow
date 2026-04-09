@@ -91,7 +91,7 @@
 
 - [x] **MOBILE-01**: Alle Features sind über responsive Web-App auf Smartphone/Tablet nutzbar
 - [ ] **MOBILE-02**: Push-Notifications für Stundenplanänderungen, neue Nachrichten, Abwesenheits-Alerts
-- [ ] **MOBILE-03**: Heutiger Stundenplan ist offline einsehbar (PWA Cache)
+- [x] **MOBILE-03**: Heutiger Stundenplan ist offline einsehbar (PWA Cache)
 
 ### Data Import/Export
 
@@ -220,7 +220,7 @@
 | DSGVO-06 | Phase 2 | Complete |
 | MOBILE-01 | Phase 9 | Complete |
 | MOBILE-02 | Phase 9 | Pending |
-| MOBILE-03 | Phase 9 | Pending |
+| MOBILE-03 | Phase 9 | Complete |
 | IMPORT-01 | Phase 8 | Complete |
 | IMPORT-02 | Phase 8 | Complete |
 | IMPORT-03 | Phase 8 | Complete |
