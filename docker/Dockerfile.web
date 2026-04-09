@@ -1,0 +1,51 @@
+# syntax=docker/dockerfile:1.7
+#
+# SchoolFlow Web -- multi-stage Docker build (D-12, DEPLOY-03).
+#
+# Build stage: installs the full pnpm workspace and runs the Vite production
+#              build for @schoolflow/web.
+# Runtime stage: minimal nginx:alpine serving the built SPA static files with
+#                SPA fallback routing and reverse proxy for /api and /socket.io
+#                to the api service over the Docker network.
+#
+# Build context MUST be the repository root (parent of ./docker):
+#
+#   docker build -f docker/Dockerfile.web -t schoolflow-web:latest .
+#
+# ------------------------------------------------------------------------------
+# Build stage
+# ------------------------------------------------------------------------------
+FROM node:24-alpine AS build
+
+WORKDIR /app
+
+RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
+
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY apps/web/package.json ./apps/web/
+COPY packages/shared/package.json ./packages/shared/
+
+RUN pnpm install --frozen-lockfile
+
+COPY tsconfig.base.json turbo.json ./
+COPY packages/shared ./packages/shared
+COPY apps/web ./apps/web
+
+# Vite build emits static assets into apps/web/dist
+RUN pnpm --filter @schoolflow/web run build
+
+# ------------------------------------------------------------------------------
+# Runtime stage -- nginx
+# ------------------------------------------------------------------------------
+FROM nginx:alpine AS runtime
+
+# wget is used by HEALTHCHECK (alpine image provides it)
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/apps/web/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:80/ || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]

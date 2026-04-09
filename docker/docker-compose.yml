@@ -50,6 +50,16 @@ services:
     depends_on:
       keycloak-db:
         condition: service_healthy
+    healthcheck:
+      # Keycloak 26.5 exposes /health/ready on the management interface by
+      # default -- probe the realm discovery doc instead which is always
+      # served on the main 8080 port without extra config. `wget` is present
+      # in the official quay.io image.
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/realms/master || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
 
   redis:
     image: redis:7-alpine

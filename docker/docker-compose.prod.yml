@@ -1,0 +1,160 @@
+#
+# SchoolFlow production Docker Compose override (D-10, D-12, DEPLOY-03).
+#
+# Extends docker-compose.yml with production-grade settings:
+#  - Builds api + web images from source (multi-stage Dockerfiles)
+#  - Applies resource limits and restart policies
+#  - Enables health checks on all services
+#  - Sources secrets from .env (see docker/.env.example)
+#
+# Usage:
+#
+#   # First deploy
+#   cp docker/.env.example docker/.env           # edit secrets
+#   docker compose \
+#     -f docker/docker-compose.yml \
+#     -f docker/docker-compose.prod.yml \
+#     up -d
+#
+#   # Zero-downtime rolling update (D-10)
+#   # Option A: using docker-rollout plugin (recommended)
+#   #
+#   #   docker rollout api \
+#   #     -f docker/docker-compose.yml \
+#   #     -f docker/docker-compose.prod.yml
+#   #
+#   # Option B: manual blue/green via compose up --no-deps --build
+#   # The api healthcheck blocks the new container from receiving traffic
+#   # until /api/v1/health returns 200, so socket.io clients (Phase 3/4)
+#   # reconnect automatically during the brief cutover window (Pitfall 8).
+#   #
+#   #   docker compose \
+#   #     -f docker/docker-compose.yml \
+#   #     -f docker/docker-compose.prod.yml \
+#   #     up -d --no-deps --build api
+#   #
+#   #   docker compose \
+#   #     -f docker/docker-compose.yml \
+#   #     -f docker/docker-compose.prod.yml \
+#   #     up -d --no-deps --build web
+#
+# Volumes, networks, and the keycloak-db definition are inherited from the
+# dev docker-compose.yml. Do NOT duplicate them here.
+#
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    image: schoolflow-api:latest
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DATABASE_URL: "postgresql://schoolflow:${POSTGRES_PASSWORD}@postgres:5432/schoolflow"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: schoolflow
+      KEYCLOAK_CLIENT_ID: schoolflow-api
+      VAPID_PUBLIC_KEY: "${VAPID_PUBLIC_KEY}"
+      VAPID_PRIVATE_KEY: "${VAPID_PRIVATE_KEY}"
+      VAPID_SUBJECT: "${VAPID_SUBJECT:-mailto:admin@schoolflow.example}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+        reservations:
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.web
+    image: schoolflow-web:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.5"
+        reservations:
+          memory: 64M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  postgres:
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "2.0"
+        reservations:
+          memory: 512M
+
+  keycloak-db:
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: "${KEYCLOAK_DB_PASSWORD:-keycloak_dev}"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+
+  redis:
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
+
+  keycloak:
+    restart: unless-stopped
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: "${KEYCLOAK_ADMIN_USERNAME:-admin}"
+      KC_BOOTSTRAP_ADMIN_PASSWORD: "${KEYCLOAK_ADMIN_PASSWORD}"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
+        reservations:
+          memory: 256M
+
+  solver:
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "2.0"
+        reservations:
+          memory: 512M

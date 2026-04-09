@@ -1,0 +1,78 @@
+# syntax=docker/dockerfile:1.7
+#
+# SchoolFlow API -- multi-stage Docker build (D-12, DEPLOY-03).
+#
+# Build stage: installs full workspace with pnpm, runs TypeScript build
+#              (nest build) and prisma generate. Build cache lives in /root/.pnpm-store.
+# Runtime stage: minimal node:24-alpine with only dist + production modules.
+#
+# Build context MUST be the repository root (parent of ./docker) so the
+# monorepo lockfile and shared packages are available.
+#
+#   docker build -f docker/Dockerfile.api -t schoolflow-api:latest .
+#
+# ------------------------------------------------------------------------------
+# Build stage
+# ------------------------------------------------------------------------------
+FROM node:24-alpine AS build
+
+WORKDIR /app
+
+# Activate pnpm via corepack (matches pnpm@10.33 used across the monorepo)
+RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
+
+# Copy lockfile + workspace manifests first for better layer caching. Changing
+# application source should not invalidate the dependency layer.
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY apps/api/package.json ./apps/api/
+COPY packages/shared/package.json ./packages/shared/
+
+# Install with frozen lockfile; build artifacts are regenerated below.
+RUN pnpm install --frozen-lockfile
+
+# Copy the remaining source for all workspace packages the API depends on.
+COPY tsconfig.base.json turbo.json ./
+COPY packages/shared ./packages/shared
+COPY apps/api ./apps/api
+
+# Generate Prisma client and compile the NestJS API.
+RUN pnpm --filter @schoolflow/api exec prisma generate \
+ && pnpm --filter @schoolflow/api run build
+
+# Prune dev dependencies to minimize runtime image size.
+RUN pnpm --filter @schoolflow/api deploy --prod /prod-api \
+ || (cd apps/api && pnpm install --frozen-lockfile --prod)
+
+# ------------------------------------------------------------------------------
+# Runtime stage
+# ------------------------------------------------------------------------------
+FROM node:24-alpine AS runtime
+
+# wget is used by HEALTHCHECK; tini supervises PID 1 signal handling.
+RUN apk add --no-cache wget tini
+
+ENV NODE_ENV=production \
+    PORT=3000 \
+    HOST=0.0.0.0
+
+WORKDIR /app
+
+# Copy compiled output + pruned production dependencies from the build stage.
+COPY --from=build /app/apps/api/dist               ./dist
+COPY --from=build /app/apps/api/node_modules       ./node_modules
+COPY --from=build /app/apps/api/package.json       ./package.json
+COPY --from=build /app/apps/api/prisma             ./prisma
+COPY --from=build /app/packages/shared             ./packages/shared
+
+# Run as the unprivileged built-in node user.
+USER node
+
+EXPOSE 3000
+
+# Container-level healthcheck targets the liveness endpoint (D-11).
+# Readiness is checked by the orchestrator via /api/v1/health/ready.
+HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/v1/health || exit 1
+
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["node", "dist/main.js"]
