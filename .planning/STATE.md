@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 09-03-PLAN.md
-last_updated: "2026-04-09T10:39:06.613Z"
+stopped_at: Completed 09-05-PLAN.md
+last_updated: "2026-04-09T11:23:17.958Z"
 last_activity: 2026-04-09
 progress:
   total_phases: 9
   completed_phases: 8
   total_plans: 71
-  completed_plans: 69
+  completed_plans: 70
   percent: 83
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 ## Current Position
 
 Phase: 09 (mobile-pwa-production-readiness) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-04-09
 
@@ -115,6 +115,7 @@ Progress: [========..] 83%
 | Phase 09-mobile-pwa-production-readiness P01 | 10min | 2 tasks tasks | 18 files files |
 | Phase 09-mobile-pwa-production-readiness P02 | 25min | 2 tasks tasks | 16 files files |
 | Phase 09-mobile-pwa-production-readiness P03 | 70min | 2 tasks tasks | 20 files files |
+| Phase 09-mobile-pwa-production-readiness P05 | 8min | 2 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -306,6 +307,12 @@ Recent decisions affecting current work:
 - [Phase 09-mobile-pwa-production-readiness]: GET /push/vapid-key is @Public() — SW needs key before login, VAPID public key is not a secret
 - [Phase 09-mobile-pwa-production-readiness]: NotificationService push enqueue wrapped in try/catch + log — push is best-effort side effect, must never block notification creation or Socket.IO emit
 - [Phase 09-mobile-pwa-production-readiness]: vi.hoisted() pattern required for shared mock objects in Vitest 4 (vi.mock() factories are hoisted above top-level const)
+- [Phase 09-mobile-pwa-production-readiness]: Dedicated ioredis client in HealthController with lazyConnect + maxRetriesPerRequest=1 + enableOfflineQueue=false for fast-fail readiness probes
+- [Phase 09-mobile-pwa-production-readiness]: Backup manifest as hand-rolled JSON (no jq dependency) with 10 key tables tracked for integrity verification post-restore
+- [Phase 09-mobile-pwa-production-readiness]: Multi-stage Dockerfile.api runs as unprivileged node user with tini PID 1 supervisor; pnpm deploy --prod pruning with install --prod fallback
+- [Phase 09-mobile-pwa-production-readiness]: docker-compose.prod.yml overrides only services requiring production tuning (build, restart, deploy.resources, healthcheck); volumes/networks inherited from dev compose to avoid duplication
+- [Phase 09-mobile-pwa-production-readiness]: e2e test uses local PrismaStubModule @Global instead of overrideProvider -- overrideProvider requires the provider to already exist in the module tree
+- [Phase 09-mobile-pwa-production-readiness]: Nginx explicit no-cache Cache-Control for sw.js/manifest.webmanifest/workbox-*.js to propagate PWA updates immediately (complements 09-01 navigateFallbackDenylist /api/*)
 
 ### Pending Todos
 
@@ -319,6 +326,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-09T10:39:06.610Z
-Stopped at: Completed 09-03-PLAN.md
+Last session: 2026-04-09T11:23:17.954Z
+Stopped at: Completed 09-05-PLAN.md
 Resume file: None

@@ -115,8 +115,8 @@
 ### Deployment
 
 - [x] **DEPLOY-01**: System lässt sich mit einem Befehl via Docker Compose starten
-- [ ] **DEPLOY-02**: Backup/Restore-Skripte sind dokumentiert und getestet
-- [ ] **DEPLOY-03**: System unterstützt Rolling Updates ohne Downtime
+- [x] **DEPLOY-02**: Backup/Restore-Skripte sind dokumentiert und getestet
+- [x] **DEPLOY-03**: System unterstützt Rolling Updates ohne Downtime
 
 ## v2 Requirements
 
@@ -232,8 +232,8 @@
 | API-02 | Phase 1 | Complete |
 | API-03 | Phase 1 | Complete |
 | DEPLOY-01 | Phase 1 | Complete |
-| DEPLOY-02 | Phase 9 | Pending |
-| DEPLOY-03 | Phase 9 | Pending |
+| DEPLOY-02 | Phase 9 | Complete |
+| DEPLOY-03 | Phase 9 | Complete |
 
 **Coverage:**
 - v1 requirements: 71 total
