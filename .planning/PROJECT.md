@@ -42,6 +42,10 @@ Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenp
 - Video-Conferencing Engine — über Konnektoren zu Teams/Zoom/Jitsi lösen
 - Cloud-SaaS Mandantenfähigkeit — v1 ist Single-Tenant; Multi-Tenant als spätere Option
 
+## Current State
+
+**v1.0 MVP shipped 2026-04-09.** 12 phases (9 planned + 3 gap closure), 74 plans, 148 tasks, ~178K LOC TypeScript/Java. All 65 v1.0 requirements satisfied. 423 backend tests passing. Full stack: NestJS 11 + Prisma 7 backend, React 19 + Vite 8 frontend, Timefold 1.32 JVM solver sidecar, Keycloak 26.5 auth, PostgreSQL 17 + Redis 7, PWA with Web Push, production Docker with backup/restore.
+
 ## Context
 
 - **Markt:** Untis dominiert den DACH-Raum mit ~26.000 Schulen. Proprietär, keine offene API, veraltete UX. Bestehende Open-Source-Alternativen (FET, AlekSIS, UniTime) decken jeweils nur Teilbereiche ab.
@@ -104,4 +108,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-01 after Phase 4 completion — Timetable Viewing, Editing & Room Management*
+*Last updated: 2026-04-09 after v1.0 MVP milestone completion*
