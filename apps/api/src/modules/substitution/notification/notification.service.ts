@@ -1,6 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 import type { NotificationDto, NotificationType } from '@schoolflow/shared';
 import { PrismaService } from '../../../config/database/prisma.service';
+import { PUSH_QUEUE } from '../../../config/queue/queue.constants';
+import type { PushJobData } from '../../push/push.processor';
 import { NotificationGateway } from './notification.gateway';
 
 export interface CreateNotificationInput {
@@ -24,9 +28,12 @@ export interface CreateNotificationInput {
  */
 @Injectable()
 export class NotificationService {
+  private readonly logger = new Logger(NotificationService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly gateway: NotificationGateway,
+    @InjectQueue(PUSH_QUEUE) private readonly pushQueue: Queue<PushJobData>,
   ) {}
 
   async create(input: CreateNotificationInput): Promise<NotificationDto> {
@@ -86,7 +93,57 @@ export class NotificationService {
 
     const dto = this.toDto(row);
     this.gateway.emitNewNotification(input.userId, dto, unreadCount);
+
+    // D-06 — trigger web push alongside Socket.IO so users who closed the tab
+    // still get a system notification. Failures here must not roll back the
+    // notification row (we already committed above): catch and log.
+    try {
+      await this.pushQueue.add('push-notification', {
+        userId: input.userId,
+        payload: {
+          title: input.title,
+          body: input.body,
+          url: this.getNotificationUrl(input),
+          tag: `${input.type.toLowerCase()}-${Date.now()}`,
+        },
+      });
+    } catch (err) {
+      this.logger.warn(
+        `Failed to enqueue push job for user ${input.userId} (${input.type}): ${(err as Error).message}`,
+      );
+    }
+
     return dto;
+  }
+
+  /**
+   * D-06 / 09-RESEARCH payload format — map NotificationType to the SPA
+   * route the user should land on when they click the push notification.
+   *
+   * Kept as a simple switch so future notification types can be added in
+   * one place without touching the rest of the service.
+   */
+  private getNotificationUrl(input: CreateNotificationInput): string {
+    switch (input.type) {
+      case 'SUBSTITUTION_OFFER':
+      case 'SUBSTITUTION_CONFIRMED':
+      case 'SUBSTITUTION_DECLINED':
+      case 'STILLARBEIT_ASSIGNED':
+        return '/teacher/substitutions';
+      case 'MESSAGE_RECEIVED': {
+        const conversationId = input.payload?.conversationId as
+          | string
+          | undefined;
+        return conversationId ? `/messages/${conversationId}` : '/messages';
+      }
+      case 'HOMEWORK_ASSIGNED':
+      case 'EXAM_SCHEDULED':
+      case 'LESSON_CANCELLED':
+      case 'ABSENCE_RECORDED':
+        return '/timetable';
+      default:
+        return '/';
+    }
   }
 
   async listForUser(

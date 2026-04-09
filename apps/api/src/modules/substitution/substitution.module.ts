@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { BullModule } from '@nestjs/bullmq';
+import { PUSH_QUEUE } from '../../config/queue/queue.constants';
 
 // Absence (Plan 06-02)
 import { TeacherAbsenceController } from './absence/teacher-absence.controller';
@@ -52,6 +54,10 @@ import { ClassBookModule } from '../classbook/classbook.module';
     TimetableModule,
     ClassBookModule,
     ConfigModule,
+    // Phase 9 Plan 03 (MOBILE-02 / D-06): NotificationService queues push
+    // delivery jobs alongside Socket.IO emits. PUSH_QUEUE must be registered
+    // locally so the @InjectQueue(PUSH_QUEUE) token resolves here.
+    BullModule.registerQueue({ name: PUSH_QUEUE }),
   ],
   controllers: [
     TeacherAbsenceController,

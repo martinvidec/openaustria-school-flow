@@ -25,6 +25,7 @@ import { CommunicationModule } from './modules/communication/communication.modul
 import { HomeworkModule } from './modules/homework/homework.module';
 import { ImportModule } from './modules/import/import.module';
 import { CalendarModule } from './modules/calendar/calendar.module';
+import { PushModule } from './modules/push/push.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { CalendarModule } from './modules/calendar/calendar.module';
     HomeworkModule,
     ImportModule,
     CalendarModule,
+    PushModule,
   ],
   providers: [
     {

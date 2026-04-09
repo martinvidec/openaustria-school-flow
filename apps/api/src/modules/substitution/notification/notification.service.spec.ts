@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import type { Queue } from 'bullmq';
 import { NotificationService } from './notification.service';
 import { NotificationGateway } from './notification.gateway';
 import { PrismaService } from '../../../config/database/prisma.service';
@@ -44,11 +45,16 @@ function createService() {
     emitBadgeUpdate: vi.fn(),
   };
 
+  const pushQueueMock = {
+    add: vi.fn().mockResolvedValue({ id: 'bull-job-1' }),
+  };
+
   const service = new NotificationService(
     prismaMock as PrismaService,
     gatewayMock as NotificationGateway,
+    pushQueueMock as unknown as Queue,
   );
-  return { service, prismaMock, gatewayMock };
+  return { service, prismaMock, gatewayMock, pushQueueMock };
 }
 
 describe('NotificationService (SUBST-03)', () => {
@@ -243,6 +249,93 @@ describe('NotificationService (SUBST-03)', () => {
     expect(recipients).toContain('kc-admin');
     // person.findMany is no longer used for admin resolution
     expect(prismaMock.person.findMany).not.toHaveBeenCalled();
+  });
+
+  it('create() queues a push-notification job on PUSH_QUEUE after persisting the row (D-06)', async () => {
+    const { service, prismaMock, pushQueueMock } = createService();
+    prismaMock.notification.create.mockResolvedValue({
+      id: 'n-1',
+      userId: 'user-1',
+      type: 'MESSAGE_RECEIVED',
+      title: 'Neue Nachricht',
+      body: 'Hr. Mueller hat Ihnen geschrieben',
+      payload: { conversationId: 'conv-1' },
+      readAt: null,
+      createdAt: new Date(),
+    });
+    prismaMock.notification.count.mockResolvedValue(1);
+
+    await service.create({
+      userId: 'user-1',
+      type: 'MESSAGE_RECEIVED',
+      title: 'Neue Nachricht',
+      body: 'Hr. Mueller hat Ihnen geschrieben',
+      payload: { conversationId: 'conv-1' },
+    });
+
+    expect(pushQueueMock.add).toHaveBeenCalledOnce();
+    const [jobName, jobData] = pushQueueMock.add.mock.calls[0];
+    expect(jobName).toBe('push-notification');
+    expect(jobData.userId).toBe('user-1');
+    expect(jobData.payload.title).toBe('Neue Nachricht');
+    expect(jobData.payload.body).toBe('Hr. Mueller hat Ihnen geschrieben');
+    // MESSAGE_RECEIVED with conversationId routes to /messages/:id
+    expect(jobData.payload.url).toBe('/messages/conv-1');
+    // Tag starts with lowercased type
+    expect(jobData.payload.tag).toMatch(/^message_received-\d+$/);
+  });
+
+  it('create() routes notification URLs per type (SUBSTITUTION_OFFER -> /teacher/substitutions, HOMEWORK_ASSIGNED -> /timetable)', async () => {
+    const { service, prismaMock, pushQueueMock } = createService();
+    prismaMock.notification.create.mockResolvedValue({
+      id: 'n-2',
+      userId: 'user-1',
+      type: 'HOMEWORK_ASSIGNED',
+      title: 'Neue Hausaufgabe',
+      body: 'Mathematik: Aufgabe 5',
+      payload: null,
+      readAt: null,
+      createdAt: new Date(),
+    });
+    prismaMock.notification.count.mockResolvedValue(1);
+
+    await service.create({
+      userId: 'user-1',
+      type: 'HOMEWORK_ASSIGNED',
+      title: 'Neue Hausaufgabe',
+      body: 'Mathematik: Aufgabe 5',
+    });
+
+    const jobData = pushQueueMock.add.mock.calls[0][1];
+    expect(jobData.payload.url).toBe('/timetable');
+  });
+
+  it('create() does not rethrow if push queue add fails (push must never block notification creation)', async () => {
+    const { service, prismaMock, pushQueueMock, gatewayMock } = createService();
+    prismaMock.notification.create.mockResolvedValue({
+      id: 'n-3',
+      userId: 'user-1',
+      type: 'ABSENCE_RECORDED',
+      title: 't',
+      body: 'b',
+      payload: null,
+      readAt: null,
+      createdAt: new Date(),
+    });
+    prismaMock.notification.count.mockResolvedValue(1);
+    pushQueueMock.add.mockRejectedValueOnce(new Error('redis down'));
+
+    // Should still resolve normally — gateway emit already happened, the
+    // push channel is a best-effort side effect.
+    await expect(
+      service.create({
+        userId: 'user-1',
+        type: 'ABSENCE_RECORDED',
+        title: 't',
+        body: 'b',
+      }),
+    ).resolves.toBeDefined();
+    expect(gatewayMock.emitNewNotification).toHaveBeenCalled();
   });
 
   it('resolveRecipientsForSubstitutionEvent omits admin for SUBSTITUTION_OFFER (substitute-only scope)', async () => {
