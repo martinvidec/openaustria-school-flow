@@ -21,6 +21,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 7: Communication** - Messaging (direct, group, broadcast), read receipts, file attachments, polls
 - [ ] **Phase 8: Homework, Exams & Data Import** - Homework/exam management in timetable, Untis XML import, CSV import, API integration
 - [ ] **Phase 9: Mobile, PWA & Production Readiness** - Push notifications, offline timetable, backup/restore, rolling updates
+- [ ] **Phase 9.1: Runtime Blockers Fix** (GAP CLOSURE) - ImportController prefix, solver callback URL, minor cleanups
+- [ ] **Phase 9.2: DSGVO Compliance Closure** (GAP CLOSURE) - Extend export/deletion/retention for Phase 5-8 data
+- [ ] **Phase 9.3: Solver Frontend Wiring** (GAP CLOSURE) - /solver Socket.IO consumer, admin solve trigger UI
 
 ## Phase Details
 
@@ -226,6 +229,39 @@ Plans:
 - [x] 09-03-PLAN.md -- Push notification backend (PushSubscription Prisma model, PushModule with web-push, BullMQ processor, NotificationService push integration)
 - [x] 09-04-PLAN.md -- Push notification frontend (usePushSubscription hook, PushNotificationSettings card, settings page wiring, human verification checkpoint)
 - [x] 09-05-PLAN.md -- Production readiness (health/ready endpoints, backup/restore scripts, multi-stage Dockerfiles, Docker Compose production profile, .env.example)
+
+### Phase 9.1: Runtime Blockers Fix (GAP CLOSURE)
+**Goal**: Fix runtime blockers identified by milestone audit -- ImportController double prefix breaking import API, solver callback URL not reaching NestJS, and minor finding cleanups
+**Depends on**: Phase 9
+**Requirements**: IMPORT-01, IMPORT-02, TIME-04
+**Gap Closure**: Closes runtime blockers from v1.0-MILESTONE-AUDIT.md (Findings 1, 2, 7, 8, 9)
+**Success Criteria**:
+  1. Import API routes resolve correctly (no double prefix); useImport hooks reach the controller
+  2. Solver callback URL from solver service reaches NestJS endpoint; solve completion arrives at SolverCallbackController
+  3. API_INTERNAL_URL documented in .env.example and set in docker-compose
+  4. PermissionSubject enum includes HOMEWORK, EXAM, IMPORT, PUSH entries
+  5. Phase 6 VERIFICATION.md ChangeIndicator truth updated to reflect resolved state
+
+### Phase 9.2: DSGVO Compliance Closure (GAP CLOSURE)
+**Goal**: Extend Phase 2 DSGVO services (export, deletion, retention) to cover personal data added by Phases 5-8 (grades, attendance, excuses, notes, messages, notifications, homework, exams)
+**Depends on**: Phase 9
+**Requirements**: DSGVO-04, DSGVO-05, DSGVO-06
+**Gap Closure**: Closes compliance gaps from v1.0-MILESTONE-AUDIT.md (Findings 4, 5, 6)
+**Success Criteria**:
+  1. data-export.service queries and includes Phase 5-8 personal data tables (AttendanceRecord, GradeEntry, AbsenceExcuse, StudentNote, Message, MessageRecipient, Notification, Homework, Exam)
+  2. anonymizePerson() updates or anonymizes Phase 5-8 linked records (no orphaned PII references)
+  3. retention.service performs actual deletion (not just count reporting) for noten, anwesenheit, kommunikation categories
+
+### Phase 9.3: Solver Frontend Wiring (GAP CLOSURE)
+**Goal**: Wire the existing /solver Socket.IO namespace into the frontend with admin solve trigger UI and real-time progress display
+**Depends on**: Phase 9.1 (needs working solver callback first)
+**Requirements**: TIME-06
+**Gap Closure**: Closes feature gap from v1.0-MILESTONE-AUDIT.md (Finding 3)
+**Success Criteria**:
+  1. createSolverSocket factory in apps/web/src/lib/socket.ts
+  2. useSolverSocket hook subscribes to solve:progress and solve:complete events
+  3. Admin solve trigger page in /admin/solver with progress bar and result display
+  4. Generate-timetable button in admin UI starts a solve run and displays live progress
 
 ## Progress
 

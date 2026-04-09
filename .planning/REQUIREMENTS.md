@@ -83,9 +83,9 @@
 - [x] **DSGVO-01**: System trackt Einwilligungen pro Datenverarbeitungszweck
 - [x] **DSGVO-02**: Personenbezogene Daten können vollständig gelöscht werden (Recht auf Vergessenwerden)
 - [x] **DSGVO-03**: Nutzer können Export aller eigenen Daten anfordern (Art. 15 DSGVO)
-- [x] **DSGVO-04**: Datenbank-Felder mit sensiblen Daten sind verschlüsselt (at rest + in transit)
-- [x] **DSGVO-05**: Automatisierte Aufbewahrungsfristen mit konfigurierbarer Ablaufzeit
-- [x] **DSGVO-06**: System liefert DSFA-Template und Verarbeitungsverzeichnis-Export
+- [ ] **DSGVO-04**: Datenbank-Felder mit sensiblen Daten sind verschlüsselt (at rest + in transit) — gap closure: data export missing Phase 5-8 personal data tables
+- [ ] **DSGVO-05**: Automatisierte Aufbewahrungsfristen mit konfigurierbarer Ablaufzeit — gap closure: anonymizePerson missing cross-phase linked records
+- [ ] **DSGVO-06**: System liefert DSFA-Template und Verarbeitungsverzeichnis-Export — gap closure: retention.service performs no actual deletion for noten/anwesenheit/kommunikation
 
 ### Mobile Access
 
@@ -95,8 +95,8 @@
 
 ### Data Import/Export
 
-- [x] **IMPORT-01**: Admin kann Daten aus Untis XML-Format importieren (Lehrer, Klassen, Räume, Stundenpläne)
-- [x] **IMPORT-02**: Admin kann CSV-Dateien importieren (Schülerlisten, Lehrerlisten, Raumlisten)
+- [ ] **IMPORT-01**: Admin kann Daten aus Untis XML-Format importieren (Lehrer, Klassen, Räume, Stundenpläne) — gap closure: ImportController double API prefix breaks all routes
+- [ ] **IMPORT-02**: Admin kann CSV-Dateien importieren (Schülerlisten, Lehrerlisten, Raumlisten) — gap closure: same double prefix issue
 - [x] **IMPORT-03**: System bietet iCal/ICS-Export für persönliche Kalender
 - [x] **IMPORT-04**: API ermöglicht Datenanbindung an externe SIS-Systeme
 
@@ -215,14 +215,14 @@
 | DSGVO-01 | Phase 2 | Complete |
 | DSGVO-02 | Phase 2 | Complete |
 | DSGVO-03 | Phase 2 | Complete |
-| DSGVO-04 | Phase 2 | Complete |
-| DSGVO-05 | Phase 2 | Complete |
-| DSGVO-06 | Phase 2 | Complete |
+| DSGVO-04 | Phase 9.2 | Pending (Gap closure: export missing Phase 5-8 data) |
+| DSGVO-05 | Phase 9.2 | Pending (Gap closure: anonymization missing cross-phase records) |
+| DSGVO-06 | Phase 9.2 | Pending (Gap closure: retention reports counts but does not delete) |
 | MOBILE-01 | Phase 9 | Complete |
 | MOBILE-02 | Phase 9 | Complete |
 | MOBILE-03 | Phase 9 | Complete |
-| IMPORT-01 | Phase 8 | Complete |
-| IMPORT-02 | Phase 8 | Complete |
+| IMPORT-01 | Phase 9.1 | Pending (Gap closure: ImportController double API prefix) |
+| IMPORT-02 | Phase 9.1 | Pending (Gap closure: ImportController double API prefix) |
 | IMPORT-03 | Phase 8 | Complete |
 | IMPORT-04 | Phase 8 | Complete |
 | HW-01 | Phase 8 | Complete |
