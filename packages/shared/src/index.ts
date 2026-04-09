@@ -10,3 +10,4 @@ export * from './types/messaging';
 export * from './types/homework';
 export * from './types/import';
 export * from './types/calendar';
+export * from './types/push';

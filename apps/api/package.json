@@ -46,7 +46,8 @@
     "pg": "^8.20.0",
     "reflect-metadata": "^0.2",
     "rxjs": "^7",
-    "socket.io": "^4.8.3"
+    "socket.io": "^4.8.3",
+    "web-push": "^3.6.7"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -60,6 +61,7 @@
     "@types/passport-jwt": "^4.0.1",
     "@types/pdfkit": "^0.17.5",
     "@types/pg": "^8.20.0",
+    "@types/web-push": "^3.6.4",
     "@vitest/coverage-v8": "^4",
     "prisma": "^7.6.0",
     "tsx": "^4.21.0",

@@ -1133,6 +1133,24 @@ model Notification {
 }
 
 // ============================================================================
+// Phase 9 Plan 03 — Web Push subscriptions (MOBILE-02)
+// D-05 Web Push with VAPID, D-08 web-push with auto-cleanup on 410 response
+// ============================================================================
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}
+
+// ============================================================================
 // Phase 7 — Communication (COMM-01..COMM-06)
 // D-01, D-02, D-03, D-04, D-05, D-08, D-10
 // ============================================================================

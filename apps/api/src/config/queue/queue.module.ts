@@ -6,6 +6,7 @@ import {
   DSGVO_EXPORT_QUEUE,
   DSGVO_RETENTION_QUEUE,
   SOLVER_QUEUE,
+  PUSH_QUEUE,
 } from './queue.constants';
 
 @Global()
@@ -25,6 +26,7 @@ import {
       { name: DSGVO_EXPORT_QUEUE },
       { name: DSGVO_RETENTION_QUEUE },
       { name: SOLVER_QUEUE },
+      { name: PUSH_QUEUE },
     ),
   ],
   exports: [BullModule],
