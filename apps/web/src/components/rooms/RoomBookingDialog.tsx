@@ -68,7 +68,7 @@ export function RoomBookingDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent>
+      <DialogContent className="h-[100dvh] sm:h-auto sm:max-w-lg max-w-full">
         <DialogHeader>
           <DialogTitle>Raum buchen</DialogTitle>
           <DialogDescription>
@@ -78,8 +78,8 @@ export function RoomBookingDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Pre-filled read-only info */}
-          <div className="grid grid-cols-3 gap-4 text-sm">
+          {/* Pre-filled read-only info -- stack on mobile, 3 cols on sm+ */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
             <div>
               <span className="text-muted-foreground">Raum</span>
               <p className="font-semibold">{room.name}</p>

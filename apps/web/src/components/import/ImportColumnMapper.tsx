@@ -97,7 +97,53 @@ export function ImportColumnMapper({
         </p>
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Mobile: stacked cards (one per column) */}
+      <div className="sm:hidden space-y-3">
+        {headers.map((header, idx) => (
+          <div
+            key={header}
+            className="rounded-md border border-border p-3 space-y-2"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <span className="font-semibold text-sm">{header}</span>
+            </div>
+            <div className="space-y-0.5">
+              <span className="text-xs text-muted-foreground">Vorschau:</span>
+              {sampleData.slice(0, 3).map((row, rowIdx) => (
+                <div
+                  key={rowIdx}
+                  className="text-xs text-muted-foreground truncate"
+                >
+                  {row[idx] ?? ''}
+                </div>
+              ))}
+            </div>
+            <div className="space-y-1">
+              <span className="text-xs font-semibold">SchoolFlow-Feld:</span>
+              <Select
+                value={mapping[header]}
+                onValueChange={(v) => handleMappingSelect(header, v)}
+              >
+                <SelectTrigger className="w-full min-h-[44px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__skip__">Ueberspringen</SelectItem>
+                  {targetFields.map((field) => (
+                    <SelectItem key={field.key} value={field.key}>
+                      {field.label}
+                      {field.required ? ' *' : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Tablet/desktop: table layout */}
+      <div className="hidden sm:block overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/50">

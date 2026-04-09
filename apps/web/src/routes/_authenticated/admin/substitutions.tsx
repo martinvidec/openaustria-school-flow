@@ -129,16 +129,23 @@ function SubstitutionsPage() {
           })
         }
       >
-        <TabsList>
-          <TabsTrigger value="absences">Abwesenheiten</TabsTrigger>
-          <TabsTrigger value="open">Offene Vertretungen</TabsTrigger>
-          <TabsTrigger value="stats">Statistik</TabsTrigger>
+        {/* Tabs stack on mobile via flex-col, horizontal on sm+ */}
+        <TabsList className="flex w-full flex-col sm:flex-row sm:w-auto h-auto sm:h-10">
+          <TabsTrigger value="absences" className="w-full sm:w-auto min-h-[44px]">
+            Abwesenheiten
+          </TabsTrigger>
+          <TabsTrigger value="open" className="w-full sm:w-auto min-h-[44px]">
+            Offene Vertretungen
+          </TabsTrigger>
+          <TabsTrigger value="stats" className="w-full sm:w-auto min-h-[44px]">
+            Statistik
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="absences" className="space-y-6 pt-4">
           {!formOpen && (
             <div>
-              <Button onClick={() => setFormOpen(true)}>
+              <Button onClick={() => setFormOpen(true)} className="w-full sm:w-auto min-h-[44px]">
                 Neue Abwesenheit erfassen
               </Button>
             </div>
@@ -180,7 +187,10 @@ function SubstitutionsPage() {
         </TabsContent>
 
         <TabsContent value="stats" className="pt-4">
-          <FairnessStatsPanel schoolId={schoolId} />
+          {/* Horizontal scroll wrapper for FairnessStatsPanel on mobile */}
+          <div className="overflow-x-auto">
+            <FairnessStatsPanel schoolId={schoolId} />
+          </div>
         </TabsContent>
       </Tabs>
     </div>

@@ -138,11 +138,13 @@ function ResourcesPage() {
   return (
     <div className="space-y-6">
       {/* Page header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 className="text-[28px] font-semibold leading-[1.2]">
           Ressourcen
         </h1>
-        <Button onClick={handleAdd}>Ressource hinzufuegen</Button>
+        <Button onClick={handleAdd} className="w-full sm:w-auto min-h-[44px]">
+          Ressource hinzufuegen
+        </Button>
       </div>
 
       {/* Loading state */}
@@ -186,20 +188,22 @@ function ResourcesPage() {
         </Card>
       )}
 
-      {/* Resource list */}
+      {/* Resource list -- horizontal scroll wrapper for mobile */}
       {!isLoading && !isError && resources.length > 0 && (
-        <ResourceList
-          resources={resources}
-          onAdd={handleAdd}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          isDeleting={deleteResource.isPending}
-        />
+        <div className="overflow-x-auto">
+          <ResourceList
+            resources={resources}
+            onAdd={handleAdd}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            isDeleting={deleteResource.isPending}
+          />
+        </div>
       )}
 
-      {/* Add/Edit dialog */}
+      {/* Add/Edit dialog -- full-screen on mobile */}
       <Dialog open={dialogOpen} onOpenChange={(open) => !open && handleDialogClose()}>
-        <DialogContent>
+        <DialogContent className="h-[100dvh] sm:h-auto sm:max-w-lg max-w-full">
           <DialogHeader>
             <DialogTitle>
               {editingResource

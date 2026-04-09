@@ -168,15 +168,15 @@ function RoomsPage() {
       {/* Page title */}
       <h1 className="text-[28px] font-semibold leading-[1.2]">Raeume</h1>
 
-      {/* Filter bar */}
+      {/* Filter bar -- stacked on mobile, horizontal on sm+ */}
       <Card>
         <CardContent className="py-4">
-          <div className="flex flex-wrap items-end gap-4">
+          <div className="grid grid-cols-1 sm:flex sm:flex-wrap sm:items-end gap-4">
             {/* Day selector */}
             <div className="space-y-1.5">
               <label className="text-sm font-semibold">Tag</label>
               <Select value={dayOfWeek} onValueChange={setDayOfWeek}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px] min-h-[44px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -193,7 +193,7 @@ function RoomsPage() {
             <div className="space-y-1.5">
               <label className="text-sm font-semibold">Raumtyp</label>
               <Select value={roomType} onValueChange={setRoomType}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px] min-h-[44px]">
                   <SelectValue placeholder="Alle Raumtypen" />
                 </SelectTrigger>
                 <SelectContent>
@@ -216,7 +216,7 @@ function RoomsPage() {
               </label>
               <input
                 type="number"
-                className="flex h-10 w-[120px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex min-h-[44px] h-11 w-full sm:w-[120px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="z.B. 20"
                 value={minCapacity}
                 onChange={(e) => setMinCapacity(e.target.value)}
@@ -229,7 +229,7 @@ function RoomsPage() {
               <label className="text-sm font-semibold">Ausstattung</label>
               <input
                 type="text"
-                className="flex h-10 w-[200px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex min-h-[44px] h-11 w-full sm:w-[200px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 placeholder="z.B. Beamer, Whiteboard"
                 value={equipment}
                 onChange={(e) => setEquipment(e.target.value)}
@@ -283,15 +283,17 @@ function RoomsPage() {
         </Card>
       )}
 
-      {/* Room availability grid */}
+      {/* Room availability grid -- horizontal scroll on mobile with frozen time column */}
       {!isLoading && !isError && hasRooms && (
         <>
-          <RoomAvailabilityGrid
-            slots={slots}
-            periods={DEFAULT_PERIODS}
-            onSlotClick={handleSlotClick}
-            onBookingClick={handleBookingClick}
-          />
+          <div className="overflow-x-auto">
+            <RoomAvailabilityGrid
+              slots={slots}
+              periods={DEFAULT_PERIODS}
+              onSlotClick={handleSlotClick}
+              onBookingClick={handleBookingClick}
+            />
+          </div>
 
           {/* Empty bookings info */}
           {!hasBookings && (

@@ -57,7 +57,12 @@ function ImportPage() {
         </Card>
       )}
 
-      {!isLoading && !isError && <ImportHistoryList imports={imports} />}
+      {/* Import history list -- horizontal scroll wrapper for mobile */}
+      {!isLoading && !isError && (
+        <div className="overflow-x-auto">
+          <ImportHistoryList imports={imports} />
+        </div>
+      )}
     </div>
   );
 }

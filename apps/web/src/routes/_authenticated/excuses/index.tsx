@@ -39,7 +39,10 @@ function ExcusesPage() {
         <h1 className="text-[28px] font-semibold leading-[1.2]">
           Entschuldigungen pruefen
         </h1>
-        <ExcuseReviewList schoolId={schoolId} />
+        {/* Horizontal scroll wrapper for ExcuseReviewList on mobile */}
+        <div className="overflow-x-auto">
+          <ExcuseReviewList schoolId={schoolId} />
+        </div>
       </div>
     );
   }

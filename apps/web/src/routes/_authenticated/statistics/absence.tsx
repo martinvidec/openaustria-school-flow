@@ -37,10 +37,13 @@ function AbsenceStatisticsPage() {
           Keine Klassen verfuegbar.
         </p>
       ) : selectedClassId ? (
-        <AbsenceStatisticsPanel
-          schoolId={schoolId}
-          classId={selectedClassId}
-        />
+        /* Horizontal scroll wrapper for AbsenceStatisticsPanel table on mobile */
+        <div className="overflow-x-auto">
+          <AbsenceStatisticsPanel
+            schoolId={schoolId}
+            classId={selectedClassId}
+          />
+        </div>
       ) : null}
     </div>
   );
