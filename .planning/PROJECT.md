@@ -27,11 +27,12 @@ Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenp
 - [x] Digitales Klassenbuch (Anwesenheit, Unterrichtsinhalte, Noten, Abwesenheiten) — Validated in Phase 5: Digital Class Book
 - [x] Vertretungsplanung (automatische Vorschläge basierend auf Verfügbarkeit) — Validated in Phase 6: Substitution Planning
 - [x] Schulkommunikation (Lehrer-Eltern, Lehrer-Schüler, Mitteilungen, Lesebestätigungen) — Validated in Phase 7: Communication
+- [x] Hausaufgaben, Prüfungen & Datenimport (Untis XML, CSV, iCal Export, SIS API) — Validated in Phase 8: Homework, Exams & Data Import
+- [x] Multi-Plattform UI (Web + Mobile) mit modernem, responsivem Design — Validated in Phase 9: Mobile, PWA & Production Readiness
 
 ### Active
 
 - [ ] Plugin-/Konnektor-System mit offener API (MS Teams, Google Calendar, Outlook, etc.)
-- [ ] Multi-Plattform UI (Web + Mobile) mit modernem, responsivem Design
 
 ### Out of Scope
 
