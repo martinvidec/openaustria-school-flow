@@ -150,6 +150,67 @@ export function disconnectNotificationSocket(socket?: Socket | null): void {
   }
 }
 
+// --- Solver namespace (TIME-06, D-08) ---
+
+let solverSocket: Socket | null = null;
+
+/**
+ * Creates (or reconnects) a Socket.IO client for the /solver namespace.
+ *
+ * Closes v1.0 audit Finding 3: /solver Socket.IO had no frontend consumer.
+ * The TimetableGateway (apps/api/src/modules/timetable/timetable.gateway.ts)
+ * broadcasts `solve:progress` and `solve:complete` events to clients joined
+ * into `school:{schoolId}` rooms.
+ *
+ * Per the gateway contract, clients identify their school via the `schoolId`
+ * query param (NOT a JWT handshake -- progress events are scoped by
+ * school-room membership, not per-user authentication). This mirrors the
+ * existing `createTimetableSocket(schoolId)` pattern.
+ *
+ * Per Pitfall 7 in Phase 3 RESEARCH: dual transports ['websocket', 'polling']
+ * for school-network proxy fallback.
+ */
+export function createSolverSocket(schoolId: string): Socket {
+  if (solverSocket) {
+    solverSocket.disconnect();
+  }
+
+  solverSocket = io(`${API_URL}/solver`, {
+    query: { schoolId },
+    auth: { token: keycloak.token },
+    transports: ['websocket', 'polling'],
+    autoConnect: true,
+    reconnection: true,
+    reconnectionDelay: 1000,
+    reconnectionAttempts: 10,
+  });
+
+  return solverSocket;
+}
+
+/**
+ * Returns the current solver socket instance, or null if not connected.
+ */
+export function getSolverSocket(): Socket | null {
+  return solverSocket;
+}
+
+/**
+ * Disconnects and cleans up the solver socket. Accepts an optional socket
+ * argument so the hook can dispose the exact instance it captured during
+ * mount (avoids race conditions on rapid unmount/remount).
+ */
+export function disconnectSolverSocket(socket?: Socket | null): void {
+  const target = socket ?? solverSocket;
+  if (target) {
+    target.removeAllListeners();
+    target.disconnect();
+  }
+  if (!socket || socket === solverSocket) {
+    solverSocket = null;
+  }
+}
+
 // --- Messaging namespace (COMM-01/02/03, D-08) ---
 
 let messagingSocket: Socket | null = null;
