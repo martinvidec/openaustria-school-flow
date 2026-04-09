@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 9.2-01-PLAN.md
-last_updated: "2026-04-09T13:27:49.847Z"
+stopped_at: Completed 9.3-01-PLAN.md
+last_updated: "2026-04-09T18:24:41.104Z"
 last_activity: 2026-04-09
 progress:
   total_phases: 12
-  completed_phases: 11
-  total_plans: 73
-  completed_plans: 73
+  completed_phases: 12
+  total_plans: 74
+  completed_plans: 74
   percent: 100
 ---
 
@@ -25,9 +25,9 @@ See: .planning/PROJECT.md (updated 2026-03-29)
 
 ## Current Position
 
-Phase: 09.2
-Plan: 9.2-01 complete
-Status: Gap-closure phase 09.2 (DSGVO compliance) complete — all v1.0 audit findings closed, ready for milestone re-audit
+Phase: 09.3
+Plan: 9.3-01 complete
+Status: Gap-closure phase 09.3 (Solver Frontend Wiring) complete — TIME-06 audit Finding 3 closed, /solver Socket.IO now has frontend consumer, all v1.0 audit findings closed, ready for milestone re-audit
 Last activity: 2026-04-09
 
 Progress: [██████████] 100%
@@ -119,6 +119,7 @@ Progress: [██████████] 100%
 | Phase 09-mobile-pwa-production-readiness P04 | 240min | 2 tasks | 3 files |
 | Phase 09.1-runtime-blockers-fix P01 | 5 min | 2 tasks | 6 files |
 | Phase 09.2-dsgvo-compliance-closure P9.2-01 | 26 | 2 tasks | 7 files |
+| Phase 09.3-solver-frontend-wiring P9.3-01 | 20 min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -329,6 +330,10 @@ Recent decisions affecting current work:
 - [Phase 09.2-dsgvo-compliance-closure]: [Phase 09.2]: kommunikation retention deletion uses explicit transaction with MessageRecipient deleted before Message (FK-safe order; schema does not declare onDelete: Cascade on every relation)
 - [Phase 09.2-dsgvo-compliance-closure]: [Phase 09.2]: Per-category 50-row cap on Phase 5-8 export sections matches existing Phase 2 D-14 cap on audit log entries -- prevents oversized DSGVO Art. 15 PDFs
 - [Phase 09.2-dsgvo-compliance-closure]: [Phase 09.2]: Anonymization splits user-only data (PushSubscription, CalendarToken, SisApiKey -- cascade-delete) from cross-phase classroom data (StudentNote.content, Message.body -- placeholder anonymization)
+- [Phase 09.3-solver-frontend-wiring]: createSolverSocket takes schoolId (not JWT) matching TimetableGateway contract -- clients join school:{schoolId} rooms via handshake query param
+- [Phase 09.3-solver-frontend-wiring]: useSolverSocket mounted page-scope (not layout) -- solver events only relevant while viewing admin solver page, mirrors useClassbookSocket precedent
+- [Phase 09.3-solver-frontend-wiring]: SolveCompleteEvent fields {runId,status,hardScore,softScore,elapsedSeconds} match SolverCallbackController payload -- plan draft lessonsCount field does not exist
+- [Phase 09.3-solver-frontend-wiring]: POST /timetable/solve body is empty {} -- backend StartSolveDto defaults apply (maxSolveSeconds=300), constraint weight tuning deferred to v1.1
 
 ### Pending Todos
 
@@ -342,6 +347,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-09T13:27:49.843Z
-Stopped at: Completed 9.2-01-PLAN.md
+Last session: 2026-04-09T18:24:41.100Z
+Stopped at: Completed 9.3-01-PLAN.md
 Resume file: None
