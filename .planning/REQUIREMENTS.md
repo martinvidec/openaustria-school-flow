@@ -153,61 +153,61 @@ Empty initially — populated during roadmap creation by `gsd-roadmapper`.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ADMIN-01 | TBD | Pending |
-| ADMIN-02 | TBD | Pending |
-| ADMIN-03 | TBD | Pending |
-| SCHOOL-01 | TBD | Pending |
-| SCHOOL-02 | TBD | Pending |
-| SCHOOL-03 | TBD | Pending |
-| SCHOOL-04 | TBD | Pending |
-| SCHOOL-05 | TBD | Pending |
-| TEACHER-01 | TBD | Pending |
-| TEACHER-02 | TBD | Pending |
-| TEACHER-03 | TBD | Pending |
-| TEACHER-04 | TBD | Pending |
-| TEACHER-05 | TBD | Pending |
-| TEACHER-06 | TBD | Pending |
-| STUDENT-01 | TBD | Pending |
-| STUDENT-02 | TBD | Pending |
-| STUDENT-03 | TBD | Pending |
-| STUDENT-04 | TBD | Pending |
-| CLASS-01 | TBD | Pending |
-| CLASS-02 | TBD | Pending |
-| CLASS-03 | TBD | Pending |
-| CLASS-04 | TBD | Pending |
-| CLASS-05 | TBD | Pending |
-| SUBJECT-01 | TBD | Pending |
-| SUBJECT-02 | TBD | Pending |
-| SUBJECT-03 | TBD | Pending |
-| SUBJECT-04 | TBD | Pending |
-| SUBJECT-05 | TBD | Pending |
-| USER-01 | TBD | Pending |
-| USER-02 | TBD | Pending |
-| USER-03 | TBD | Pending |
-| USER-04 | TBD | Pending |
-| USER-05 | TBD | Pending |
-| SOLVER-01 | TBD | Pending |
-| SOLVER-02 | TBD | Pending |
-| SOLVER-03 | TBD | Pending |
-| SOLVER-04 | TBD | Pending |
-| SOLVER-05 | TBD | Pending |
-| DSGVO-ADM-01 | TBD | Pending |
-| DSGVO-ADM-02 | TBD | Pending |
-| DSGVO-ADM-03 | TBD | Pending |
-| DSGVO-ADM-04 | TBD | Pending |
-| DSGVO-ADM-05 | TBD | Pending |
-| DSGVO-ADM-06 | TBD | Pending |
-| AUDIT-VIEW-01 | TBD | Pending |
-| AUDIT-VIEW-02 | TBD | Pending |
-| AUDIT-VIEW-03 | TBD | Pending |
-| MOBILE-ADM-01 | TBD | Pending |
-| MOBILE-ADM-02 | TBD | Pending |
-| MOBILE-ADM-03 | TBD | Pending |
+| ADMIN-01 | Phase 16 | Pending |
+| ADMIN-02 | Phase 16 | Pending |
+| ADMIN-03 | Phase 16 | Pending |
+| SCHOOL-01 | Phase 10 | Pending |
+| SCHOOL-02 | Phase 10 | Pending |
+| SCHOOL-03 | Phase 10 | Pending |
+| SCHOOL-04 | Phase 10 | Pending |
+| SCHOOL-05 | Phase 10 | Pending |
+| TEACHER-01 | Phase 11 | Pending |
+| TEACHER-02 | Phase 11 | Pending |
+| TEACHER-03 | Phase 11 | Pending |
+| TEACHER-04 | Phase 11 | Pending |
+| TEACHER-05 | Phase 11 | Pending |
+| TEACHER-06 | Phase 11 | Pending |
+| STUDENT-01 | Phase 12 | Pending |
+| STUDENT-02 | Phase 12 | Pending |
+| STUDENT-03 | Phase 12 | Pending |
+| STUDENT-04 | Phase 12 | Pending |
+| CLASS-01 | Phase 12 | Pending |
+| CLASS-02 | Phase 12 | Pending |
+| CLASS-03 | Phase 12 | Pending |
+| CLASS-04 | Phase 12 | Pending |
+| CLASS-05 | Phase 12 | Pending |
+| SUBJECT-01 | Phase 11 | Pending |
+| SUBJECT-02 | Phase 11 | Pending |
+| SUBJECT-03 | Phase 11 | Pending |
+| SUBJECT-04 | Phase 11 | Pending |
+| SUBJECT-05 | Phase 11 | Pending |
+| USER-01 | Phase 13 | Pending |
+| USER-02 | Phase 13 | Pending |
+| USER-03 | Phase 13 | Pending |
+| USER-04 | Phase 13 | Pending |
+| USER-05 | Phase 13 | Pending |
+| SOLVER-01 | Phase 14 | Pending |
+| SOLVER-02 | Phase 14 | Pending |
+| SOLVER-03 | Phase 14 | Pending |
+| SOLVER-04 | Phase 14 | Pending |
+| SOLVER-05 | Phase 14 | Pending |
+| DSGVO-ADM-01 | Phase 15 | Pending |
+| DSGVO-ADM-02 | Phase 15 | Pending |
+| DSGVO-ADM-03 | Phase 15 | Pending |
+| DSGVO-ADM-04 | Phase 15 | Pending |
+| DSGVO-ADM-05 | Phase 15 | Pending |
+| DSGVO-ADM-06 | Phase 15 | Pending |
+| AUDIT-VIEW-01 | Phase 15 | Pending |
+| AUDIT-VIEW-02 | Phase 15 | Pending |
+| AUDIT-VIEW-03 | Phase 15 | Pending |
+| MOBILE-ADM-01 | Phase 16 | Pending |
+| MOBILE-ADM-02 | Phase 16 | Pending |
+| MOBILE-ADM-03 | Phase 16 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 50 total
-- Mapped to phases: 0 (pending roadmapper)
-- Unmapped: 50 ⚠
+- Mapped to phases: 50 (7 phases, Phase 10-16)
+- Unmapped: 0 ✓
 
 ---
 

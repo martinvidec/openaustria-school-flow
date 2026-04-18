@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: schuladmin-console
-status: defining-requirements
-stopped_at: Milestone v1.1 started — defining requirements
-last_updated: "2026-04-18T12:00:00.000Z"
+status: ready-to-plan
+stopped_at: Roadmap created — ready to plan Phase 10
+last_updated: "2026-04-18T12:30:00.000Z"
 last_activity: 2026-04-18
 progress:
-  total_phases: 0
+  total_phases: 7
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Not started (roadmap created — ready to plan Phase 10)
 Plan: —
-Status: Defining requirements for v1.1 Schuladmin Console (brownfield UI-only milestone — admin CRUD surfaces on top of existing v1.0 backend)
-Last activity: 2026-04-18 — Milestone v1.1 started
+Status: Roadmap for v1.1 Schuladmin Console created — 7 phases (10-16), 50 requirements mapped. Next step: /gsd:plan-phase 10
+Last activity: 2026-04-18 — v1.1 roadmap created
 
 Progress: [░░░░░░░░░░] 0%
 
