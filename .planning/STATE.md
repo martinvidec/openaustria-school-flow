@@ -3,9 +3,10 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: schuladmin-console
 status: ready-to-plan
-stopped_at: Roadmap created — ready to plan Phase 10
-last_updated: "2026-04-18T12:30:00.000Z"
+stopped_at: Phase 10 context gathered
+last_updated: "2026-04-18T13:00:00.000Z"
 last_activity: 2026-04-18
+resume_file: .planning/phases/10-schulstammdaten-zeitraster/10-CONTEXT.md
 progress:
   total_phases: 7
   completed_phases: 0
@@ -25,10 +26,10 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 
 ## Current Position
 
-Phase: Not started (roadmap created — ready to plan Phase 10)
+Phase: 10 — Schulstammdaten & Zeitraster (context gathered, ready to plan)
 Plan: —
-Status: Roadmap for v1.1 Schuladmin Console created — 7 phases (10-16), 50 requirements mapped. Next step: /gsd:plan-phase 10
-Last activity: 2026-04-18 — v1.1 roadmap created
+Status: Phase 10 CONTEXT.md captured — 16 implementation decisions across 4 gray areas (Onboarding-Flow, A/B-Wochen, Schuljahr-Semantik, Zeitraster-Editor) + 1 deferred (Kontakt → Phase 13). Next step: /gsd:plan-phase 10
+Last activity: 2026-04-18 — Phase 10 context gathered
 
 Progress: [░░░░░░░░░░] 0%
 
