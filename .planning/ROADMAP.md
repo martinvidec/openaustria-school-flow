@@ -30,4 +30,6 @@ See [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full 
 
 ## Progress
 
-v1.0 complete. Ready for v1.1 planning — run `/gsd:new-milestone` to start the next cycle.
+**v1.1 Schuladmin Console — defining requirements (started 2026-04-18).**
+
+Roadmap phases will be appended here once the roadmapper agent runs. Phase numbering continues from v1.0 (next phase = **Phase 10**).

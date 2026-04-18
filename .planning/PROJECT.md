@@ -32,7 +32,22 @@ Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenp
 
 ### Active
 
-- [ ] Plugin-/Konnektor-System mit offener API (MS Teams, Google Calendar, Outlook, etc.)
+**v1.1 Schuladmin Console (current milestone):**
+
+- [ ] Admin UI für Schulstammdaten, Zeitraster, Schuljahr (inkl. A/B-Wochen-Toggle)
+- [ ] Admin UI für Lehrer-CRUD mit Lehrverpflichtung/Werteinheiten, Verfügbarkeit und Ermäßigungen
+- [ ] Admin UI für Schüler- und Klassen-CRUD mit Stammklasse und Gruppenzuordnung
+- [ ] Admin UI für Fächer-CRUD und Stundentafel-Verwaltung inkl. Gruppenableitungsregeln (Religion/Leistung/Wahlpflicht)
+- [ ] Admin UI für User-Verwaltung (Keycloak-Liste, Rollenzuweisung) und CASL-ACL-Overrides pro User
+- [ ] Admin UI für Solver-Tuning (Constraint-Templates, Gewichts-Overrides, Zeit-/Fach-Restriktionen)
+- [ ] Admin UI für DSGVO-Verwaltung (Einwilligungs-Audit, Aufbewahrungs-Editor, DSFA/VVZ, manuelle Art. 15/17-Auslösung)
+- [ ] Admin UI für Audit-Log-Viewer mit Such- und Filterfunktion
+- [ ] Admin-Dashboard mit Setup-Completeness-Checkliste als Einstiegspunkt
+- [ ] Vollständige Mobile-Parität (375px ↔ 1280px) für alle Admin-Oberflächen
+
+**Deferred to later milestones:**
+
+- [ ] Plugin-/Konnektor-System mit offener API (MS Teams, Google Calendar, Outlook, etc.) — deferred to v1.2
 
 ### Out of Scope
 
@@ -45,6 +60,31 @@ Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenp
 ## Current State
 
 **v1.0 MVP shipped 2026-04-09.** 12 phases (9 planned + 3 gap closure), 74 plans, 148 tasks, ~178K LOC TypeScript/Java. All 65 v1.0 requirements satisfied. 423 backend tests passing. Full stack: NestJS 11 + Prisma 7 backend, React 19 + Vite 8 frontend, Timefold 1.32 JVM solver sidecar, Keycloak 26.5 auth, PostgreSQL 17 + Redis 7, PWA with Web Push, production Docker with backup/restore.
+
+**v1.1 Schuladmin Console started 2026-04-18.** Brownfield UI-only milestone. All backend APIs exist from v1.0; no new endpoints or Prisma models planned (except gap fixes surfaced during build). Goal: a Schuladmin can onboard a new school and administer the running year end-to-end through the UI — no SQL, no Swagger, no seed scripts.
+
+## Current Milestone: v1.1 Schuladmin Console
+
+**Goal:** Ein Schuladmin kann eine neue Schule End-to-End durch die Benutzeroberfläche aufsetzen und den laufenden Schulbetrieb ohne SQL, Swagger oder Seed-Skripte administrieren — alle bestehenden v1.0-Backend-APIs bekommen produktive Admin-UIs, DSGVO-konform und mit vollständiger Mobile-Parität.
+
+**Target features:**
+
+- Teachers (Lehrer) — CRUD mit Lehrverpflichtung/Werteinheiten, Verfügbarkeit, Ermäßigungen
+- Students + Classes — Schüler-CRUD mit Person-Daten, Klassen-CRUD mit Stammklasse und Stundentafel-Zuordnung
+- Subjects + Stundentafel — Fächer-CRUD, Stundentafel-Vorlagen pro Schultyp, Gruppenableitungsregeln
+- School profile + year — Schulstammdaten, Zeitraster, Schuljahrgrenzen, A/B-Wochen, Periodendefinitionen
+- Users + ACL overrides — User-Liste aus Keycloak, Rollenzuweisung, CASL-Per-User-Overrides
+- Solver tuning — ConstraintTemplate- und ConstraintWeightOverrides-Editor, Zeit-/Fach-Restriktionen
+- DSGVO admin — Einwilligungs-Audit, Aufbewahrungs-Editor, DSFA/VVZ-Management, Art. 15/17-Trigger
+- Audit log viewer — Such- und filterbare Audit-Log-Ansicht
+- Admin dashboard + setup checklist — Einstiegsseite mit Setup-Completeness-Checkliste
+
+**Out of scope for v1.1:**
+
+- Plugin-/Konnektor-System (MS Teams, Google Calendar, Outlook) — deferred to v1.2
+- Reporting / Analytics / Dashboards jenseits der Setup-Checkliste
+- Multi-School / Multi-Tenancy
+- Neue Backend-Features (reine UI-Meilenstein)
 
 ## Context
 
@@ -108,4 +148,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-09 after v1.0 MVP milestone completion*
+*Last updated: 2026-04-18 after v1.1 Schuladmin Console milestone started*

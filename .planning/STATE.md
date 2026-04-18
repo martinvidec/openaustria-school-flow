@@ -1,36 +1,36 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: completed
-stopped_at: Completed 9.3-01-PLAN.md
-last_updated: "2026-04-09T19:12:12.612Z"
-last_activity: 2026-04-09
+milestone: v1.1
+milestone_name: schuladmin-console
+status: defining-requirements
+stopped_at: Milestone v1.1 started — defining requirements
+last_updated: "2026-04-18T12:00:00.000Z"
+last_activity: 2026-04-18
 progress:
-  total_phases: 12
-  completed_phases: 12
-  total_plans: 74
-  completed_plans: 74
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-29)
+See: .planning/PROJECT.md (updated 2026-04-18)
 
 **Core value:** Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenplanerstellung, die sie selbst hosten koennen -- ohne Vendor Lock-in, mit offenen APIs und DSGVO-Konformitaet von Tag 1.
-**Current focus:** Phase 09 — mobile-pwa-production-readiness
+**Current focus:** v1.1 Schuladmin Console — defining requirements
 
 ## Current Position
 
-Phase: 09.3
-Plan: Not started
-Status: Gap-closure phase 09.3 (Solver Frontend Wiring) complete — TIME-06 audit Finding 3 closed, /solver Socket.IO now has frontend consumer, all v1.0 audit findings closed, ready for milestone re-audit
-Last activity: 2026-04-09
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements for v1.1 Schuladmin Console (brownfield UI-only milestone — admin CRUD surfaces on top of existing v1.0 backend)
+Last activity: 2026-04-18 — Milestone v1.1 started
 
-Progress: [██████████] 100%
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
@@ -345,8 +345,13 @@ None yet.
 - Phase 5 (ClassBook): Austrian Schulunterrichtsgesetz requirements need domain expert review
 - Phase 8 (Import): Untis XML/DIF format documentation is sparse -- may need reverse-engineering
 
+### Roadmap Evolution
+
+- v1.0 MVP shipped 2026-04-09 (12 phases, 74 plans, 148 tasks)
+- v1.1 Schuladmin Console started 2026-04-18 — brownfield UI-only milestone
+
 ## Session Continuity
 
-Last session: 2026-04-09T18:24:41.100Z
-Stopped at: Completed 9.3-01-PLAN.md
+Last session: 2026-04-18T12:00:00.000Z
+Stopped at: Milestone v1.1 Schuladmin Console kickoff — defining requirements
 Resume file: None
