@@ -57,7 +57,7 @@ See [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full 
 **Goal:** Admin kann eine neue Schule mit Zeitraster und Schuljahr UI-gestützt aufsetzen — Fundament für alle weiteren Admin-Oberflächen.
 **Requirements:** SCHOOL-01, SCHOOL-02, SCHOOL-03, SCHOOL-04, SCHOOL-05
 **Depends on:** v1.0 backend (SchoolModule, TimeGrid, SchoolYear already exist from v1.0 Phase 1-2)
-**Plans:** 0 plans
+**Plans:** 8 plans
 
 **Success criteria:**
 - [ ] Admin kann eine neue Schule anlegen und Stammdaten (Name, Typ, Adresse, Kontakt) editieren
@@ -67,10 +67,17 @@ See [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full 
 - [ ] Alle Oberflächen sind bei 375px mit 44px-Touch-Targets benutzbar
 
 **Known risks / backend gap candidates:**
-- Keine erwartet — SchoolModule + TimeGrid + SchoolYear CRUD sind aus v1.0 bereits produktiv.
+- Holiday/AutonomousDay standalone CRUD endpoints did not exist in v1.0 — added in Plan 02 Task 3 (D-08 nested Sub-UI requirement).
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 10 to break down)
+- [ ] 10-01a-PLAN.md — Backend foundation A: Prisma migrations (School.abWeekEnabled + SchoolYear multi-active partial unique index), seed.ts repair, Prisma client regen [BLOCKING for Wave 2+] [Wave 1]
+- [ ] 10-01b-PLAN.md — Frontend foundation B: shared Zod schemas + shadcn primitives + RHF/zod installs (parallel with 01a, no file overlap) [Wave 1]
+- [ ] 10-02-PLAN.md — Backend SchoolYear sub-module + SchoolTimeGrid destructive-edit endpoint + Holiday/AutonomousDay CRUD endpoints + abWeekEnabled DTO + permission seed + timetable.service cast cleanup [Wave 2]
+- [ ] 10-03a-PLAN.md — Frontend page shell + reusable shared admin components (PageShell/UnsavedChangesDialog/StickyMobileSaveBar/InfoBanner/WarnDialog) + sidebar entry + Zustand extension + 4 placeholder tabs [Wave 3]
+- [ ] 10-03b-PLAN.md — TanStack Query hooks bundle (useSchool/useTimeGrid/useSchoolYears + Holiday/AutonomousDay hooks/useActiveTimetableRun) + Stammdaten tab full implementation [Wave 4, depends on 03a]
+- [ ] 10-04-PLAN.md — Zeitraster tab (PeriodsEditor with DnD, SchoolDay toggles, DestructiveEditDialog 3-button conflict flow with PINNED solver-rerun URL, TemplateReloadDialog) [Wave 5]
+- [ ] 10-05-PLAN.md — Schuljahre tab (multi-year list, Aktiv-Badge, Aktivieren/Bearbeiten/Loeschen dialogs, nested Holidays + AutonomousDays via PINNED endpoints) + Optionen tab (A/B toggle + status line + Info Banner) [Wave 5]
+- [ ] 10-06-PLAN.md — Playwright E2E (desktop happy path with seeded SCHOOL-05 orphan-guard + mobile 375px touch-target audit) + manual UAT screenshot checkpoint with per-screenshot SCHOOL-XX mapping [Wave 6]
 
 ---
 

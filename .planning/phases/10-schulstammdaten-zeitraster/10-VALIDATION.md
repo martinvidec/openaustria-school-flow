@@ -2,8 +2,8 @@
 phase: 10
 slug: schulstammdaten-zeitraster
 status: draft
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: true  # scaffolds are now in-plan; "Wave 0" renamed to "Plan-internal scaffold step"
 created: 2026-04-19
 ---
 
@@ -43,41 +43,44 @@ created: 2026-04-19
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 10-01-01 | 01 (migrations) | 1 | SCHOOL-04 | unit | `pnpm --filter @schoolflow/api exec vitest run prisma/__tests__/migration.spec.ts` | ❌ W0 | ⬜ pending |
-| 10-01-02 | 01 (migrations) | 1 | SCHOOL-03 | unit | `pnpm --filter @schoolflow/api exec vitest run prisma/__tests__/school-year-multi-active.spec.ts` | ❌ W0 | ⬜ pending |
-| 10-02-01 | 02 (shared schemas) | 1 | SCHOOL-01..05 (D-15) | unit | `pnpm --filter @schoolflow/shared exec vitest run src/schemas/school.schema.spec.ts` | ❌ W0 | ⬜ pending |
-| 10-03-01 | 03 (API school-year module) | 2 | SCHOOL-03, SCHOOL-05 | integration | `pnpm --filter @schoolflow/api exec vitest run src/modules/school/school-year.controller.spec.ts` | ❌ W0 | ⬜ pending |
-| 10-03-02 | 03 (API school-year module) | 2 | SCHOOL-05 (orphan-guard) | integration | `pnpm --filter @schoolflow/api exec vitest run src/modules/school/school-year.service.spec.ts` | ❌ W0 | ⬜ pending |
-| 10-04-01 | 04 (API time-grid destructive guard) | 2 | SCHOOL-02 (D-13) | integration | `pnpm --filter @schoolflow/api exec vitest run src/modules/school/school-time-grid.service.spec.ts` | ❌ W0 | ⬜ pending |
-| 10-04-02 | 04 (API school update incl. abWeekEnabled) | 2 | SCHOOL-04 | integration | `pnpm --filter @schoolflow/api exec vitest run src/modules/school/school.controller.spec.ts` | ❌ W0 | ⬜ pending |
-| 10-05-01 | 05 (Web Tab shell + route) | 3 | SCHOOL-01 (D-01) | integration | `pnpm --filter @schoolflow/web exec vitest run src/routes/_authenticated/admin/__tests__/school.settings.spec.tsx` | ❌ W0 | ⬜ pending |
-| 10-05-02 | 05 (Unsaved-Changes dialog) | 3 | D-02 | integration | `pnpm --filter @schoolflow/web exec vitest run src/components/admin/school-settings/__tests__/UnsavedChangesDialog.spec.tsx` | ❌ W0 | ⬜ pending |
-| 10-06-01 | 06 (Stammdaten tab) | 3 | SCHOOL-01, D-03 | integration | `pnpm --filter @schoolflow/web exec vitest run src/components/admin/school-settings/__tests__/SchoolDetailsTab.spec.tsx` | ❌ W0 | ⬜ pending |
-| 10-07-01 | 07 (Zeitraster tab) | 3 | SCHOOL-02, D-11, D-14 | integration | `pnpm --filter @schoolflow/web exec vitest run src/components/admin/school-settings/__tests__/TimeGridTab.spec.tsx` | ❌ W0 | ⬜ pending |
-| 10-08-01 | 08 (Schuljahr tab) | 3 | SCHOOL-03, SCHOOL-05 | integration | `pnpm --filter @schoolflow/web exec vitest run src/components/admin/school-settings/__tests__/SchoolYearsTab.spec.tsx` | ❌ W0 | ⬜ pending |
-| 10-09-01 | 09 (Optionen tab + A/B) | 3 | SCHOOL-04, D-05, D-06 | integration | `pnpm --filter @schoolflow/web exec vitest run src/components/admin/school-settings/__tests__/OptionsTab.spec.tsx` | ❌ W0 | ⬜ pending |
-| 10-10-01 | 10 (E2E desktop happy path) | 4 | SCHOOL-01..05 | e2e | `pnpm --filter @schoolflow/web exec playwright test e2e/admin-school-settings.spec.ts` | ❌ W0 | ⬜ pending |
-| 10-10-02 | 10 (E2E mobile 375px) | 4 | MOBILE-ADM-02, D-12 | e2e | `pnpm --filter @schoolflow/web exec playwright test e2e/admin-school-settings-mobile.spec.ts` | ❌ W0 | ⬜ pending |
+| 10-01a-01 | 01a (migrations) | 1 | SCHOOL-04 | unit | `pnpm --filter @schoolflow/api exec vitest run prisma/__tests__/migration.spec.ts` | ✅ scaffolded-in-plan | ⬜ pending |
+| 10-01a-02 | 01a (migrations) | 1 | SCHOOL-03 | unit | `pnpm --filter @schoolflow/api exec vitest run prisma/__tests__/school-year-multi-active.spec.ts` | ✅ scaffolded-in-plan | ⬜ pending |
+| 10-01b-01 | 01b (shared schemas + shadcn) | 1 | SCHOOL-01..05 (D-15) | unit | `pnpm --filter @schoolflow/shared exec vitest run src/schemas/school.schema.spec.ts` | ✅ scaffolded-in-plan | ⬜ pending |
+| 10-02-01 | 02 (API school-year module) | 2 | SCHOOL-03, SCHOOL-05 | integration | `pnpm --filter @schoolflow/api exec vitest run src/modules/school/school-year.controller.spec.ts` | ✅ scaffolded-in-plan | ⬜ pending |
+| 10-02-02 | 02 (API school-year orphan-guard) | 2 | SCHOOL-05 (orphan-guard) | integration | `pnpm --filter @schoolflow/api exec vitest run src/modules/school/school-year.service.spec.ts` | ✅ scaffolded-in-plan | ⬜ pending |
+| 10-02-03 | 02 (API time-grid destructive guard) | 2 | SCHOOL-02 (D-13) | integration | `pnpm --filter @schoolflow/api exec vitest run src/modules/school/school-time-grid.service.spec.ts` | ✅ scaffolded-in-plan | ⬜ pending |
+| 10-02-04 | 02 (API school update incl. abWeekEnabled) | 2 | SCHOOL-04 | integration | `pnpm --filter @schoolflow/api exec vitest run src/modules/school/school.controller.spec.ts` | ✅ scaffolded-in-plan | ⬜ pending |
+| 10-02-05 | 02 (Holiday CRUD endpoints) | 2 | D-08 | integration | `pnpm --filter @schoolflow/api exec vitest run src/modules/school/holiday.service.spec.ts` | ✅ scaffolded-in-plan | ⬜ pending |
+| 10-02-06 | 02 (AutonomousDay CRUD endpoints) | 2 | D-08 | integration | `pnpm --filter @schoolflow/api exec vitest run src/modules/school/autonomous-day.service.spec.ts` | ✅ scaffolded-in-plan | ⬜ pending |
+| 10-03a-01 | 03a (Web Tab shell + route) | 3 | SCHOOL-01 (D-01) | integration | `pnpm --filter @schoolflow/web exec vitest run src/routes/_authenticated/admin/__tests__/school.settings.spec.tsx` | ✅ scaffolded-in-plan | ⬜ pending |
+| 10-03a-02 | 03a (Unsaved-Changes dialog) | 3 | D-02 | integration | `pnpm --filter @schoolflow/web exec vitest run src/components/admin/shared/__tests__/UnsavedChangesDialog.spec.tsx` | ✅ scaffolded-in-plan | ⬜ pending |
+| 10-03b-01 | 03b (hooks + Stammdaten tab) | 3 | SCHOOL-01, D-03 | integration | `pnpm --filter @schoolflow/web exec vitest run src/components/admin/school-settings/__tests__/SchoolDetailsTab.spec.tsx` | ✅ scaffolded-in-plan | ⬜ pending |
+| 10-04-01 | 04 (Zeitraster tab + dialogs) | 4 | SCHOOL-02, D-11, D-13, D-14 | integration | `pnpm --filter @schoolflow/web exec vitest run src/components/admin/school-settings/__tests__/TimeGridTab.spec.tsx` | ✅ scaffolded-in-plan | ⬜ pending |
+| 10-04-02 | 04 (PeriodsEditor responsive) | 4 | SCHOOL-02, D-11, D-12 | integration | `pnpm --filter @schoolflow/web exec vitest run src/components/admin/school-settings/__tests__/PeriodsEditor.spec.tsx` | ✅ scaffolded-in-plan | ⬜ pending |
+| 10-05-01 | 05 (Schuljahr tab) | 4 | SCHOOL-03, SCHOOL-05 | integration | `pnpm --filter @schoolflow/web exec vitest run src/components/admin/school-settings/__tests__/SchoolYearsTab.spec.tsx` | ✅ scaffolded-in-plan | ⬜ pending |
+| 10-05-02 | 05 (Optionen tab + A/B) | 4 | SCHOOL-04, D-05, D-06 | integration | `pnpm --filter @schoolflow/web exec vitest run src/components/admin/school-settings/__tests__/OptionsTab.spec.tsx` | ✅ scaffolded-in-plan | ⬜ pending |
+| 10-06-01 | 06 (E2E desktop happy path) | 5 | SCHOOL-01..05 | e2e | `pnpm --filter @schoolflow/web exec playwright test e2e/admin-school-settings.spec.ts` | ✅ scaffolded-in-plan | ⬜ pending |
+| 10-06-02 | 06 (E2E mobile 375px) | 5 | MOBILE-ADM-02, D-12 | e2e | `pnpm --filter @schoolflow/web exec playwright test e2e/admin-school-settings.mobile.spec.ts` | ✅ scaffolded-in-plan | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 *File Exists: ❌ W0 = test infrastructure to be scaffolded in Wave 0 of the owning plan.*
 
 ---
 
-## Wave 0 Requirements
+## Plan-Internal Scaffold Step (formerly "Wave 0")
 
-Wave 0 (runs before feature code) installs missing deps and scaffolds test stubs:
+Each plan now scaffolds its own test infrastructure as part of its first task. The items below are tracked here for visibility but are no longer a separate Wave 0 — every checkbox is owned by a specific plan and verified via that plan's acceptance criteria:
 
-- [ ] `pnpm --filter @schoolflow/shared add zod` — CONTEXT.md D-15 dependency
-- [ ] `pnpm --filter @schoolflow/web add zod react-hook-form @hookform/resolvers` — form stack (see RESEARCH §3.1)
-- [ ] `packages/shared/vitest.config.ts` — add if missing
-- [ ] `packages/shared/src/schemas/school.schema.ts` — Zod source of truth
-- [ ] `packages/shared/src/schemas/school.schema.spec.ts` — test stub
-- [ ] `apps/api/prisma/__tests__/migration.spec.ts` — Prisma shadow DB assertion stubs
-- [ ] `apps/api/src/modules/school/school-year.*.spec.ts` — service + controller stubs
-- [ ] `apps/api/src/modules/school/school-time-grid.service.spec.ts` — destructive-guard stub
-- [ ] `apps/web/playwright.config.ts` — add if missing (375px + desktop projects)
-- [ ] `apps/web/e2e/admin-school-settings.spec.ts` + `.mobile.spec.ts` — E2E stubs
+- [x] `pnpm --filter @schoolflow/shared add zod` — CONTEXT.md D-15 dependency (Plan 01b Step A)
+- [x] `pnpm --filter @schoolflow/web add zod react-hook-form @hookform/resolvers` — form stack (Plan 01b Step A)
+- [x] `packages/shared/vitest.config.ts` — add if missing (Plan 01b Step B)
+- [x] `packages/shared/src/schemas/school.schema.ts` — Zod source of truth (Plan 01b Step D)
+- [x] `packages/shared/src/schemas/school.schema.spec.ts` — test stub (Plan 01b Step I)
+- [x] `apps/api/prisma/__tests__/migration.spec.ts` — Prisma shadow DB assertion stubs (Plan 01a Step E)
+- [x] `apps/api/src/modules/school/school-year.*.spec.ts` — service + controller stubs (Plan 02 Task 1)
+- [x] `apps/api/src/modules/school/school-time-grid.service.spec.ts` — destructive-guard stub (Plan 02 Task 2)
+- [x] `apps/web/playwright.config.ts` — add if missing (375px + desktop projects) (Plan 06 Task 1 Step B)
+- [x] `apps/web/e2e/admin-school-settings.spec.ts` + `.mobile.spec.ts` — E2E stubs (Plan 06 Task 1 Steps C-D)
 
 ---
 
@@ -100,4 +103,4 @@ Wave 0 (runs before feature code) installs missing deps and scaffolds test stubs
 - [ ] Feedback latency < 45s (quick) / < 210s (full)
 - [ ] `nyquist_compliant: true` set in frontmatter
 
-**Approval:** pending
+**Approval:** approved (revision 1) — plan-checker sign-off; nyquist_compliant=true after splits + scaffold-in-plan model
