@@ -16,7 +16,8 @@ describe('SchoolService', () => {
     updatedAt: new Date(),
     timeGrid: { id: 'tg-1', periods: [] },
     schoolDays: [],
-    schoolYear: null,
+    // Phase 10 Plan 01a: multi-active migration — schoolYear relation is now a list.
+    schoolYears: [],
   };
 
   const mockPrismaService = {

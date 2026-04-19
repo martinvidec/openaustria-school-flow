@@ -34,6 +34,8 @@ export class SchoolYearResponseDto {
   @ApiProperty() startDate!: Date;
   @ApiProperty() semesterBreak!: Date;
   @ApiProperty() endDate!: Date;
+  // Phase 10 Plan 01a: SCHOOL-03 multi-active flag (partial unique per school).
+  @ApiProperty() isActive!: boolean;
   @ApiProperty({ type: [HolidayResponseDto] }) holidays!: HolidayResponseDto[];
   @ApiProperty({ type: [AutonomousDayResponseDto] }) autonomousDays!: AutonomousDayResponseDto[];
 }
@@ -49,9 +51,13 @@ export class SchoolResponseDto {
   @ApiProperty() name!: string;
   @ApiProperty() schoolType!: string;
   @ApiPropertyOptional() address!: string | null;
+  // Phase 10 Plan 01a: SCHOOL-04 A/B-week default for new TimetableRuns.
+  @ApiProperty() abWeekEnabled!: boolean;
   @ApiProperty() createdAt!: Date;
   @ApiProperty() updatedAt!: Date;
   @ApiPropertyOptional({ type: TimeGridResponseDto }) timeGrid!: TimeGridResponseDto | null;
-  @ApiPropertyOptional({ type: SchoolYearResponseDto }) schoolYear!: SchoolYearResponseDto | null;
+  // Phase 10 Plan 01a: multi-active migration — SchoolYear is now a list per school.
+  // Plan 02 will expose richer SchoolYear endpoints; for now surface all years.
+  @ApiProperty({ type: [SchoolYearResponseDto] }) schoolYears!: SchoolYearResponseDto[];
   @ApiProperty({ type: [SchoolDayResponseDto] }) schoolDays!: SchoolDayResponseDto[];
 }

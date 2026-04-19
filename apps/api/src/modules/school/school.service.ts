@@ -45,12 +45,16 @@ export class SchoolService {
             isActive: true,
           })),
         },
-        schoolYear: dto.schoolYear ? {
-          create: {
+        // Phase 10 Plan 01a: SchoolYear.schoolId is no longer @unique —
+        // the School -> SchoolYear relation is now one-to-many. Create the
+        // initial year as an active member of the new schoolYears list.
+        schoolYears: dto.schoolYear ? {
+          create: [{
             name: dto.schoolYear.name,
             startDate: new Date(dto.schoolYear.startDate),
             semesterBreak: new Date(dto.schoolYear.semesterBreak),
             endDate: new Date(dto.schoolYear.endDate),
+            isActive: true,
             holidays: dto.schoolYear.holidays ? {
               create: dto.schoolYear.holidays.map((h) => ({
                 name: h.name,
@@ -64,7 +68,7 @@ export class SchoolService {
                 reason: d.reason,
               })),
             } : undefined,
-          },
+          }],
         } : undefined,
       },
       include: this.fullInclude(),
@@ -119,11 +123,15 @@ export class SchoolService {
         },
       },
       schoolDays: { orderBy: { dayOfWeek: 'asc' as const } },
-      schoolYear: {
+      // Phase 10 Plan 01a: schoolYears is now a list (multi-active migration).
+      // Include all years; consumers (and Plan 02's school-year controller)
+      // can filter by isActive on the client side.
+      schoolYears: {
         include: {
           holidays: { orderBy: { startDate: 'asc' as const } },
           autonomousDays: { orderBy: { date: 'asc' as const } },
         },
+        orderBy: { startDate: 'desc' as const },
       },
     };
   }

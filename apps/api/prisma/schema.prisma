@@ -28,16 +28,17 @@ enum DayOfWeek {
 }
 
 model School {
-  id         String     @id @default(uuid())
-  name       String
-  schoolType SchoolType @map("school_type")
-  address    String?
-  createdAt  DateTime   @default(now()) @map("created_at")
-  updatedAt  DateTime   @updatedAt @map("updated_at")
+  id            String     @id @default(uuid())
+  name          String
+  schoolType    SchoolType @map("school_type")
+  address       String?
+  abWeekEnabled Boolean    @default(false) @map("ab_week_enabled")
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
 
-  timeGrid   TimeGrid?
-  schoolYear SchoolYear?
-  schoolDays SchoolDay[]
+  timeGrid    TimeGrid?
+  schoolYears SchoolYear[]
+  schoolDays  SchoolDay[]
 
   // Phase 2 relations
   persons           Person[]
@@ -115,17 +116,21 @@ model SchoolDay {
 
 model SchoolYear {
   id       String @id @default(uuid())
-  schoolId String @unique @map("school_id")
+  schoolId String @map("school_id")
   school   School @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   name          String // "2026/2027"
   startDate     DateTime @map("start_date")
   semesterBreak DateTime @map("semester_break")
   endDate       DateTime @map("end_date")
+  isActive      Boolean  @default(false) @map("is_active")
 
   holidays       Holiday[]
   autonomousDays AutonomousDay[]
 
+  // Partial unique index (isActive=true → at most one per school) is
+  // declared in migration SQL (Prisma 7 schema cannot express WHERE).
+  @@index([schoolId])
   @@map("school_years")
 }
 
