@@ -507,7 +507,11 @@ Tailwind 4 + shadcn semantic tokens. All values come from the default shadcn the
 
 Small / caption: `text-xs` (12px / 400 / 1.5) — reserved for help text, error text, breadcrumbs, table headers, status lines. Do NOT introduce additional sizes (11px, 13px, 15px, etc.) — budget is 4 roles + 1 caption = 5 max.
 
-Weight budget: 2 weights only — 400 (regular) and 600 (semibold) for display/h2; 500 (medium) is allowed ONLY for Labels to disambiguate from body text. Treat 500 as a sub-role within the Label usage, not a free weight.
+**Weight budget — 2 primary weights + 1 documented exception:**
+
+- **400 (regular)** — body, help, caption, error, input text, Table cells.
+- **600 (semibold)** — h1 (display) and h2 (section titles) only.
+- **500 (medium) — EXCEPTION, Label-only.** Reserved exclusively for the shadcn `<Label>` component (whose default is `font-medium`). This is inherited from the shadcn design system's form-field convention; overriding `<Label>` to 400 would drift the entire project from the library's canonical form layout. Treat 500 as a sub-role bound to the Label role — NOT a free weight. If you find yourself reaching for `font-medium` outside a `<Label>`, use 400 or 600 instead.
 
 ### 10.3 Spacing
 Tailwind defaults, multiples of 4:
@@ -522,7 +526,10 @@ Tailwind defaults, multiples of 4:
 | 8 | 32px | Card padding (desktop, `md:p-8`), layout gaps |
 | 12 | 48px | Empty-state vertical padding |
 
-Exceptions: **44px** (`h-11`, `w-11`) — mandated mobile touch-target floor, not freely reused for other spacing. And **11 units (44px)** for mobile input height.
+**Exceptions (not free scale tokens — each documented with a specific role):**
+
+- **6px** (`space-y-1.5`, `gap-1.5`, `mt-1.5`) — label-to-input spacing inside form-field stacks (§2.3), help/error margin below inputs (§2.4), and breadcrumb chevron gap (§1.2). Inherited from shadcn's canonical `<Label>` + `<Input>` form-field layout. NOT reused for any other inter-element spacing. If you find yourself reaching for `1.5` outside of form-field-internal gaps or breadcrumb separators, use token 2 (8px) instead.
+- **44px** (`h-11`, `w-11`) — mandated mobile touch-target floor (MOBILE-ADM-02). Applies to icon-buttons, mobile Inputs, and sticky mobile action buttons. NOT reused for general spacing.
 
 ### 10.4 Border Radius
 - Default: `rounded-md` (shadcn `--radius` = 0.5rem = 8px).
@@ -743,6 +750,21 @@ Planner SHOULD generate tasks to extract these as shared components in Wave 0 or
 | third-party | none | not applicable |
 
 No third-party registries declared. Registry vetting gate not required.
+
+**Install status — action required by the planner:** The following shadcn primitives are referenced in this UI-SPEC but are NOT yet present in `apps/web/src/components/ui/` (inventory at writing time contained only `button`, `card`, `dialog`, `dropdown-menu`, `input`, `label`, `popover`, `select`, `tabs`, `textarea`). The planner MUST add install tasks to Wave 0 of the owning plan:
+
+- `switch` — Optionen-Tab A/B toggle (§6.1)
+- `toggle` or `switch` — SchoolDay Mo-Sa toggles (§4.2 — Toggle-Group pattern; reuse `toggle-group` primitive if added, otherwise composite with `toggle`)
+- `separator` — breadcrumb + section dividers (§1.2, §2.2)
+- `tooltip` — icon-only action hints on desktop (§4.3 drag handle, §5.2 row-action icons)
+- `collapsible` — Ferien / Autonome Tage expandable rows (§5.3)
+- `sheet` — MobileSidebar drawer (confirm whether MobileSidebar already uses this; if yes, no new install)
+- `sonner` — toast notifications (package is installed per RESEARCH.md §Stack, but shadcn `sonner` wrapper component may need adding)
+- `badge` — Aktiv-Badge on Schuljahr list (§5.2)
+
+Install command (batch): `pnpm --filter @schoolflow/web exec npx shadcn@latest add switch toggle toggle-group separator tooltip collapsible sheet sonner badge`.
+
+**Design-system preset reconciliation:** The frontmatter `preset` field references `new-york` style, but `apps/web/components.json` currently has `"style": "default"`. Planner should pick one and update either the UI-SPEC or `components.json` accordingly. Recommended: keep the existing `"default"` style (it is what is already installed and rendered) and update the UI-SPEC frontmatter to `preset: shadcn default (Tailwind 4 tokens, pre-existing install)`. Non-blocking, but worth closing before execution so the executor does not run `shadcn add` commands that assume a different style registry.
 
 ---
 
