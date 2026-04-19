@@ -1,9 +1,10 @@
 ---
 phase: 10
 slug: schulstammdaten-zeitraster
-status: draft
+status: approved
+approved: 2026-04-19
 shadcn_initialized: true
-preset: shadcn default (new-york / Tailwind 4 tokens, pre-existing install)
+preset: shadcn default (Tailwind 4 tokens, pre-existing install — components.json style=default; planner to reconcile frontmatter in Wave 0 if needed)
 ui_language: de
 api_language: en
 created: 2026-04-18
@@ -770,12 +771,14 @@ Install command (batch): `pnpm --filter @schoolflow/web exec npx shadcn@latest a
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS (500-weight scoped to Label role as documented exception)
+- [x] Dimension 5 Spacing: PASS (6px scoped to form-field stacks + breadcrumb gap as documented exception)
+- [x] Dimension 6 Registry Safety: PASS (no third-party registries; planner emits Wave 0 install tasks for missing official blocks)
+
+**Approved:** 2026-04-19 by gsd-ui-checker after 1 revision iteration.
 
 **Approval:** pending (awaiting gsd-ui-checker)
 
