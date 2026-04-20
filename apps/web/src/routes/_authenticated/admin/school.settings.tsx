@@ -1,5 +1,5 @@
 import { createFileRoute, useBlocker } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { z } from 'zod';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -40,6 +40,26 @@ export function SchoolSettingsPage() {
 
   const setTab = (value: TabValueT) =>
     navigate({ search: (prev) => ({ ...prev, tab: value }), replace: true });
+
+  // Stable callbacks so child tabs' useEffect(() => onDirtyChange(isDirty),
+  // [isDirty, onDirtyChange]) does not fire on every parent render (infinite
+  // loop caused by a fresh inline lambda each render).
+  const setDetailsDirty = useCallback(
+    (d: boolean) => setDirty((s) => ({ ...s, details: d })),
+    [],
+  );
+  const setTimeGridDirty = useCallback(
+    (d: boolean) => setDirty((s) => ({ ...s, timegrid: d })),
+    [],
+  );
+  const setYearsDirty = useCallback(
+    (d: boolean) => setDirty((s) => ({ ...s, years: d })),
+    [],
+  );
+  const setOptionsDirty = useCallback(
+    (d: boolean) => setDirty((s) => ({ ...s, options: d })),
+    [],
+  );
 
   // TanStack Router's useBlocker arms as soon as isAnyDirty is true and fires
   // the UnsavedChangesDialog on router navigation (sidebar click, back button,
@@ -87,33 +107,16 @@ export function SchoolSettingsPage() {
         </Select>
 
         <TabsContent value="details">
-          <SchoolDetailsTab
-            onDirtyChange={(d) => setDirty((s) => ({ ...s, details: d }))}
-          />
+          <SchoolDetailsTab onDirtyChange={setDetailsDirty} />
         </TabsContent>
         <TabsContent value="timegrid">
-          {schoolId && (
-            <TimeGridTab
-              schoolId={schoolId}
-              onDirtyChange={(d) => setDirty((s) => ({ ...s, timegrid: d }))}
-            />
-          )}
+          {schoolId && <TimeGridTab schoolId={schoolId} onDirtyChange={setTimeGridDirty} />}
         </TabsContent>
         <TabsContent value="years">
-          {schoolId && (
-            <SchoolYearsTab
-              schoolId={schoolId}
-              onDirtyChange={(d) => setDirty((s) => ({ ...s, years: d }))}
-            />
-          )}
+          {schoolId && <SchoolYearsTab schoolId={schoolId} onDirtyChange={setYearsDirty} />}
         </TabsContent>
         <TabsContent value="options">
-          {schoolId && (
-            <OptionsTab
-              schoolId={schoolId}
-              onDirtyChange={(d) => setDirty((s) => ({ ...s, options: d }))}
-            />
-          )}
+          {schoolId && <OptionsTab schoolId={schoolId} onDirtyChange={setOptionsDirty} />}
         </TabsContent>
       </Tabs>
 

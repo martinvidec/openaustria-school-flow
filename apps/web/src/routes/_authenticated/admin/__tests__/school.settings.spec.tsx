@@ -7,8 +7,20 @@ vi.mock('@/stores/school-context-store', () => ({
     selector({
       schoolId: (globalThis as any).__schoolId ?? null,
       personType: 'admin',
+      setContext: vi.fn(),
     }),
 }));
+
+// The route shell embeds SchoolDetailsTab (Plan 10-03b). Mock its data hooks
+// so the shell tests only exercise the tab structure, not the tab content.
+vi.mock('@/hooks/useSchool', () => ({
+  useSchool: () => ({ data: null }),
+  useFirstSchool: () => ({ data: null, isFetched: true }),
+  useCreateSchool: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useUpdateSchool: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  schoolKeys: { one: (id: string) => ['school', id], list: () => ['schools'] },
+}));
+vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 // Mock TanStack Router hooks used by the route. The file-route decorator runs
 // at import time, so these must be present for the module to load.
