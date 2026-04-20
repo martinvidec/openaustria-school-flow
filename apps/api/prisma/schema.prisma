@@ -12,10 +12,19 @@ datasource db {
 
 enum SchoolType {
   VS // Volksschule
-  MS // Mittelschule
-  AHS_UNTER // AHS Unterstufe
-  AHS_OBER // AHS Oberstufe
+  MS // Mittelschule (Phase 2 legacy — retained for back-compat, unused going forward)
+  AHS_UNTER // AHS Unterstufe (Phase 2 legacy)
+  AHS_OBER // AHS Oberstufe (Phase 2 legacy)
   BHS // Berufsbildende hoehere Schule
+  // Phase 10 (UI-SPEC §3.2 / CONTEXT.md D-15): 5 additional Austrian school
+  // types matching the Stammdaten Select options. MS/AHS_UNTER/AHS_OBER stay
+  // as unused legacy values — Postgres enums cannot remove values easily and
+  // dropping them would need a separate backfill migration.
+  NMS // Neue Mittelschule
+  AHS // Allgemeinbildende hoehere Schule (replaces AHS_UNTER/AHS_OBER split)
+  BMS // Berufsbildende mittlere Schule
+  PTS // Polytechnische Schule
+  ASO // Allgemeine Sonderschule
 }
 
 enum DayOfWeek {
