@@ -92,6 +92,9 @@ importers:
       ioredis:
         specifier: ^5.10.1
         version: 5.10.1
+      jsonwebtoken:
+        specifier: ^9.0.3
+        version: 9.0.3
       jwks-rsa:
         specifier: ^4.0.1
         version: 4.0.1
@@ -135,6 +138,9 @@ importers:
       '@swc/core':
         specifier: ^1
         version: 1.15.21(@swc/helpers@0.5.20)
+      '@types/jsonwebtoken':
+        specifier: ^9.0.10
+        version: 9.0.10
       '@types/papaparse':
         specifier: ^5.5.2
         version: 5.5.2
