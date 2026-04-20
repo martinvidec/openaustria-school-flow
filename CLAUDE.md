@@ -236,7 +236,18 @@ Eine Open-Source-Plattform zur Verwaltung von Schulen im DACH-Raum — die freie
 <!-- GSD:conventions-start source:CONVENTIONS.md -->
 ## Conventions
 
-Conventions not yet established. Will populate as patterns emerge during development.
+### Database migrations — hard rule
+
+Every change to `apps/api/prisma/schema.prisma` MUST ship as a migration file under `apps/api/prisma/migrations/<timestamp>_<name>/`. Do **not** use `prisma db push` on this project.
+
+Why: during Phases 3–9, schema edits were applied via `db push` without recording migration files. `prisma migrate reset` (and any fresh clone) could not reproduce the live schema, and `prisma/seed.ts` failed on the first missing column. A consolidated baseline (`20260419000000_phases_3_to_9_consolidated`) patched that history; this convention prevents recurrence.
+
+How:
+1. Edit `schema.prisma`.
+2. `pnpm --filter @schoolflow/api exec prisma migrate dev --name <descriptive>`.
+3. Commit the generated migration folder in the same PR as the schema change.
+
+Enforcement: `scripts/check-migration-hygiene.sh` (run locally and in CI) fails any diff where `schema.prisma` changed without a new `migration.sql`. See `apps/api/prisma/README.md` for the full policy, including the shadow database setup needed by `prisma migrate diff`.
 <!-- GSD:conventions-end -->
 
 <!-- GSD:architecture-start source:ARCHITECTURE.md -->

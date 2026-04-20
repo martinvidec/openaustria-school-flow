@@ -6,5 +6,6 @@ export default defineConfig({
   schema: path.join(__dirname, 'prisma', 'schema.prisma'),
   datasource: {
     url: process.env.DATABASE_URL ?? 'postgresql://schoolflow:schoolflow_dev@localhost:5432/schoolflow',
+    shadowDatabaseUrl: process.env.SHADOW_DATABASE_URL ?? 'postgresql://schoolflow:schoolflow_dev@localhost:5432/schoolflow_shadow',
   },
 });
