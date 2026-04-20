@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsString, IsDateString, IsOptional, IsArray, ValidateNested } from 'class-validator';
+import { IsString, IsDateString, IsOptional, IsArray, ValidateNested, IsBoolean } from 'class-validator';
 
 export class CreateHolidayDto {
   @ApiProperty({ example: 'Herbstferien' })
@@ -57,4 +57,9 @@ export class CreateSchoolYearDto {
   @ValidateNested({ each: true })
   @Type(() => CreateAutonomousDayDto)
   autonomousDays?: CreateAutonomousDayDto[];
+
+  @ApiPropertyOptional({ example: false, description: 'Als aktives Schuljahr setzen (D-07).' })
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }

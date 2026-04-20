@@ -53,12 +53,20 @@ async function main() {
     { action: 'manage', subject: 'conversation' },
     { action: 'manage', subject: 'message' },
     { action: 'manage', subject: 'poll' },
+    // Phase 10: plural SchoolYears + A/B weeks (SCHOOL-03..SCHOOL-05)
+    { action: 'manage', subject: 'school-year' },
   ];
 
   // Schulleitung: pedagogical management (D-03) + Phase 2 subjects
   const schulleitungPermissions = [
     // Phase 1 subjects
     { action: 'manage', subject: 'school' },
+    // Phase 10: plural SchoolYears + A/B weeks (SCHOOL-03..SCHOOL-05)
+    { action: 'create', subject: 'school-year' },
+    { action: 'read', subject: 'school-year' },
+    { action: 'update', subject: 'school-year' },
+    { action: 'delete', subject: 'school-year' },
+    { action: 'activate', subject: 'school-year' },
     { action: 'manage', subject: 'timetable' },
     { action: 'manage', subject: 'classbook' },
     { action: 'read', subject: 'grades' },
