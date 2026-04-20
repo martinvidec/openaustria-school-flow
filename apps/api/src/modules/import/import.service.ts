@@ -389,12 +389,14 @@ export class ImportService {
       return { status: 'error', error: 'Missing class name' };
     }
 
-    // Resolve the school's current SchoolYear for schoolYearId
-    const schoolYear = await this.prisma.schoolYear.findUnique({
-      where: { schoolId },
+    // Resolve the school's current active SchoolYear for schoolYearId.
+    // Phase 10 Plan 01a: schoolId is no longer @unique — filter on the
+    // partial-unique isActive=true row.
+    const schoolYear = await this.prisma.schoolYear.findFirst({
+      where: { schoolId, isActive: true },
     });
     if (!schoolYear) {
-      return { status: 'error', error: 'No SchoolYear configured for this school' };
+      return { status: 'error', error: 'No active SchoolYear configured for this school' };
     }
 
     const existing = await this.prisma.schoolClass.findFirst({

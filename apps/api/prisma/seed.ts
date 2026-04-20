@@ -337,7 +337,12 @@ async function main() {
   }
 
   // SchoolYear: 2025/2026
-  const existingYear = await prisma.schoolYear.findUnique({ where: { schoolId: school.id } });
+  // Phase 10 Plan 01a: schoolId is no longer @unique on SchoolYear — use
+  // findFirst({ schoolId, isActive: true }) to select the active year per
+  // the partial unique index school_years_active_per_school.
+  const existingYear = await prisma.schoolYear.findFirst({
+    where: { schoolId: school.id, isActive: true },
+  });
   if (!existingYear) {
     await prisma.schoolYear.create({
       data: {
@@ -346,10 +351,13 @@ async function main() {
         startDate: new Date('2025-09-01'),
         semesterBreak: new Date('2026-02-07'),
         endDate: new Date('2026-07-04'),
+        isActive: true,
       },
     });
   }
-  const schoolYear = await prisma.schoolYear.findUniqueOrThrow({ where: { schoolId: school.id } });
+  const schoolYear = await prisma.schoolYear.findFirstOrThrow({
+    where: { schoolId: school.id, isActive: true },
+  });
 
   // SchoolDays: Monday-Friday active
   for (const day of ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'] as const) {
