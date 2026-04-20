@@ -1,5 +1,6 @@
 import { Link, useRouterState } from '@tanstack/react-router';
 import {
+  Building2,
   Calendar,
   CalendarCog,
   DoorOpen,
@@ -44,6 +45,12 @@ const navItems: NavItem[] = [
     href: '/admin/import',
     icon: Upload,
     roles: ['admin'],
+  },
+  {
+    label: 'Schulverwaltung',
+    href: '/admin/school/settings',
+    icon: Building2,
+    roles: ['admin', 'schulleitung'],
   },
   {
     label: 'Raeume',

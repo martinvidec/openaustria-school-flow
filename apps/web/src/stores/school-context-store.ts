@@ -17,6 +17,10 @@ interface SchoolContextState {
   childClassName: string | null;
   childStudentName: string | null;
   children: ChildContext[];
+  // Phase 10: plural SchoolYears + A/B weeks — Stammdaten tab + Optionen tab
+  // consume these to gate nested UI and pre-populate toggles.
+  activeSchoolYearId: string | null;
+  abWeekEnabled: boolean;
   isLoaded: boolean;
 
   setContext: (data: {
@@ -29,6 +33,8 @@ interface SchoolContextState {
     childClassName?: string | null;
     childStudentName?: string | null;
     children?: ChildContext[];
+    activeSchoolYearId?: string | null;
+    abWeekEnabled?: boolean;
   }) => void;
 }
 
@@ -42,6 +48,8 @@ export const useSchoolContext = create<SchoolContextState>((set) => ({
   childClassName: null,
   childStudentName: null,
   children: [],
+  activeSchoolYearId: null,
+  abWeekEnabled: false,
   isLoaded: false,
 
   setContext: (data) =>
@@ -55,6 +63,8 @@ export const useSchoolContext = create<SchoolContextState>((set) => ({
       childClassName: data.childClassName ?? null,
       childStudentName: data.childStudentName ?? null,
       children: data.children ?? [],
+      activeSchoolYearId: data.activeSchoolYearId ?? null,
+      abWeekEnabled: data.abWeekEnabled ?? false,
       isLoaded: true,
     }),
 }));
