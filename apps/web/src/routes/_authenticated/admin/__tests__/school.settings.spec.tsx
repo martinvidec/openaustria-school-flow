@@ -11,8 +11,9 @@ vi.mock('@/stores/school-context-store', () => ({
     }),
 }));
 
-// The route shell embeds SchoolDetailsTab (Plan 10-03b). Mock its data hooks
-// so the shell tests only exercise the tab structure, not the tab content.
+// The route shell embeds SchoolDetailsTab (Plan 10-03b) AND — when tab=timegrid —
+// TimeGridTab (Plan 10-04). Mock all data hooks so the shell tests only exercise
+// the tab structure, not the tab content.
 vi.mock('@/hooks/useSchool', () => ({
   useSchool: () => ({ data: null }),
   useFirstSchool: () => ({ data: null, isFetched: true }),
@@ -20,6 +21,19 @@ vi.mock('@/hooks/useSchool', () => ({
   useUpdateSchool: () => ({ mutateAsync: vi.fn(), isPending: false }),
   schoolKeys: { one: (id: string) => ['school', id], list: () => ['schools'] },
 }));
+vi.mock('@/hooks/useTimeGrid', () => {
+  class TimeGridConflictError extends Error {
+    constructor(public impactedRunsCount: number) {
+      super('stub');
+      this.name = 'TimeGridConflictError';
+    }
+  }
+  return {
+    TimeGridConflictError,
+    useTimeGrid: () => ({ data: null, isLoading: false }),
+    useUpdateTimeGrid: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  };
+});
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 // Mock TanStack Router hooks used by the route. The file-route decorator runs
