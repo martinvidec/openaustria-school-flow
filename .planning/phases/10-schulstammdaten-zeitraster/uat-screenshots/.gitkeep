@@ -1,0 +1,11 @@
+UAT screenshot artifacts for Phase 10 (Task 2 / manual verify checkpoint).
+
+Expected filenames per Plan 10-06 Task 2:
+  01-stammdaten-empty-cta.png         SCHOOL-01 empty-flow hero
+  02-stammdaten-filled.png            SCHOOL-01 edit mode
+  03-timegrid-desktop-drag.png        SCHOOL-02 / D-11 periods table
+  04-timegrid-mobile-375.png          SCHOOL-02 + MOBILE-ADM-02 Cards
+  04b-timegrid-conflict-dialog.png    D-13 destructive-edit dialog (optional)
+  05-schuljahr-aktiv-badge.png        SCHOOL-03 / D-07 aktiv badge
+  05b-schuljahr-orphan-toast.png      SCHOOL-05 / D-10 orphan toast (optional)
+  06-optionen-ab-banner.png           SCHOOL-04 A/B toggle + banner

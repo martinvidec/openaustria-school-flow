@@ -10,6 +10,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:desktop": "playwright test --project=desktop",
+    "test:e2e:mobile": "playwright test --project=mobile-375",
     "lint": "echo lint-placeholder"
   },
   "dependencies": {
@@ -48,6 +51,7 @@
     "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/vite": "^4.2.0",
     "@tanstack/intent": "^0.0.27",
     "@tanstack/router-devtools": "^1.166.0",
