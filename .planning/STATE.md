@@ -4,8 +4,8 @@ milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
 stopped_at: Milestone v1.1 Schuladmin Console kickoff — defining requirements
-last_updated: "2026-04-19T19:42:31.223Z"
-last_activity: 2026-04-19 -- Phase 10 planning complete
+last_updated: "2026-04-19T20:09:57.775Z"
+last_activity: 2026-04-19 -- Phase 10 execution started
 progress:
   total_phases: 7
   completed_phases: 0
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-18)
 
 **Core value:** Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenplanerstellung, die sie selbst hosten koennen -- ohne Vendor Lock-in, mit offenen APIs und DSGVO-Konformitaet von Tag 1.
-**Current focus:** v1.1 Schuladmin Console — defining requirements
+**Current focus:** Phase 10 — schulstammdaten-zeitraster
 
 ## Current Position
 
-Phase: 10 — Schulstammdaten & Zeitraster (context gathered, ready to plan)
-Plan: —
-Status: Ready to execute
-Last activity: 2026-04-19 -- Phase 10 planning complete
+Phase: 10 (schulstammdaten-zeitraster) — EXECUTING
+Plan: 1 of 8
+Status: Executing Phase 10
+Last activity: 2026-04-19 -- Phase 10 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -349,6 +349,7 @@ None yet.
 
 - v1.0 MVP shipped 2026-04-09 (12 phases, 74 plans, 148 tasks)
 - v1.1 Schuladmin Console started 2026-04-18 — brownfield UI-only milestone
+- Phase 10.1 inserted after Phase 10: UAT gap closure — SchoolTypeDto enum, School.address schema, silent 4xx toast (URGENT)
 
 ## Session Continuity
 
