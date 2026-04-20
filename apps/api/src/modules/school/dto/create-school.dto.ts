@@ -61,4 +61,12 @@ export class CreateSchoolDto {
   @IsOptional()
   @IsBoolean()
   useTemplate?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'A/B-Wochen-Modus default for new TimetableRuns (D-04 / SCHOOL-04).',
+    example: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  abWeekEnabled?: boolean;
 }

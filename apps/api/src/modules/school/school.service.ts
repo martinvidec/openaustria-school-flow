@@ -100,6 +100,7 @@ export class SchoolService {
         name: dto.name,
         schoolType: dto.schoolType as any,
         address: dto.address,
+        ...(dto.abWeekEnabled !== undefined ? { abWeekEnabled: dto.abWeekEnabled } : {}),
       },
       include: this.fullInclude(),
     });

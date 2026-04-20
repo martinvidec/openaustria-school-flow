@@ -50,7 +50,7 @@ export class TimetableService {
         schoolId,
         status: 'QUEUED',
         maxSolveSeconds,
-        abWeekEnabled: (school as any).abWeekEnabled ?? false,
+        abWeekEnabled: school.abWeekEnabled ?? false,
         constraintConfig: constraintWeights
           ? (constraintWeights as unknown as Prisma.InputJsonValue)
           : undefined,
