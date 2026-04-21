@@ -41,14 +41,19 @@ See [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full 
 | # | Phase | REQ count | Depends on | Parallelism |
 |---|-------|-----------|------------|-------------|
 | 10 | Schulstammdaten & Zeitraster | 5 | v1.0 backend | — |
-| 11 | Lehrer- und Fächer-Verwaltung | 11 | Phase 10 | Parallel with Phase 14 |
+| 10.1 | UAT gap closure — DTO/schema/toast | gap-closure | Phase 10 | — |
+| 10.2 | E2E Admin-Console gap-closure (Tier 1) | E2E-hardening | Phase 10.1 | — |
+| 10.3 | E2E Harness + per-role Smoke (Tier 2) | E2E-hardening | Phase 10.2 | — |
+| 10.4 | E2E Admin-Ops People (Tier 3a) | E2E-hardening | Phase 10.3 | Parallel with 10.5 |
+| 10.5 | E2E Admin-Ops Operations (Tier 3b) | E2E-hardening | Phase 10.3 | Parallel with 10.4 |
+| 11 | Lehrer- und Fächer-Verwaltung | 11 | Phase 10.5 | Parallel with Phase 14 |
 | 12 | Schüler-, Klassen- & Gruppenverwaltung | 9 | Phase 11 | — |
 | 13 | User- und Rechteverwaltung | 5 | Phase 12 | — |
-| 14 | Solver-Tuning | 5 | Phase 10 | Parallel with Phases 11-13 |
+| 14 | Solver-Tuning | 5 | Phase 10.5 | Parallel with Phases 11-13 |
 | 15 | DSGVO-Admin & Audit-Log-Viewer | 9 | Phase 13 | — |
 | 16 | Admin-Dashboard & Mobile-Härtung | 6 | Phases 10-15 | — |
 
-**Total:** 7 phases, 50 requirements, 100% coverage.
+**Total:** 7 feature phases + 5 gap/E2E phases (10.1-10.5), 50 requirements, 100% coverage. UAT resumes after Phase 10.5 per `feedback_e2e_first_no_uat.md`.
 
 ---
 
@@ -92,6 +97,86 @@ Plans:
 - [x] 10.1-01-PLAN.md — Bug 3 audit: silent 4xx success-toast across useSchool/useSchoolYears/useTimeGrid/OptionsTab + regression specs [Wave 1]
 - [x] 10.1-02-PLAN.md — Bug 1 fix: align SchoolTypeDto with @schoolflow/shared SCHOOL_TYPES (7 active values) + DTO validation regression spec [Wave 2]
 - [x] 10.1-03-PLAN.md — Bug 2 fix: School.address → Json? @db.JsonB via hand-authored migration, AddressDto + AddressResponseDto, seed repair for corrupt '[object Object]' row [Wave 3]
+
+---
+
+### Phase 10.2: E2E Admin-Console gap-closure (Tier 1 — INSERTED)
+
+**Goal:** Admin-Console mit Playwright-Coverage absichern. Zeitraster-Save-500 fixen und durch E2E abdecken, Wochentage-UX-Entscheidung treffen und Spec schreiben, Schuljahre edit/delete/activate-Switch durch E2E sichern, Silent-4xx als E2E für alle 4 Tabs, Phase-10 Screenshots automatisiert via Playwright, CI-Workflow wired. Schließt Phase 10 mit.
+**Requirements:** E2E-hardening (no new REQ-IDs; must-haves aus E2E-COVERAGE-MATRIX.md Tier 1)
+**Depends on:** Phase 10.1
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 10.2 to break down)
+
+**Success criteria:**
+- [ ] `PUT /api/v1/schools/:id/time-grid` Happy-Path + Error-Path (invalid payload) haben je 1 Playwright-Spec (desktop + mobile)
+- [ ] Wochentage-Surface: Entscheidung getroffen (Spec oder Backlog), bei "Spec" → E2E deckt `admin kann Mo-So als aktiv/inaktiv markieren` ab
+- [ ] Schuljahre edit, delete (non-orphan), activate-switch haben je 1 Playwright-Spec
+- [ ] Silent-4xx-Invariante ist als E2E für Stammdaten/Zeitraster/Schuljahre/Optionen verifiziert (green toast ausgeschlossen, red toast present bei 4xx)
+- [ ] Phase-10 UAT-Screenshot-Capture läuft via Playwright `page.screenshot()` automatisiert, 6 Bilder unter `.planning/phases/10-schulstammdaten-zeitraster/uat-screenshots/`
+- [ ] CI-Workflow (GitHub Actions) running Playwright green on PRs to main
+- [ ] Phase 10 wird als `complete` markiert nach 10.2-Verification
+
+---
+
+### Phase 10.3: E2E Harness + per-role Smoke (Tier 2 — INSERTED)
+
+**Goal:** Playwright-Harness für alle 5 Rollen nutzbar machen und je Rolle 1 Smoke-Spec (Login + primäre Aktion). Harness-Extensions: per-role Login-Helper, `globalSetup`/`globalTeardown`, Trace-Retention config, DB-Seeding+Cleanup-Pattern.
+**Requirements:** E2E-hardening
+**Depends on:** Phase 10.2
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 10.3 to break down)
+
+**Success criteria:**
+- [ ] Login-Helper pro Rolle: admin, schulleitung, lehrer, eltern, schueler
+- [ ] `globalSetup` seedet Basis-Fixtures, `globalTeardown` cleaned deterministisch
+- [ ] Smoke-Specs: schulleitung öffnet Substitutions-Admin · lehrer öffnet Klassenbuch-Lesson · eltern öffnet Kind-Timetable · schueler öffnet persönliches Timetable (admin bereits covered über 10.2)
+- [ ] Trace-Retention auf `retain-on-failure`, Screenshots als CI-Artifacts
+- [ ] Alle neuen Specs laufen in CI (aus 10.2 gewired)
+
+---
+
+### Phase 10.4: E2E Admin-Ops People (Tier 3a — INSERTED)
+
+**Goal:** Admin-Ops People-Surfaces mit E2E absichern: Klassen-CRUD inkl. Stundentafel-Zuordnung, Lehrpersonen-CRUD inkl. Werteinheiten-Edit, Schüler-CRUD, Fächer-CRUD.
+**Requirements:** E2E-hardening
+**Depends on:** Phase 10.3
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 10.4 to break down)
+
+**Success criteria:**
+- [ ] Klassen-CRUD: create, edit, delete (orphan-safe), Stundentafel-Zuordnung — je Happy + Error
+- [ ] Lehrpersonen-CRUD: create, edit, delete, Werteinheiten-Edit — je Happy + Error
+- [ ] Schüler-CRUD: create, edit, delete, Elternlink — je Happy + Error
+- [ ] Fächer-CRUD: create, edit, delete — je Happy + Error
+- [ ] Alle Specs laufen auf desktop + (für Formulare) mobile-375
+
+---
+
+### Phase 10.5: E2E Admin-Ops Operations (Tier 3b — INSERTED)
+
+**Goal:** Admin-Ops Operations-Surfaces mit E2E absichern: Räume-CRUD inkl. Booking-Conflict, Ressourcen-CRUD, Imports (Untis-XML + CSV Happy-Path + ein Error-Path), Solver-Workflow (trigger → result → publish).
+**Requirements:** E2E-hardening
+**Depends on:** Phase 10.3 (Harness) — parallel with 10.4 möglich
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 10.5 to break down)
+
+**Success criteria:**
+- [ ] Räume-CRUD + Booking-Conflict: Happy + Error
+- [ ] Ressourcen-CRUD: Happy + Error
+- [ ] Imports: Untis-XML Happy-Path, CSV Happy-Path, CSV Error-Path (malformed row)
+- [ ] Solver-Workflow: trigger run → WebSocket progress visible → result published — Happy-Path + ein abort/error-Path
+- [ ] Nach 10.5-Verification: UAT-Ban ist aufgehoben per `feedback_e2e_first_no_uat.md`
+
+---
 
 ### Phase 11: Lehrer- und Fächer-Verwaltung
 
