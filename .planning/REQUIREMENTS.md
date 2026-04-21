@@ -20,11 +20,11 @@
 
 ### School Profile & Year
 
-- [ ] **SCHOOL-01**: Admin kann Schulstammdaten (Name, Schultyp, Adresse, Kontakt) anlegen und editieren
-- [ ] **SCHOOL-02**: Admin kann Zeitraster (Perioden, Pausenzeiten, Unterrichtstage) konfigurieren
-- [ ] **SCHOOL-03**: Admin kann Schuljahre mit Start-/Enddatum anlegen und aktives Schuljahr setzen
-- [ ] **SCHOOL-04**: Admin kann A/B-Wochen-Modus pro Schule aktivieren/deaktivieren
-- [ ] **SCHOOL-05**: Admin kann Perioden-Slots (Länge, Label, Pausen-Flag) im Zeitraster editieren
+- [x] **SCHOOL-01**: Admin kann Schulstammdaten (Name, Schultyp, Adresse, Kontakt) anlegen und editieren
+- [x] **SCHOOL-02**: Admin kann Zeitraster (Perioden, Pausenzeiten, Unterrichtstage) konfigurieren
+- [x] **SCHOOL-03**: Admin kann Schuljahre mit Start-/Enddatum anlegen und aktives Schuljahr setzen
+- [x] **SCHOOL-04**: Admin kann A/B-Wochen-Modus pro Schule aktivieren/deaktivieren
+- [x] **SCHOOL-05**: Admin kann Perioden-Slots (Länge, Label, Pausen-Flag) im Zeitraster editieren
 
 ### Teacher Management
 
@@ -156,11 +156,11 @@ Empty initially — populated during roadmap creation by `gsd-roadmapper`.
 | ADMIN-01 | Phase 16 | Pending |
 | ADMIN-02 | Phase 16 | Pending |
 | ADMIN-03 | Phase 16 | Pending |
-| SCHOOL-01 | Phase 10 | Pending |
-| SCHOOL-02 | Phase 10 | Pending |
-| SCHOOL-03 | Phase 10 | Pending |
-| SCHOOL-04 | Phase 10 | Pending |
-| SCHOOL-05 | Phase 10 | Pending |
+| SCHOOL-01 | Phase 10 | Complete |
+| SCHOOL-02 | Phase 10 | Complete |
+| SCHOOL-03 | Phase 10 | Complete |
+| SCHOOL-04 | Phase 10 | Complete |
+| SCHOOL-05 | Phase 10 | Complete |
 | TEACHER-01 | Phase 11 | Pending |
 | TEACHER-02 | Phase 11 | Pending |
 | TEACHER-03 | Phase 11 | Pending |

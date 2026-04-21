@@ -40,8 +40,8 @@ See [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full 
 
 | # | Phase | REQ count | Depends on | Parallelism |
 |---|-------|-----------|------------|-------------|
-| 10 | Schulstammdaten & Zeitraster | 5 | v1.0 backend | — |
-| 10.1 | UAT gap closure — DTO/schema/toast | gap-closure | Phase 10 | — |
+| 10 | Schulstammdaten & Zeitraster | 5 | Complete    | 2026-04-21 |
+| 10.1 | UAT gap closure — DTO/schema/toast | gap-closure | Complete    | 2026-04-21 |
 | 10.2 | E2E Admin-Console gap-closure (Tier 1) | 4/5 | In Progress|  |
 | 10.3 | E2E Harness + per-role Smoke (Tier 2) | E2E-hardening | Phase 10.2 | — |
 | 10.4 | E2E Admin-Ops People (Tier 3a) | E2E-hardening | Phase 10.3 | Parallel with 10.5 |
@@ -62,7 +62,7 @@ See [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full 
 **Goal:** Admin kann eine neue Schule mit Zeitraster und Schuljahr UI-gestützt aufsetzen — Fundament für alle weiteren Admin-Oberflächen.
 **Requirements:** SCHOOL-01, SCHOOL-02, SCHOOL-03, SCHOOL-04, SCHOOL-05
 **Depends on:** v1.0 backend (SchoolModule, TimeGrid, SchoolYear already exist from v1.0 Phase 1-2)
-**Plans:** 8 plans
+**Plans:** 8/8 plans complete
 
 **Success criteria:**
 - [ ] Admin kann eine neue Schule anlegen und Stammdaten (Name, Typ, Adresse, Kontakt) editieren
@@ -91,7 +91,7 @@ Plans:
 **Goal:** Close the 3 blockers found during Phase 10 manual UAT (10-UAT-FINDINGS.md) so Plan 10-06 Task 2 screenshot capture can resume — Bug 3 first (silent 4xx success toast, CRITICAL), then Bug 1 (SchoolTypeDto enum drift), then Bug 2 (School.address schema mismatch + corrupt seed row + migration).
 **Requirements:** [gap-closure — no REQ-IDs; must-haves derived from 10-UAT-FINDINGS.md acceptance criteria]
 **Depends on:** Phase 10
-**Plans:** 3/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 10.1-01-PLAN.md — Bug 3 audit: silent 4xx success-toast across useSchool/useSchoolYears/useTimeGrid/OptionsTab + regression specs [Wave 1]
@@ -112,7 +112,7 @@ Plans:
 - [x] 10.2-02-PLAN.md — Wochentage UX decision + E2E spec [Wave 2] — FIX landed (18-LoC TimeGridTab promotion) + WOCH-01 spec green
 - [x] 10.2-03-PLAN.md — Schuljahre edit/delete/activate E2E [Wave 2] — shipped at 2/3 (YEAR-01 edit deferred, see deferred-items.md #1)
 - [x] 10.2-04-PLAN.md — Silent-4xx E2E sweep (Stammdaten/Zeitraster/Schuljahre/Optionen) [Wave 2]
-- [ ] 10.2-05-PLAN.md — Playwright screenshots + CI workflow + Phase 10 closure [Wave 3]
+- [x] 10.2-05-PLAN.md — Playwright screenshots + CI workflow + Phase 10 closure [Wave 3] (completed 2026-04-21)
 
 **Success criteria:**
 - [ ] `PUT /api/v1/schools/:id/time-grid` Happy-Path + Error-Path (invalid payload) haben je 1 Playwright-Spec (desktop + mobile)
