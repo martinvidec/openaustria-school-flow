@@ -42,7 +42,7 @@ See [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full 
 |---|-------|-----------|------------|-------------|
 | 10 | Schulstammdaten & Zeitraster | 5 | Complete    | 2026-04-21 |
 | 10.1 | UAT gap closure — DTO/schema/toast | gap-closure | Complete    | 2026-04-21 |
-| 10.2 | E2E Admin-Console gap-closure (Tier 1) | 4/5 | In Progress|  |
+| 10.2 | E2E Admin-Console gap-closure (Tier 1) | 5/5 | Complete    | 2026-04-21 |
 | 10.3 | E2E Harness + per-role Smoke (Tier 2) | E2E-hardening | Phase 10.2 | — |
 | 10.4 | E2E Admin-Ops People (Tier 3a) | E2E-hardening | Phase 10.3 | Parallel with 10.5 |
 | 10.5 | E2E Admin-Ops Operations (Tier 3b) | E2E-hardening | Phase 10.3 | Parallel with 10.4 |
@@ -105,7 +105,7 @@ Plans:
 **Goal:** Admin-Console mit Playwright-Coverage absichern. Zeitraster-Save-500 fixen und durch E2E abdecken, Wochentage-UX-Entscheidung treffen und Spec schreiben, Schuljahre edit/delete/activate-Switch durch E2E sichern, Silent-4xx als E2E für alle 4 Tabs, Phase-10 Screenshots automatisiert via Playwright, CI-Workflow wired. Schließt Phase 10 mit.
 **Requirements:** E2E-hardening (no new REQ-IDs; must-haves aus E2E-COVERAGE-MATRIX.md Tier 1)
 **Depends on:** Phase 10.1
-**Plans:** 4/5 plans executed
+**Plans:** 5/5 plans complete
 
 Plans:
 - [x] 10.2-01-PLAN.md — Zeitraster E2E (desktop + mobile) + durationMin UAT fix [Wave 1]
