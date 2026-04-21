@@ -40,7 +40,7 @@ model School {
   id            String     @id @default(uuid())
   name          String
   schoolType    SchoolType @map("school_type")
-  address       String?
+  address       Json?      @db.JsonB
   abWeekEnabled Boolean    @default(false) @map("ab_week_enabled")
   createdAt     DateTime   @default(now()) @map("created_at")
   updatedAt     DateTime   @updatedAt @map("updated_at")
