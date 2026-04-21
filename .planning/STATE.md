@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
-stopped_at: Milestone v1.1 Schuladmin Console kickoff — defining requirements
-last_updated: "2026-04-19T20:09:57.775Z"
-last_activity: 2026-04-19 -- Phase 10 execution started
+stopped_at: Phase 10.1-01 complete — silent-4xx-toast audit + regression specs locked down. Ready for 10.1-02 SchoolTypeDto enum.
+last_updated: "2026-04-21T01:43:08.355Z"
+last_activity: 2026-04-21
 progress:
-  total_phases: 7
-  completed_phases: 0
-  total_plans: 8
-  completed_plans: 0
+  total_phases: 8
+  completed_phases: 1
+  total_plans: 11
+  completed_plans: 9
   percent: 0
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-18)
 
 **Core value:** Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenplanerstellung, die sie selbst hosten koennen -- ohne Vendor Lock-in, mit offenen APIs und DSGVO-Konformitaet von Tag 1.
-**Current focus:** Phase 10 — schulstammdaten-zeitraster
+**Current focus:** Phase 10.1 — uat-gap-closure-schooltypedto-enum-school-address-schema-silent-4xx-toast
 
 ## Current Position
 
-Phase: 10 (schulstammdaten-zeitraster) — EXECUTING
-Plan: 1 of 8
-Status: Executing Phase 10
-Last activity: 2026-04-19 -- Phase 10 execution started
+Phase: 10.1 (uat-gap-closure-schooltypedto-enum-school-address-schema-silent-4xx-toast) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-04-21
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -120,6 +120,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 09.1-runtime-blockers-fix P01 | 5 min | 2 tasks | 6 files |
 | Phase 09.2-dsgvo-compliance-closure P9.2-01 | 26 | 2 tasks | 7 files |
 | Phase 09.3-solver-frontend-wiring P9.3-01 | 20 min | 2 tasks | 6 files |
+| Phase 10.1 P01 | 35min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -334,6 +335,8 @@ Recent decisions affecting current work:
 - [Phase 09.3-solver-frontend-wiring]: useSolverSocket mounted page-scope (not layout) -- solver events only relevant while viewing admin solver page, mirrors useClassbookSocket precedent
 - [Phase 09.3-solver-frontend-wiring]: SolveCompleteEvent fields {runId,status,hardScore,softScore,elapsedSeconds} match SolverCallbackController payload -- plan draft lessonsCount field does not exist
 - [Phase 09.3-solver-frontend-wiring]: POST /timetable/solve body is empty {} -- backend StartSolveDto defaults apply (maxSolveSeconds=300), constraint weight tuning deferred to v1.1
+- [Phase 10.1]: Phase 10.1-01: Silent-4xx-toast invariants already held across all 12 useMutation hooks at baseline — no source changes needed, locked down with 4 Vitest regression specs.
+- [Phase 10.1]: Phase 10.1-01: 8 pre-existing tsc -b errors (unrelated to plan file list) logged to deferred-items.md per Scope Boundary rule — dedicated web-typecheck-gap-closure mini-plan recommended.
 
 ### Pending Todos
 
@@ -353,6 +356,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-18T12:00:00.000Z
-Stopped at: Milestone v1.1 Schuladmin Console kickoff — defining requirements
+Last session: 2026-04-21T01:43:08.351Z
+Stopped at: Phase 10.1-01 complete — silent-4xx-toast audit + regression specs locked down. Ready for 10.1-02 SchoolTypeDto enum.
 Resume file: None
