@@ -39,3 +39,33 @@ one react-hook-form zod-resolver generic-narrowing issue.
 
 The Vitest suite (the relevant gate for 10.1-01 Task 2) passes: 53 tests green,
 36 `it.todo` stubs, 7 skipped suites at baseline (pre-10.1-01 work).
+
+## Pre-existing `prisma/__tests__/school-year-multi-active.spec.ts` failure — unrelated to 10.1-02
+
+Discovered 2026-04-21 while running `pnpm --filter @schoolflow/api test` as Plan 10.1-02
+Task 1 GREEN gate:
+
+```
+FAIL prisma/__tests__/school-year-multi-active.spec.ts > SchoolYear partial unique index
+  (school_years_active_per_school) > backfill invariant —
+  all existing rows after migration are isActive=true
+AssertionError: expected 1 to be 2
+```
+
+**Root cause:** The spec (added in commit `aaa3672` during Plan 10-01a RED phase) asserts
+that after the 20260419_add_active_school_year migration, every existing row in a local
+test PG instance ended up with `isActive=true`. On the current dev environment there are
+2 school rows but only 1 active school-year row total, so the backfill invariant
+`active === total` does not hold.
+
+This spec ran and failed at RED BEFORE any 10.1-02 edit (pre-existing DB state drift),
+so it is NOT a regression from this plan. Both `apps/api/src/modules/school/dto/create-school.dto.ts`
+and `apps/api/src/modules/school/school.controller.spec.ts` (the 2 files touched by 10.1-02)
+are green — full school.controller.spec.ts file: 11/11 passing.
+
+**Recommended follow-up:** either reset the dev PG to a clean state (`pnpm prisma migrate reset`)
+before running `prisma/__tests__/*.spec.ts`, or gate those migration-assertion specs behind a
+`describe.skipIf(!process.env.CLEAN_MIGRATION_CI)` so they only run in CI after a fresh DB.
+Not in scope for Phase 10.1 (UAT gap closure) — recommend rolling into the next prisma-hygiene
+mini-plan.
+

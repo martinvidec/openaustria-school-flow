@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
-stopped_at: Phase 10.1-01 complete — silent-4xx-toast audit + regression specs locked down. Ready for 10.1-02 SchoolTypeDto enum.
-last_updated: "2026-04-21T01:43:08.355Z"
+stopped_at: Phase 10.1-02 complete — SchoolTypeDto aligned with @schoolflow/shared SCHOOL_TYPES (7 active values accepted via @IsEnum). Ready for 10.1-03 School.address schema fix (Wave 3).
+last_updated: "2026-04-21T08:29:00Z"
 last_activity: 2026-04-21
 progress:
   total_phases: 8
   completed_phases: 1
   total_plans: 11
-  completed_plans: 9
+  completed_plans: 10
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 ## Current Position
 
 Phase: 10.1 (uat-gap-closure-schooltypedto-enum-school-address-schema-silent-4xx-toast) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-04-21
 
@@ -121,6 +121,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 09.2-dsgvo-compliance-closure P9.2-01 | 26 | 2 tasks | 7 files |
 | Phase 09.3-solver-frontend-wiring P9.3-01 | 20 min | 2 tasks | 6 files |
 | Phase 10.1 P01 | 35min | 2 tasks | 5 files |
+| Phase 10.1 P02 | 20min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -337,6 +338,10 @@ Recent decisions affecting current work:
 - [Phase 09.3-solver-frontend-wiring]: POST /timetable/solve body is empty {} -- backend StartSolveDto defaults apply (maxSolveSeconds=300), constraint weight tuning deferred to v1.1
 - [Phase 10.1]: Phase 10.1-01: Silent-4xx-toast invariants already held across all 12 useMutation hooks at baseline — no source changes needed, locked down with 4 Vitest regression specs.
 - [Phase 10.1]: Phase 10.1-01: 8 pre-existing tsc -b errors (unrelated to plan file list) logged to deferred-items.md per Scope Boundary rule — dedicated web-typecheck-gap-closure mini-plan recommended.
+- [Phase 10.1]: Phase 10.1-02: SchoolTypeDto imports SCHOOL_TYPES from @schoolflow/shared (Approach A) — Object.fromEntries(SCHOOL_TYPES.map(t=>[t,t])) frozen literal-object feeds @IsEnum so class-validator accepts all 7 Phase-10 values; type SchoolTypeDto = (typeof SCHOOL_TYPES)[number] preserves literal-union typing.
+- [Phase 10.1]: Phase 10.1-02: Prisma SchoolType enum kept at 10 members (7 active + 3 legacy MS/AHS_UNTER/AHS_OBER) — legacy retained for back-compat seed rows; DTO-level rejection is sufficient to prevent new schools from being created with legacy values.
+- [Phase 10.1]: Phase 10.1-02: apps/api/src/modules/subject/dto/apply-stundentafel.dto.ts has its own private SchoolTypeDto enum (still 5 legacy values) — out of scope for 10.1-02 (plan targets only create-school.dto.ts); flagged for future subject-module hygiene work.
+- [Phase 10.1]: Phase 10.1-02: Pre-existing prisma/__tests__/school-year-multi-active.spec.ts DB-integration failure logged to deferred-items.md (backfill invariant expected 2 rows, found 1 in dev DB) — not caused by DTO fix, pre-exists at RED.
 
 ### Pending Todos
 
@@ -356,6 +361,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-21T01:43:08.351Z
-Stopped at: Phase 10.1-01 complete — silent-4xx-toast audit + regression specs locked down. Ready for 10.1-02 SchoolTypeDto enum.
+Last session: 2026-04-21T08:29:00Z
+Stopped at: Phase 10.1-02 complete — SchoolTypeDto aligned with @schoolflow/shared SCHOOL_TYPES (7 active values). Ready for 10.1-03 School.address schema fix (Wave 3, last UAT blocker).
 Resume file: None

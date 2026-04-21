@@ -86,11 +86,11 @@ Plans:
 **Goal:** Close the 3 blockers found during Phase 10 manual UAT (10-UAT-FINDINGS.md) so Plan 10-06 Task 2 screenshot capture can resume — Bug 3 first (silent 4xx success toast, CRITICAL), then Bug 1 (SchoolTypeDto enum drift), then Bug 2 (School.address schema mismatch + corrupt seed row + migration).
 **Requirements:** [gap-closure — no REQ-IDs; must-haves derived from 10-UAT-FINDINGS.md acceptance criteria]
 **Depends on:** Phase 10
-**Plans:** 1/3 plans executed
+**Plans:** 2/3 plans executed
 
 Plans:
 - [x] 10.1-01-PLAN.md — Bug 3 audit: silent 4xx success-toast across useSchool/useSchoolYears/useTimeGrid/OptionsTab + regression specs [Wave 1]
-- [ ] 10.1-02-PLAN.md — Bug 1 fix: align SchoolTypeDto with @schoolflow/shared SCHOOL_TYPES (7 active values) + DTO validation regression spec [Wave 2]
+- [x] 10.1-02-PLAN.md — Bug 1 fix: align SchoolTypeDto with @schoolflow/shared SCHOOL_TYPES (7 active values) + DTO validation regression spec [Wave 2]
 - [ ] 10.1-03-PLAN.md — Bug 2 fix: School.address → Json? @db.JsonB via prisma migrate dev, AddressDto + AddressResponseDto, seed repair for corrupt '[object Object]' row [Wave 3]
 
 ### Phase 11: Lehrer- und Fächer-Verwaltung
