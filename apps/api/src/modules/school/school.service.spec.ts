@@ -84,4 +84,19 @@ describe('SchoolService', () => {
       expect.arrayContaining(['VS', 'MS', 'AHS_UNTER', 'AHS_OBER', 'BHS'])
     );
   });
+
+  it('passes a nested address object to Prisma.school.create without stringification', async () => {
+    const addr = { street: 'Amerlingstrasse 6', zip: '1060', city: 'Wien' };
+    const dto = {
+      name: 'BG/BRG Test',
+      schoolType: 'AHS' as any,
+      address: addr,
+    };
+    await service.create(dto);
+    const createArg = prismaService.school.create.mock.calls[0][0];
+    expect(createArg.data.address).toEqual(addr);
+    // Ensure nobody JSON.stringify'd the address on the way to Prisma:
+    expect(typeof createArg.data.address).toBe('object');
+    expect(createArg.data.address).not.toBe('[object Object]');
+  });
 });
