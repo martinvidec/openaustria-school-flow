@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
-stopped_at: Completed 10.2-04-PLAN.md
-last_updated: "2026-04-21T18:22:10.653Z"
+stopped_at: Completed 10.2-02-PLAN.md
+last_updated: "2026-04-21T18:58:41Z"
 last_activity: 2026-04-21
 progress:
   total_phases: 12
   completed_phases: 2
   total_plans: 16
-  completed_plans: 14
-  percent: 27
+  completed_plans: 15
+  percent: 29
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 ## Current Position
 
 Phase: 10.2 (e2e-admin-console-gap-closure) — IN PROGRESS
-Plan: 3 of 5 — 10.2-01 + 10.2-03 completed 2026-04-21; 10.2-02, 10.2-04, 10.2-05 pending
+Plan: 4 of 5 — 10.2-01 + 10.2-02 + 10.2-03 + 10.2-04 completed 2026-04-21; 10.2-05 pending
 Status: Ready to execute
 Last activity: 2026-04-21
 
-Progress: [██░░░░░░░░] 27%
+Progress: [███░░░░░░░] 29%
 
 ## Performance Metrics
 
@@ -126,6 +126,7 @@ Progress: [██░░░░░░░░] 27%
 | Phase 10.2 P01 | ~180min | 4 tasks | 6 files |
 | Phase 10.2 P03 | ~45min | 2 tasks | 2 files |
 | Phase 10.2 P10.2-04 | 17min | 1 tasks | 1 files |
+| Phase 10.2 P10.2-02 | 35min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -360,6 +361,10 @@ Recent decisions affecting current work:
 - [Phase 10.2]: Phase 10.2-03: Single-active invariant asserted at API layer (GET /school-years then filter isActive) instead of DOM-level badge count — SchoolYearCard renders both an 'Aktiv' badge and an 'Aktivieren' button (substring overlap), making exact-match disambiguation fragile across icon/text refactors
 - [Phase 10.2]: Phase 10.2-03: afterEach cleanup re-activates a real (non-E2E-*) year before deleting leftover active E2E-* rows — the DELETE endpoint rejects active-year deletion with a 409
 - [Phase 10.2]: E2E silent-4xx guardrail: 4 mocked-422 Playwright tests per admin-console mutation (SILENT-4XX-01..04), asserting red toast + NO green toast; lifts Plan 10.1-01 hook-level proof to real-network layer. — Hook-level silent-4xx proof can miss render-layer regressions (tab-component try/catch, error-boundary coercion). E2E layer exercises the full sonner toast portal chain and catches the exact UAT bug class (green toast masking data loss) the user saw in Phase 10.
+- [Phase 10.2]: Phase 10.2-02: Wochentage UX gap resolved via 9+/9- LoC TimeGridTab promotion — `<Label>` → `<h3>`, hint moved above toggles with explicit interaction language, wrapped in `<section aria-labelledby>` + `role="group"` on toggle container. Chose FIX over DEFER because the affordance existed but was visually subordinate (muted-foreground Label); small scope, no new components, button accessible names preserved verbatim so existing specs keep working.
+- [Phase 10.2]: Phase 10.2-02: WOCH-01 persistence assertion via GET /api/v1/schools/:id (not UI reload) — same pattern as ZEIT-01 because GET /time-grid is 404 (deferred-items #2); useTimeGrid swallows the 404 and keeps data=null so UI reload can never read persisted schoolDays back into the form.
+- [Phase 10.2]: Phase 10.2-02: WOCH-01 uses `page.waitForResponse(PUT /time-grid)` instead of `getByText(/Aenderungen gespeichert/)` for multi-save spec determinism — sonner queues the toast across consecutive saves, letting getByText short-circuit BEFORE the second PUT fires and producing false-positive persistence checks. Documented as a new `patterns-established` entry for future Playwright specs.
+- [Phase 10.2]: Phase 10.2-02: WOCH-01 + ZEIT-01 parallel-worker DB race logged to deferred-items.md — both specs mutate the same seed school, concurrent PUTs race. Both green deterministically with `--workers=1`. Fix belongs to testing-infra follow-up (per-spec throwaway-school fixture or project-level `workers: 1`).
 
 ### Pending Todos
 
@@ -376,10 +381,10 @@ None yet.
 - v1.0 MVP shipped 2026-04-09 (12 phases, 74 plans, 148 tasks)
 - v1.1 Schuladmin Console started 2026-04-18 — brownfield UI-only milestone
 - Phase 10.1 inserted after Phase 10: UAT gap closure — SchoolTypeDto enum, School.address schema, silent 4xx toast (URGENT)
-- Phase 10.2 started 2026-04-21: E2E admin-console gap-closure (Tier 1) — 10.2-01 closes Zeitraster-save UAT bug + locks it in with Playwright; 10.2-03 ships Schuljahre desktop E2E at 2/3 must_haves (YEAR-01 edit deferred, YEAR-02 + YEAR-03 green)
+- Phase 10.2 started 2026-04-21: E2E admin-console gap-closure (Tier 1) — 10.2-01 closes Zeitraster-save UAT bug + locks it in with Playwright; 10.2-03 ships Schuljahre desktop E2E at 2/3 must_haves (YEAR-01 edit deferred, YEAR-02 + YEAR-03 green); 10.2-02 closes Wochentage UX gap with 18-LoC TimeGridTab FIX + WOCH-01 spec asserting Sa toggle API persistence
 
 ## Session Continuity
 
-Last session: 2026-04-21T18:21:49.879Z
-Stopped at: Completed 10.2-04-PLAN.md
+Last session: 2026-04-21T18:58:41Z
+Stopped at: Completed 10.2-02-PLAN.md
 Resume file: None
