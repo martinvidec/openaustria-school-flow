@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
-stopped_at: Plan 10.2-03 COMPLETE — Schuljahre desktop E2E shipped at 2 of 3 (YEAR-02 delete + YEAR-03 activate-switch green; YEAR-01 edit deferred — edit UI does not exist in v1.1 Phase 10, backend PATCH ready + hook dead-code). 3 deferred items logged (#1 edit-UI missing, #2 POST /school-years with isActive:true returns 500 when another active year exists, #3 SCHOOL-05 Prisma 7.6 fixture init). Next: Plan 10.2-02 (Wochentage UX decision + E2E).
-last_updated: "2026-04-21T18:07:28Z"
+stopped_at: Completed 10.2-04-PLAN.md
+last_updated: "2026-04-21T18:22:10.653Z"
 last_activity: 2026-04-21
 progress:
-  total_phases: 8
+  total_phases: 12
   completed_phases: 2
-  total_plans: 13
-  completed_plans: 13
-  percent: 29
+  total_plans: 16
+  completed_plans: 14
+  percent: 27
 ---
 
 # Project State
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 ## Current Position
 
 Phase: 10.2 (e2e-admin-console-gap-closure) — IN PROGRESS
-Plan: 2 of 5 — 10.2-01 + 10.2-03 completed 2026-04-21; 10.2-02, 10.2-04, 10.2-05 pending
-Status: Zeitraster + Schuljahre desktop E2E coverage shipped. Schuljahre at 2/3 must_haves (YEAR-01 edit deferred — no edit UI in v1.1; deferred-items.md #1). Combined regression shows 2 pre-existing failures (SCHOOL-03 + SCHOOL-05) logged in deferred-items.md #2 + #3.
+Plan: 3 of 5 — 10.2-01 + 10.2-03 completed 2026-04-21; 10.2-02, 10.2-04, 10.2-05 pending
+Status: Ready to execute
 Last activity: 2026-04-21
 
 Progress: [██░░░░░░░░] 27%
@@ -125,6 +125,7 @@ Progress: [██░░░░░░░░] 27%
 | Phase 10.1 P03 | 23min | 3 tasks | 6 files |
 | Phase 10.2 P01 | ~180min | 4 tasks | 6 files |
 | Phase 10.2 P03 | ~45min | 2 tasks | 2 files |
+| Phase 10.2 P10.2-04 | 17min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -358,6 +359,7 @@ Recent decisions affecting current work:
 - [Phase 10.2]: Phase 10.2-03: YEAR-03 activates via Aktivieren button (SchoolYearService.activate — atomic demote inside $transaction) instead of creating-as-active via dialog, because POST /school-years with isActive:true currently returns 500 when another active year exists (deferred-items.md #2 — SchoolYearService.create missing atomic-demote transaction)
 - [Phase 10.2]: Phase 10.2-03: Single-active invariant asserted at API layer (GET /school-years then filter isActive) instead of DOM-level badge count — SchoolYearCard renders both an 'Aktiv' badge and an 'Aktivieren' button (substring overlap), making exact-match disambiguation fragile across icon/text refactors
 - [Phase 10.2]: Phase 10.2-03: afterEach cleanup re-activates a real (non-E2E-*) year before deleting leftover active E2E-* rows — the DELETE endpoint rejects active-year deletion with a 409
+- [Phase 10.2]: E2E silent-4xx guardrail: 4 mocked-422 Playwright tests per admin-console mutation (SILENT-4XX-01..04), asserting red toast + NO green toast; lifts Plan 10.1-01 hook-level proof to real-network layer. — Hook-level silent-4xx proof can miss render-layer regressions (tab-component try/catch, error-boundary coercion). E2E layer exercises the full sonner toast portal chain and catches the exact UAT bug class (green toast masking data loss) the user saw in Phase 10.
 
 ### Pending Todos
 
@@ -378,6 +380,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-21T18:07:28Z
-Stopped at: Plan 10.2-03 COMPLETE — Schuljahre desktop E2E shipped at 2 of 3 must_haves (YEAR-02 delete + YEAR-03 activate-switch green; YEAR-01 edit deferred because the edit UI does not exist in v1.1 Phase 10). Commits 2eb84c6 (spec) + 55616f6 (deferred-items). 3 pre-existing bugs discovered and logged (edit-UI missing, create-as-active 500, SCHOOL-05 Prisma fixture init). Next step: Plan 10.2-02 (Wochentage UX decision + E2E spec).
+Last session: 2026-04-21T18:21:49.879Z
+Stopped at: Completed 10.2-04-PLAN.md
 Resume file: None
