@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
-stopped_at: Completed 10.3-01-PLAN.md
-last_updated: "2026-04-21T19:37:13Z"
-last_activity: 2026-04-21 -- Phase 10.3-01 harness extension complete
+stopped_at: Completed 10.3-02-PLAN.md
+last_updated: "2026-04-21T19:45:56Z"
+last_activity: 2026-04-21 -- Phase 10.3-02 per-role smoke specs complete (4/4 green)
 progress:
   total_phases: 12
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 19
-  completed_plans: 17
-  percent: 31
+  completed_plans: 18
+  percent: 33
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 
 ## Current Position
 
-Phase: 10.3 (e2e-harness-per-role-smoke) — EXECUTING
-Plan: 2 of 2 (10.3-01 complete)
-Status: Executing Phase 10.3
-Last activity: 2026-04-21 -- Phase 10.3-01 harness extension complete (loginAsRole + globalSetup/Teardown)
+Phase: 10.3 (e2e-harness-per-role-smoke) — COMPLETE (2/2 plans)
+Plan: Next — Phase 10.4 (E2E Admin-Ops People, Tier 3a) or 10.5 (E2E Admin-Ops Operations, Tier 3b) — parallel-eligible
+Status: Phase 10.3 complete, ready for Phase 10.4 / 10.5
+Last activity: 2026-04-21 -- Phase 10.3-02 per-role smoke specs complete (4/4 SMOKE green: SL-01, LEHRER-01, ELTERN-01, SCHUELER-01; desktop regression 20/23, 3 pre-existing SCHOOL-02/03/05 failures unchanged)
 
-Progress: [███░░░░░░░] 31%
+Progress: [███░░░░░░░] 33%
 
 ## Performance Metrics
 
@@ -128,6 +128,7 @@ Progress: [███░░░░░░░] 31%
 | Phase 10.2 P10.2-04 | 17min | 1 tasks | 1 files |
 | Phase 10.2 P10.2-02 | 35min | 2 tasks | 4 files |
 | Phase 10.3 P10.3-01 | 8min | 3 tasks | 6 files |
+| Phase 10.3 P10.3-02 | 4min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -371,6 +372,10 @@ Recent decisions affecting current work:
 - [Phase 10.3]: Phase 10.3-01: Playwright globalSetup uses AbortController fetch with 5s timeout and treats 401 as live-but-unauthorized — API health 200 is the success path, 401 prevents false-negatives on authenticated roots. Fail-fast throws with label + url + reason (verified via E2E_API_URL pointing at dead port).
 - [Phase 10.3]: Phase 10.3-01: globalTeardown shipped as explicit no-op stub (not omitted) so the hook is wired + documented — 10.3-02+ fixture cleanup can be added without touching playwright.config.ts.
 - [Phase 10.3]: Phase 10.3-01: 3 pre-existing admin-school-settings failures (SCHOOL-02/03/05) confirmed via git stash + re-run on pre-10.3 baseline — 10.3-01 refactor introduces zero new failures. Logged to deferred-items.md for spec-hygiene follow-up (SCHOOL-02: 10.2-02 markup drift, SCHOOL-03: 10.2-03 deferred #2 backend bug, SCHOOL-05: Playwright worker env wiring).
+- [Phase 10.3]: Phase 10.3-02: Per-role smoke specs ship 4 read-only tests (SMOKE-SL-01/LEHRER-01/ELTERN-01/SCHUELER-01) consuming loginAsRole helper — E2E per-role coverage matrix bumps from 1/5 (admin-only) to 5/5. Smoke shape: h1 assertion (data-layer-independent) + grid-or-empty-state .or() compound locator (seed-tolerant).
+- [Phase 10.3]: Phase 10.3-02: Grid-or-empty-state smoke pattern for timetable routes — seed DB ships 0 perspective-filtered lessons for kc-lehrer/eltern/schueler personas, so getByRole('grid').or(getByText('Kein Stundenplan vorhanden')) covers both valid render states. Grid-only would false-fail on fresh seed; empty-only would regress to green if grid silently broke. .or() = smoke-correct.
+- [Phase 10.3]: Phase 10.3-02: shadcn CardTitle renders as <div> (not heading element) — 2nd repo-wide trap (first was 10.2-03 era). Empty-state text locators must use getByText, NOT getByRole('heading'). Flagged for Phase 10.4 harness hardening: add getByCardTitle helper OR promote CardTitle to render <h3>.
+- [Phase 10.3]: Phase 10.3-02: SMOKE-ADMIN-01 explicitly NOT added — admin coverage already lives in Phase 10.2 specs (SCHOOL-01..05, ZEIT-01..02, YEAR-02..03, WOCH-01, SILENT-4XX-01..04). Adding a 5th smoke would be pure redundancy and violate the plan's explicit must_have "Admin smoke is NOT repeated here".
 
 ### Pending Todos
 
@@ -388,10 +393,10 @@ None yet.
 - v1.1 Schuladmin Console started 2026-04-18 — brownfield UI-only milestone
 - Phase 10.1 inserted after Phase 10: UAT gap closure — SchoolTypeDto enum, School.address schema, silent 4xx toast (URGENT)
 - Phase 10.2 started 2026-04-21: E2E admin-console gap-closure (Tier 1) — 10.2-01 closes Zeitraster-save UAT bug + locks it in with Playwright; 10.2-03 ships Schuljahre desktop E2E at 2/3 must_haves (YEAR-01 edit deferred, YEAR-02 + YEAR-03 green); 10.2-02 closes Wochentage UX gap with 18-LoC TimeGridTab FIX + WOCH-01 spec asserting Sa toggle API persistence
-- Phase 10.3 started 2026-04-21: E2E Harness + per-role Smoke (Tier 2) — 10.3-01 extends loginAsAdmin to loginAsRole(page, role) for all 5 seed personas + adds Playwright globalSetup/Teardown with fail-fast API+Vite health-checks; 10.3-02 (per-role smokes) remains
+- Phase 10.3 started 2026-04-21: E2E Harness + per-role Smoke (Tier 2) — 10.3-01 extends loginAsAdmin to loginAsRole(page, role) for all 5 seed personas + adds Playwright globalSetup/Teardown with fail-fast API+Vite health-checks; 10.3-02 ships 4 per-role smoke specs (SL-01/LEHRER-01/ELTERN-01/SCHUELER-01), E2E per-role coverage matrix 1/5 → 5/5 — Phase 10.3 COMPLETE (2/2 plans). Ready for Phase 10.4/10.5 parallel waves.
 
 ## Session Continuity
 
-Last session: 2026-04-21T19:37:13Z
-Stopped at: Completed 10.3-01-PLAN.md
+Last session: 2026-04-21T19:45:56Z
+Stopped at: Completed 10.3-02-PLAN.md
 Resume file: None

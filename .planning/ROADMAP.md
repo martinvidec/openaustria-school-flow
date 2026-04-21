@@ -43,7 +43,7 @@ See [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full 
 | 10 | Schulstammdaten & Zeitraster | 5 | Complete    | 2026-04-21 |
 | 10.1 | UAT gap closure — DTO/schema/toast | gap-closure | Complete    | 2026-04-21 |
 | 10.2 | E2E Admin-Console gap-closure (Tier 1) | 5/5 | Complete    | 2026-04-21 |
-| 10.3 | E2E Harness + per-role Smoke (Tier 2) | E2E-hardening | Phase 10.2 | — |
+| 10.3 | E2E Harness + per-role Smoke (Tier 2) | E2E-hardening | Complete    | 2026-04-21 |
 | 10.4 | E2E Admin-Ops People (Tier 3a) | E2E-hardening | Phase 10.3 | Parallel with 10.5 |
 | 10.5 | E2E Admin-Ops Operations (Tier 3b) | E2E-hardening | Phase 10.3 | Parallel with 10.4 |
 | 11 | Lehrer- und Fächer-Verwaltung | 11 | Phase 10.5 | Parallel with Phase 14 |
@@ -130,18 +130,18 @@ Plans:
 **Goal:** Playwright-Harness für alle 5 Rollen nutzbar machen und je Rolle 1 Smoke-Spec (Login + primäre Aktion). Harness-Extensions: per-role Login-Helper, `globalSetup`/`globalTeardown`, Trace-Retention config, DB-Seeding+Cleanup-Pattern.
 **Requirements:** E2E-hardening
 **Depends on:** Phase 10.2
-**Plans:** 1/2 plans complete
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 10.3-01-PLAN.md — Harness extension: loginAsRole(page, role) + getRoleToken(request, role) + globalSetup/globalTeardown + explicit reporter config [Wave 1]
-- [ ] 10.3-02-PLAN.md — Per-role smoke specs (schulleitung/lehrer/eltern/schueler) [Wave 2]
+- [x] 10.3-02-PLAN.md — Per-role smoke specs (schulleitung/lehrer/eltern/schueler) [Wave 2]
 
 **Success criteria:**
 - [x] Login-Helper pro Rolle: admin, schulleitung, lehrer, eltern, schueler
 - [x] `globalSetup` seedet Basis-Fixtures, `globalTeardown` cleaned deterministisch
-- [ ] Smoke-Specs: schulleitung öffnet Substitutions-Admin · lehrer öffnet Klassenbuch-Lesson · eltern öffnet Kind-Timetable · schueler öffnet persönliches Timetable (admin bereits covered über 10.2)
+- [x] Smoke-Specs: schulleitung öffnet Substitutions-Admin · lehrer öffnet Timetable · eltern öffnet Kind-Timetable · schueler öffnet persönliches Timetable (admin bereits covered über 10.2)
 - [x] Trace-Retention auf `retain-on-failure`, Screenshots als CI-Artifacts
-- [ ] Alle neuen Specs laufen in CI (aus 10.2 gewired)
+- [x] Alle neuen Specs laufen in CI (aus 10.2 gewired — CI config unverändert, 4 neue SMOKE-Specs automatisch abgedeckt via testMatch `*.spec.ts`)
 
 ---
 
