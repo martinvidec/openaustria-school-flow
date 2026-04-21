@@ -63,6 +63,8 @@ Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenp
 
 **v1.1 Schuladmin Console started 2026-04-18.** Brownfield UI-only milestone. All backend APIs exist from v1.0; no new endpoints or Prisma models planned (except gap fixes surfaced during build). Goal: a Schuladmin can onboard a new school and administer the running year end-to-end through the UI — no SQL, no Swagger, no seed scripts.
 
+**E2E-first directive (2026-04-21).** Per user feedback, UAT is paused until Playwright coverage exists for all roles and admin-ops surfaces. Phases 10.1–10.5 drive that hardening before v1.1 feature phases resume. Phase 10.3 (harness extension + per-role smoke) completed 2026-04-21 — all 5 roles now have login + primary-view smoke specs; global-setup health-checks the stack before any spec runs. Next: Tier 3 hardening (10.4 People, 10.5 Operations) in parallel.
+
 ## Current Milestone: v1.1 Schuladmin Console
 
 **Goal:** Ein Schuladmin kann eine neue Schule End-to-End durch die Benutzeroberfläche aufsetzen und den laufenden Schulbetrieb ohne SQL, Swagger oder Seed-Skripte administrieren — alle bestehenden v1.0-Backend-APIs bekommen produktive Admin-UIs, DSGVO-konform und mit vollständiger Mobile-Parität.
@@ -148,4 +150,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-18 after v1.1 Schuladmin Console milestone started*
+*Last updated: 2026-04-21 after Phase 10.3 (E2E harness + per-role smoke) completed*
