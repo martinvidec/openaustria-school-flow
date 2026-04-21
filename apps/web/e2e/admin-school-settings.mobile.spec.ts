@@ -6,8 +6,13 @@
  * honours the 44px touch-target floor (UI-SPEC §10.5).
  */
 import { expect, test } from '@playwright/test';
+import { loginAsAdmin } from './helpers/login';
 
 test.describe('Phase 10 — Admin School Settings (mobile 375)', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginAsAdmin(page);
+  });
+
   test('MOBILE-ADM-02 + D-12: tab bar becomes Select; PeriodsEditor renders Cards', async ({
     page,
   }) => {
