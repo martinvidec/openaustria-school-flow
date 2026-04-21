@@ -5,7 +5,6 @@ import { SCHOOL_DAYS, TimeGridSchema, type PeriodInput } from '@schoolflow/share
 import { StickyMobileSaveBar } from '@/components/admin/shared/StickyMobileSaveBar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { Toggle } from '@/components/ui/toggle';
 import { useSchool } from '@/hooks/useSchool';
 import { TimeGridConflictError, useTimeGrid, useUpdateTimeGrid } from '@/hooks/useTimeGrid';
@@ -183,11 +182,15 @@ export function TimeGridTab({ schoolId, onDirtyChange }: Props) {
         </p>
       </div>
 
-      <div className="mb-6">
-        <Label className="text-sm font-medium text-muted-foreground mb-2 block">
+      <section className="mb-6" aria-labelledby="unterrichtstage-heading">
+        <h3 id="unterrichtstage-heading" className="text-sm font-semibold mb-1">
           Unterrichtstage
-        </Label>
-        <div className="flex flex-wrap gap-2">
+        </h3>
+        <p className="text-xs text-muted-foreground mb-3">
+          Klicken Sie einen Tag an, um ihn als Unterrichtstag zu aktivieren oder zu
+          deaktivieren. An inaktiven (nicht gedrueckten) Tagen findet kein Unterricht statt.
+        </p>
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Unterrichtstage auswaehlen">
           {SCHOOL_DAYS.map((d) => {
             const active = schoolDays.includes(d);
             return (
@@ -205,10 +208,7 @@ export function TimeGridTab({ schoolId, onDirtyChange }: Props) {
             );
           })}
         </div>
-        <p className="text-xs text-muted-foreground mt-2">
-          An inaktiven Tagen findet kein Unterricht statt.
-        </p>
-      </div>
+      </section>
 
       <PeriodsEditor
         periods={periods}
