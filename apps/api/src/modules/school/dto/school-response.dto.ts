@@ -1,5 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
+// Phase 10.1 Bug 2: nested address object shape mirrors CreateSchoolDto.AddressDto
+// and @schoolflow/shared AddressSchema — single source of truth across the wire.
+export class AddressResponseDto {
+  @ApiProperty() street!: string;
+  @ApiProperty() zip!: string;
+  @ApiProperty() city!: string;
+}
+
 export class PeriodResponseDto {
   @ApiProperty() id!: string;
   @ApiProperty() periodNumber!: number;
@@ -50,7 +58,7 @@ export class SchoolResponseDto {
   @ApiProperty() id!: string;
   @ApiProperty() name!: string;
   @ApiProperty() schoolType!: string;
-  @ApiPropertyOptional() address!: string | null;
+  @ApiPropertyOptional({ type: AddressResponseDto }) address!: AddressResponseDto | null;
   // Phase 10 Plan 01a: SCHOOL-04 A/B-week default for new TimetableRuns.
   @ApiProperty() abWeekEnabled!: boolean;
   @ApiProperty() createdAt!: Date;

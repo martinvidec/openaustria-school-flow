@@ -24,7 +24,8 @@ export class SchoolService {
       data: {
         name: dto.name,
         schoolType: dto.schoolType as any,
-        address: dto.address,
+        // address is a jsonb column after 10.1-03 migration — pass the object through unchanged.
+        address: dto.address as any,
         timeGrid: periodsData.length > 0 ? {
           create: {
             periods: {
@@ -99,7 +100,8 @@ export class SchoolService {
       data: {
         name: dto.name,
         schoolType: dto.schoolType as any,
-        address: dto.address,
+        // address is a jsonb column after 10.1-03 migration — pass the object through unchanged.
+        address: dto.address as any,
         ...(dto.abWeekEnabled !== undefined ? { abWeekEnabled: dto.abWeekEnabled } : {}),
       },
       include: this.fullInclude(),
