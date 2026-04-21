@@ -5,6 +5,52 @@ plan and should be triaged in a follow-up phase or infra sweep.
 
 ---
 
+## From Plan 10.2-02 (executor run, 2026-04-21)
+
+### 1. WOCH-01 + ZEIT-01 parallel-worker DB race
+
+**Discovered:** Running combined regression `--grep "WOCH-01|ZEIT-01"` on
+desktop with Playwright's default 2-worker pool.
+
+**Observed:** ZEIT-01 fails with `getByText(/Aenderungen gespeichert/)`
+timeout even though the toast is visible in the post-failure DOM snapshot.
+
+**Root cause:** Both specs mutate the SAME seed school's time-grid (there is
+only one school in the seed). When WOCH-01 and ZEIT-01 run in parallel,
+their concurrent PUT `/time-grid` calls race each other — one overwrites
+the other's in-flight state — which produces timing-dependent toast /
+validation glitches. Each spec asserts its own persistence via
+`GET /schools/:id` which is strongly consistent, but the in-UI Save toast
+can be clobbered by a second PUT that fires while the first toast is still
+pending its visibility transition.
+
+**Verification:** `--workers=1` makes both specs pass deterministically
+every time:
+```bash
+pnpm exec playwright test --grep "WOCH-01|ZEIT-01" --project=desktop --workers=1
+# → 2 passed
+```
+
+**Fix direction (out of scope for 10.2-02 — test-authoring-only plan):**
+Options in order of preference:
+1. Per-spec test fixture that creates a throwaway school, points all
+   mutations at it, and deletes it in afterAll. Would require a
+   POST `/schools` + DELETE `/schools/:id` surface and generous admin
+   scoping — probably a Phase 10.2 testing-infra follow-up.
+2. Make the `playwright.config.ts` desktop project default to
+   `workers: 1` — simplest and fastest to ship, but slows the whole
+   desktop suite.
+3. Serialize WOCH-01 and ZEIT-01 via `test.describe.serial` grouping
+   both specs in one file. Cross-file serialization requires a custom
+   `test.projects` split.
+
+**Current status:** Both specs green in isolation AND in any `--workers=1`
+run. Flaky only under the default parallel pool when paired. The
+Tier-1 Wochentage gap-closure goal of 10.2-02 (spec passing against a
+running dev stack) is met per the plan's acceptance criterion.
+
+---
+
 ## From Plan 10.2-03 (executor run, 2026-04-21)
 
 ### 1. Schuljahr edit UI missing (blocks YEAR-01)
@@ -232,3 +278,17 @@ ZEIT-02) and `zeitraster.mobile.spec.ts` use `page.getByText(
 **Fix:** update SCHOOL-02 to use `{ exact: true }` too. Trivial one-line
 edit; belongs to a follow-up admin-school-settings tidy plan, NOT to
 10.2-01.
+
+**Update after Plan 10.2-02 (2026-04-21):** The Phase 10.2-02 TimeGridTab
+UX promotion replaced the `<Label>` with an `<h3>` and kept the Card
+subtitle paragraph ("Unterrichtstage, Perioden und Pausen dieser Schule"
+— pre-existing) untouched. SCHOOL-02's `getByText('Unterrichtstage')`
+now matches {h3 heading, paragraph subtitle} — strict-mode violation
+persists for a slightly different reason (subtitle instead of tab label).
+The recommended fix is now `page.getByRole('heading', { name:
+'Unterrichtstage' })` which targets the section h3 unambiguously. Even
+with that fix SCHOOL-02 would still fail later on the empty-schoolDays
+"Mindestens ein Unterrichtstag erforderlich" validation because
+`GET /time-grid` is 404 (deferred item #2 above) — SCHOOL-02 is a
+pre-existing failure that needs BOTH fixes to go green, and was out of
+scope for both 10.2-01 and 10.2-02 (test-authoring-only plans).
