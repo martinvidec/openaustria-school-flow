@@ -19,6 +19,10 @@ import { getAdminToken, loginAsAdmin } from './helpers/login';
 test.describe('Phase 10 — Admin School Settings (desktop)', () => {
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page);
+    // 10.3-01: loginAsRole no longer navigates to /admin/school/settings;
+    // specs own their own post-login routing. This beforeEach restores the
+    // pre-10.3 behavior for the admin-school-settings.spec shell.
+    await page.goto('/admin/school/settings');
   });
 
   test('SCHOOL-01: empty-flow create OR edit-mode pre-fill + tabs enable', async ({
