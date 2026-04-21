@@ -130,16 +130,17 @@ Plans:
 **Goal:** Playwright-Harness für alle 5 Rollen nutzbar machen und je Rolle 1 Smoke-Spec (Login + primäre Aktion). Harness-Extensions: per-role Login-Helper, `globalSetup`/`globalTeardown`, Trace-Retention config, DB-Seeding+Cleanup-Pattern.
 **Requirements:** E2E-hardening
 **Depends on:** Phase 10.2
-**Plans:** 0 plans
+**Plans:** 1/2 plans complete
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 10.3 to break down)
+- [x] 10.3-01-PLAN.md — Harness extension: loginAsRole(page, role) + getRoleToken(request, role) + globalSetup/globalTeardown + explicit reporter config [Wave 1]
+- [ ] 10.3-02-PLAN.md — Per-role smoke specs (schulleitung/lehrer/eltern/schueler) [Wave 2]
 
 **Success criteria:**
-- [ ] Login-Helper pro Rolle: admin, schulleitung, lehrer, eltern, schueler
-- [ ] `globalSetup` seedet Basis-Fixtures, `globalTeardown` cleaned deterministisch
+- [x] Login-Helper pro Rolle: admin, schulleitung, lehrer, eltern, schueler
+- [x] `globalSetup` seedet Basis-Fixtures, `globalTeardown` cleaned deterministisch
 - [ ] Smoke-Specs: schulleitung öffnet Substitutions-Admin · lehrer öffnet Klassenbuch-Lesson · eltern öffnet Kind-Timetable · schueler öffnet persönliches Timetable (admin bereits covered über 10.2)
-- [ ] Trace-Retention auf `retain-on-failure`, Screenshots als CI-Artifacts
+- [x] Trace-Retention auf `retain-on-failure`, Screenshots als CI-Artifacts
 - [ ] Alle neuen Specs laufen in CI (aus 10.2 gewired)
 
 ---

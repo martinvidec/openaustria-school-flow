@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
-stopped_at: Completed 10.2-02-PLAN.md
-last_updated: "2026-04-21T19:20:25.371Z"
-last_activity: 2026-04-21
+stopped_at: Completed 10.3-01-PLAN.md
+last_updated: "2026-04-21T19:37:13Z"
+last_activity: 2026-04-21 -- Phase 10.3-01 harness extension complete
 progress:
   total_phases: 12
   completed_phases: 3
-  total_plans: 16
-  completed_plans: 16
-  percent: 29
+  total_plans: 19
+  completed_plans: 17
+  percent: 31
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-18)
 
 **Core value:** Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenplanerstellung, die sie selbst hosten koennen -- ohne Vendor Lock-in, mit offenen APIs und DSGVO-Konformitaet von Tag 1.
-**Current focus:** Phase 10.2 — e2e-admin-console-gap-closure (Tier 1)
+**Current focus:** Phase 10.3 — e2e-harness-per-role-smoke
 
 ## Current Position
 
-Phase: 10.3
-Plan: Not started
-Status: Ready to execute
-Last activity: 2026-04-21
+Phase: 10.3 (e2e-harness-per-role-smoke) — EXECUTING
+Plan: 2 of 2 (10.3-01 complete)
+Status: Executing Phase 10.3
+Last activity: 2026-04-21 -- Phase 10.3-01 harness extension complete (loginAsRole + globalSetup/Teardown)
 
-Progress: [███░░░░░░░] 29%
+Progress: [███░░░░░░░] 31%
 
 ## Performance Metrics
 
@@ -127,6 +127,7 @@ Progress: [███░░░░░░░] 29%
 | Phase 10.2 P03 | ~45min | 2 tasks | 2 files |
 | Phase 10.2 P10.2-04 | 17min | 1 tasks | 1 files |
 | Phase 10.2 P10.2-02 | 35min | 2 tasks | 4 files |
+| Phase 10.3 P10.3-01 | 8min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -365,6 +366,11 @@ Recent decisions affecting current work:
 - [Phase 10.2]: Phase 10.2-02: WOCH-01 persistence assertion via GET /api/v1/schools/:id (not UI reload) — same pattern as ZEIT-01 because GET /time-grid is 404 (deferred-items #2); useTimeGrid swallows the 404 and keeps data=null so UI reload can never read persisted schoolDays back into the form.
 - [Phase 10.2]: Phase 10.2-02: WOCH-01 uses `page.waitForResponse(PUT /time-grid)` instead of `getByText(/Aenderungen gespeichert/)` for multi-save spec determinism — sonner queues the toast across consecutive saves, letting getByText short-circuit BEFORE the second PUT fires and producing false-positive persistence checks. Documented as a new `patterns-established` entry for future Playwright specs.
 - [Phase 10.2]: Phase 10.2-02: WOCH-01 + ZEIT-01 parallel-worker DB race logged to deferred-items.md — both specs mutate the same seed school, concurrent PUTs race. Both green deterministically with `--workers=1`. Fix belongs to testing-infra follow-up (per-spec throwaway-school fixture or project-level `workers: 1`).
+- [Phase 10.3]: Phase 10.3-01: Login helper neutrality — multi-role test helpers land on '/' post-login; specs own their post-login routing. Admin-specific sidebar click moved OUT of the generic helper to prevent role contamination in 10.3-02+ smokes. Only admin-school-settings.spec.ts beforeEach needed an added page.goto (plan anticipated this edit).
+- [Phase 10.3]: Phase 10.3-01: CREDENTIALS map Record<Role, Credential> with E2E_<ROLE>_USER/_PASS env fallbacks + seed-default passwords (admin123/direktor123/lehrer123/eltern123/schueler123). loginAsAdmin + getAdminToken kept as thin wrappers — zero 10.2-era spec import drift.
+- [Phase 10.3]: Phase 10.3-01: Playwright globalSetup uses AbortController fetch with 5s timeout and treats 401 as live-but-unauthorized — API health 200 is the success path, 401 prevents false-negatives on authenticated roots. Fail-fast throws with label + url + reason (verified via E2E_API_URL pointing at dead port).
+- [Phase 10.3]: Phase 10.3-01: globalTeardown shipped as explicit no-op stub (not omitted) so the hook is wired + documented — 10.3-02+ fixture cleanup can be added without touching playwright.config.ts.
+- [Phase 10.3]: Phase 10.3-01: 3 pre-existing admin-school-settings failures (SCHOOL-02/03/05) confirmed via git stash + re-run on pre-10.3 baseline — 10.3-01 refactor introduces zero new failures. Logged to deferred-items.md for spec-hygiene follow-up (SCHOOL-02: 10.2-02 markup drift, SCHOOL-03: 10.2-03 deferred #2 backend bug, SCHOOL-05: Playwright worker env wiring).
 
 ### Pending Todos
 
@@ -382,9 +388,10 @@ None yet.
 - v1.1 Schuladmin Console started 2026-04-18 — brownfield UI-only milestone
 - Phase 10.1 inserted after Phase 10: UAT gap closure — SchoolTypeDto enum, School.address schema, silent 4xx toast (URGENT)
 - Phase 10.2 started 2026-04-21: E2E admin-console gap-closure (Tier 1) — 10.2-01 closes Zeitraster-save UAT bug + locks it in with Playwright; 10.2-03 ships Schuljahre desktop E2E at 2/3 must_haves (YEAR-01 edit deferred, YEAR-02 + YEAR-03 green); 10.2-02 closes Wochentage UX gap with 18-LoC TimeGridTab FIX + WOCH-01 spec asserting Sa toggle API persistence
+- Phase 10.3 started 2026-04-21: E2E Harness + per-role Smoke (Tier 2) — 10.3-01 extends loginAsAdmin to loginAsRole(page, role) for all 5 seed personas + adds Playwright globalSetup/Teardown with fail-fast API+Vite health-checks; 10.3-02 (per-role smokes) remains
 
 ## Session Continuity
 
-Last session: 2026-04-21T18:58:41Z
-Stopped at: Completed 10.2-02-PLAN.md
+Last session: 2026-04-21T19:37:13Z
+Stopped at: Completed 10.3-01-PLAN.md
 Resume file: None
