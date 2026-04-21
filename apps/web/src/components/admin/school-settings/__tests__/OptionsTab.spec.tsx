@@ -114,4 +114,23 @@ describe('OptionsTab (Plan 10-05 Task 2)', () => {
     });
     await waitFor(() => expect(toastSuccess).toHaveBeenCalledWith('Option gespeichert.'));
   });
+
+  // Plan 10.1-01 Task 2 — silent-4xx-toast regression guard for updateAbMut inline
+  // mutation. Toggling the Switch when the backend rejects with 4xx must NEVER fire
+  // toast.success (no green "Option gespeichert." on a rejected save).
+  it('does NOT call toast.success when the A/B toggle PUT returns 422', async () => {
+    apiFetchMock.mockReset();
+    apiFetchMock.mockResolvedValueOnce({
+      ok: false,
+      status: 422,
+      json: async () => ({ message: 'Validation failed' }),
+    });
+
+    render(wrap(<OptionsTab schoolId="school-1" />));
+    await userEvent.click(screen.getByRole('switch', { name: 'A/B-Wochen-Modus aktivieren' }));
+
+    await waitFor(() => expect(toastError).toHaveBeenCalledTimes(1));
+    expect(toastError).toHaveBeenCalledWith('Speichern fehlgeschlagen');
+    expect(toastSuccess).not.toHaveBeenCalled();
+  });
 });
