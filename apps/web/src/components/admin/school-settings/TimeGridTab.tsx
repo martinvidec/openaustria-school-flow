@@ -11,7 +11,7 @@ import { useSchool } from '@/hooks/useSchool';
 import { TimeGridConflictError, useTimeGrid, useUpdateTimeGrid } from '@/hooks/useTimeGrid';
 import { apiFetch } from '@/lib/api';
 import { DestructiveEditDialog } from './DestructiveEditDialog';
-import { PeriodsEditor, type PeriodWithId } from './PeriodsEditor';
+import { PeriodsEditor, durationFor, type PeriodWithId } from './PeriodsEditor';
 import { TemplateReloadDialog } from './TemplateReloadDialog';
 
 const DAY_LABELS: Record<(typeof SCHOOL_DAYS)[number], string> = {
@@ -72,7 +72,16 @@ export function TimeGridTab({ schoolId, onDirtyChange }: Props) {
   useEffect(() => onDirtyChange?.(isDirty), [isDirty, onDirtyChange]);
 
   const buildDto = () => ({
-    periods: periods.map(({ id: _id, ...p }) => p as PeriodInput),
+    // The API's CreatePeriodDto requires `durationMin` (end-minus-start in minutes).
+    // The shared PeriodSchema intentionally omits it — we compute it at submit
+    // time so the server contract is satisfied without leaking a derived field
+    // into the form state. durationFor returns null for invalid times; fall
+    // back to 0 so class-validator surfaces the real error (Zod's
+    // TimeGridSchema.safeParse already gates this in validateBeforeSave).
+    periods: periods.map(({ id: _id, ...p }) => ({
+      ...(p as PeriodInput),
+      durationMin: durationFor(p) ?? 0,
+    })),
     schoolDays,
   });
 
