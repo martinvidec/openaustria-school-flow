@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
-stopped_at: Phase 10.1 COMPLETE — all 3 UAT blockers closed (10.1-01 silent 4xx toast, 10.1-02 SchoolTypeDto enum, 10.1-03 School.address jsonb). Next: Plan 10-06 Task 2 — 6 UAT screenshots to close Phase 10.
-last_updated: "2026-04-21T09:13:32Z"
+stopped_at: Plan 10.2-01 COMPLETE — durationMin UAT fix (TimeGridTab.buildDto) + desktop Zeitraster E2E (ZEIT-01 + ZEIT-02 green) + mobile spec authored (ZEIT-03-MOBILE pending WebKit-infra fix). Next: Plan 10.2-02 (Wochentage / Schuljahre E2E).
+last_updated: "2026-04-21T17:20:00Z"
 last_activity: 2026-04-21
 progress:
   total_phases: 8
   completed_phases: 2
-  total_plans: 11
-  completed_plans: 11
-  percent: 25
+  total_plans: 12
+  completed_plans: 12
+  percent: 27
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-18)
 
 **Core value:** Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenplanerstellung, die sie selbst hosten koennen -- ohne Vendor Lock-in, mit offenen APIs und DSGVO-Konformitaet von Tag 1.
-**Current focus:** Phase 10.1 — uat-gap-closure-schooltypedto-enum-school-address-schema-silent-4xx-toast
+**Current focus:** Phase 10.2 — e2e-admin-console-gap-closure (Tier 1)
 
 ## Current Position
 
-Phase: 10.1 (uat-gap-closure-schooltypedto-enum-school-address-schema-silent-4xx-toast) — COMPLETE
-Plan: 3 of 3 — completed 2026-04-21
-Status: All 3 UAT blockers closed. Phase 10.1 closes. Next step: Plan 10-06 Task 2 UAT screenshots.
+Phase: 10.2 (e2e-admin-console-gap-closure) — IN PROGRESS
+Plan: 1 of 5 — 10.2-01 completed 2026-04-21; 10.2-02 through 10.2-05 pending
+Status: Zeitraster E2E coverage + durationMin UAT bug fixed. Desktop specs green (ZEIT-01 + ZEIT-02). Mobile spec authored but WebKit infra crash blocks execution (deferred-items.md #1).
 Last activity: 2026-04-21
 
-Progress: [██░░░░░░░░] 25%
+Progress: [██░░░░░░░░] 27%
 
 ## Performance Metrics
 
@@ -123,6 +123,7 @@ Progress: [██░░░░░░░░] 25%
 | Phase 10.1 P01 | 35min | 2 tasks | 5 files |
 | Phase 10.1 P02 | 20min | 2 tasks | 3 files |
 | Phase 10.1 P03 | 23min | 3 tasks | 6 files |
+| Phase 10.2 P01 | ~180min | 4 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -348,6 +349,10 @@ Recent decisions affecting current work:
 - [Phase 10.1]: Phase 10.1-03: Migration folder authored by hand (name `20260421085122_schools_address_json`) because `prisma migrate dev --create-only` refused the non-interactive shell due to Prisma's auto-diff "data loss" warning on String→Json cast; applied via non-interactive `prisma migrate deploy` after authoring the safe SQL.
 - [Phase 10.1]: Phase 10.1-03: AddressDto + AddressResponseDto class-validator classes mirror @schoolflow/shared AddressSchema — @Matches(/^\d{4,5}$/) for AT 4-digit + DE 5-digit PLZ; @IsOptional on CreateSchoolDto.address (new schools may POST without address and fill in later).
 - [Phase 10.1]: Phase 10.1-03: Seed writes {street,zip,city} on BOTH upsert branches (create + update) so corrupt dev rows are repaired idempotently on every `prisma db seed` run — previously `update: {}` was empty and corrupt rows survived re-seeds.
+- [Phase 10.2]: Phase 10.2-01: Fix durationMin inline in TimeGridTab.buildDto via durationFor() import from PeriodsEditor — do NOT add durationMin to shared PeriodSchema (keeps form layer decoupled from API DTO; server contract is the source of truth for durationMin)
+- [Phase 10.2]: Phase 10.2-01: ZEIT-01 persistence check via API (GET /schools/:id) not UI reload — because GET /schools/:id/time-grid is not implemented (pre-existing gap logged for follow-up); the plan's original UI-reload assertion is unreachable without that endpoint
+- [Phase 10.2]: Phase 10.2-01: zeitraster.mobile.spec.ts authored + typechecked but not executable on this dev box — Playwright 1.59's frozen mac14_arm64_special WebKit segfaults on macOS 14.3; deferred to testing-infra follow-up (deferred-items.md #1)
+- [Phase 10.2]: Phase 10.2-01: Shared Playwright login helpers — future phase specs import loginAsAdmin / getAdminToken from apps/web/e2e/helpers/login.ts, never re-paste the 40-line Keycloak redirect dance
 
 ### Pending Todos
 
@@ -364,9 +369,10 @@ None yet.
 - v1.0 MVP shipped 2026-04-09 (12 phases, 74 plans, 148 tasks)
 - v1.1 Schuladmin Console started 2026-04-18 — brownfield UI-only milestone
 - Phase 10.1 inserted after Phase 10: UAT gap closure — SchoolTypeDto enum, School.address schema, silent 4xx toast (URGENT)
+- Phase 10.2 started 2026-04-21: E2E admin-console gap-closure (Tier 1) — 10.2-01 closes Zeitraster-save UAT bug + locks it in with Playwright
 
 ## Session Continuity
 
-Last session: 2026-04-21T09:13:32Z
-Stopped at: Phase 10.1 COMPLETE — all 3 UAT blockers closed (10.1-01 silent 4xx toast, 10.1-02 SchoolTypeDto enum, 10.1-03 School.address jsonb + AddressDto + migration + seed repair). Next step: Plan 10-06 Task 2 UAT screenshots (blocks Phase 10 closure).
+Last session: 2026-04-21T17:20:00Z
+Stopped at: Plan 10.2-01 COMPLETE — durationMin UAT fix landed (commit 23d09bc), desktop Zeitraster E2E green (ZEIT-01 + ZEIT-02), mobile spec authored (WebKit infra blocks execution — deferred-items.md #1). Next step: Plan 10.2-02.
 Resume file: None

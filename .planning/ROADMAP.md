@@ -105,10 +105,14 @@ Plans:
 **Goal:** Admin-Console mit Playwright-Coverage absichern. Zeitraster-Save-500 fixen und durch E2E abdecken, Wochentage-UX-Entscheidung treffen und Spec schreiben, Schuljahre edit/delete/activate-Switch durch E2E sichern, Silent-4xx als E2E für alle 4 Tabs, Phase-10 Screenshots automatisiert via Playwright, CI-Workflow wired. Schließt Phase 10 mit.
 **Requirements:** E2E-hardening (no new REQ-IDs; must-haves aus E2E-COVERAGE-MATRIX.md Tier 1)
 **Depends on:** Phase 10.1
-**Plans:** 0 plans
+**Plans:** 1 of 5 complete
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 10.2 to break down)
+- [x] 10.2-01-PLAN.md — Zeitraster E2E (desktop + mobile) + durationMin UAT fix [Wave 1]
+- [ ] 10.2-02-PLAN.md — Wochentage UX decision + E2E spec [Wave 2]
+- [ ] 10.2-03-PLAN.md — Schuljahre edit/delete/activate E2E [Wave 2]
+- [ ] 10.2-04-PLAN.md — Silent-4xx E2E sweep (Stammdaten/Zeitraster/Schuljahre/Optionen) [Wave 2]
+- [ ] 10.2-05-PLAN.md — Playwright screenshots + CI workflow + Phase 10 closure [Wave 3]
 
 **Success criteria:**
 - [ ] `PUT /api/v1/schools/:id/time-grid` Happy-Path + Error-Path (invalid payload) haben je 1 Playwright-Spec (desktop + mobile)
