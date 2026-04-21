@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
-stopped_at: Plan 10.2-01 COMPLETE — durationMin UAT fix (TimeGridTab.buildDto) + desktop Zeitraster E2E (ZEIT-01 + ZEIT-02 green) + mobile spec authored (ZEIT-03-MOBILE pending WebKit-infra fix). Next: Plan 10.2-02 (Wochentage / Schuljahre E2E).
-last_updated: "2026-04-21T17:20:00Z"
+stopped_at: Plan 10.2-03 COMPLETE — Schuljahre desktop E2E shipped at 2 of 3 (YEAR-02 delete + YEAR-03 activate-switch green; YEAR-01 edit deferred — edit UI does not exist in v1.1 Phase 10, backend PATCH ready + hook dead-code). 3 deferred items logged (#1 edit-UI missing, #2 POST /school-years with isActive:true returns 500 when another active year exists, #3 SCHOOL-05 Prisma 7.6 fixture init). Next: Plan 10.2-02 (Wochentage UX decision + E2E).
+last_updated: "2026-04-21T18:07:28Z"
 last_activity: 2026-04-21
 progress:
   total_phases: 8
   completed_phases: 2
-  total_plans: 12
-  completed_plans: 12
-  percent: 27
+  total_plans: 13
+  completed_plans: 13
+  percent: 29
 ---
 
 # Project State
@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 ## Current Position
 
 Phase: 10.2 (e2e-admin-console-gap-closure) — IN PROGRESS
-Plan: 1 of 5 — 10.2-01 completed 2026-04-21; 10.2-02 through 10.2-05 pending
-Status: Zeitraster E2E coverage + durationMin UAT bug fixed. Desktop specs green (ZEIT-01 + ZEIT-02). Mobile spec authored but WebKit infra crash blocks execution (deferred-items.md #1).
+Plan: 2 of 5 — 10.2-01 + 10.2-03 completed 2026-04-21; 10.2-02, 10.2-04, 10.2-05 pending
+Status: Zeitraster + Schuljahre desktop E2E coverage shipped. Schuljahre at 2/3 must_haves (YEAR-01 edit deferred — no edit UI in v1.1; deferred-items.md #1). Combined regression shows 2 pre-existing failures (SCHOOL-03 + SCHOOL-05) logged in deferred-items.md #2 + #3.
 Last activity: 2026-04-21
 
 Progress: [██░░░░░░░░] 27%
@@ -124,6 +124,7 @@ Progress: [██░░░░░░░░] 27%
 | Phase 10.1 P02 | 20min | 2 tasks | 3 files |
 | Phase 10.1 P03 | 23min | 3 tasks | 6 files |
 | Phase 10.2 P01 | ~180min | 4 tasks | 6 files |
+| Phase 10.2 P03 | ~45min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -353,6 +354,10 @@ Recent decisions affecting current work:
 - [Phase 10.2]: Phase 10.2-01: ZEIT-01 persistence check via API (GET /schools/:id) not UI reload — because GET /schools/:id/time-grid is not implemented (pre-existing gap logged for follow-up); the plan's original UI-reload assertion is unreachable without that endpoint
 - [Phase 10.2]: Phase 10.2-01: zeitraster.mobile.spec.ts authored + typechecked but not executable on this dev box — Playwright 1.59's frozen mac14_arm64_special WebKit segfaults on macOS 14.3; deferred to testing-infra follow-up (deferred-items.md #1)
 - [Phase 10.2]: Phase 10.2-01: Shared Playwright login helpers — future phase specs import loginAsAdmin / getAdminToken from apps/web/e2e/helpers/login.ts, never re-paste the 40-line Keycloak redirect dance
+- [Phase 10.2]: Phase 10.2-03: Shipped at 2/3 must_haves (delete + activate-switch) per orchestrator Option A — YEAR-01 (edit) deferred because the edit UI does not exist in v1.1 Phase 10 (no EditSchoolYearDialog, no bearbeiten button, useUpdateSchoolYear has zero call sites); leading spec comment + deferred-items.md #1 document the gap
+- [Phase 10.2]: Phase 10.2-03: YEAR-03 activates via Aktivieren button (SchoolYearService.activate — atomic demote inside $transaction) instead of creating-as-active via dialog, because POST /school-years with isActive:true currently returns 500 when another active year exists (deferred-items.md #2 — SchoolYearService.create missing atomic-demote transaction)
+- [Phase 10.2]: Phase 10.2-03: Single-active invariant asserted at API layer (GET /school-years then filter isActive) instead of DOM-level badge count — SchoolYearCard renders both an 'Aktiv' badge and an 'Aktivieren' button (substring overlap), making exact-match disambiguation fragile across icon/text refactors
+- [Phase 10.2]: Phase 10.2-03: afterEach cleanup re-activates a real (non-E2E-*) year before deleting leftover active E2E-* rows — the DELETE endpoint rejects active-year deletion with a 409
 
 ### Pending Todos
 
@@ -369,10 +374,10 @@ None yet.
 - v1.0 MVP shipped 2026-04-09 (12 phases, 74 plans, 148 tasks)
 - v1.1 Schuladmin Console started 2026-04-18 — brownfield UI-only milestone
 - Phase 10.1 inserted after Phase 10: UAT gap closure — SchoolTypeDto enum, School.address schema, silent 4xx toast (URGENT)
-- Phase 10.2 started 2026-04-21: E2E admin-console gap-closure (Tier 1) — 10.2-01 closes Zeitraster-save UAT bug + locks it in with Playwright
+- Phase 10.2 started 2026-04-21: E2E admin-console gap-closure (Tier 1) — 10.2-01 closes Zeitraster-save UAT bug + locks it in with Playwright; 10.2-03 ships Schuljahre desktop E2E at 2/3 must_haves (YEAR-01 edit deferred, YEAR-02 + YEAR-03 green)
 
 ## Session Continuity
 
-Last session: 2026-04-21T17:20:00Z
-Stopped at: Plan 10.2-01 COMPLETE — durationMin UAT fix landed (commit 23d09bc), desktop Zeitraster E2E green (ZEIT-01 + ZEIT-02), mobile spec authored (WebKit infra blocks execution — deferred-items.md #1). Next step: Plan 10.2-02.
+Last session: 2026-04-21T18:07:28Z
+Stopped at: Plan 10.2-03 COMPLETE — Schuljahre desktop E2E shipped at 2 of 3 must_haves (YEAR-02 delete + YEAR-03 activate-switch green; YEAR-01 edit deferred because the edit UI does not exist in v1.1 Phase 10). Commits 2eb84c6 (spec) + 55616f6 (deferred-items). 3 pre-existing bugs discovered and logged (edit-UI missing, create-as-active 500, SCHOOL-05 Prisma fixture init). Next step: Plan 10.2-02 (Wochentage UX decision + E2E spec).
 Resume file: None
