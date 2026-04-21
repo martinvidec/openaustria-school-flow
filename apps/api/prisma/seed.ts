@@ -312,12 +312,16 @@ async function main() {
   // School: BG/BRG Musterstadt (AHS Unterstufe)
   const school = await prisma.school.upsert({
     where: { id: 'seed-school-bgbrg-musterstadt' },
-    update: {},
+    update: {
+      // Phase 10.1 Bug 2: re-seed repairs the corrupt '[object Object]' row on every
+      // `prisma migrate reset` → `prisma db seed` cycle. Idempotent for healthy rows.
+      address: { street: 'Schulstrasse 1', zip: '1010', city: 'Wien' },
+    },
     create: {
       id: 'seed-school-bgbrg-musterstadt',
       name: 'BG/BRG Musterstadt',
       schoolType: 'AHS_UNTER',
-      address: 'Schulstrasse 1, 1010 Wien',
+      address: { street: 'Schulstrasse 1', zip: '1010', city: 'Wien' },
     },
   });
 
