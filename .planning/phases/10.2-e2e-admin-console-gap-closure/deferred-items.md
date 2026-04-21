@@ -5,6 +5,140 @@ plan and should be triaged in a follow-up phase or infra sweep.
 
 ---
 
+## From Plan 10.2-03 (executor run, 2026-04-21)
+
+### 1. Schuljahr edit UI missing (blocks YEAR-01)
+
+**Discovered:** Plan 10.2-03 execution, 2026-04-21
+
+**Evidence:**
+- Backend `PATCH /api/v1/schools/:schoolId/school-years/:yearId` endpoint is
+  implemented (`apps/api/src/modules/school/school-year.controller.ts:40`).
+- Hook `useUpdateSchoolYear` is defined
+  (`apps/web/src/hooks/useSchoolYears.ts:43`) but has **zero** call sites in
+  `apps/web/src`.
+- No `EditSchoolYearDialog.tsx` exists in
+  `apps/web/src/components/admin/school-settings/`.
+- `SchoolYearCard.tsx` renders only `Aktivieren` + trash-icon `loeschen` — no
+  `bearbeiten` button.
+
+**UX impact:** Admin can create / activate / delete school years but cannot
+rename or change dates on an existing year. Typos and mid-year corrections
+require delete+recreate (plus re-adding all holidays / autonomous days), which
+is destructive and forbidden once any `SchoolClass` or `TeachingReduction`
+references the year (D-10 orphan-guard — 409).
+
+**Recommended path:** A dedicated plan (candidate `10.2-03b` if a follow-up
+wave is preferred, or backlog v1.2) that:
+  1. Adds `EditSchoolYearDialog` mirroring `CreateSchoolYearDialog`.
+  2. Wires a `bearbeiten` button in `SchoolYearCard` with aria-label
+     `Schuljahr <name> bearbeiten`.
+  3. Adds success toast `Schuljahr aktualisiert.` to
+     `useUpdateSchoolYear.onSuccess` (currently silent).
+  4. Lands the YEAR-01 E2E test from the original 10.2-03 plan draft.
+
+Estimated effort: ~90 min.
+
+**Current coverage gap:** Phase 10.2 Tier 1 goal "Schuljahre
+edit/delete/activate-switch have each Playwright spec" is at **2 of 3**
+(delete + activate landed in 10.2-03; edit deferred). UAT-ban policy is not
+fully satisfied for this surface until YEAR-01 lands.
+
+---
+
+### 2. `POST /school-years` with `isActive: true` returns 500 when another active year exists
+
+**Discovered:** Plan 10.2-03 YEAR-03 first-pass — the original plan draft had
+the test create a new year with `Als aktives Schuljahr setzen` ON and assert
+the expected atomic demote. Instead the POST returned HTTP 500.
+
+**Evidence:**
+```bash
+POST /api/v1/schools/seed-school-bgbrg-musterstadt/school-years
+body: { "name": "E2E-API-TEST-ACTIVE", ..., "isActive": true }
+→  HTTP 500  "Ein unerwarteter Fehler ist aufgetreten."
+```
+
+**Root cause:**
+`SchoolYearService.create` at
+`apps/api/src/modules/school/school-year.service.ts:11` does a plain
+`prisma.schoolYear.create({ data: { ... isActive: true ... } })` without
+demoting the currently-active year first. The schema's partial-unique index
+`school_years_active_per_school` (one `isActive=true` per `schoolId`) then
+fires a Prisma unique-constraint violation, which the ProblemDetailsFilter
+surfaces as a bare 500.
+
+Compare to `SchoolYearService.activate` at
+`apps/api/src/modules/school/school-year.service.ts:74` which **does** handle
+the demote inside a `$transaction`.
+
+**Effect on the test surface:**
+- Original SCHOOL-03 in `admin-school-settings.spec.ts` (Phase 10-06) was
+  drafted when the seed had no active year and passed. Now that the seed
+  includes an active `2025/2026`, SCHOOL-03 fails deterministically with the
+  same 500 — a **pre-existing regression** flushed out while running the
+  combined regression for 10.2-03.
+- 10.2-03 YEAR-03 is authored around the bug by creating the throwaway year
+  inactive and then activating via the dedicated `Aktivieren` button — which
+  is the admin's daily workflow anyway.
+
+**Fix direction (out of scope for 10.2-03 — test-authoring-only plan):**
+Mirror `activate`'s transaction pattern in `create`. When `isActive === true`,
+demote sibling active years inside the same `$transaction` before inserting
+the new row. Pseudocode:
+
+```ts
+return this.prisma.$transaction(async (tx) => {
+  if (dto.isActive) {
+    await tx.schoolYear.updateMany({
+      where: { schoolId, isActive: true },
+      data: { isActive: false },
+    });
+  }
+  return tx.schoolYear.create({ data: { schoolId, ..., isActive: !!dto.isActive } });
+});
+```
+
+**Regression coverage:** a follow-up plan should also fix SCHOOL-03 (it will
+start passing once the backend is fixed) and add a backend-level spec
+asserting the atomic demote on create-with-active. A UAT-ban ticket for this
+line of the admin flow.
+
+---
+
+### 3. SCHOOL-05 Prisma client init failure in Playwright parallel workers
+
+**Discovered:** Running combined regression
+`--grep "SCHOOL-03|SCHOOL-05|YEAR-"` under Playwright's default 2-worker mode.
+
+**Evidence:**
+```
+PrismaClientInitializationError: `PrismaClient` needs to be constructed with
+a non-empty, valid `PrismaClientOptions`:
+    new PrismaClient({ ... })
+```
+Thrown at `apps/web/e2e/fixtures/orphan-year.ts:40` — the `new PrismaClient()`
+zero-arg call.
+
+**Context:**
+- Single-worker runs **also fail** (verified `--workers=1`) — so this is NOT
+  a parallel-workers issue as first suspected.
+- Prisma 7 may have tightened the "DATABASE_URL auto-discovery" path when the
+  CJS client is loaded via `createRequire` from the web package (the API
+  package's `.env` isn't on the web-package resolution path).
+- The fixture relies on the DATABASE_URL env var being inherited into the
+  Node worker's `process.env`. That inheritance appears to be broken post-
+  Prisma-7 (our Prisma is 7.6.0, pinned in `package.json`).
+
+**Fix direction (out of scope for 10.2-03):**
+Pass `datasources: { db: { url: process.env.DATABASE_URL } }` explicitly in
+the `new PrismaClient()` call inside `orphan-year.ts`, or add a guard that
+loads `apps/api/.env` via `dotenv` before instantiation. Belongs to the same
+testing-infra sweep as deferred #1 from Plan 10.2-01 (WebKit crash +
+`storageState` auth-setup).
+
+---
+
 ## From Plan 10.2-01 (executor run, 2026-04-21)
 
 ### 1. WebKit / mobile-375 project crashes on macOS 14.3 (infrastructure)
