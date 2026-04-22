@@ -47,8 +47,28 @@ Reproduction: `pnpm --filter @schoolflow/web exec playwright test apps/web/e2e/r
 **Owner:** same testing-infra / OS upgrade follow-up as 10.4 deferred-item (Mobile-375 WebKit Bus-Error-10)
 **Tracking:** `.planning/STATE.md` line 416 "mobile-375 5/5 Bus-error-10 = pre-existing WebKit frozen-build environmental blocker, NOT a regression" + 10.4-REGRESSION-REPORT §5.3
 
+## 6. Timefold sidecar `move-thread-count=AUTO` — Enterprise-only
+
+**Descoped because:** `apps/solver/src/main/resources/application.properties` sets `quarkus.timefold.solver.move-thread-count=AUTO`, which requires Timefold **Enterprise Edition** (commercial). On Community Edition the solver throws `IllegalStateException` at boot when the first solve is dispatched. Discovered 2026-04-22 during 10.5-04 Task 4 when SOLVER-01 attempted a real solve.
+
+**Workaround at runtime:** export `QUARKUS_TIMEFOLD_SOLVER_MOVE_THREAD_COUNT=NONE` before `docker compose up solver`.
+
+**Why not fixed in 10.5:** Touches production code in `apps/solver/` — outside 10.5-04's allowed path set (D-14). A proper fix belongs to a solver-hardening tranche that can consider the trade-offs (single-thread performance vs. upgrade to Enterprise).
+
+**Owner:** future "solver-hardening" tranche (Phase 14 Solver-Tuning is a natural home)
+**Tracking:** referenced by `apps/web/e2e/admin-solver.spec.ts` docblock (opt-in E2E_RUN_SOLVER gate) + 10.5-04 DISCOVERY.md
+
+## 7. Timefold sidecar duplicate SolverTimeslot planningIds
+
+**Descoped because:** The solver domain input builds `SolverTimeslot` objects whose `planningId` collides across weekdays (e.g. Mo P1 and Tue P1 carry the same UUID). Timefold rejects the working-solution with `"Working objects must be unique"`. Discovered 2026-04-22 during 10.5-04 Task 4.
+
+**Why not fixed in 10.5:** Production code fix in `apps/solver/src/main/java/...` — outside 10.5-04's allowed path set. Fix likely composes `{dayOfWeek}-{periodNumber}-{weekType}` into a deterministic planningId.
+
+**Owner:** future "solver-hardening" tranche
+**Tracking:** referenced by `apps/web/e2e/admin-solver.spec.ts` docblock
+
 ---
 
 *Created: 2026-04-22*
 *Phase: 10.5-e2e-admin-ops-operations*
-*Source: CONTEXT.md D-27 (D-01 Räume-CRUD descope, D-12 Solver-Aktivieren confirm-dialog rejection, CONTEXT.md `<deferred>` item 4 CSV variants, D-09c Imports mobile-optional, 10.5-01 Task 3 empirical mobile-375 gate)*
+*Source: CONTEXT.md D-27 (D-01 Räume-CRUD descope, D-12 Solver-Aktivieren confirm-dialog rejection, CONTEXT.md `<deferred>` item 4 CSV variants, D-09c Imports mobile-optional, 10.5-01 Task 3 empirical mobile-375 gate) + 10.5-04 Task 4 empirical solver-sidecar gates (§6-§7)*
