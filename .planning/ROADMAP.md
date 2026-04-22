@@ -180,7 +180,7 @@ Plans:
 - [ ] TBD (run /gsd:plan-phase 10.5 to break down)
 
 **Success criteria:**
-- [ ] Räume-CRUD + Booking-Conflict: Happy + Error
+- [ ] Räume-Booking-Conflict: Happy + 409 (Räume-CRUD UI deferred to future phase)
 - [ ] Ressourcen-CRUD: Happy + Error
 - [ ] Imports: Untis-XML Happy-Path, CSV Happy-Path, CSV Error-Path (malformed row)
 - [ ] Solver-Workflow: trigger run → WebSocket progress visible → result published — Happy-Path + ein abort/error-Path
