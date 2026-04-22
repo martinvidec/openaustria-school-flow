@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
-status: planning
-stopped_at: Phase 10.5 context gathered
-last_updated: "2026-04-22T06:40:22.841Z"
+status: executing
+stopped_at: Phase 10.5-02 complete — Admin Resources CRUD E2E (desktop 4/4 green, mobile authored + Chromium-verified, WebKit N/A)
+last_updated: "2026-04-22T09:45:07.316Z"
 last_activity: 2026-04-22
 progress:
   total_phases: 12
   completed_phases: 5
-  total_plans: 21
-  completed_plans: 21
+  total_plans: 25
+  completed_plans: 23
   percent: 39
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-18)
 
 **Core value:** Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenplanerstellung, die sie selbst hosten koennen -- ohne Vendor Lock-in, mit offenen APIs und DSGVO-Konformitaet von Tag 1.
-**Current focus:** Phase 10.4 — e2e-admin-ops-people
+**Current focus:** Phase 10.5 — e2e-admin-ops-operations
 
 ## Current Position
 
-Phase: 10.5
-Plan: Not started
-Status: Phase 10.4 complete. 10.4-03 regression gate passed — all 3 previously-deferred specs (SCHOOL-02/03/05) transition red → green; ROADMAP consistency audit 14/14 checks green (zero planner ROADMAP writes); 2 non-regression full-suite failures (multi-active backfill + screenshots SCHOOL-05) flagged as test-DB-pollution follow-up, not blockers; mobile-375 WebKit Bus-error-10 flagged as pre-existing environmental blocker. Next: Phase 10.5 (Operations E2E) or parallel Phase 11 planning.
+Phase: 10.5 (e2e-admin-ops-operations) — EXECUTING
+Plan: 3 of 4
+Status: Ready to execute
 Last activity: 2026-04-22
 
 Progress: [████░░░░░░] 39%
@@ -132,6 +132,7 @@ Progress: [████░░░░░░] 39%
 | Phase 10.4 P10.4-02 | 5min | 2 tasks | 3 files |
 | Phase 10.4 P10.4-01 | 10min | 3 tasks | 5 files |
 | Phase 10.4 P10.4-03 | 12min | 2 tasks | 4 files |
+| Phase 10.5 P02 | 27 | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -393,6 +394,11 @@ Recent decisions affecting current work:
 - [Phase 10.4]: Phase 10.4-03: ROADMAP consistency audit performed read-only via 14 Grep checks — zero planner ROADMAP writes per CONTEXT.md Deliverable 6 "Keine Neuedits durch den Planner". Audit artifact embedded in 10.4-REGRESSION-REPORT.md §3 for future re-run.
 - [Phase 10.4]: Phase 10.4-03: Continuation-agent log-triage pattern — when /tmp sandbox blocks log reads, Playwright HTML report data/*.md files (1.7KB stderr-transcripts per failed spec, written by the orchestrator's own run) serve as first-party fallback evidence. 5 mobile-375 Bus-error-10 transcripts quoted verbatim in REGRESSION-REPORT §1.3.
 - [Phase 10.4]: Phase 10.4-03: Sandbox denial of git add/commit forced orchestrator-delegated atomic commit — authored all 4 artifacts on disk (REGRESSION-REPORT + SUMMARY created; STATE + ROADMAP amended) and documented exact commit command shape in SUMMARY §Task Commits. Atomicity property preserved via 2 sequential orchestrator commits (docs(10.4-03) report + docs(10.4-03) finalization).
+- [Phase 10.5-02]: Prefix cleanup isolation E2E-RES-* (desktop) vs E2E-RES-MOBILE-* (mobile) — enables co-existing desktop + mobile Playwright runs on shared seed DB without cross-deletion hiding failures
+- [Phase 10.5-02]: Dialog title anchor assertion (Ressource hinzufuegen / bearbeiten / loeschen) between click and subsequent fill/click — codifies 10.4-02 anchor discipline, prevents fills on stale dialog if close animation races next open
+- [Phase 10.5-02]: Mobile RES-CRUD-03 API-seeds then UI-deletes — UI create already covered by RES-CRUD-01.mobile; API seed saves ~2s/run with zero coverage loss, reusable pattern for Phase 11/12 mobile CRUD smokes
+- [Phase 10.5-02]: Duplicate constants across desktop + mobile specs instead of shared module — Playwright projects run in isolated processes; 10-line duplication cheaper than cross-file coupling for what must remain independently maintainable specs
+- [Phase 10.5-02]: Mobile WebKit Bus-Error-10 acceptance marked N/A in SUMMARY per plan fallback clause — Chromium-375 emulation (Pixel 5 profile, 375x812 forced viewport) verifies spec logic is correct; environmental blocker per CONTEXT.md deferred #10 + STATE.md lines 362/394
 
 ### Pending Todos
 
@@ -417,6 +423,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-22T06:40:22.836Z
-Stopped at: Phase 10.5 context gathered
-Resume file: .planning/phases/10.5-e2e-admin-ops-operations/10.5-CONTEXT.md
+Last session: 2026-04-22T09:45:07.312Z
+Stopped at: Phase 10.5-02 complete — Admin Resources CRUD E2E (desktop 4/4 green, mobile authored + Chromium-verified, WebKit N/A)
+Resume file: .planning/phases/10.5-e2e-admin-ops-operations/10.5-02-SUMMARY.md
