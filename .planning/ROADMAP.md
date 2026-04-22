@@ -145,9 +145,9 @@ Plans:
 
 ---
 
-### Phase 10.4: E2E Admin-Ops People (Tier 3a — INSERTED)
+### Phase 10.4: E2E Harness Hardening & 10.3 Deferred-Items Closure (Tier 3a — INSERTED, RESCOPED 2026-04-22)
 
-**Goal:** Admin-Ops People-Surfaces mit E2E absichern: Klassen-CRUD inkl. Stundentafel-Zuordnung, Lehrpersonen-CRUD inkl. Werteinheiten-Edit, Schüler-CRUD, Fächer-CRUD.
+**Goal:** Schließt die in 10.3 deferred 3 pre-existing Failures (SCHOOL-02/03/05) und härtet das E2E-Harness (CardTitle-Helper). Schafft die Voraussetzung, dass Phase 11/12 E2E-Authoring ungestört läuft. People-CRUD E2E wurde nach Phase 11 (Lehrer+Fächer) und Phase 12 (Schüler+Klassen) verschoben, da die zu testenden UIs erst dort geshipped werden.
 **Requirements:** E2E-hardening
 **Depends on:** Phase 10.3
 **Plans:** 0 plans
@@ -156,11 +156,14 @@ Plans:
 - [ ] TBD (run /gsd:plan-phase 10.4 to break down)
 
 **Success criteria:**
-- [ ] Klassen-CRUD: create, edit, delete (orphan-safe), Stundentafel-Zuordnung — je Happy + Error
-- [ ] Lehrpersonen-CRUD: create, edit, delete, Werteinheiten-Edit — je Happy + Error
-- [ ] Schüler-CRUD: create, edit, delete, Elternlink — je Happy + Error
-- [ ] Fächer-CRUD: create, edit, delete — je Happy + Error
-- [ ] Alle Specs laufen auf desktop + (für Formulare) mobile-375
+- [ ] SCHOOL-02 grün: `admin-school-settings.spec.ts` verwendet `getByRole('heading', { name: 'Unterrichtstage' })` statt `getByText` — Desktop & Mobile-375
+- [ ] SCHOOL-03 grün: `SchoolYearService.create` demotet atomar einen existierenden `isActive:true`-Year in derselben Transaktion; `admin-school-settings.spec.ts` SCHOOL-03 zeigt Erfolgstoast „Schuljahr angelegt" (Backend-Gap-Fix inkl. Unit-Test + E2E)
+- [ ] SCHOOL-05 grün: `apps/web/e2e/fixtures/orphan-year.ts` lädt `DATABASE_URL` explizit via `dotenv` oder direkter `datasources`-Injection — läuft sowohl in CI als auch lokal ohne `source .env`
+- [ ] CardTitle-Harness-Hardening: Entweder Helper `getByCardTitle(name)` in `apps/web/e2e/helpers/` verfügbar & mindestens in einer bestehenden Spec verwendet, ODER shadcn `CardTitle` rendert als `<h3>` nach Tailwind/shadcn-Audit (Plan-zeitliche Entscheidung, per ADR dokumentiert)
+- [ ] Gesamt-Regression: Alle desktop E2E-Specs grün (ab 20 bestehenden + ggf. neue Regressions-Tests für SCHOOL-03-Fix)
+- [ ] ROADMAP-Edit durchgeführt: People-CRUD-Deliverables nach Phase 11/12 verschoben (siehe deren Success Criteria)
+
+**Descope-Beschluss (2026-04-22):** People-CRUD-E2E (Klassen/Lehrer/Schüler/Fächer) wurde aus Phase 10.4 entfernt, weil die zu testenden Admin-UIs in v1.1 noch nicht existieren (siehe `10.4-RESEARCH.md` Blocker B1). Phase 11 + Phase 12 übernehmen das E2E-Authoring zusammen mit ihrem jeweiligen UI.
 
 ---
 
@@ -196,9 +199,12 @@ Plans:
 - [ ] Admin kann Lehrer-Verfügbarkeit (Tage, Zeitslots, wiederkehrende Ausnahmen) pflegen und Lehrer deaktivieren/archivieren ohne Datenverlust
 - [ ] Admin kann Fächer (Name, Kürzel, Farbe) anlegen/editieren und Stundentafel-Vorlagen pro Schultyp einsehen
 - [ ] Fach-Löschung ist Orphan-sicher (Fach mit Zuordnungen kann nicht gelöscht werden)
+- [ ] **E2E (ex-10.4):** Lehrpersonen-CRUD (create/edit/delete/Werteinheiten-Edit) — je Happy + Error, Desktop + Mobile-375 für Formulare
+- [ ] **E2E (ex-10.4):** Fächer-CRUD (create/edit/delete inkl. Orphan-Guard-Error) — je Happy + Error, Desktop + Mobile-375 für Formulare
 
 **Known risks / backend gap candidates:**
 - SUBJECT-03 (Stundentafel-Vorlagen pro Schultyp einsehen): Templates sind als statische TS-Arrays in v1.0 implementiert — UI muss sie aus dem shared package lesen, nicht aus der DB.
+- Orphan-Guard-Backend für Teacher/Subject DELETE fehlt in v1.0 (`TeacherService.remove` + `SubjectService.remove` kaskadieren ohne Dependency-Check). Plan muss Gap-Fix-Task mit ausliefern, damit "Orphan-sicher"-Success-Criterion + E2E-Error-Spec passen.
 
 Plans:
 - [ ] TBD (run /gsd-plan-phase 11 to break down)
@@ -218,9 +224,13 @@ Plans:
 - [ ] Admin kann Stundentafel-Vorlage auf eine Klasse anwenden und pro Klasse anpassen
 - [ ] Admin kann Gruppenableitungsregeln (Religion/Leistung/Wahlpflicht) pro Klasse definieren und Gruppenzugehörigkeiten manuell überschreiben
 - [ ] Admin kann Schüler zwischen Stammklassen umziehen ohne Datenverlust und ohne Referenz-Bruch zum Klassenbuch
+- [ ] **E2E (ex-10.4):** Schüler-CRUD (create/edit/delete, Elternlink) — je Happy + Error, Desktop + Mobile-375 für Formulare
+- [ ] **E2E (ex-10.4):** Klassen-CRUD (create/edit/delete mit Orphan-Guard, Stundentafel-Zuordnung) — je Happy + Error, Desktop + Mobile-375 für Formulare
 
 **Known risks / backend gap candidates:**
 - CLASS-04 (Gruppenmitgliedschaften manuell verwalten): GroupMembership-CRUD in v1.0 unterstützt bereits `isAutoAssigned` — UI muss selective override reflektieren.
+- Elternlink-HTTP-Surface fehlt in v1.0: `CreateStudentDto` kennt kein `parentId`, kein `ParentController` exponiert die ParentStudent-Junction. Plan muss Backend-Gap-Fix (CreateStudentDto-Erweiterung + POST `/students/:id/parents`) mitliefern, damit Elternlink-E2E möglich ist.
+- Orphan-Guard-Backend für Student/SchoolClass DELETE fehlt in v1.0 (`StudentService.remove` + `ClassService.remove` kaskadieren ohne Dependency-Check). Plan muss Gap-Fix-Task enthalten.
 
 Plans:
 - [ ] TBD (run /gsd-plan-phase 12 to break down)
