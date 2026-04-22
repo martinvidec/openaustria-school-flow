@@ -30,6 +30,19 @@ async function healthCheck(url: string, label: string, timeoutMs = 5_000): Promi
 export default async function globalSetup(_config: FullConfig): Promise<void> {
   const apiUrl = process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1/health';
   const webUrl = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5173';
+  // Timefold sidecar precheck — added by Phase 10.5 Plan 04 (D-11).
+  // Pinned URL: port 8081 (application.properties:6 + docker-compose.yml:86),
+  // path /health (Docker healthcheck parity via HealthResource.java:12).
+  // Quarkus SmallRye also serves a health endpoint but /health is the canonical
+  // fingerprint the Docker healthcheck probes.
+  // See 10.5-04-DISCOVERY.md for the URL pin — RESEARCH.md Pitfall 1 corrects
+  // CONTEXT.md D-11 (which mis-documented the port as Keycloak's).
+  // Override via E2E_SOLVER_URL env for CI / remote sidecars.
+  const solverUrl = process.env.E2E_SOLVER_URL ?? 'http://localhost:8081/health';
 
-  await Promise.all([healthCheck(apiUrl, 'API'), healthCheck(webUrl, 'Web/Vite')]);
+  await Promise.all([
+    healthCheck(apiUrl, 'API'),
+    healthCheck(webUrl, 'Web/Vite'),
+    healthCheck(solverUrl, '[E2E-PRECHECK] Timefold sidecar'),
+  ]);
 }
