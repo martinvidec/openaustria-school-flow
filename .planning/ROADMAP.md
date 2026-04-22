@@ -55,6 +55,15 @@ See [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full 
 
 **Total:** 7 feature phases + 5 gap/E2E phases (10.1-10.5), 50 requirements, 100% coverage. UAT resumes after Phase 10.5 per `feedback_e2e_first_no_uat.md`.
 
+### Completed v1.1 phases
+
+- [x] Phase 10: Schulstammdaten & Zeitraster (8/8 plans)
+- [x] Phase 10.1: UAT gap closure (3/3 plans) — INSERTED
+- [x] Phase 10.2: E2E Admin-Console gap-closure (5/5 plans) — TIER 1
+- [x] Phase 10.3: E2E Harness + per-role Smoke (2/2 plans) — TIER 2
+- [x] Phase 10.4: E2E Harness Hardening & Deferred-Items Closure (3/3 plans) — TIER 3a
+- [x] Phase 10.5: E2E Admin-Ops Operations (4/4 plans) — TIER 3b
+
 ---
 
 ### Phase 10: Schulstammdaten & Zeitraster
