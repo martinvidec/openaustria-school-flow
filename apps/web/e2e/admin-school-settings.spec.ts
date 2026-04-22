@@ -107,7 +107,7 @@ test.describe('Phase 10 — Admin School Settings (desktop)', () => {
 
   test('SCHOOL-02: time grid tab renders toggles + periods + Save', async ({ page }) => {
     await page.goto('/admin/school/settings?tab=timegrid');
-    await expect(page.getByText('Unterrichtstage')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Unterrichtstage' })).toBeVisible();
 
     // At least Mo-Fr toggles visible.
     for (const day of ['Mo', 'Di', 'Mi', 'Do', 'Fr']) {
