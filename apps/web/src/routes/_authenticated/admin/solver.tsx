@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,8 +32,10 @@ export const Route = createFileRoute('/_authenticated/admin/solver')({
  */
 function AdminSolverPage() {
   const schoolId = useSchoolContext((s) => s.schoolId);
+  const navigate = useNavigate();
   const { isConnected, progress, lastResult } = useSolverSocket(schoolId);
   const [isStarting, setIsStarting] = useState(false);
+  const [isActivating, setIsActivating] = useState(false);
 
   const handleGenerate = async () => {
     if (!schoolId) return;
@@ -58,6 +60,30 @@ function AdminSolverPage() {
       });
     } finally {
       setIsStarting(false);
+    }
+  };
+
+  // Phase 10.5-04 D-12: Aktivieren button publishes the lastResult run as the
+  // current timetable and navigates to /timetable. No confirmation dialog
+  // (CONTEXT.md D-12 rejected Option C). Local useState mirrors the
+  // isStarting pattern above (CD-03 — keep consistent with handleGenerate).
+  const handleActivate = async () => {
+    if (!schoolId || !lastResult) return;
+    setIsActivating(true);
+    try {
+      const res = await apiFetch(
+        `/api/v1/schools/${schoolId}/timetable/runs/${lastResult.runId}/activate`,
+        { method: 'POST' },
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      toast.success('Stundenplan aktiviert');
+      navigate({ to: '/timetable' });
+    } catch (error) {
+      toast.error('Aktivierung fehlgeschlagen', {
+        description: error instanceof Error ? error.message : 'Unbekannter Fehler',
+      });
+    } finally {
+      setIsActivating(false);
     }
   };
 
@@ -199,6 +225,14 @@ function AdminSolverPage() {
               verfuegbar. Unter &quot;Stundenplan bearbeiten&quot; koennen Sie
               einzelne Lektionen manuell verschieben.
             </p>
+            {/* Phase 10.5-04 D-12: activate run as current timetable */}
+            <Button
+              className="mt-4"
+              onClick={handleActivate}
+              disabled={isActivating}
+            >
+              {isActivating ? 'Wird aktiviert…' : 'Aktivieren'}
+            </Button>
           </CardContent>
         </Card>
       )}
