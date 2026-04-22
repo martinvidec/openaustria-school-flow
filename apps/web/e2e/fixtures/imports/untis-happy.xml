@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document>
+  <teachers>
+    <teacher>
+      <shortname>MAI</shortname>
+      <firstname>Maria</firstname>
+      <surname>Mueller</surname>
+      <title></title>
+    </teacher>
+  </teachers>
+  <classes>
+    <class>
+      <shortname>1A</shortname>
+      <longname>1A Gymnasium</longname>
+      <level>1</level>
+    </class>
+  </classes>
+  <rooms>
+    <room>
+      <shortname>R101</shortname>
+      <longname>Klassenraum 101</longname>
+      <capacity>30</capacity>
+    </room>
+  </rooms>
+  <lessons>
+    <lesson>
+      <lesson_number>1</lesson_number>
+      <subject>M</subject>
+      <teacher>MAI</teacher>
+      <classes>1A</classes>
+      <room>R101</room>
+      <periods_per_week>4</periods_per_week>
+    </lesson>
+  </lessons>
+</document>

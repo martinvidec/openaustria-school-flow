@@ -20,11 +20,14 @@ Items explicitly descoped from 10.5 per user decision 2026-04-22. Each entry nam
 **Owner:** Phase 14 Solver-Tuning (add to Phase 14 success criteria when that phase is planned — D-28)
 **Tracking:** 10.5-CONTEXT.md D-28
 
-## 4. Imports Mobile-Project E2E
+## 4. Imports Mobile-Project E2E (RESOLVED — DEFERRED)
 
-**Descoped conditionally:** If the ImportWizard is not responsive at 375px, mobile E2E defers to a future tranche. 10.5-03 Task 3 decides empirically; this entry is filled (or left as TBD) based on that outcome.
-**Owner:** future "imports-ux-mobile" tranche OR 10.5-03 decides in-flight
-**Tracking:** 10.5-CONTEXT.md D-09c + 10.5-03 Task 3 SUMMARY
+**Descoped because:** `ImportColumnMapper.tsx:101-143` ships an explicit mobile layout (`sm:hidden` stacked cards) so the wizard IS 375px-responsive. However, the 5-step wizard + column-mapping + dry-run preview + progress panel + result badges would hit the same WebKit `Bus error: 10` environmental blocker that 10.5-01 rooms-booking.mobile, 10.5-02 admin-resources.mobile, and every 10.4 mobile-375 spec already document. Authoring a mobile-375 variant for 10.5-03 would produce the same unrunnable spec shape as §5 below — more code to maintain, no additional signal over the desktop run.
+
+**Empirical basis:** the `mobile-375` WebKit project on this host fails with `browserType.launch: Target page, context or browser has been closed` / `Bus error: 10` in the frozen Playwright 1.59 `mac14_arm64_special` build on macOS 14.3 (see STATE.md line 416 + 10.4-REGRESSION-REPORT §5.3 + deferred-item §5 below).
+
+**Owner:** same testing-infra / OS upgrade follow-up as §5 (Rooms-Booking Mobile-375). Once the WebKit blocker clears, a single Imports mobile-375 happy-path smoke (IMPORT-CSV-01.mobile) is enough — the stacked-card layout is structurally identical to the desktop table layout modulo breakpoint.
+**Tracking:** 10.5-CONTEXT.md D-09c + 10.5-03 SUMMARY
 
 ## 5. Rooms-Booking Mobile-375 — environmental blocker (authored + deferred)
 
