@@ -36,7 +36,7 @@ canonical_for:
 | D-08 Keycloak search-by-email + confirmation | CONTEXT.md | §2.6 |
 | D-09 Dense table + edit dialog for Subjects | CONTEXT.md | §3.2 |
 | D-10 Stundentafel-Vorlagen read-only section | CONTEXT.md | §3.4 |
-| **D-11 USER-OVERRIDE: Free hex picker + WCAG live warning + SUBJECT_PALETTE recommended row** | CONTEXT.md | §3.3 |
+| ~~D-11 USER-OVERRIDE: Free hex picker~~ — **rolled back 2026-04-22** after research; Farbe field removed from Subject dialog (no schema change) | CONTEXT.md | §3.3 |
 | D-12 Orphan-Guard 409 with affected-entity list | CONTEXT.md | §4 |
 | D-13 E2E full ROADMAP scope — 8 spec files | CONTEXT.md | §9 (E2E patterns) |
 | D-14 Orphan-Guard backend gap-fix atomic | CONTEXT.md | §4 |
@@ -551,83 +551,26 @@ Per-card layout (`p-4 flex items-center gap-3`):
 - Main: Line 1 — name bold + kürzel pill inline after `gap-2`. Line 2 — `text-xs text-muted-foreground` → `{schultyp} · {count} Zuordnungen`.
 - Trailing: `MoreVertical` icon-button (`h-11 w-11`) opening the same dropdown.
 
-### 3.3 Subject Create + Edit Dialog (SUBJECT-02) — **USER-OVERRIDE D-11**
+### 3.3 Subject Create + Edit Dialog (SUBJECT-02) — D-11 descoped, no color field
 
-shadcn `<Dialog>`, `sm:max-w-lg` (wider than default to fit the live preview side-by-side on desktop).
+shadcn `<Dialog>`, `sm:max-w-md`.
+
+> **Scope note (2026-04-22, post-research):** D-11 user-override "free hex picker" and D-A4 "Schultyp-Zuordnung multi-select" both rolled back after research surfaced schema gaps. `Subject` model has no `colorBg/colorText/colorIndex` column in v1.0 — and since the research-gate descope explicitly excludes schema changes, the Farbe field is **removed from Phase 11 scope entirely**. Subject colors remain auto-derived via `getSubjectColor(id)` hash-to-SUBJECT_PALETTE mapping (existing v1.0 behavior, unchanged). Admin-chosen color customization is deferred to a future phase (see §13 Deferred).
 
 Title: `Fach anlegen` (create) / `Fach bearbeiten` (edit).
 
-Body layout (`grid grid-cols-1 md:grid-cols-[1fr_220px] gap-6`):
+Body layout (`space-y-4`):
 
-**Left column (form fields, stacked):**
 1. **Name** (required) — `Input type="text"`, `placeholder="Mathematik"`, `maxLength={64}`.
 2. **Kürzel** (required, unique per school) — `Input type="text"`, `placeholder="M"`, `maxLength={8}`, uppercase auto-transform via RHF setValue on blur.
-3. **Schultyp-Zuordnung** (required, multi-select) — shadcn `<Select>` single or multi? → multi via shadcn `<Command>` + `<Popover>` combobox. Options = 7 values from `SCHOOL_TYPES` (VS, NMS, AHS, BHS, BMS, PTS, ASO — Phase 10 §3.2 mapping). Multi-select chip display below trigger.
-4. **Farbe** (required) — free hex picker block, see §3.3.1.
-
-**Right column (live preview — desktop only, hidden `< md` and appears beneath the form stacked):**
-See §3.3.2.
 
 Footer buttons (`flex flex-col-reverse sm:flex-row sm:justify-end gap-2`):
 - `[Abbrechen]` — ghost, default-focused.
 - `[Fach anlegen]` / `[Speichern]` — primary, disabled until Zod-valid.
 
-#### 3.3.1 Free Hex Picker (USER-OVERRIDE D-11)
+Information note inside dialog body (above footer): `<div className="text-xs text-muted-foreground bg-muted/50 rounded-md p-3">Die Farbe wird automatisch aus der Standard-Palette vergeben. Manuelle Farbauswahl folgt in einer späteren Phase.</div>`
 
-Three stacked controls inside the Farbe field block:
-
-**(a) SUBJECT_PALETTE swatch row — "Empfohlene Farben"**
-- Label above: `Empfohlene Farben` (`text-sm font-medium`).
-- Sub-line: `WCAG-AA-konforme Farbpaare aus der Standard-Palette.` (`text-xs text-muted-foreground`).
-- Swatch grid: `flex flex-wrap gap-1.5` containing 15 swatches, each a `<button type="button" className="h-8 w-8 rounded-md border-2" aria-label={`Farbe {i+1} ({hex})`}>` with `bg-{pair.bg}` and a small inner text-sample `{pair.text}`-tinted "A" letter centered to reinforce the bg/text pair meaning. Border shows `ring-2 ring-ring ring-offset-2` when selected. Click sets both `bg` and `text` fields at once.
-- Mobile-friendly: 15 swatches at 32×32 fit in 2 rows on 375px (`2 × 8 × 32 + gaps` well within viewport).
-- Source: `SUBJECT_PALETTE` from `packages/shared/src/types/timetable.ts` (15 pairs already defined — see `@schoolflow/shared` export).
-
-**(b) Free hex input** — `<label>Eigene Hex-Farbe</label>` + grouped input:
-- `<input type="color">` (native browser picker) — `h-10 w-16 rounded-l-md border` — syncs to `bg` field.
-- `<Input type="text">` — `h-10 rounded-none border-x-0 font-mono text-sm w-28` — manual hex input `#RRGGBB`, zod `/^#[0-9A-Fa-f]{6}$/`, `placeholder="#1E40AF"`.
-- `<Input type="text">` — `h-10 rounded-r-md border font-mono text-sm w-28` — matching text color override, zod same regex, `placeholder="#FFFFFF"`. Defaults to white on palette-pick unless the picked palette pair specifies otherwise.
-- Help text: `Wählen Sie Hintergrund- und Textfarbe. Für Kontraste siehe Live-Vorschau rechts.` (`< md` copy: `Wählen Sie Hintergrund- und Textfarbe. Die Vorschau warnt bei unzureichendem Kontrast.`)
-
-**(c) WCAG-AA Live-Contrast Warning (critical for USER-OVERRIDE mitigation)**
-- Inline banner RIGHT BELOW the hex inputs, `mt-2`. Rendered conditionally:
-
-| Ratio | State | Banner |
-|-------|-------|--------|
-| ≥ 7.0 | AAA excellent | `bg-green-50 border border-green-200 text-green-900 rounded-md p-2 text-xs` with `CheckCircle2` icon. Copy: `Kontrastverhältnis {ratio}:1 — WCAG AAA.` |
-| 4.5–7.0 | AA pass | `bg-green-50 border border-green-200 text-green-900 rounded-md p-2 text-xs` with `CheckCircle2` icon. Copy: `Kontrastverhältnis {ratio}:1 — WCAG AA.` |
-| 3.0–4.5 | AA large-only | `bg-amber-50 border border-amber-200 text-amber-900 rounded-md p-2 text-xs` with `AlertTriangle` icon. Copy: `Kontrastverhältnis {ratio}:1 — Nur für große Texte ausreichend. Für Timetable-Zellen ist WCAG AA (≥ 4.5:1) empfohlen.` |
-| < 3.0 | Fail | `bg-destructive/10 border border-destructive/30 text-destructive rounded-md p-2 text-xs` with `AlertCircle` icon. Copy: `Kontrastverhältnis {ratio}:1 — Unzureichend für Timetable-Zellen. Speichern ist trotzdem möglich, wir empfehlen aber eine Anpassung.` |
-
-The ratio is computed in real-time from the current `bg` + `text` hex values using a hand-rolled WCAG 2.1 relative-luminance function (`apps/web/src/lib/wcag.ts`). Submit is **never blocked** by contrast — the admin carries the responsibility per CONTEXT.md D-11 text "Admin kann speichern trotz Warning; Verantwortung beim Admin".
-
-#### 3.3.2 Live Timetable-Cell Mockup (preview)
-
-Right column (`md:` ≥ 768) renders a faithful Timetable-Cell mockup at ~200px width, styled as close to the real `TimetableCell` in `apps/web/src/components/timetable/` as possible:
-
-```
-<div
-  className="rounded-md p-3 shadow-sm"
-  style={{ backgroundColor: bgHex, color: textHex }}
->
-  <div className="text-xs font-semibold uppercase tracking-wide">
-    {kuerzel || 'FAC'}
-  </div>
-  <div className="text-sm font-medium mt-1 truncate">
-    {name || 'Fach-Vorschau'}
-  </div>
-  <div className="text-xs opacity-80 mt-1">
-    Raum 101 · Mo 2.
-  </div>
-</div>
-```
-
-Heading above preview: `Vorschau` (`text-sm font-medium mb-2`).
-Secondary mini-swatch below preview: two stacked rows — one with subject-color against `bg-white` (day-view context), one against `bg-muted` (week-view alternating row). Both `h-10 rounded` with the same kürzel + name.
-
-Mobile (`< md`): preview is rendered BELOW the form fields (stacked, full-width), not hidden. Heading changes to `Vorschau (Timetable-Zelle)` for clarity.
-
-#### 3.3.3 Copywriting
+#### 3.3.2 Copywriting
 
 | Element | Copy |
 |---------|------|
@@ -638,22 +581,7 @@ Mobile (`< md`): preview is rendered BELOW the form fields (stacked, full-width)
 | Kürzel label | `Kürzel *` |
 | Kürzel placeholder | `M` |
 | Kürzel uniqueness error | `Dieses Kürzel ist bereits vergeben.` |
-| Schultyp label | `Schultyp-Zuordnung *` |
-| Schultyp placeholder | `Schultypen wählen` |
-| Schultyp empty selection error | `Mindestens ein Schultyp ist erforderlich.` |
-| Palette heading | `Empfohlene Farben` |
-| Palette subtitle | `WCAG-AA-konforme Farbpaare aus der Standard-Palette.` |
-| Hex section label | `Eigene Hex-Farbe` |
-| Hex bg placeholder | `#1E40AF` |
-| Hex text placeholder | `#FFFFFF` |
-| Hex format error | `Hex-Farbe im Format #RRGGBB eingeben` |
-| Hex help | `Wählen Sie Hintergrund- und Textfarbe. Für Kontraste siehe Live-Vorschau rechts.` |
-| Contrast AAA | `Kontrastverhältnis {ratio}:1 — WCAG AAA.` |
-| Contrast AA | `Kontrastverhältnis {ratio}:1 — WCAG AA.` |
-| Contrast AA-large | `Kontrastverhältnis {ratio}:1 — Nur für große Texte ausreichend. Für Timetable-Zellen ist WCAG AA (≥ 4.5:1) empfohlen.` |
-| Contrast fail | `Kontrastverhältnis {ratio}:1 — Unzureichend für Timetable-Zellen. Speichern ist trotzdem möglich, wir empfehlen aber eine Anpassung.` |
-| Preview heading | `Vorschau` |
-| Preview mobile heading | `Vorschau (Timetable-Zelle)` |
+| Color info note | `Die Farbe wird automatisch aus der Standard-Palette vergeben. Manuelle Farbauswahl folgt in einer späteren Phase.` |
 | Dialog cancel | `Abbrechen` |
 | Dialog submit (create) | `Fach anlegen` |
 | Dialog submit (edit) | `Speichern` |
@@ -997,7 +925,7 @@ Inherits Phase 10 §12 entirely. Phase-11-specific additions:
 | Plan | Scope |
 |------|-------|
 | **11-01** | Shared foundation + Teacher CRUD + Orphan-Guard gap-fix. Zod schemas in `packages/shared` (teacher + availability-rule + teaching-reduction), werteinheiten.util re-export, WCAG util, `/admin/teachers` routes shell, sidebar "Personal & Fächer" group refactor, all Teacher TanStack-Query hooks, Teacher-List-Page, Teacher-Detail-Page with all 4 tabs, Keycloak-Link UI. Backend: `TeacherService.remove` Orphan-Guard + unit tests. |
-| **11-02** | Fächer CRUD + Stundentafel-Vorlagen + Orphan-Guard gap-fix. `/admin/subjects` route, hooks, Fach-Table, Edit/Create-Dialog (free hex picker with WCAG live warning + SUBJECT_PALETTE swatch + live preview), Affected-Entities pre-emptive dialog, Orphan-Guard Delete-Dialog. Backend: `SubjectService.remove` Orphan-Guard + unit tests. |
+| **11-02** | Fächer CRUD + Stundentafel-Vorlagen + Orphan-Guard gap-fix. `/admin/subjects` route, hooks, Fach-Table, Edit/Create-Dialog (Name + Kürzel only — no Farbe field per post-research descope, colors auto-derived via `getSubjectColor(id)`), Affected-Entities pre-emptive dialog, Orphan-Guard Delete-Dialog. Backend: `SubjectService.remove` Orphan-Guard + unit tests. No schema migration. |
 | **11-03** | E2E Sweep — 8 Playwright spec files (Lehrer-CRUD × {happy, error} × {desktop, mobile-375} + Fächer-CRUD × {happy, error} × {desktop, mobile-375}). Reuses Phase 10.2 SILENT-4XX pattern, Phase 10.5-02 mobile-prefix-isolation (E2E-TEA-* desktop, E2E-TEA-MOBILE-* mobile for teachers; E2E-SUB-* / E2E-SUB-MOBILE-* for subjects). |
 
 ### 9.2 E2E Coverage (D-13) — 8 Spec Files
@@ -1008,10 +936,10 @@ Inherits Phase 10 §12 entirely. Phase-11-specific additions:
 | 2 | `apps/web/e2e/admin-teachers-crud.error.spec.ts` | desktop | admin | TEACHER-CRUD-04 error (Orphan-Guard 409 Löschen blockiert), -05 error (Email dupe validation) |
 | 3 | `apps/web/e2e/admin-teachers-crud.mobile.spec.ts` | mobile-375 | admin | TEACHER-CRUD-01.m happy (create via Dialog at 375px), -02.m happy (Stammdaten edit with sticky-save) |
 | 4 | `apps/web/e2e/admin-teachers-werteinheiten.spec.ts` | desktop | admin | TEACHER-CRUD-06 Werteinheiten-Edit (live-computed total), Verfügbarkeits-Grid toggle persistence, Ermäßigungen row-add, Keycloak search-by-email happy |
-| 5 | `apps/web/e2e/admin-subjects-crud.spec.ts` | desktop | admin | SUBJECT-CRUD-01 happy (create with palette pick), -02 happy (edit with free hex), -03 happy (delete) |
+| 5 | `apps/web/e2e/admin-subjects-crud.spec.ts` | desktop | admin | SUBJECT-CRUD-01 happy (create Name + Kürzel), -02 happy (edit Name + Kürzel), -03 happy (delete) |
 | 6 | `apps/web/e2e/admin-subjects-crud.error.spec.ts` | desktop | admin | SUBJECT-CRUD-04 error (Orphan-Guard 409 Löschen blockiert — with seeded ClassSubject), -05 error (Kürzel-Uniqueness dupe) |
 | 7 | `apps/web/e2e/admin-subjects-crud.mobile.spec.ts` | mobile-375 | admin | SUBJECT-CRUD-01.m happy (create via Dialog), -02.m happy (edit via Dialog) |
-| 8 | `apps/web/e2e/admin-subjects-contrast.spec.ts` | desktop | admin | CONTRAST-01 WCAG-AA Live-Warning fires on low-contrast pair (assert destructive-tint banner visible, save still succeeds), CONTRAST-02 WCAG-AAA banner appears on palette pick |
+| 8 | `apps/web/e2e/admin-subjects-stundentafel.spec.ts` | desktop | admin | STUNDENTAFEL-01 section renders all 7 Schultyp tabs with static data (read-only view); Stundentafel-Vorlagen displayed per Schultyp |
 
 All specs reuse the Phase 10.3 Playwright harness (`loginAsRole`, `getRoleToken`, `globalSetup`, `getByCardTitle` helper).
 
@@ -1044,7 +972,7 @@ No third-party registries declared. Registry vetting gate not required.
 
 **Install status — action required by the planner:** Phase 10 already installed most primitives. Phase 11 additions:
 
-- `command` — Keycloak search combobox (§2.6.2); multi-select Schultyp-Zuordnung in Fach dialog (§3.3). CONFIRM existence via `ls apps/web/src/components/ui/` before adding to Wave 0 tasks.
+- `command` — Keycloak search combobox (§2.6.2) only. CONFIRM existence via `ls apps/web/src/components/ui/` before adding to Wave 0 tasks.
 - `scroll-area` — Affected-entities list inside delete dialog (§4.3). Already installed (visible in `apps/web/src/components/ui/scroll-area.tsx`).
 - All others already installed in Phase 10 (see `apps/web/src/components/ui/` listing).
 
