@@ -167,7 +167,7 @@ No bulk-select checkboxes in Phase 11 (bulk-actions deferred per CONTEXT.md).
 | Column | Width | Alignment | Content |
 |--------|-------|-----------|---------|
 | Name | `w-auto` | left | `{firstName} {lastName}` (14px / 500 weight) + `E-Mail` below in `text-xs text-muted-foreground` |
-| Fächer | `w-48` | left | Comma-separated `{kuerzel}` list (max 3 visible + `+N` pill for overflow). Each kürzel pill uses the Fach's color pair as background-text, `rounded px-1.5 py-0.5 text-[11px] font-semibold`. |
+| Fächer | `w-48` | left | Comma-separated `{kuerzel}` list (max 3 visible + `+N` pill for overflow). Each kürzel pill uses the Fach's color pair as background-text, `rounded px-1.5 py-0.5 text-xs font-semibold`. |
 | Werteinheiten | `w-28` | right | Computed total (e.g. `18,5 WE`). `tabular-nums`. |
 | Status | `w-24` | center | Badge: `Aktiv` (primary) or `Archiviert` (muted). |
 | Keycloak | `w-20` | center | `Link2` icon (primary) when linked, `Link2Off` icon muted when not. Tooltip on hover: linked email or `Nicht verknüpft`. |
@@ -177,7 +177,8 @@ Row click anywhere except the Aktion dropdown → navigate to `/admin/teachers/$
 
 Row actions in the dropdown:
 - `Bearbeiten` — opens detail page.
-- `Archivieren` / `Reaktivieren` (depending on status).
+- `Archivieren` (visible when `status === ACTIVE`) — **opens `WarnDialog`** (non-destructive variant, `AlertTriangle` amber-600). Canonical copy declared in §7.2. On confirm: PATCH status to `ARCHIVED`, toast `Lehrperson archiviert.`, invalidate list query.
+- `Reaktivieren` (visible when `status === ARCHIVED`) — **direct mutation, no confirmation** (action is fully recoverable). PATCH status to `ACTIVE`, toast `Lehrperson reaktiviert.`, invalidate list query.
 - `Löschen` — destructive; only visible when `status === ARCHIVED` AND has no orphan references (the backend decides; client calls the endpoint and surfaces the 409 if it comes back). Disabled-tooltip on `ACTIVE` teachers: `Lehrperson muss vorher archiviert werden`.
 
 Header row: `text-xs font-medium text-muted-foreground uppercase tracking-wide border-b px-3 py-2` (inherits Phase 10 §4.3 header row style).
@@ -448,7 +449,7 @@ Body layout (`space-y-4`):
    - **Searching:** inline `Loader2` spinner + text `Suche läuft...`.
    - **No match (404):** destructive-tinted inline banner `bg-destructive/10 border border-destructive/30 rounded-md p-3 text-sm text-destructive` with `AlertCircle` icon + copy `Kein Account mit dieser E-Mail gefunden.` + secondary action button `Nach anderen Treffern suchen` (re-focuses input).
    - **Match (200):** user-card inside `bg-card border rounded-md p-3`:
-     - Avatar circle (initials, 10×10) + name bold (`text-sm font-semibold`) + email muted (`text-xs text-muted-foreground`) + 2-line spacer + shadcn `<Badge>` with Keycloak-ID (first 8 chars, `text-[11px] tabular-nums font-mono`).
+     - Avatar circle (initials, 10×10) + name bold (`text-sm font-semibold`) + email muted (`text-xs text-muted-foreground`) + 2-line spacer + shadcn `<Badge>` with Keycloak-ID (first 8 chars, `text-xs tabular-nums font-mono`).
      - Sub-note if user already linked to ANOTHER teacher: `bg-amber-50 border border-amber-200 p-2 text-xs rounded mt-2` — `AlertTriangle` icon + copy `Bereits verknüpft mit {firstName} {lastName}. Beim Bestätigen wird die alte Verknüpfung gelöst.` (the backend enforces uniqueness via upsert on keycloakUserId, this copy mirrors the behavior).
 3. **Footer buttons** (`flex flex-col-reverse sm:flex-row sm:justify-end gap-2`):
    - `[Abbrechen]` — ghost, default-focused when dialog opens (or once a result loads, no action selected).
@@ -529,7 +530,7 @@ Desktop `<table className="hidden md:table w-full">` inside a `<Card>`.
 |--------|-------|-----------|---------|
 | Farbe | `w-16` | center | `12px × 12px` color swatch (`rounded-sm`) with background = subject.color.bg; inline ARIA label `Farbe {hexValue}`. Native right of the swatch rendered inside the same cell: `text-xs font-mono text-muted-foreground` hex value (hidden `< lg`, visible `lg:` ≥ 1024px). |
 | Name | `w-auto` | left | `text-sm font-medium` |
-| Kürzel | `w-24` | left | colored pill (`rounded px-2 py-0.5 text-[11px] font-semibold`) using subject color pair (`bg` + `text`) |
+| Kürzel | `w-24` | left | colored pill (`rounded px-2 py-0.5 text-xs font-semibold`) using subject color pair (`bg` + `text`) |
 | Schultyp | `w-40` | left | `text-sm text-muted-foreground` |
 | Nutzung | `w-28` | right | `<button>` — `{count} Zuordnungen` as underlined inline link (`text-primary underline-offset-2 hover:underline`). Click opens the Affected-Entities-Dialog (§4.2 pre-emptive — non-deletion context). `tabular-nums`. |
 | Aktion | `w-10` | center | Row-level `<DropdownMenu>` trigger: `MoreVertical`. |
@@ -568,7 +569,7 @@ See §3.3.2.
 
 Footer buttons (`flex flex-col-reverse sm:flex-row sm:justify-end gap-2`):
 - `[Abbrechen]` — ghost, default-focused.
-- `[Anlegen]` / `[Speichern]` — primary, disabled until Zod-valid.
+- `[Fach anlegen]` / `[Speichern]` — primary, disabled until Zod-valid.
 
 #### 3.3.1 Free Hex Picker (USER-OVERRIDE D-11)
 
@@ -608,13 +609,13 @@ Right column (`md:` ≥ 768) renders a faithful Timetable-Cell mockup at ~200px 
   className="rounded-md p-3 shadow-sm"
   style={{ backgroundColor: bgHex, color: textHex }}
 >
-  <div className="text-[11px] font-semibold uppercase tracking-wide">
+  <div className="text-xs font-semibold uppercase tracking-wide">
     {kuerzel || 'FAC'}
   </div>
   <div className="text-sm font-medium mt-1 truncate">
     {name || 'Fach-Vorschau'}
   </div>
-  <div className="text-[11px] opacity-80 mt-0.5">
+  <div className="text-xs opacity-80 mt-0.5">
     Raum 101 · Mo 2.
   </div>
 </div>
@@ -653,7 +654,7 @@ Mobile (`< md`): preview is rendered BELOW the form fields (stacked, full-width)
 | Preview heading | `Vorschau` |
 | Preview mobile heading | `Vorschau (Timetable-Zelle)` |
 | Dialog cancel | `Abbrechen` |
-| Dialog submit (create) | `Anlegen` |
+| Dialog submit (create) | `Fach anlegen` |
 | Dialog submit (edit) | `Speichern` |
 | Success toast (create) | `Fach angelegt.` |
 | Success toast (edit) | `Fach aktualisiert.` |
@@ -679,7 +680,7 @@ Columns:
 | Column | Width | Alignment | Content |
 |--------|-------|-----------|---------|
 | Fach | `w-auto` | left | `text-sm` |
-| Kürzel | `w-16` | center | `<span className="bg-muted rounded px-1.5 py-0.5 text-[11px] font-mono">{kuerzel}</span>` |
+| Kürzel | `w-16` | center | `<span className="bg-muted rounded px-1.5 py-0.5 text-xs font-mono">{kuerzel}</span>` |
 | Jg. 1 | `w-16` | center | Wochenstunden integer; `text-muted-foreground` when `=== 0`, else `text-foreground tabular-nums`. |
 | Jg. 2 | `w-16` | center | ditto |
 | Jg. 3 | `w-16` | center | ditto |
@@ -764,7 +765,7 @@ Body (`space-y-3`):
 1. Lead paragraph (`text-sm`): `"{entityName}" hat {totalCount} aktive Zuordnung{totalCount === 1 ? '' : 'en'}. Die Löschung ist nicht möglich, solange diese Zuordnungen bestehen.`
 2. Grouped list inside `<ScrollArea className="max-h-64 border rounded-md p-3 bg-muted/30">`. Each group = one `affectedEntities` key with ≥ 1 item. Group header:
    ```
-   <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-1.5">
+   <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">
      {groupLabel} ({count})
    </h4>
    ```
@@ -848,10 +849,9 @@ Accent-usage budget unchanged from Phase 10 (primary CTAs, active badge, active 
 
 ### 5.2 Typography — No additions
 
-Phase 10's 4 roles (Body 14, Label 14, Heading 18, Display 24→30) + 1 caption (12) + 2-weight budget (400/600) with 500-weight Label exception are fully sufficient for Phase 11. No new sizes, no new weights.
+Phase 11 inherits Phase 10's full typography budget verbatim: 4 roles (Body 14, Label 14, Heading 18, Display 24→30) + 1 caption (12) + 2-weight budget (400/600) with a 500-weight Label exception. Total: 5 distinct numeric sizes (12/14/18/24/30) and 3 weights (400/500/600).
 
-One additional exception added explicitly:
-- **11px (`text-[11px]`) — color-pill caption.** Reserved exclusively for the `{kuerzel}` color-pills in tables (§2.1.2, §3.2) and the Keycloak-ID badge in the link dialog (§2.6.2). Rationale: pills must fit inside a 24×24 row cell without wrapping; 12px pushes pill width above 24px once letter-spacing is added. Uppercase-semibold at 11px still clears WCAG AA readability threshold for short (≤ 4 char) strings at the pill background contrast ratios guaranteed by SUBJECT_PALETTE.
+**No additional exceptions in Phase 11.** All `{kuerzel}` color-pills, Keycloak-ID badges, table-header uppercase captions, and Timetable-Cell preview captions use `text-xs` (12px) — the existing caption role. Any proposal to introduce a new size must first extend Phase 10 canonical and be re-checked against Dimension 4 budget.
 
 ### 5.3 Spacing — No new exceptions
 
@@ -937,9 +937,29 @@ Phase 11 reuses the following without copying:
 | `UnsavedChangesDialog` | `apps/web/src/components/admin/shared/UnsavedChangesDialog.tsx` | Teacher-detail per-tab dirty-navigation |
 | `StickyMobileSaveBar` | `apps/web/src/components/admin/shared/StickyMobileSaveBar.tsx` | Teacher-detail all 4 tabs |
 | `InfoBanner` | `apps/web/src/components/admin/shared/InfoBanner.tsx` | Solver-re-run hint on Lehrverpflichtung + Verfügbarkeit; empty-TimeGrid hint on Verfügbarkeit |
-| `WarnDialog` | `apps/web/src/components/admin/shared/WarnDialog.tsx` | Keycloak unlink confirmation; Teacher archive confirmation |
+| `WarnDialog` | `apps/web/src/components/admin/shared/WarnDialog.tsx` | Keycloak unlink confirmation (§2.6.3); Teacher archive confirmation (§2.1.2, §7.2) |
 
 Phase 10 `preset reconciliation` note remains valid: `components.json` style is `default`, UI-SPEC `preset` frontmatter mirrors that. No preset change needed.
+
+### 7.1 Reactivate — No Dialog
+
+`Reaktivieren` is a direct mutation with toast feedback. Rationale: reactivation is fully recoverable (the admin can archive again with one click) and carries no data-integrity risk, so a confirmation dialog would only add friction. If a future phase introduces non-recoverable side-effects on reactivation (e.g. re-enabling Keycloak login with notification), reassess.
+
+### 7.2 Canonical WarnDialog Copy — Teacher Archive
+
+Invoked from §2.1.2 row-action `Archivieren` on `status === ACTIVE` teachers.
+
+| Element | Copy |
+|---------|------|
+| Title | `Lehrperson archivieren?` |
+| Icon | `AlertTriangle` amber-600 (non-destructive variant) |
+| Body | `Archivierte Lehrpersonen verschwinden aus aktiven Listen, bleiben aber für Reporting und Referenzen aus vergangenen Schuljahren erhalten. Die Verknüpfung zum Keycloak-Account bleibt bestehen.` |
+| Cancel button | `Abbrechen` (ghost, autoFocus) |
+| Confirm button | `Archivieren` (default variant — NOT destructive; archivation is recoverable) |
+| Success toast | `Lehrperson archiviert.` |
+| Reactivate success toast (no dialog) | `Lehrperson reaktiviert.` |
+
+No separate dialog for `Reaktivieren` — see §7.1.
 
 ---
 
@@ -1055,6 +1075,7 @@ Canonical single-table for gsd-ui-checker Dimension 1 PASS.
 | Destructive confirmation (Teacher delete) | `Lehrperson löschen?` → confirm button `Löschen` |
 | Destructive confirmation (Subject delete) | `Fach löschen?` → confirm button `Löschen` |
 | Destructive confirmation (Keycloak unlink) | `Verknüpfung lösen?` → confirm button `Verknüpfung lösen` |
+| Recoverable confirmation (Teacher archive) | `Lehrperson archivieren?` → confirm button `Archivieren` (see §7.2 for body) |
 | Orphan-guard blocked title | `{Lehrperson | Fach} kann nicht gelöscht werden` |
 
 Tone is Phase 10 §13.1 (Sie-Form, no tech jargon, concrete verbs). Button-label canon from Phase 10 §13.2 is reused verbatim.
@@ -1084,4 +1105,4 @@ Tone is Phase 10 §13.1 (Sie-Form, no tech jargon, concrete verbs). Button-label
 
 ---
 
-*Phase 11 UI-SPEC authored 2026-04-22. Inherits Phase 10 canonical contract. Locks three user-override decisions (D-06 visual week-grid, D-11 free hex picker with WCAG live warning, D-16 3-plan breakdown) per 11-CONTEXT.md.*
+*Phase 11 UI-SPEC authored 2026-04-22. **Revision 1 applied 2026-04-22** — Typography budget reconciled (removed 11px exception, all captions on `text-xs` 12px), Subject Create dialog submit relabelled `Fach anlegen`, Teacher archive `WarnDialog` copy declared (§7.2, recoverable variant; Reaktivieren is direct-mutation per §7.1), group-header margin normalized to `mb-2`. Inherits Phase 10 canonical contract. Locks three user-override decisions (D-06 visual week-grid, D-11 free hex picker with WCAG live warning, D-16 3-plan breakdown) per 11-CONTEXT.md.*
