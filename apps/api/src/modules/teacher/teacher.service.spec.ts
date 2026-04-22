@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { TeacherService } from './teacher.service';
 import { PrismaService } from '../../config/database/prisma.service';
 import { PaginationQueryDto } from '../../common/dto/pagination.dto';
@@ -30,7 +30,35 @@ const mockPrisma = {
     deleteMany: vi.fn(),
     createMany: vi.fn(),
   },
-  $transaction: vi.fn((cb: (tx: typeof mockPrisma) => Promise<unknown>) => cb(mockPrisma)),
+  schoolClass: {
+    count: vi.fn(),
+    findMany: vi.fn(),
+  },
+  timetableLesson: {
+    count: vi.fn(),
+  },
+  classBookEntry: {
+    count: vi.fn(),
+  },
+  gradeEntry: {
+    count: vi.fn(),
+  },
+  substitution: {
+    count: vi.fn(),
+  },
+  // Orphan-Guard uses $transaction([...]) array form (returns array of results)
+  $transaction: vi.fn(
+    async (arg: unknown) => {
+      if (Array.isArray(arg)) {
+        return Promise.all(arg);
+      }
+      // callback form used by update() — run with the same mock object
+      if (typeof arg === 'function') {
+        return (arg as (tx: typeof mockPrisma) => Promise<unknown>)(mockPrisma);
+      }
+      return arg;
+    },
+  ),
 };
 
 describe('TeacherService', () => {
@@ -123,15 +151,143 @@ describe('TeacherService', () => {
   });
 
   describe('remove — Orphan-Guard', () => {
-    it.todo('deletes teacher + person when zero dependents (204)');
-    it.todo('throws ConflictException when klassenvorstandId is set on SchoolClass');
-    it.todo('throws ConflictException when TimetableLesson.teacherId references teacher (denormalized)');
-    it.todo('throws ConflictException when ClassBookEntry.teacherId references teacher');
-    it.todo('throws ConflictException when GradeEntry.teacherId references teacher');
-    it.todo('throws ConflictException when Substitution.originalTeacherId references teacher');
-    it.todo('throws ConflictException when Substitution.substituteTeacherId references teacher');
-    it.todo('payload contains extensions.affectedEntities.{klassenvorstandFor, lessonCount, classbookCount, gradeCount, substitutionCount}');
-    it.todo('affectedEntities.klassenvorstandFor array is capped at 50 entries');
+    const TEACHER_ID = 'teacher-1';
+    const PERSON_ID = 'person-1';
+
+    function setupTeacherFound() {
+      mockPrisma.teacher.findUnique.mockResolvedValue({
+        id: TEACHER_ID,
+        personId: PERSON_ID,
+        person: { firstName: 'Maria', lastName: 'Huber' },
+      });
+    }
+
+    function setupCounts(counts: {
+      klassenvorstand?: number;
+      lesson?: number;
+      classbook?: number;
+      grade?: number;
+      originalSub?: number;
+      substituteSub?: number;
+      classes?: Array<{ id: string; name: string }>;
+    }) {
+      mockPrisma.schoolClass.count.mockResolvedValue(counts.klassenvorstand ?? 0);
+      mockPrisma.timetableLesson.count.mockResolvedValue(counts.lesson ?? 0);
+      mockPrisma.classBookEntry.count.mockResolvedValue(counts.classbook ?? 0);
+      mockPrisma.gradeEntry.count.mockResolvedValue(counts.grade ?? 0);
+      mockPrisma.substitution.count
+        .mockResolvedValueOnce(counts.originalSub ?? 0)
+        .mockResolvedValueOnce(counts.substituteSub ?? 0);
+      mockPrisma.schoolClass.findMany.mockResolvedValue(counts.classes ?? []);
+    }
+
+    it('deletes teacher + person when zero dependents (204)', async () => {
+      setupTeacherFound();
+      setupCounts({});
+
+      await service.remove(TEACHER_ID);
+
+      expect(mockPrisma.teacher.delete).toHaveBeenCalledWith({ where: { id: TEACHER_ID } });
+      expect(mockPrisma.person.delete).toHaveBeenCalledWith({ where: { id: PERSON_ID } });
+    });
+
+    it('throws ConflictException when klassenvorstandId is set on SchoolClass', async () => {
+      setupTeacherFound();
+      setupCounts({
+        klassenvorstand: 2,
+        classes: [
+          { id: 'c1', name: '3A' },
+          { id: 'c2', name: '3B' },
+        ],
+      });
+
+      await expect(service.remove(TEACHER_ID)).rejects.toBeInstanceOf(ConflictException);
+      expect(mockPrisma.teacher.delete).not.toHaveBeenCalled();
+    });
+
+    it('throws ConflictException when TimetableLesson.teacherId references teacher (denormalized)', async () => {
+      setupTeacherFound();
+      setupCounts({ lesson: 12 });
+
+      await expect(service.remove(TEACHER_ID)).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it('throws ConflictException when ClassBookEntry.teacherId references teacher', async () => {
+      setupTeacherFound();
+      setupCounts({ classbook: 7 });
+
+      await expect(service.remove(TEACHER_ID)).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it('throws ConflictException when GradeEntry.teacherId references teacher', async () => {
+      setupTeacherFound();
+      setupCounts({ grade: 3 });
+
+      await expect(service.remove(TEACHER_ID)).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it('throws ConflictException when Substitution.originalTeacherId references teacher', async () => {
+      setupTeacherFound();
+      setupCounts({ originalSub: 1 });
+
+      await expect(service.remove(TEACHER_ID)).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it('throws ConflictException when Substitution.substituteTeacherId references teacher', async () => {
+      setupTeacherFound();
+      setupCounts({ substituteSub: 4 });
+
+      await expect(service.remove(TEACHER_ID)).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it('payload contains extensions.affectedEntities.{klassenvorstandFor, lessonCount, classbookCount, gradeCount, substitutionCount}', async () => {
+      setupTeacherFound();
+      setupCounts({
+        klassenvorstand: 1,
+        lesson: 10,
+        classbook: 5,
+        grade: 2,
+        originalSub: 3,
+        substituteSub: 4,
+        classes: [{ id: 'c1', name: '3A' }],
+      });
+
+      try {
+        await service.remove(TEACHER_ID);
+        expect.fail('should have thrown');
+      } catch (err) {
+        expect(err).toBeInstanceOf(ConflictException);
+        const response = (err as ConflictException).getResponse() as {
+          extensions: { affectedEntities: Record<string, unknown> };
+        };
+        expect(response.extensions.affectedEntities).toEqual({
+          klassenvorstandFor: [{ id: 'c1', name: '3A' }],
+          lessonCount: 10,
+          classbookCount: 5,
+          gradeCount: 2,
+          substitutionCount: 7, // originalSub + substituteSub
+        });
+      }
+    });
+
+    it('affectedEntities.klassenvorstandFor array is capped at 50 entries', async () => {
+      setupTeacherFound();
+      const fiftyClasses = Array.from({ length: 50 }, (_, i) => ({
+        id: `c${i}`,
+        name: `Klasse ${i}`,
+      }));
+      setupCounts({ klassenvorstand: 120, classes: fiftyClasses });
+
+      await expect(service.remove(TEACHER_ID)).rejects.toBeInstanceOf(ConflictException);
+
+      // Assert Prisma findMany was called with take: 50 (the cap)
+      expect(mockPrisma.schoolClass.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          take: 50,
+          where: { klassenvorstandId: TEACHER_ID },
+        }),
+      );
+    });
   });
 
   describe('getEffectiveCapacity', () => {

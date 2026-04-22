@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../config/database/prisma.service';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateTeacherDto } from './dto/update-teacher.dto';
@@ -204,12 +204,98 @@ export class TeacherService {
     });
   }
 
+  /**
+   * Orphan-Guard (Phase 11 TEACHER-06 / D-12 / D-14):
+   *
+   * TimetableLesson.teacherId, ClassBookEntry.teacherId, GradeEntry.teacherId,
+   * Substitution.originalTeacherId and Substitution.substituteTeacherId are
+   * DENORMALIZED string columns with NO foreign key — deleting the teacher
+   * without this guard silently "zombifies" every historical audit row.
+   *
+   * We refuse the delete with RFC 9457 problem+json `409 Conflict` and embed
+   * an `extensions.affectedEntities` payload so the UI can render a
+   * blocked-state dialog with per-category counts + up-to-50 Klassenvorstand
+   * class names.
+   */
   async remove(id: string) {
-    const existing = await this.findOne(id);
+    const existing = await this.findOne(id); // throws 404
+
+    const [
+      klassenvorstandCount,
+      lessonCount,
+      classbookCount,
+      gradeCount,
+      originalSubCount,
+      substituteSubCount,
+      klassenvorstandClasses,
+    ] = await this.prisma.$transaction([
+      this.prisma.schoolClass.count({ where: { klassenvorstandId: id } }),
+      this.prisma.timetableLesson.count({ where: { teacherId: id } }),
+      this.prisma.classBookEntry.count({ where: { teacherId: id } }),
+      this.prisma.gradeEntry.count({ where: { teacherId: id } }),
+      this.prisma.substitution.count({ where: { originalTeacherId: id } }),
+      this.prisma.substitution.count({ where: { substituteTeacherId: id } }),
+      this.prisma.schoolClass.findMany({
+        where: { klassenvorstandId: id },
+        select: { id: true, name: true },
+        take: 50,
+      }),
+    ]);
+
+    const totalRefs =
+      klassenvorstandCount +
+      lessonCount +
+      classbookCount +
+      gradeCount +
+      originalSubCount +
+      substituteSubCount;
+
+    if (totalRefs > 0) {
+      throw new ConflictException({
+        type: 'https://schoolflow.dev/errors/teacher-has-dependents',
+        title: 'Lehrperson hat Abhängigkeiten',
+        status: 409,
+        detail: 'Diese Lehrperson ist noch verplant. Lösen Sie erst alle Zuordnungen.',
+        extensions: {
+          affectedEntities: {
+            klassenvorstandFor: klassenvorstandClasses,
+            lessonCount,
+            classbookCount,
+            gradeCount,
+            substitutionCount: originalSubCount + substituteSubCount,
+          },
+        },
+      });
+    }
+
     // Delete teacher (cascades to qualifications, rules, reductions)
     await this.prisma.teacher.delete({ where: { id } });
     // Delete associated person record
     await this.prisma.person.delete({ where: { id: existing.personId } });
+  }
+
+  /**
+   * Link a Keycloak user (OIDC sub claim) to this teacher's Person row.
+   * Used by the admin UI's "Keycloak-Account verknüpfen" dialog.
+   */
+  async linkKeycloakUser(teacherId: string, keycloakUserId: string) {
+    const teacher = await this.findOne(teacherId);
+    return this.prisma.person.update({
+      where: { id: teacher.personId },
+      data: { keycloakUserId },
+    });
+  }
+
+  /**
+   * Remove the Keycloak link from this teacher's Person row.
+   * The teacher can no longer log in via SSO until re-linked.
+   */
+  async unlinkKeycloakUser(teacherId: string) {
+    const teacher = await this.findOne(teacherId);
+    return this.prisma.person.update({
+      where: { id: teacher.personId },
+      data: { keycloakUserId: null },
+    });
   }
 
   async getEffectiveCapacity(id: string) {

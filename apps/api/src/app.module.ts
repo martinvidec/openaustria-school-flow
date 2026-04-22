@@ -12,6 +12,7 @@ import { SchoolModule } from './modules/school/school.module';
 import { EncryptionModule } from './modules/dsgvo/encryption/encryption.module';
 import { DsgvoModule } from './modules/dsgvo/dsgvo.module';
 import { TeacherModule } from './modules/teacher/teacher.module';
+import { KeycloakAdminModule } from './modules/keycloak-admin/keycloak-admin.module';
 import { StudentModule } from './modules/student/student.module';
 import { SubstitutionModule } from './modules/substitution/substitution.module';
 import { ClassModule } from './modules/class/class.module';
@@ -42,6 +43,7 @@ import { PushModule } from './modules/push/push.module';
     EncryptionModule,
     DsgvoModule,
     TeacherModule,
+    KeycloakAdminModule,
     StudentModule,
     SubstitutionModule,
     ClassModule,

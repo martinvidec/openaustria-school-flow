@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -19,6 +20,7 @@ import {
 import { TeacherService } from './teacher.service';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UpdateTeacherDto } from './dto/update-teacher.dto';
+import { LinkKeycloakDto } from './dto/link-keycloak.dto';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator';
 import { SchoolPaginationQueryDto } from '../../common/dto/pagination.dto';
 
@@ -79,7 +81,31 @@ export class TeacherController {
   @ApiOperation({ summary: 'Delete a teacher and associated person record' })
   @ApiResponse({ status: 204, description: 'Teacher deleted' })
   @ApiResponse({ status: 404, description: 'Teacher not found' })
+  @ApiResponse({
+    status: 409,
+    description:
+      'Teacher has dependents (Klassenvorstand / Timetable / Classbook / Grades / Substitutions) — RFC 9457 problem+json with extensions.affectedEntities',
+  })
   async remove(@Param('id') id: string) {
     await this.teacherService.remove(id);
+  }
+
+  @Patch(':id/keycloak-link')
+  @CheckPermissions({ action: 'update', subject: 'teacher' })
+  @ApiOperation({ summary: 'Link a Keycloak user to this teacher' })
+  @ApiResponse({ status: 200, description: 'Teacher linked to Keycloak user' })
+  @ApiResponse({ status: 404, description: 'Teacher not found' })
+  async linkKeycloak(@Param('id') id: string, @Body() dto: LinkKeycloakDto) {
+    return this.teacherService.linkKeycloakUser(id, dto.keycloakUserId);
+  }
+
+  @Delete(':id/keycloak-link')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @CheckPermissions({ action: 'update', subject: 'teacher' })
+  @ApiOperation({ summary: 'Remove the Keycloak link on this teacher' })
+  @ApiResponse({ status: 204, description: 'Keycloak link removed' })
+  @ApiResponse({ status: 404, description: 'Teacher not found' })
+  async unlinkKeycloak(@Param('id') id: string) {
+    await this.teacherService.unlinkKeycloakUser(id);
   }
 }

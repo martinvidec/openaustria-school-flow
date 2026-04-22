@@ -17,6 +17,7 @@
     "@casl/prisma": "^1.6.1",
     "@fastify/multipart": "^9.4.0",
     "@fastify/static": "^8",
+    "@keycloak/keycloak-admin-client": "^26.6.1",
     "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^11",
     "@nestjs/config": "^4",
