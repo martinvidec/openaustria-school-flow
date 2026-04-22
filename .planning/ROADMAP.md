@@ -154,7 +154,7 @@ Plans:
 
 Plans:
 - [ ] 10.4-01-PLAN.md — E2E-harness hardening: getByCardTitle helper (Option 4a ADR), SCHOOL-02 heading selector, SCHOOL-05 orphan-year fixture (dotenv+datasources), roles-smoke migration [Wave 1]
-- [ ] 10.4-02-PLAN.md — SchoolYearService.create atomic-demote (TDD RED→GREEN) + SCHOOL-03 E2E regression with API single-active invariant [Wave 1]
+- [x] 10.4-02-PLAN.md — SchoolYearService.create atomic-demote (TDD RED→GREEN) + SCHOOL-03 E2E regression with API single-active invariant [Wave 1] ✅ 2026-04-22
 - [ ] 10.4-03-PLAN.md — Full-suite regression gate + ROADMAP consistency audit (read-only) + regression report artifact [Wave 2]
 
 **Success criteria:**

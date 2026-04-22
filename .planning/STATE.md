@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
-status: completed
-stopped_at: Completed 10.3-02-PLAN.md
-last_updated: "2026-04-21T20:10:45.539Z"
-last_activity: 2026-04-21
+status: executing
+stopped_at: Completed 10.4-02-PLAN.md
+last_updated: "2026-04-22T05:23:35Z"
+last_activity: 2026-04-22 -- Phase 10.4 Plan 02 completed (atomic-demote + SCHOOL-03 regression)
 progress:
   total_phases: 12
   completed_phases: 4
-  total_plans: 18
-  completed_plans: 18
-  percent: 33
+  total_plans: 24
+  completed_plans: 19
+  percent: 35
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-18)
 
 **Core value:** Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenplanerstellung, die sie selbst hosten koennen -- ohne Vendor Lock-in, mit offenen APIs und DSGVO-Konformitaet von Tag 1.
-**Current focus:** Phase 10.3 — e2e-harness-per-role-smoke
+**Current focus:** Phase 10.4 — e2e-admin-ops-people
 
 ## Current Position
 
-Phase: 10.4
-Plan: Not started
-Status: Phase 10.3 complete, ready for Phase 10.4 / 10.5
-Last activity: 2026-04-21
+Phase: 10.4 (e2e-admin-ops-people) — EXECUTING (Wave 1, Plan 02 complete)
+Plan: 2 of 3
+Status: Executing Phase 10.4 (Plan 10.4-02 complete — SchoolYearService.create atomic-demote + SCHOOL-03 E2E strengthened; Wave 1 still has 10.4-01 in flight)
+Last activity: 2026-04-22 -- Phase 10.4 Plan 02 completed
 
-Progress: [███░░░░░░░] 33%
+Progress: [████░░░░░░] 35%
 
 ## Performance Metrics
 
@@ -129,6 +129,7 @@ Progress: [███░░░░░░░] 33%
 | Phase 10.2 P10.2-02 | 35min | 2 tasks | 4 files |
 | Phase 10.3 P10.3-01 | 8min | 3 tasks | 6 files |
 | Phase 10.3 P10.3-02 | 4min | 1 tasks | 1 files |
+| Phase 10.4 P10.4-02 | 5min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -376,6 +377,11 @@ Recent decisions affecting current work:
 - [Phase 10.3]: Phase 10.3-02: Grid-or-empty-state smoke pattern for timetable routes — seed DB ships 0 perspective-filtered lessons for kc-lehrer/eltern/schueler personas, so getByRole('grid').or(getByText('Kein Stundenplan vorhanden')) covers both valid render states. Grid-only would false-fail on fresh seed; empty-only would regress to green if grid silently broke. .or() = smoke-correct.
 - [Phase 10.3]: Phase 10.3-02: shadcn CardTitle renders as <div> (not heading element) — 2nd repo-wide trap (first was 10.2-03 era). Empty-state text locators must use getByText, NOT getByRole('heading'). Flagged for Phase 10.4 harness hardening: add getByCardTitle helper OR promote CardTitle to render <h3>.
 - [Phase 10.3]: Phase 10.3-02: SMOKE-ADMIN-01 explicitly NOT added — admin coverage already lives in Phase 10.2 specs (SCHOOL-01..05, ZEIT-01..02, YEAR-02..03, WOCH-01, SILENT-4XX-01..04). Adding a 5th smoke would be pure redundancy and violate the plan's explicit must_have "Admin smoke is NOT repeated here".
+- [Phase 10.4]: Phase 10.4-02: SchoolYearService.create wraps create in a conditional Prisma.$transaction only when dto.isActive === true — preserves the direct-create fast path for the common case (schools create inactive years, activate one at a time). Matches the behavioral test split (Test 1b atomic-demote vs Test 1c no-op).
+- [Phase 10.4]: Phase 10.4-02: buildData() extracted as local closure (not private method) — single-use data-shape builder for the complex holidays + autonomousDays + Date conversions; no reason to surface on class API.
+- [Phase 10.4]: Phase 10.4-02: SCHOOL-03 single-active invariant asserted via API GET (request fixture) not DOM count — SchoolYearCard renders both 'Aktiv' badge and 'Aktivieren' button (10.2-03 note re substring overlap); API is canonical truth.
+- [Phase 10.4]: Phase 10.4-02: SCHOOL-03 throwaway naming uses E2E-SCHOOL03-{Date.now()} + describe-level afterEach activate-seed-then-delete-throwaway cleanup — respects SchoolYearService.remove ConflictException on active years. Pattern ready to copy for Phase 11/12 People E2E specs.
+- [Phase 10.4]: Phase 10.4-02: Parallel-executor coordination in same spec file (10.4-01 modifying SCHOOL-02 line 110 while I owned SCHOOL-03 region) handled by temporarily reverting other agent's line to HEAD before staging, then restoring post-commit — my 3 commits contain zero cross-agent lines, verified via git diff --cached before each commit.
 
 ### Pending Todos
 
@@ -394,9 +400,10 @@ None yet.
 - Phase 10.1 inserted after Phase 10: UAT gap closure — SchoolTypeDto enum, School.address schema, silent 4xx toast (URGENT)
 - Phase 10.2 started 2026-04-21: E2E admin-console gap-closure (Tier 1) — 10.2-01 closes Zeitraster-save UAT bug + locks it in with Playwright; 10.2-03 ships Schuljahre desktop E2E at 2/3 must_haves (YEAR-01 edit deferred, YEAR-02 + YEAR-03 green); 10.2-02 closes Wochentage UX gap with 18-LoC TimeGridTab FIX + WOCH-01 spec asserting Sa toggle API persistence
 - Phase 10.3 started 2026-04-21: E2E Harness + per-role Smoke (Tier 2) — 10.3-01 extends loginAsAdmin to loginAsRole(page, role) for all 5 seed personas + adds Playwright globalSetup/Teardown with fail-fast API+Vite health-checks; 10.3-02 ships 4 per-role smoke specs (SL-01/LEHRER-01/ELTERN-01/SCHUELER-01), E2E per-role coverage matrix 1/5 → 5/5 — Phase 10.3 COMPLETE (2/2 plans). Ready for Phase 10.4/10.5 parallel waves.
+- Phase 10.4 started 2026-04-22: E2E Harness Hardening + 10.3 deferred-items closure (Tier 3a, rescoped) — 10.4-02 closes SCHOOL-03 at backend root cause with conditional $transaction atomic-demote in SchoolYearService.create (mirrors activate() pattern lines 74-90), plus 2 unit tests (invocationCallOrder) and strengthened SCHOOL-03 E2E with API single-active invariant + throwaway cleanup. 3 commits: test(RED) 993aa6f, feat(GREEN) cbd415a, test(E2E) 1aba6d7. Zero schema change. 10.4-01 in parallel (SCHOOL-02/05 + helper), 10.4-03 (full-suite gate) pending Wave 2.
 
 ## Session Continuity
 
-Last session: 2026-04-21T19:45:56Z
-Stopped at: Completed 10.3-02-PLAN.md
+Last session: 2026-04-22T05:23:35Z
+Stopped at: Completed 10.4-02-PLAN.md
 Resume file: None
