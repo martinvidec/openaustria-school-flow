@@ -30,6 +30,7 @@
  *     KC_SCHULLEITUNG persons + teacher/student/parent rows + realm users)
  */
 import { expect, test } from '@playwright/test';
+import { getByCardTitle } from './helpers/card';
 import { loginAsRole } from './helpers/login';
 
 test.describe('Phase 10.3 — Per-role smoke (desktop)', () => {
@@ -53,10 +54,10 @@ test.describe('Phase 10.3 — Per-role smoke (desktop)', () => {
     // route regardless of whether the grid or the empty-state card is
     // showing. Proves route mount + auth-gate pass.
     //
-    // NOTE: shadcn/ui CardTitle is a <div> (not a heading element), so
-    // the empty-state "Kein Stundenplan vorhanden" text does NOT have
-    // role=heading — we assert on its visible text directly as the
-    // fallback signal.
+    // NOTE: shadcn/ui CardTitle is a <div> (not a heading element). The
+    // getByCardTitle helper (10.4-01 Option 4a ADR) targets the stable
+    // class bundle `.text-2xl.font-semibold.leading-none.tracking-tight`
+    // with text scoping — reusable across all future CardTitle assertions.
     await expect(
       page.getByRole('heading', { level: 1, name: 'Stundenplan' }),
     ).toBeVisible({ timeout: 15_000 });
@@ -65,8 +66,8 @@ test.describe('Phase 10.3 — Per-role smoke (desktop)', () => {
     // Maria Mueller) OR empty-state card rendered (no lessons yet).
     // Both prove role gate + data-fetch completed.
     const grid = page.getByRole('grid', { name: 'Stundenplan' });
-    const emptyText = page.getByText('Kein Stundenplan vorhanden');
-    await expect(grid.or(emptyText).first()).toBeVisible({ timeout: 15_000 });
+    const emptyTitle = getByCardTitle(page, 'Kein Stundenplan vorhanden');
+    await expect(grid.or(emptyTitle).first()).toBeVisible({ timeout: 15_000 });
   });
 
   test('SMOKE-ELTERN-01: eltern opens child timetable', async ({ page }) => {
@@ -79,8 +80,8 @@ test.describe('Phase 10.3 — Per-role smoke (desktop)', () => {
     ).toBeVisible({ timeout: 15_000 });
 
     const grid = page.getByRole('grid', { name: 'Stundenplan' });
-    const emptyText = page.getByText('Kein Stundenplan vorhanden');
-    await expect(grid.or(emptyText).first()).toBeVisible({ timeout: 15_000 });
+    const emptyTitle = getByCardTitle(page, 'Kein Stundenplan vorhanden');
+    await expect(grid.or(emptyTitle).first()).toBeVisible({ timeout: 15_000 });
   });
 
   test('SMOKE-SCHUELER-01: schueler opens personal timetable', async ({ page }) => {
@@ -93,7 +94,7 @@ test.describe('Phase 10.3 — Per-role smoke (desktop)', () => {
     ).toBeVisible({ timeout: 15_000 });
 
     const grid = page.getByRole('grid', { name: 'Stundenplan' });
-    const emptyText = page.getByText('Kein Stundenplan vorhanden');
-    await expect(grid.or(emptyText).first()).toBeVisible({ timeout: 15_000 });
+    const emptyTitle = getByCardTitle(page, 'Kein Stundenplan vorhanden');
+    await expect(grid.or(emptyTitle).first()).toBeVisible({ timeout: 15_000 });
   });
 });
