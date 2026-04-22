@@ -10,37 +10,53 @@ export class SchoolYearService {
 
   async create(schoolId: string, dto: CreateSchoolYearDto) {
     const { holidays, autonomousDays, startDate, semesterBreak, endDate, isActive, ...rest } = dto;
-    return this.prisma.schoolYear.create({
-      data: {
-        schoolId,
-        ...rest,
-        startDate: new Date(startDate),
-        semesterBreak: new Date(semesterBreak),
-        endDate: new Date(endDate),
-        isActive: isActive ?? false,
-        ...(holidays && holidays.length > 0
-          ? {
-              holidays: {
-                create: holidays.map((h) => ({
-                  name: h.name,
-                  startDate: new Date(h.startDate),
-                  endDate: new Date(h.endDate),
-                })),
-              },
-            }
-          : {}),
-        ...(autonomousDays && autonomousDays.length > 0
-          ? {
-              autonomousDays: {
-                create: autonomousDays.map((d) => ({
-                  date: new Date(d.date),
-                  reason: d.reason ?? null,
-                })),
-              },
-            }
-          : {}),
-      },
+
+    const buildData = () => ({
+      schoolId,
+      ...rest,
+      startDate: new Date(startDate),
+      semesterBreak: new Date(semesterBreak),
+      endDate: new Date(endDate),
+      isActive: isActive ?? false,
+      ...(holidays && holidays.length > 0
+        ? {
+            holidays: {
+              create: holidays.map((h) => ({
+                name: h.name,
+                startDate: new Date(h.startDate),
+                endDate: new Date(h.endDate),
+              })),
+            },
+          }
+        : {}),
+      ...(autonomousDays && autonomousDays.length > 0
+        ? {
+            autonomousDays: {
+              create: autonomousDays.map((d) => ({
+                date: new Date(d.date),
+                reason: d.reason ?? null,
+              })),
+            },
+          }
+        : {}),
     });
+
+    // Atomic-demote when DTO asks for isActive:true — mirrors activate() on lines 74-90.
+    // The partial-unique index `school_years_active_per_school` (one isActive=true per
+    // schoolId) would otherwise raise P2002; flipping the incumbent inside the same
+    // transaction keeps both operations consistent (deferred-items 10.2-03 #2, 10.3 #1b).
+    if (isActive === true) {
+      return this.prisma.$transaction(async (tx) => {
+        await tx.schoolYear.updateMany({
+          where: { schoolId, isActive: true },
+          data: { isActive: false },
+        });
+        return tx.schoolYear.create({ data: buildData() });
+      });
+    }
+
+    // Non-active create: direct path preserved — no $transaction, no demote.
+    return this.prisma.schoolYear.create({ data: buildData() });
   }
 
   async findAll(schoolId: string) {
