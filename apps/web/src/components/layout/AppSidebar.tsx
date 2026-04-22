@@ -7,6 +7,7 @@ import {
   DoorOpen,
   FileText,
   BarChart3,
+  GraduationCap,
   Package,
   PencilRuler,
   History,
@@ -24,11 +25,18 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
+/**
+ * Sidebar nav item. `group` is an optional section label (Phase 11 D-03);
+ * when present, all items sharing the same `group` value render under a
+ * shared uppercase-small-caps separator row.
+ */
 interface NavItem {
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   roles: string[] | 'all';
+  /** Optional group label (e.g. "Personal & Fächer"). Ungrouped items render first. */
+  group?: string;
 }
 
 const navItems: NavItem[] = [
@@ -110,11 +118,38 @@ const navItems: NavItem[] = [
     icon: UserCheck,
     roles: ['lehrer', 'schulleitung'],
   },
+  // Phase 11 D-03: Personal & Fächer group (admin/schulleitung).
+  // Plan 11-02 will append the "Fächer" entry after merge.
+  {
+    label: 'Lehrer',
+    href: '/admin/teachers',
+    icon: GraduationCap,
+    roles: ['admin', 'schulleitung'],
+    group: 'Personal & Fächer',
+  },
 ];
 
 function hasAccess(userRoles: string[], itemRoles: string[] | 'all'): boolean {
   if (itemRoles === 'all') return true;
   return itemRoles.some((role) => userRoles.includes(role));
+}
+
+/** Partition items into ungrouped + ordered groups (preserves array order of first appearance). */
+function groupItems(items: NavItem[]): { ungrouped: NavItem[]; groups: Array<{ label: string; items: NavItem[] }> } {
+  const ungrouped: NavItem[] = [];
+  const groupMap = new Map<string, NavItem[]>();
+  for (const item of items) {
+    if (!item.group) {
+      ungrouped.push(item);
+      continue;
+    }
+    if (!groupMap.has(item.group)) groupMap.set(item.group, []);
+    groupMap.get(item.group)!.push(item);
+  }
+  return {
+    ungrouped,
+    groups: Array.from(groupMap.entries()).map(([label, items]) => ({ label, items })),
+  };
 }
 
 export function AppSidebar() {
@@ -131,6 +166,41 @@ export function AppSidebar() {
   const visibleItems = navItems.filter((item) =>
     hasAccess(userRoles, item.roles),
   );
+  const { ungrouped, groups } = groupItems(visibleItems);
+
+  const renderItem = (item: NavItem) => {
+    const isActive =
+      currentPath === item.href ||
+      currentPath.startsWith(item.href + '/');
+    const Icon = item.icon;
+    return (
+      <Link
+        key={item.href}
+        to={item.href}
+        className={cn(
+          'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold transition-colors',
+          'hover:bg-accent hover:text-accent-foreground',
+          isActive
+            ? 'bg-primary/10 text-primary'
+            : 'text-muted-foreground',
+          sidebarCollapsed && 'justify-center px-2',
+        )}
+        title={sidebarCollapsed ? item.label : undefined}
+      >
+        <Icon className="h-5 w-5 shrink-0" />
+        {!sidebarCollapsed && (
+          <>
+            <span className="truncate">{item.label}</span>
+            {item.href === '/messages' && unreadCount > 0 && (
+              <Badge className="ml-auto text-[10px] px-1.5 py-0 min-w-[18px] justify-center">
+                {unreadCount}
+              </Badge>
+            )}
+          </>
+        )}
+      </Link>
+    );
+  };
 
   return (
     <aside
@@ -148,40 +218,17 @@ export function AppSidebar() {
       </div>
 
       <nav className="flex-1 py-4 space-y-1 px-2">
-        {visibleItems.map((item) => {
-          const isActive =
-            currentPath === item.href ||
-            currentPath.startsWith(item.href + '/');
-          const Icon = item.icon;
-
-          return (
-            <Link
-              key={item.href}
-              to={item.href}
-              className={cn(
-                'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold transition-colors',
-                'hover:bg-accent hover:text-accent-foreground',
-                isActive
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground',
-                sidebarCollapsed && 'justify-center px-2',
-              )}
-              title={sidebarCollapsed ? item.label : undefined}
-            >
-              <Icon className="h-5 w-5 shrink-0" />
-              {!sidebarCollapsed && (
-                <>
-                  <span className="truncate">{item.label}</span>
-                  {item.href === '/messages' && unreadCount > 0 && (
-                    <Badge className="ml-auto text-[10px] px-1.5 py-0 min-w-[18px] justify-center">
-                      {unreadCount}
-                    </Badge>
-                  )}
-                </>
-              )}
-            </Link>
-          );
-        })}
+        {ungrouped.map(renderItem)}
+        {groups.map((group) => (
+          <div key={group.label} className="pt-2">
+            {!sidebarCollapsed && (
+              <div className="px-3 pt-2 pb-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                {group.label}
+              </div>
+            )}
+            {group.items.map(renderItem)}
+          </div>
+        ))}
       </nav>
 
       <div className="border-t border-border p-2">
