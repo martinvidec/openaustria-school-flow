@@ -615,7 +615,7 @@ Right column (`md:` ≥ 768) renders a faithful Timetable-Cell mockup at ~200px 
   <div className="text-sm font-medium mt-1 truncate">
     {name || 'Fach-Vorschau'}
   </div>
-  <div className="text-xs opacity-80 mt-0.5">
+  <div className="text-xs opacity-80 mt-1">
     Raum 101 · Mo 2.
   </div>
 </div>
@@ -853,9 +853,13 @@ Phase 11 inherits Phase 10's full typography budget verbatim: 4 roles (Body 14, 
 
 **No additional exceptions in Phase 11.** All `{kuerzel}` color-pills, Keycloak-ID badges, table-header uppercase captions, and Timetable-Cell preview captions use `text-xs` (12px) — the existing caption role. Any proposal to introduce a new size must first extend Phase 10 canonical and be re-checked against Dimension 4 budget.
 
-### 5.3 Spacing — No new exceptions
+### 5.3 Spacing — No new tokens, one scope extension
 
-Phase 10's exceptions (6px for form-field label/input gap, 44px for mobile touch) carry forward. No new tokens introduced.
+Phase 10's exceptions (6px `*-1.5` for form-field label/input gap + breadcrumb chevron gap, 44px `h-11` for mobile touch) carry forward. No new numeric tokens introduced.
+
+**Scope extension (documented):** The 6px `gap-1.5` exception inventory is extended by one context — **palette swatch grid gap** in the Subject color picker (§3.3.1). Rationale: 15 compact 32×32 swatches in a `flex flex-wrap` grid need a tight visual gap to read as a single palette cluster; `gap-2` (8px) produces excessive whitespace that fragments the palette into disconnected swatches. The 6px value itself is unchanged — this is a scope note, not a new token.
+
+Full 6px scoped-use list (Phase 10 + Phase 11): (1) form-field label-to-input gap, (2) form-field input-to-help/error gap, (3) breadcrumb chevron gap, (4) Subject palette swatch grid gap.
 
 ### 5.4 Touch Targets (inherits Phase 10 §10.5)
 
