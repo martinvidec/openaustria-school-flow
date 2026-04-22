@@ -167,7 +167,7 @@ No bulk-select checkboxes in Phase 11 (bulk-actions deferred per CONTEXT.md).
 | Column | Width | Alignment | Content |
 |--------|-------|-----------|---------|
 | Name | `w-auto` | left | `{firstName} {lastName}` (14px / 500 weight) + `E-Mail` below in `text-xs text-muted-foreground` |
-| Fächer | `w-48` | left | Comma-separated `{kuerzel}` list (max 3 visible + `+N` pill for overflow). Each kürzel pill uses the Fach's color pair as background-text, `rounded px-1.5 py-0.5 text-xs font-semibold`. |
+| Fächer | `w-48` | left | Comma-separated `{kuerzel}` list (max 3 visible + `+N` pill for overflow). Each kürzel pill uses the Fach's color pair as background-text, `rounded px-1.5 py-1 text-xs font-semibold`. |
 | Werteinheiten | `w-28` | right | Computed total (e.g. `18,5 WE`). `tabular-nums`. |
 | Status | `w-24` | center | Badge: `Aktiv` (primary) or `Archiviert` (muted). |
 | Keycloak | `w-20` | center | `Link2` icon (primary) when linked, `Link2Off` icon muted when not. Tooltip on hover: linked email or `Nicht verknüpft`. |
@@ -530,7 +530,7 @@ Desktop `<table className="hidden md:table w-full">` inside a `<Card>`.
 |--------|-------|-----------|---------|
 | Farbe | `w-16` | center | `12px × 12px` color swatch (`rounded-sm`) with background = subject.color.bg; inline ARIA label `Farbe {hexValue}`. Native right of the swatch rendered inside the same cell: `text-xs font-mono text-muted-foreground` hex value (hidden `< lg`, visible `lg:` ≥ 1024px). |
 | Name | `w-auto` | left | `text-sm font-medium` |
-| Kürzel | `w-24` | left | colored pill (`rounded px-2 py-0.5 text-xs font-semibold`) using subject color pair (`bg` + `text`) |
+| Kürzel | `w-24` | left | colored pill (`rounded px-2 py-1 text-xs font-semibold`) using subject color pair (`bg` + `text`) |
 | Schultyp | `w-40` | left | `text-sm text-muted-foreground` |
 | Nutzung | `w-28` | right | `<button>` — `{count} Zuordnungen` as underlined inline link (`text-primary underline-offset-2 hover:underline`). Click opens the Affected-Entities-Dialog (§4.2 pre-emptive — non-deletion context). `tabular-nums`. |
 | Aktion | `w-10` | center | Row-level `<DropdownMenu>` trigger: `MoreVertical`. |
@@ -680,7 +680,7 @@ Columns:
 | Column | Width | Alignment | Content |
 |--------|-------|-----------|---------|
 | Fach | `w-auto` | left | `text-sm` |
-| Kürzel | `w-16` | center | `<span className="bg-muted rounded px-1.5 py-0.5 text-xs font-mono">{kuerzel}</span>` |
+| Kürzel | `w-16` | center | `<span className="bg-muted rounded px-1.5 py-1 text-xs font-mono">{kuerzel}</span>` |
 | Jg. 1 | `w-16` | center | Wochenstunden integer; `text-muted-foreground` when `=== 0`, else `text-foreground tabular-nums`. |
 | Jg. 2 | `w-16` | center | ditto |
 | Jg. 3 | `w-16` | center | ditto |
