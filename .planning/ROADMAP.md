@@ -45,7 +45,7 @@ See [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full 
 | 10.2 | E2E Admin-Console gap-closure (Tier 1) | 5/5 | Complete    | 2026-04-21 |
 | 10.3 | E2E Harness + per-role Smoke (Tier 2) | E2E-hardening | Complete    | 2026-04-21 |
 | 10.4 | E2E Harness Hardening (Tier 3a, rescoped) | E2E-hardening | Complete    | 2026-04-22 |
-| 10.5 | E2E Admin-Ops Operations (Tier 3b) | E2E-hardening | Phase 10.3 | Parallel with 10.4 |
+| 10.5 | E2E Admin-Ops Operations (Tier 3b) | 2/4 | In Progress|  |
 | 11 | Lehrer- und Fächer-Verwaltung | 11 | Phase 10.5 | Parallel with Phase 14 |
 | 12 | Schüler-, Klassen- & Gruppenverwaltung | 9 | Phase 11 | — |
 | 13 | User- und Rechteverwaltung | 5 | Phase 12 | — |
@@ -174,7 +174,7 @@ Plans:
 **Goal:** Admin-Ops Operations-Surfaces mit E2E absichern: Räume-CRUD inkl. Booking-Conflict, Ressourcen-CRUD, Imports (Untis-XML + CSV Happy-Path + ein Error-Path), Solver-Workflow (trigger → result → publish).
 **Requirements:** E2E-hardening
 **Depends on:** Phase 10.3 (Harness) — parallel with 10.4 möglich
-**Plans:** 0 plans
+**Plans:** 2/4 plans executed
 
 Plans:
 - [ ] TBD (run /gsd:plan-phase 10.5 to break down)
