@@ -50,7 +50,7 @@
 ### Subject & Stundentafel
 
 - [ ] **SUBJECT-01**: Admin sieht Fächerliste mit Filter
-- [ ] **SUBJECT-02**: Admin kann Fächer anlegen und editieren (Name, Kürzel, Farbe)
+- [ ] **SUBJECT-02**: Admin kann Fächer anlegen und editieren (Name, Kürzel) — Farbe wird automatisch aus Standard-Palette vergeben (manuelle Farbauswahl in späterer Phase, siehe Phase 11 CONTEXT D-11)
 - [ ] **SUBJECT-03**: Admin kann Stundentafel-Vorlagen pro Schultyp einsehen und auswählen
 - [ ] **SUBJECT-04**: Admin kann Wochenstunden pro Fach pro Klassenstufe anpassen
 - [ ] **SUBJECT-05**: Admin kann ungenutzte Fächer löschen (Orphan-Schutz gegen Fächer mit Zuordnungen)
@@ -179,7 +179,7 @@ Empty initially — populated during roadmap creation by `gsd-roadmapper`.
 | SUBJECT-01 | Phase 11 | Pending |
 | SUBJECT-02 | Phase 11 | Pending |
 | SUBJECT-03 | Phase 11 | Pending |
-| SUBJECT-04 | Phase 11 | Pending |
+| SUBJECT-04 | Phase 12 | Pending |
 | SUBJECT-05 | Phase 11 | Pending |
 | USER-01 | Phase 13 | Pending |
 | USER-02 | Phase 13 | Pending |

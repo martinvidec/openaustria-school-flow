@@ -200,15 +200,15 @@ Plans:
 ### Phase 11: Lehrer- und Fächer-Verwaltung
 
 **Goal:** Admin kann Lehrerstammdaten inkl. Lehrverpflichtung/Werteinheiten und Fächer inkl. Stundentafel-Vorlagen UI-gestützt pflegen.
-**Requirements:** TEACHER-01, TEACHER-02, TEACHER-03, TEACHER-04, TEACHER-05, TEACHER-06, SUBJECT-01, SUBJECT-02, SUBJECT-03, SUBJECT-04, SUBJECT-05
+**Requirements:** TEACHER-01, TEACHER-02, TEACHER-03, TEACHER-04, TEACHER-05, TEACHER-06, SUBJECT-01, SUBJECT-02, SUBJECT-03, SUBJECT-05
 **Depends on:** Phase 10 (Schule + Schuljahr müssen vor Lehrer-Anlage existieren)
-**Plans:** 0 plans
+**Plans:** 3 plans
 
 **Success criteria:**
 - [ ] Admin sieht Lehrerliste mit Suche/Filter und kann einen Lehrer inkl. Person-Daten und Keycloak-Verknüpfung anlegen/editieren
 - [ ] Admin kann Lehrverpflichtung/Werteinheiten (Beschäftigungsgrad, OEPU-Gruppen-Stunden, Ermäßigungen) pro Lehrer editieren
 - [ ] Admin kann Lehrer-Verfügbarkeit (Tage, Zeitslots, wiederkehrende Ausnahmen) pflegen und Lehrer deaktivieren/archivieren ohne Datenverlust
-- [ ] Admin kann Fächer (Name, Kürzel, Farbe) anlegen/editieren und Stundentafel-Vorlagen pro Schultyp einsehen
+- [ ] Admin kann Fächer (Name, Kürzel) anlegen/editieren und Stundentafel-Vorlagen pro Schultyp einsehen
 - [ ] Fach-Löschung ist Orphan-sicher (Fach mit Zuordnungen kann nicht gelöscht werden)
 - [ ] **E2E (ex-10.4):** Lehrpersonen-CRUD (create/edit/delete/Werteinheiten-Edit) — je Happy + Error, Desktop + Mobile-375 für Formulare
 - [ ] **E2E (ex-10.4):** Fächer-CRUD (create/edit/delete inkl. Orphan-Guard-Error) — je Happy + Error, Desktop + Mobile-375 für Formulare
@@ -218,21 +218,23 @@ Plans:
 - Orphan-Guard-Backend für Teacher/Subject DELETE fehlt in v1.0 (`TeacherService.remove` + `SubjectService.remove` kaskadieren ohne Dependency-Check). Plan muss Gap-Fix-Task mit ausliefern, damit "Orphan-sicher"-Success-Criterion + E2E-Error-Spec passen.
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 11 to break down)
+- [ ] 11-01-PLAN.md — Shared foundation (Zod schemas + werteinheiten util) + Teacher-CRUD FE/BE + TeacherService.remove Orphan-Guard gap-fix + Keycloak-admin module (GET /admin/keycloak/users) + sidebar "Personal & Fächer" group scaffold + Lehrer entry [Wave 1]
+- [ ] 11-02-PLAN.md — Fächer-CRUD FE/BE (Name + Kürzel dialog only, D-11 free-hex picker rolled back post-research) + Stundentafel-Vorlagen read-only section (moved to @schoolflow/shared) + SubjectService.remove Orphan-Guard gap-fix + sidebar Fächer entry append [Wave 2, depends on 11-01]
+- [ ] 11-03-PLAN.md — 8 Playwright E2E specs: Teacher CRUD {happy, error, mobile-375} + Werteinheiten-deep-dive; Subject CRUD {happy, error, mobile-375} + Stundentafel-Vorlagen — reuses Phase 10.3 harness, Phase 10.5-02 prefix-isolation (E2E-TEA-*, E2E-SUB-*), Phase 10.2-04 SILENT-4XX invariant codified at E2E layer [Wave 3, depends on 11-01+11-02]
 
 ---
 
 ### Phase 12: Schüler-, Klassen- und Gruppenverwaltung
 
 **Goal:** Admin kann Schüler, Klassen mit Stammklasse und Klassenvorstand sowie Gruppenableitungsregeln UI-gestützt pflegen.
-**Requirements:** STUDENT-01, STUDENT-02, STUDENT-03, STUDENT-04, CLASS-01, CLASS-02, CLASS-03, CLASS-04, CLASS-05
-**Depends on:** Phase 11 (Fächer + Stundentafel-Vorlagen werden für CLASS-03 benötigt)
+**Requirements:** STUDENT-01, STUDENT-02, STUDENT-03, STUDENT-04, CLASS-01, CLASS-02, CLASS-03, CLASS-04, CLASS-05, SUBJECT-04
+**Depends on:** Phase 11 (Fächer + Stundentafel-Vorlagen werden für CLASS-03 benötigt; SUBJECT-04 Wochenstunden-Editing verschoben aus Phase 11 weil ClassSubject-Model hier lebt)
 **Plans:** 0 plans
 
 **Success criteria:**
 - [ ] Admin kann Schüler mit Person-Daten und Erziehungsberechtigten anlegen, editieren und archivieren
 - [ ] Admin kann Klassen anlegen/editieren mit Stammklasse-Marker und Klassenvorstand-Zuweisung
-- [ ] Admin kann Stundentafel-Vorlage auf eine Klasse anwenden und pro Klasse anpassen
+- [ ] Admin kann Stundentafel-Vorlage auf eine Klasse anwenden und pro Klasse anpassen (inkl. SUBJECT-04: Wochenstunden pro Fach pro Klassenstufe editieren)
 - [ ] Admin kann Gruppenableitungsregeln (Religion/Leistung/Wahlpflicht) pro Klasse definieren und Gruppenzugehörigkeiten manuell überschreiben
 - [ ] Admin kann Schüler zwischen Stammklassen umziehen ohne Datenverlust und ohne Referenz-Bruch zum Klassenbuch
 - [ ] **E2E (ex-10.4):** Schüler-CRUD (create/edit/delete, Elternlink) — je Happy + Error, Desktop + Mobile-375 für Formulare
