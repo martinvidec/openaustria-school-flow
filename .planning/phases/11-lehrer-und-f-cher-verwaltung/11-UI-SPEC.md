@@ -1,7 +1,8 @@
 ---
 phase: 11
 slug: lehrer-und-faecher-verwaltung
-status: draft
+status: approved
+reviewed_at: 2026-04-22
 shadcn_initialized: true
 preset: shadcn default (Tailwind 4 tokens, pre-existing install — components.json style=default, baseColor=neutral, cssVariables=true)
 ui_language: de
