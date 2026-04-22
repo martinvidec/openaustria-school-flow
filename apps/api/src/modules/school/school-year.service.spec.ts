@@ -71,6 +71,58 @@ describe('SchoolYearService', () => {
     expect(arg.data.isActive).toBe(false);
   });
 
+  // Test 1b: create() with isActive:true — atomic-demote pattern (Phase 10.4-02)
+  // Matches activate() shape in school-year.service.ts:74-90
+  it('create() with isActive:true runs $transaction(updateMany → create) atomically', async () => {
+    const dto = {
+      name: '2027/2028',
+      startDate: '2027-09-01',
+      semesterBreak: '2028-02-07',
+      endDate: '2028-07-04',
+      isActive: true,
+    } as any;
+    await service.create('school-1', dto);
+
+    // $transaction wraps the whole sequence
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+
+    // Inside the callback: demote first, then create
+    expect(prisma.schoolYear.updateMany).toHaveBeenCalledWith({
+      where: { schoolId: 'school-1', isActive: true },
+      data: { isActive: false },
+    });
+
+    // create was called with isActive:true
+    const createArg = prisma.schoolYear.create.mock.calls[0][0];
+    expect(createArg.data.schoolId).toBe('school-1');
+    expect(createArg.data.isActive).toBe(true);
+
+    // ORDER invariant: updateMany BEFORE create inside the same tx body
+    const updateManyOrder = prisma.schoolYear.updateMany.mock.invocationCallOrder[0];
+    const createOrder = prisma.schoolYear.create.mock.invocationCallOrder[0];
+    expect(updateManyOrder).toBeLessThan(createOrder);
+  });
+
+  // Test 1c: create() without isActive (or isActive:false) — no $transaction, no demote
+  it('create() with isActive:false or undefined does NOT run $transaction or updateMany', async () => {
+    const dto = {
+      name: '2028/2029',
+      startDate: '2028-09-01',
+      semesterBreak: '2029-02-07',
+      endDate: '2029-07-04',
+      // isActive omitted → defaults to false per service body
+    } as any;
+    await service.create('school-1', dto);
+
+    // No transactional wrapper, no demote — direct create only
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(prisma.schoolYear.updateMany).not.toHaveBeenCalled();
+
+    expect(prisma.schoolYear.create).toHaveBeenCalledTimes(1);
+    const createArg = prisma.schoolYear.create.mock.calls[0][0];
+    expect(createArg.data.isActive).toBe(false);
+  });
+
   // Test 2: findAll
   it('findAll(schoolId) queries findMany with the schoolId and orderBy startDate desc', async () => {
     await service.findAll('school-1');
