@@ -28,12 +28,12 @@
 
 ### Teacher Management
 
-- [ ] **TEACHER-01**: Admin sieht Lehrerliste mit Suche und Filter (Name, Fach, Status)
-- [ ] **TEACHER-02**: Admin kann Lehrer anlegen und editieren (Stammdaten, Keycloak-Verknüpfung)
-- [ ] **TEACHER-03**: Admin kann Lehrverpflichtung/Werteinheiten editieren (Beschäftigungsgrad, OEPU-Gruppen-Stunden)
-- [ ] **TEACHER-04**: Admin kann Lehrer-Verfügbarkeit editieren (Tage, Zeitslots, wiederkehrende Ausnahmen)
-- [ ] **TEACHER-05**: Admin kann Ermäßigungen/Reduktionen mit Grund und Stundenanzahl verwalten
-- [ ] **TEACHER-06**: Admin kann Lehrer deaktivieren/archivieren ohne Datenverlust
+- [x] **TEACHER-01**: Admin sieht Lehrerliste mit Suche und Filter (Name, Fach, Status)
+- [x] **TEACHER-02**: Admin kann Lehrer anlegen und editieren (Stammdaten, Keycloak-Verknüpfung)
+- [x] **TEACHER-03**: Admin kann Lehrverpflichtung/Werteinheiten editieren (Beschäftigungsgrad, OEPU-Gruppen-Stunden)
+- [x] **TEACHER-04**: Admin kann Lehrer-Verfügbarkeit editieren (Tage, Zeitslots, wiederkehrende Ausnahmen)
+- [x] **TEACHER-05**: Admin kann Ermäßigungen/Reduktionen mit Grund und Stundenanzahl verwalten
+- [x] **TEACHER-06**: Admin kann Lehrer deaktivieren/archivieren ohne Datenverlust
 
 ### Student & Class Management
 
@@ -161,12 +161,12 @@ Empty initially — populated during roadmap creation by `gsd-roadmapper`.
 | SCHOOL-03 | Phase 10 | Complete |
 | SCHOOL-04 | Phase 10 | Complete |
 | SCHOOL-05 | Phase 10 | Complete |
-| TEACHER-01 | Phase 11 | Pending |
-| TEACHER-02 | Phase 11 | Pending |
-| TEACHER-03 | Phase 11 | Pending |
-| TEACHER-04 | Phase 11 | Pending |
-| TEACHER-05 | Phase 11 | Pending |
-| TEACHER-06 | Phase 11 | Pending |
+| TEACHER-01 | Phase 11-01 | Complete |
+| TEACHER-02 | Phase 11-01 | Complete |
+| TEACHER-03 | Phase 11-01 | Complete |
+| TEACHER-04 | Phase 11-01 | Complete |
+| TEACHER-05 | Phase 11-01 | Complete |
+| TEACHER-06 | Phase 11-01 | Complete |
 | STUDENT-01 | Phase 12 | Pending |
 | STUDENT-02 | Phase 12 | Pending |
 | STUDENT-03 | Phase 12 | Pending |

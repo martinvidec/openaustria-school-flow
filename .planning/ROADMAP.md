@@ -46,7 +46,7 @@ See [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full 
 | 10.3 | E2E Harness + per-role Smoke (Tier 2) | E2E-hardening | Complete    | 2026-04-21 |
 | 10.4 | E2E Harness Hardening (Tier 3a, rescoped) | E2E-hardening | Complete    | 2026-04-22 |
 | 10.5 | E2E Admin-Ops Operations (Tier 3b) | 4/4 | Complete    | 2026-04-22 |
-| 11 | Lehrer- und Fächer-Verwaltung | 11 | Phase 10.5 | Parallel with Phase 14 |
+| 11 | Lehrer- und Fächer-Verwaltung | 11 | Phase 10.5 | 1/3 plans (2026-04-22) |
 | 12 | Schüler-, Klassen- & Gruppenverwaltung | 9 | Phase 11 | — |
 | 13 | User- und Rechteverwaltung | 5 | Phase 12 | — |
 | 14 | Solver-Tuning | 5 | Phase 10.5 | Parallel with Phases 11-13 |
@@ -218,7 +218,7 @@ Plans:
 - Orphan-Guard-Backend für Teacher/Subject DELETE fehlt in v1.0 (`TeacherService.remove` + `SubjectService.remove` kaskadieren ohne Dependency-Check). Plan muss Gap-Fix-Task mit ausliefern, damit "Orphan-sicher"-Success-Criterion + E2E-Error-Spec passen.
 
 Plans:
-- [ ] 11-01-PLAN.md — Shared foundation (Zod schemas + werteinheiten util) + Teacher-CRUD FE/BE + TeacherService.remove Orphan-Guard gap-fix + Keycloak-admin module (GET /admin/keycloak/users) + sidebar "Personal & Fächer" group scaffold + Lehrer entry [Wave 1]
+- [x] 11-01-PLAN.md — Shared foundation (Zod schemas + werteinheiten util) + Teacher-CRUD FE/BE + TeacherService.remove Orphan-Guard gap-fix + Keycloak-admin module (GET /admin/keycloak/users) + sidebar "Personal & Fächer" group scaffold + Lehrer entry [Wave 1] — SHIPPED 2026-04-22 (3 tasks, 37 files, TEACHER-01..06 complete)
 - [ ] 11-02-PLAN.md — Fächer-CRUD FE/BE (Name + Kürzel dialog only, D-11 free-hex picker rolled back post-research) + Stundentafel-Vorlagen read-only section (moved to @schoolflow/shared) + SubjectService.remove Orphan-Guard gap-fix + sidebar Fächer entry append [Wave 2, depends on 11-01]
 - [ ] 11-03-PLAN.md — 8 Playwright E2E specs: Teacher CRUD {happy, error, mobile-375} + Werteinheiten-deep-dive; Subject CRUD {happy, error, mobile-375} + Stundentafel-Vorlagen — reuses Phase 10.3 harness, Phase 10.5-02 prefix-isolation (E2E-TEA-*, E2E-SUB-*), Phase 10.2-04 SILENT-4XX invariant codified at E2E layer [Wave 3, depends on 11-01+11-02]
 
