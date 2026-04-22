@@ -15,3 +15,7 @@ export * from './types/push';
 export * from './schemas/school.schema';
 export * from './schemas/time-grid.schema';
 export * from './schemas/school-year.schema';
+export * from './schemas/teacher.schema';
+export * from './schemas/availability.schema';
+export * from './schemas/teaching-reduction.schema';
+export * from './werteinheiten/index';

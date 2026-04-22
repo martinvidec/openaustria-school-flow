@@ -122,6 +122,18 @@ describe('TeacherService', () => {
     });
   });
 
+  describe('remove — Orphan-Guard', () => {
+    it.todo('deletes teacher + person when zero dependents (204)');
+    it.todo('throws ConflictException when klassenvorstandId is set on SchoolClass');
+    it.todo('throws ConflictException when TimetableLesson.teacherId references teacher (denormalized)');
+    it.todo('throws ConflictException when ClassBookEntry.teacherId references teacher');
+    it.todo('throws ConflictException when GradeEntry.teacherId references teacher');
+    it.todo('throws ConflictException when Substitution.originalTeacherId references teacher');
+    it.todo('throws ConflictException when Substitution.substituteTeacherId references teacher');
+    it.todo('payload contains extensions.affectedEntities.{klassenvorstandFor, lessonCount, classbookCount, gradeCount, substitutionCount}');
+    it.todo('affectedEntities.klassenvorstandFor array is capped at 50 entries');
+  });
+
   describe('getEffectiveCapacity', () => {
     it('returns correct Werteinheiten calculation with reductions', async () => {
       const teacher = {
