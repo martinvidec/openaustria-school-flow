@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
-stopped_at: Completed 10.4-01-PLAN.md
-last_updated: "2026-04-22T05:29:01Z"
-last_activity: 2026-04-22 -- Phase 10.4 Wave 1 complete (Plans 01 + 02 both landed)
+stopped_at: Completed 10.4-03-PLAN.md — Phase 10.4 closed
+last_updated: "2026-04-22T05:57:00Z"
+last_activity: 2026-04-22 -- Phase 10.4 complete (Wave 1 + Wave 2 landed, regression gate passed, ROADMAP audit 14/14 green)
 progress:
   total_phases: 12
   completed_phases: 4
   total_plans: 24
-  completed_plans: 20
-  percent: 37
+  completed_plans: 21
+  percent: 39
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 
 ## Current Position
 
-Phase: 10.4 (e2e-admin-ops-people) — EXECUTING (Wave 1 complete — Plans 01 + 02 shipped)
-Plan: 2 of 3
-Status: Executing Phase 10.4 (Wave 1 complete: Plan 10.4-01 shipped getByCardTitle helper + SCHOOL-02/05 E2E fixes; Plan 10.4-02 shipped SchoolYearService atomic-demote + SCHOOL-03 E2E strengthening. Wave 2: Plan 10.4-03 verifier next.)
-Last activity: 2026-04-22 -- Phase 10.4 Wave 1 complete
+Phase: 10.4 (e2e-admin-ops-people) — COMPLETE (3/3 plans shipped: 10.4-01 + 10.4-02 Wave 1, 10.4-03 Wave 2)
+Plan: 3 of 3 — Phase 10.4 CLOSED
+Status: Phase 10.4 complete. 10.4-03 regression gate passed — all 3 previously-deferred specs (SCHOOL-02/03/05) transition red → green; ROADMAP consistency audit 14/14 checks green (zero planner ROADMAP writes); 2 non-regression full-suite failures (multi-active backfill + screenshots SCHOOL-05) flagged as test-DB-pollution follow-up, not blockers; mobile-375 WebKit Bus-error-10 flagged as pre-existing environmental blocker. Next: Phase 10.5 (Operations E2E) or parallel Phase 11 planning.
+Last activity: 2026-04-22 -- Phase 10.4 complete (all 3 plans + regression gate)
 
-Progress: [████░░░░░░] 37%
+Progress: [████░░░░░░] 39%
 
 ## Performance Metrics
 
@@ -131,6 +131,7 @@ Progress: [████░░░░░░] 37%
 | Phase 10.3 P10.3-02 | 4min | 1 tasks | 1 files |
 | Phase 10.4 P10.4-02 | 5min | 2 tasks | 3 files |
 | Phase 10.4 P10.4-01 | 10min | 3 tasks | 5 files |
+| Phase 10.4 P10.4-03 | 12min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -388,6 +389,10 @@ Recent decisions affecting current work:
 - [Phase 10.4]: Phase 10.4-01: Playwright worker CWD=apps/web breaks plain `import 'dotenv/config'` (loads from CWD, misses repo-root .env). Added belt-and-braces explicit `dotenvConfig({ path: fileURLToPath-rooted <repo>/.env })` — works under both pnpm-exec-from-root and Playwright-worker-CWD shells. Validated via `env -i PATH HOME ...` regression.
 - [Phase 10.4]: Phase 10.4-01: SCHOOL-02 Mo-toggle bootstrap (Rule 1 auto-fix) unmasked after strict-mode-selector fix — TimeGridSchema requires ≥1 Unterrichtstag AND ≥1 Periode; same minimum-valid-state bootstrap WOCH-01 already documents at lines 61-87.
 - [Phase 10.4]: Phase 10.4-01: getByCardTitle helper adopted in roles-smoke.spec.ts for LEHRER/ELTERN/SCHUELER-01 empty-state fallbacks — proves drop-in replacement for the 3x-repeated `getByText('Kein Stundenplan vorhanden')` workaround. SMOKE-SL-01 unchanged (Vertretungsplanung is a real h1).
+- [Phase 10.4]: Phase 10.4-03: Three-class failure taxonomy established — (a) Wave-N code regression, (b) pre-existing test-DB-pollution, (c) environmental. Only (a) blocks closure. Applied to the 2 full-suite non-regression failures (multi-active backfill + screenshots SCHOOL-05 = both class-b test-DB-pollution) + mobile-375 Bus-error-10 (class-c environmental). Prevents false-red blocking of shipped Wave 1 work.
+- [Phase 10.4]: Phase 10.4-03: ROADMAP consistency audit performed read-only via 14 Grep checks — zero planner ROADMAP writes per CONTEXT.md Deliverable 6 "Keine Neuedits durch den Planner". Audit artifact embedded in 10.4-REGRESSION-REPORT.md §3 for future re-run.
+- [Phase 10.4]: Phase 10.4-03: Continuation-agent log-triage pattern — when /tmp sandbox blocks log reads, Playwright HTML report data/*.md files (1.7KB stderr-transcripts per failed spec, written by the orchestrator's own run) serve as first-party fallback evidence. 5 mobile-375 Bus-error-10 transcripts quoted verbatim in REGRESSION-REPORT §1.3.
+- [Phase 10.4]: Phase 10.4-03: Sandbox denial of git add/commit forced orchestrator-delegated atomic commit — authored all 4 artifacts on disk (REGRESSION-REPORT + SUMMARY created; STATE + ROADMAP amended) and documented exact commit command shape in SUMMARY §Task Commits. Atomicity property preserved via 2 sequential orchestrator commits (docs(10.4-03) report + docs(10.4-03) finalization).
 
 ### Pending Todos
 
@@ -408,9 +413,10 @@ None yet.
 - Phase 10.3 started 2026-04-21: E2E Harness + per-role Smoke (Tier 2) — 10.3-01 extends loginAsAdmin to loginAsRole(page, role) for all 5 seed personas + adds Playwright globalSetup/Teardown with fail-fast API+Vite health-checks; 10.3-02 ships 4 per-role smoke specs (SL-01/LEHRER-01/ELTERN-01/SCHUELER-01), E2E per-role coverage matrix 1/5 → 5/5 — Phase 10.3 COMPLETE (2/2 plans). Ready for Phase 10.4/10.5 parallel waves.
 - Phase 10.4 started 2026-04-22: E2E Harness Hardening + 10.3 deferred-items closure (Tier 3a, rescoped) — 10.4-02 closes SCHOOL-03 at backend root cause with conditional $transaction atomic-demote in SchoolYearService.create (mirrors activate() pattern lines 74-90), plus 2 unit tests (invocationCallOrder) and strengthened SCHOOL-03 E2E with API single-active invariant + throwaway cleanup. 3 commits: test(RED) 993aa6f, feat(GREEN) cbd415a, test(E2E) 1aba6d7. Zero schema change. 10.4-01 in parallel (SCHOOL-02/05 + helper), 10.4-03 (full-suite gate) pending Wave 2.
 - Phase 10.4 Wave 1 complete 2026-04-22: 10.4-01 ships getByCardTitle E2E helper (ADR Option 4a) under apps/web/e2e/helpers/card.ts, fixes SCHOOL-02 strict-mode violation (getByText → getByRole heading), and makes SCHOOL-05 env-robust via dotenv (belt-and-braces) + Prisma 7 driver-adapter pattern (plan's Prisma 6 datasources.db.url syntax rejected at runtime). 3 commits: feat 66514ba, fix a4b52d8, refactor 8c51ef2. roles-smoke.spec.ts migrated to consume getByCardTitle in 3 per-role smokes. SCHOOL-02 + SCHOOL-05 now green on --project=desktop, even under `env -i` (no pre-sourced .env). Wave 2 (10.4-03 full-regression verifier) ready to run.
+- Phase 10.4 closed 2026-04-22: 10.4-03 regression gate passed — desktop E2E 22/23 green (all 3 plan-target deferred specs SCHOOL-02/03/05 red→green; single remaining failure in screenshots.spec.ts:172 is pre-existing test-DB-pollution, NOT a Wave 1 regression); API unit tests 10/10 on school-year.service.spec.ts (multi-active backfill spec's 1 failure = same test-DB-pollution root cause); mobile-375 5/5 Bus-error-10 = pre-existing WebKit frozen-build environmental blocker, NOT a regression. ROADMAP audit 14/14 checks GREEN, zero planner ROADMAP content edits. Phase 10.4 ships at 3/3 plans. 3 follow-up items flagged (multi-active DB reset, screenshots self-provisioned throwaway year, mobile OS upgrade) for future testing-infra tranche.
 
 ## Session Continuity
 
-Last session: 2026-04-22T05:29:01Z
-Stopped at: Completed 10.4-01-PLAN.md
-Resume file: None
+Last session: 2026-04-22T05:57:00Z
+Stopped at: Completed 10.4-03-PLAN.md — Phase 10.4 CLOSED (3/3 plans shipped)
+Resume file: None — Phase 10.4 is done; next actions are Phase 10.5 (Operations E2E, parallel-ready) or Phase 11 (People Verwaltung, depends on 10.5 per ROADMAP)

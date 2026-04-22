@@ -44,7 +44,7 @@ See [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full 
 | 10.1 | UAT gap closure — DTO/schema/toast | gap-closure | Complete    | 2026-04-21 |
 | 10.2 | E2E Admin-Console gap-closure (Tier 1) | 5/5 | Complete    | 2026-04-21 |
 | 10.3 | E2E Harness + per-role Smoke (Tier 2) | E2E-hardening | Complete    | 2026-04-21 |
-| 10.4 | E2E Admin-Ops People (Tier 3a) | E2E-hardening | Phase 10.3 | Parallel with 10.5 |
+| 10.4 | E2E Harness Hardening (Tier 3a, rescoped) | E2E-hardening | Complete    | 2026-04-22 |
 | 10.5 | E2E Admin-Ops Operations (Tier 3b) | E2E-hardening | Phase 10.3 | Parallel with 10.4 |
 | 11 | Lehrer- und Fächer-Verwaltung | 11 | Phase 10.5 | Parallel with Phase 14 |
 | 12 | Schüler-, Klassen- & Gruppenverwaltung | 9 | Phase 11 | — |
@@ -150,12 +150,12 @@ Plans:
 **Goal:** Schließt die in 10.3 deferred 3 pre-existing Failures (SCHOOL-02/03/05) und härtet das E2E-Harness (CardTitle-Helper). Schafft die Voraussetzung, dass Phase 11/12 E2E-Authoring ungestört läuft. People-CRUD E2E wurde nach Phase 11 (Lehrer+Fächer) und Phase 12 (Schüler+Klassen) verschoben, da die zu testenden UIs erst dort geshipped werden.
 **Requirements:** E2E-hardening
 **Depends on:** Phase 10.3
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 10.4-01-PLAN.md — E2E-harness hardening: getByCardTitle helper (Option 4a ADR), SCHOOL-02 heading selector, SCHOOL-05 orphan-year fixture (dotenv+datasources), roles-smoke migration [Wave 1] ✅ 2026-04-22
 - [x] 10.4-02-PLAN.md — SchoolYearService.create atomic-demote (TDD RED→GREEN) + SCHOOL-03 E2E regression with API single-active invariant [Wave 1] ✅ 2026-04-22
-- [ ] 10.4-03-PLAN.md — Full-suite regression gate + ROADMAP consistency audit (read-only) + regression report artifact [Wave 2]
+- [x] 10.4-03-PLAN.md — Full-suite regression gate + ROADMAP consistency audit (read-only) + regression report artifact [Wave 2] ✅ 2026-04-22
 
 **Success criteria:**
 - [ ] SCHOOL-02 grün: `admin-school-settings.spec.ts` verwendet `getByRole('heading', { name: 'Unterrichtstage' })` statt `getByText` — Desktop & Mobile-375
