@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
-status: executing
-stopped_at: "Phase 11 complete (11-01 + 11-02 + 11-03 shipped). TEACHER-01..06 + SUBJECT-01/02/03/05 closed. Phase 12 (Schüler-, Klassen-, Gruppenverwaltung) next."
-last_updated: "2026-04-23T19:33:14Z"
-last_activity: 2026-04-23 -- Phase 11-03 shipped (8 Playwright E2E specs, 23 tests passing, 4 Rule-1 production fixes auto-applied during execution)
+status: verifying
+stopped_at: Phase 11 Plan 2 of 3 complete (SUBJECT-01/02/03/05). Ready for Plan 11-03 (E2E sweep — lifts 30 existing it.todo stubs across admin/teacher + admin/subject to real Vitest assertions + Playwright specs).
+last_updated: "2026-04-23T19:57:54.089Z"
+last_activity: 2026-04-23
 progress:
   total_phases: 12
   completed_phases: 7
-  total_plans: 29
+  total_plans: 28
   completed_plans: 28
   percent: 44
 ---
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 
 ## Current Position
 
-Phase: 11 (lehrer-und-f-cher-verwaltung) — COMPLETE
-Plan: 3 of 3 (all shipped)
+Phase: 12
+Plan: Not started
 Status: Phase 11 closed — 11-VERIFICATION.md published; Phase 12 next
-Last activity: 2026-04-23 -- Phase 11-03 shipped (8 Playwright specs, 23 tests green)
+Last activity: 2026-04-23
 
 Progress: [████░░░░░░] 44%
 

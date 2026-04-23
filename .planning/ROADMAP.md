@@ -46,7 +46,7 @@ See [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full 
 | 10.3 | E2E Harness + per-role Smoke (Tier 2) | E2E-hardening | Complete    | 2026-04-21 |
 | 10.4 | E2E Harness Hardening (Tier 3a, rescoped) | E2E-hardening | Complete    | 2026-04-22 |
 | 10.5 | E2E Admin-Ops Operations (Tier 3b) | 4/4 | Complete    | 2026-04-22 |
-| 11 | Lehrer- und Fächer-Verwaltung | 11 | Phase 10.5 | 2/3 plans (2026-04-23) |
+| 11 | Lehrer- und Fächer-Verwaltung | 11 | Complete    | 2026-04-23 |
 | 12 | Schüler-, Klassen- & Gruppenverwaltung | 9 | Phase 11 | — |
 | 13 | User- und Rechteverwaltung | 5 | Phase 12 | — |
 | 14 | Solver-Tuning | 5 | Phase 10.5 | Parallel with Phases 11-13 |
@@ -202,7 +202,7 @@ Plans:
 **Goal:** Admin kann Lehrerstammdaten inkl. Lehrverpflichtung/Werteinheiten und Fächer inkl. Stundentafel-Vorlagen UI-gestützt pflegen.
 **Requirements:** TEACHER-01, TEACHER-02, TEACHER-03, TEACHER-04, TEACHER-05, TEACHER-06, SUBJECT-01, SUBJECT-02, SUBJECT-03, SUBJECT-05
 **Depends on:** Phase 10 (Schule + Schuljahr müssen vor Lehrer-Anlage existieren)
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 **Success criteria:**
 - [ ] Admin sieht Lehrerliste mit Suche/Filter und kann einen Lehrer inkl. Person-Daten und Keycloak-Verknüpfung anlegen/editieren
