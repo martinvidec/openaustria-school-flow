@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
-stopped_at: "Phase 11 Plan 2 of 3 complete (SUBJECT-01/02/03/05). Ready for Plan 11-03 (E2E sweep — final plan of Phase 11)."
-last_updated: "2026-04-23T14:02:54Z"
-last_activity: 2026-04-23 -- Phase 11-02 shipped (Fächer admin UI + SubjectService Orphan-Guard + AUSTRIAN_STUNDENTAFELN shared move)
+stopped_at: "Phase 11 complete (11-01 + 11-02 + 11-03 shipped). TEACHER-01..06 + SUBJECT-01/02/03/05 closed. Phase 12 (Schüler-, Klassen-, Gruppenverwaltung) next."
+last_updated: "2026-04-23T19:33:14Z"
+last_activity: 2026-04-23 -- Phase 11-03 shipped (8 Playwright E2E specs, 23 tests passing, 4 Rule-1 production fixes auto-applied during execution)
 progress:
   total_phases: 12
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 29
-  completed_plans: 27
-  percent: 41
+  completed_plans: 28
+  percent: 44
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 
 ## Current Position
 
-Phase: 11 (lehrer-und-f-cher-verwaltung) — EXECUTING
-Plan: 3 of 3 (Plan 11-01 + 11-02 complete; Plan 11-03 next — E2E sweep)
-Status: Executing Phase 11
-Last activity: 2026-04-23 -- Phase 11-02 shipped
+Phase: 11 (lehrer-und-f-cher-verwaltung) — COMPLETE
+Plan: 3 of 3 (all shipped)
+Status: Phase 11 closed — 11-VERIFICATION.md published; Phase 12 next
+Last activity: 2026-04-23 -- Phase 11-03 shipped (8 Playwright specs, 23 tests green)
 
-Progress: [████░░░░░░] 41%
+Progress: [████░░░░░░] 44%
 
 ## Performance Metrics
 
@@ -135,6 +135,7 @@ Progress: [████░░░░░░] 41%
 | Phase 10.5 P02 | 27 | 3 tasks | 3 files |
 | Phase 11 P01 | 17min | 3 tasks | 37 files |
 | Phase 11 P02 | 76min | 3 tasks | 25 files |
+| Phase 11 P03 | 175min | 3 tasks | 22 files |
 
 ## Accumulated Context
 

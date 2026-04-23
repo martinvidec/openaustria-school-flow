@@ -210,8 +210,8 @@ Plans:
 - [ ] Admin kann Lehrer-Verfügbarkeit (Tage, Zeitslots, wiederkehrende Ausnahmen) pflegen und Lehrer deaktivieren/archivieren ohne Datenverlust
 - [ ] Admin kann Fächer (Name, Kürzel) anlegen/editieren und Stundentafel-Vorlagen pro Schultyp einsehen
 - [ ] Fach-Löschung ist Orphan-sicher (Fach mit Zuordnungen kann nicht gelöscht werden)
-- [ ] **E2E (ex-10.4):** Lehrpersonen-CRUD (create/edit/delete/Werteinheiten-Edit) — je Happy + Error, Desktop + Mobile-375 für Formulare
-- [ ] **E2E (ex-10.4):** Fächer-CRUD (create/edit/delete inkl. Orphan-Guard-Error) — je Happy + Error, Desktop + Mobile-375 für Formulare
+- [x] **E2E (ex-10.4):** Lehrpersonen-CRUD (create/edit/delete/Werteinheiten-Edit) — je Happy + Error, Desktop + Mobile-375 für Formulare
+- [x] **E2E (ex-10.4):** Fächer-CRUD (create/edit/delete inkl. Orphan-Guard-Error) — je Happy + Error, Desktop + Mobile-375 für Formulare
 
 **Known risks / backend gap candidates:**
 - SUBJECT-03 (Stundentafel-Vorlagen pro Schultyp einsehen): Templates sind als statische TS-Arrays in v1.0 implementiert — UI muss sie aus dem shared package lesen, nicht aus der DB.
@@ -220,7 +220,7 @@ Plans:
 Plans:
 - [x] 11-01-PLAN.md — Shared foundation (Zod schemas + werteinheiten util) + Teacher-CRUD FE/BE + TeacherService.remove Orphan-Guard gap-fix + Keycloak-admin module (GET /admin/keycloak/users) + sidebar "Personal & Fächer" group scaffold + Lehrer entry [Wave 1] — SHIPPED 2026-04-22 (3 tasks, 37 files, TEACHER-01..06 complete)
 - [x] 11-02-PLAN.md — Fächer-CRUD FE/BE (Name + Kürzel dialog only, D-11 free-hex picker rolled back post-research) + Stundentafel-Vorlagen read-only section (moved to @schoolflow/shared) + SubjectService.remove Orphan-Guard gap-fix + sidebar Fächer entry append [Wave 2, depends on 11-01] — SHIPPED 2026-04-23 (3 tasks, 25 files, SUBJECT-01/02/03/05 complete; AffectedEntitiesList refactored to discriminated union kind: 'teacher' | 'subject' with backward-compat default)
-- [ ] 11-03-PLAN.md — 8 Playwright E2E specs: Teacher CRUD {happy, error, mobile-375} + Werteinheiten-deep-dive; Subject CRUD {happy, error, mobile-375} + Stundentafel-Vorlagen — reuses Phase 10.3 harness, Phase 10.5-02 prefix-isolation (E2E-TEA-*, E2E-SUB-*), Phase 10.2-04 SILENT-4XX invariant codified at E2E layer [Wave 3, depends on 11-01+11-02]
+- [x] 11-03-PLAN.md — 8 Playwright E2E specs: Teacher CRUD {happy, error, mobile-375} + Werteinheiten-deep-dive; Subject CRUD {happy, error, mobile-375} + Stundentafel-Vorlagen — reuses Phase 10.3 harness, Phase 10.5-02 prefix-isolation (E2E-TEA-*, E2E-SUB-*), Phase 10.2-04 SILENT-4XX invariant codified at E2E layer [Wave 3, depends on 11-01+11-02] — SHIPPED 2026-04-23 (8 spec files, 23 tests passing on desktop+mobile-chrome, mobile-WebKit/iPhone13 Bus-Error-10 deferred per 10.4-03/10.5-02 precedent; surfaced 4 Rule-1 bugs in production: RFC 9457 extensions passthrough, @IsUUID on seed schoolIds, pagination limit cap, SubjectFormDialog edit-payload schoolId leak)
 
 ---
 
