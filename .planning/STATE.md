@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
-stopped_at: "Phase 11 Plan 1 of 3 complete (TEACHER-01..06). Ready for Plan 11-02 (Fächer CRUD + Stundentafel-Vorlagen)."
-last_updated: "2026-04-22T21:15:08Z"
-last_activity: 2026-04-22 -- Phase 11-01 shipped (Teacher admin UI + Orphan-Guard + KeycloakAdmin module)
+stopped_at: "Phase 11 Plan 2 of 3 complete (SUBJECT-01/02/03/05). Ready for Plan 11-03 (E2E sweep — final plan of Phase 11)."
+last_updated: "2026-04-23T14:02:54Z"
+last_activity: 2026-04-23 -- Phase 11-02 shipped (Fächer admin UI + SubjectService Orphan-Guard + AUSTRIAN_STUNDENTAFELN shared move)
 progress:
   total_phases: 12
   completed_phases: 6
   total_plans: 29
-  completed_plans: 26
-  percent: 40
+  completed_plans: 27
+  percent: 41
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 ## Current Position
 
 Phase: 11 (lehrer-und-f-cher-verwaltung) — EXECUTING
-Plan: 2 of 3 (Plan 11-01 complete; Plan 11-02 next)
+Plan: 3 of 3 (Plan 11-01 + 11-02 complete; Plan 11-03 next — E2E sweep)
 Status: Executing Phase 11
-Last activity: 2026-04-22 -- Phase 11-01 shipped
+Last activity: 2026-04-23 -- Phase 11-02 shipped
 
-Progress: [████░░░░░░] 40%
+Progress: [████░░░░░░] 41%
 
 ## Performance Metrics
 
@@ -134,6 +134,7 @@ Progress: [████░░░░░░] 40%
 | Phase 10.4 P10.4-03 | 12min | 2 tasks | 4 files |
 | Phase 10.5 P02 | 27 | 3 tasks | 3 files |
 | Phase 11 P01 | 17min | 3 tasks | 37 files |
+| Phase 11 P02 | 76min | 3 tasks | 25 files |
 
 ## Accumulated Context
 
@@ -410,6 +411,13 @@ Recent decisions affecting current work:
 - [Phase 11-01]: Vitest 4 constructor mock pattern for @keycloak/keycloak-admin-client — `vi.fn().mockImplementation()` is non-constructible; switch to old-style `function MockKCC() { return kcMock; }` so `new KeycloakAdminClient(...)` works
 - [Phase 11-01]: KeycloakAdminService token cache uses `tokenExpiresAt - 30_000` guard so refresh fires 30s before 5-minute TTL expires — non-blocking re-auth, cached across `findUsersByEmail` calls
 - [Phase 11-01]: NavItem.group? optional field + groupItems() helper (AppSidebar + MobileSidebar) renders uppercase-small-caps separator header per group; Plan 11-02 will append "Fächer" to "Personal & Fächer" with a single-line navItems edit, no re-render logic changes
+- [Phase 11-02]: D-11 (Free Hex Picker) + A4 (Schultyp multi-select) rollback confirmed — v1.0 Subject.schema.prisma has no colorBg/colorText/colorIndex/schoolType columns, so both UI features were descoped post-research (CONTEXT.md 2026-04-22). SubjectFormDialog ships Name + Kürzel ONLY + info note. Zero schema migration in Plan 11-02.
+- [Phase 11-02]: TimetableLesson Orphan-Guard filter uses `classSubjectId: { in: [pre-queried CS-ids] }` instead of nested `classSubject: {subjectId}` — `schema.prisma` declares TimetableLesson.classSubjectId as scalar with NO named relation (only Homework line 1358 + Exam line 1382 declare it). Two-phase query pattern (pre-query IDs → $transaction with IN filter) is consistent across all three dependent models and independent of schema relation declarations.
+- [Phase 11-02]: LEGACY_SCHOOL_TYPES_LABELS (AHS_UNTER/AHS_OBER/MS) authored alongside SCHOOL_TYPES_LABELS (7 modern VS/NMS/AHS/BHS/BMS/PTS/ASO). AUSTRIAN_STUNDENTAFELN uses historical keys that are not in the modern SchoolType enum; getSchoolTypeLabel unifies both maps (modern first, legacy second, raw-key fallback). Keeps the shared Zod SchoolType schema canonical while unblocking Stundentafel-Vorlagen tabs without a data migration.
+- [Phase 11-02]: AUSTRIAN_STUNDENTAFELN moved (not duplicated) to @schoolflow/shared — apps/api/.../templates/austrian-stundentafeln.ts rewritten as 9-line pure re-export; stundentafel-template.service.ts import path unchanged. Same pattern as 11-01's werteinheiten move; zero-impact shared consolidation.
+- [Phase 11-02]: SubjectApiError + inline-error-for-409 mutation idiom — when 409 maps to a field-level validation issue (unique index), the mutation hook's onError suppresses the toast for status 409 so the caller (dialog/form) can call setError to render inline. All other 4xx still toast. Applied to useCreateSubject + useUpdateSubject (Kürzel uniqueness → inline on shortName field, dialog stays open). Also reused by useDeleteSubject (409 → DeleteSubjectDialog blocks + fires its own toast) to avoid double-toast.
+- [Phase 11-02]: AffectedEntitiesList discriminated-union refactor (kind: 'teacher' | 'subject') — single component covers both Orphan-Guard domains. Teacher payload remains backward-compat (default kind='teacher'); Plan 11-01 DeleteTeacherDialog unchanged. Pattern ready for any future entity that needs an Orphan-Guard blocked-state view.
+- [Phase 11-02]: SubjectAffectedEntitiesDialog uses existing useSubject(id) findOne include — no dedicated /subjects/:id/affected-entities endpoint needed for Phase 11. Scalar category counts (lesson/homework/exam) are 0 in the informational preview (they come from SubjectService.remove's extensions in the destructive 409 path where they matter).
 
 ### Pending Todos
 
@@ -431,10 +439,11 @@ None yet.
 - Phase 10.4 started 2026-04-22: E2E Harness Hardening + 10.3 deferred-items closure (Tier 3a, rescoped) — 10.4-02 closes SCHOOL-03 at backend root cause with conditional $transaction atomic-demote in SchoolYearService.create (mirrors activate() pattern lines 74-90), plus 2 unit tests (invocationCallOrder) and strengthened SCHOOL-03 E2E with API single-active invariant + throwaway cleanup. 3 commits: test(RED) 993aa6f, feat(GREEN) cbd415a, test(E2E) 1aba6d7. Zero schema change. 10.4-01 in parallel (SCHOOL-02/05 + helper), 10.4-03 (full-suite gate) pending Wave 2.
 - Phase 10.4 Wave 1 complete 2026-04-22: 10.4-01 ships getByCardTitle E2E helper (ADR Option 4a) under apps/web/e2e/helpers/card.ts, fixes SCHOOL-02 strict-mode violation (getByText → getByRole heading), and makes SCHOOL-05 env-robust via dotenv (belt-and-braces) + Prisma 7 driver-adapter pattern (plan's Prisma 6 datasources.db.url syntax rejected at runtime). 3 commits: feat 66514ba, fix a4b52d8, refactor 8c51ef2. roles-smoke.spec.ts migrated to consume getByCardTitle in 3 per-role smokes. SCHOOL-02 + SCHOOL-05 now green on --project=desktop, even under `env -i` (no pre-sourced .env). Wave 2 (10.4-03 full-regression verifier) ready to run.
 - Phase 10.4 closed 2026-04-22: 10.4-03 regression gate passed — desktop E2E 22/23 green (all 3 plan-target deferred specs SCHOOL-02/03/05 red→green; single remaining failure in screenshots.spec.ts:172 is pre-existing test-DB-pollution, NOT a Wave 1 regression); API unit tests 10/10 on school-year.service.spec.ts (multi-active backfill spec's 1 failure = same test-DB-pollution root cause); mobile-375 5/5 Bus-error-10 = pre-existing WebKit frozen-build environmental blocker, NOT a regression. ROADMAP audit 14/14 checks GREEN, zero planner ROADMAP content edits. Phase 10.4 ships at 3/3 plans. 3 follow-up items flagged (multi-active DB reset, screenshots self-provisioned throwaway year, mobile OS upgrade) for future testing-infra tranche.
+- Phase 11 Plan 2 complete 2026-04-23: Plan 11-02 ships SUBJECT-01/02/03/05 production-ready UI — /admin/subjects list (search Name oder Kürzel + empty-state `Erstes Fach anlegen` CTA + SubjectTable desktop 6-col + SubjectMobileCards) + SubjectFormDialog (Name + Kürzel ONLY per D-11 rollback — Kürzel auto-uppercases on blur, 409 uniqueness → inline `Dieses Kürzel ist bereits vergeben.` error, info note `Manuelle Farbauswahl folgt in einer späteren Phase`) + DeleteSubjectDialog (happy/blocked two-state reusing AffectedEntitiesList kind='subject') + SubjectAffectedEntitiesDialog (informational variant with Info icon) + StundentafelVorlagenSection (read-only shadcn Tabs per Schultyp sourced from @schoolflow/shared's AUSTRIAN_STUNDENTAFELN, merged Fach table with Jg.1-4 columns + footer totals + disabled `Zur Klassenverwaltung →` tooltip); SubjectService.remove Orphan-Guard gap-fix closes silent-cascade risk via two-phase query (pre-query dependent ClassSubject IDs → $transaction with IN filter for TimetableLesson/Homework/Exam + findMany for affectedClasses/Teachers take 50) — 8 new Vitest specs + RFC 9457 extensions.affectedEntities={affectedClasses, affectedTeachers, lessonCount, homeworkCount, examCount}; AUSTRIAN_STUNDENTAFELN moved from apps/api to packages/shared/src/stundentafel/ (VERBATIM copy) — apps/api is now 9-line pure re-export shim; SubjectCreateSchema + SubjectUpdateSchema authored in @schoolflow/shared (Name + Kürzel, shortName .transform → uppercase); SCHOOL_TYPES_LABELS (7 modern) + LEGACY_SCHOOL_TYPES_LABELS (AHS_UNTER/AHS_OBER/MS) + getSchoolTypeLabel unified lookup; AppSidebar + MobileSidebar now render BOTH Lehrer + Fächer entries in "Personal & Fächer" group; AffectedEntitiesList refactored to discriminated union (kind: 'teacher' | 'subject') — Plan 11-01 DeleteTeacherDialog unchanged (backward-compat default). 3 atomic commits (dc60fd5 Wave-0 shared move + c8cc3e8 Orphan-Guard + e0b5ccf admin Fächer UI), 25 files touched, 75/75 shared + 29/29 API subject + 57/66-todo web tests green, zero new TS errors on subject code (same 12 pre-existing Phase-10.1-deferred errors unchanged). 2 Rule-1/3 auto-fixes documented (TimetableLesson nested-relation filter drift, mock Prisma shape expansion for $transaction + dependent-entity handles). Ready for Plan 11-03 (E2E sweep — final plan of Phase 11).
 - Phase 11 Plan 1 complete 2026-04-22: Plan 11-01 ships TEACHER-01..06 production-ready UI — /admin/teachers list (search + empty-state CTA) + /admin/teachers/$teacherId detail with 4 tabs (Stammdaten/Lehrverpflichtung with live-WE-compute/Verfügbarkeits-Grid desktop + Day-Picker mobile/Ermässigungen row-add) + KeycloakLinkDialog (300ms debounce, alreadyLinked warning) + DeleteTeacherDialog (409 orphan-guard blocked-state with AffectedEntitiesList); TeacherService.remove orphan-guard gap-fix closes silent-zombification of denormalized-FK history (klassenvorstand + TimetableLesson + ClassBookEntry + GradeEntry + Substitution.original/substitute — 9 new Vitest specs); new KeycloakAdmin NestJS module with @keycloak/keycloak-admin-client + service-account token cache (5min TTL, 30s pre-expiry refresh) + Person.keycloakUserId enrichment for duplicate-link warning; 3 shared Zod schemas + werteinheiten util moved to @schoolflow/shared (FE/BE byte-identical per D-05); AppSidebar + MobileSidebar grouping refactor with "Personal & Fächer" group ready for 11-02 Fächer append. 3 atomic commits (09790da + f89079e + f3e7be0), 37 files touched, 28/28 API + 59/59 shared tests green, zero new TS errors on teacher code (12 pre-existing Phase-10.1-deferred errors unchanged). 6 Rule-1/2/3 auto-fixes documented (Zod enum drift from Prisma, Zod v4 UUID version-nibble, legacy useTeachers hook preservation, Vitest 4 constructor mock shape, TeacherDetailTabs onSave return type, Orphan-Guard mock Prisma shape expansion). Ready for Plan 11-02.
 
 ## Session Continuity
 
-Last session: 2026-04-22T21:15:08Z
-Stopped at: Phase 11 Plan 1 of 3 complete. Ready for Plan 11-02 (Fächer CRUD + Stundentafel-Vorlagen)
-Resume file: .planning/phases/11-lehrer-und-f-cher-verwaltung/11-02-PLAN.md
+Last session: 2026-04-23T14:02:54Z
+Stopped at: Phase 11 Plan 2 of 3 complete (SUBJECT-01/02/03/05). Ready for Plan 11-03 (E2E sweep — lifts 30 existing it.todo stubs across admin/teacher + admin/subject to real Vitest assertions + Playwright specs).
+Resume file: .planning/phases/11-lehrer-und-f-cher-verwaltung/11-03-PLAN.md
