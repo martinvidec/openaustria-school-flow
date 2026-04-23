@@ -103,6 +103,119 @@ export class SubjectService {
 
   async remove(id: string) {
     await this.findOne(id); // Throws 404 if not found
+
+    // Orphan-Guard per SUBJECT-05 + 11-RESEARCH Focus 4.
+    // Subject dependents that would silently cascade (or fail at DB level):
+    //  - ClassSubject.subjectId         → cascade; drops Homework/Exam children
+    //  - TeacherSubject.subjectId       → cascade (benign)
+    //  - TimetableLesson via classSubjectId → indirect cascade
+    //  - Homework via classSubjectId    → indirect cascade
+    //  - Exam via classSubjectId        → NO ACTION (DB error) — must block here
+    //
+    // TimetableLesson has no named `classSubject` relation in schema.prisma
+    // (only the scalar `classSubjectId`), so we gather classSubject IDs
+    // first and filter by `classSubjectId: { in: [...] }`. Homework/Exam
+    // DO declare the relation and could use nested filters, but we keep
+    // the single-query `in` pattern consistent across all three dependents.
+    const dependentCSIds = (
+      await this.prisma.classSubject.findMany({
+        where: { subjectId: id },
+        select: { id: true },
+      })
+    ).map((cs: { id: string }) => cs.id);
+
+    const [
+      classSubjectCount,
+      teacherSubjectCount,
+      timetableLessonCount,
+      homeworkCount,
+      examCount,
+      affectedClassSubjects,
+      affectedTeacherSubjects,
+    ] = await this.prisma.$transaction([
+      this.prisma.classSubject.count({ where: { subjectId: id } }),
+      this.prisma.teacherSubject.count({ where: { subjectId: id } }),
+      this.prisma.timetableLesson.count({
+        where:
+          dependentCSIds.length > 0
+            ? { classSubjectId: { in: dependentCSIds } }
+            : { id: '__never__' },
+      }),
+      this.prisma.homework.count({
+        where:
+          dependentCSIds.length > 0
+            ? { classSubjectId: { in: dependentCSIds } }
+            : { id: '__never__' },
+      }),
+      this.prisma.exam.count({
+        where:
+          dependentCSIds.length > 0
+            ? { classSubjectId: { in: dependentCSIds } }
+            : { id: '__never__' },
+      }),
+      this.prisma.classSubject.findMany({
+        where: { subjectId: id },
+        select: { schoolClass: { select: { id: true, name: true } } },
+        distinct: ['classId'],
+        take: 50,
+      }),
+      this.prisma.teacherSubject.findMany({
+        where: { subjectId: id },
+        select: {
+          teacher: {
+            select: {
+              id: true,
+              person: { select: { firstName: true, lastName: true } },
+            },
+          },
+        },
+        take: 50,
+      }),
+    ]);
+
+    const totalRefs =
+      classSubjectCount +
+      teacherSubjectCount +
+      timetableLessonCount +
+      homeworkCount +
+      examCount;
+
+    if (totalRefs > 0) {
+      const affectedClasses = affectedClassSubjects
+        .map((cs: { schoolClass: { id: string; name: string } | null }) =>
+          cs.schoolClass,
+        )
+        .filter(
+          (c: { id: string; name: string } | null): c is { id: string; name: string } =>
+            c !== null,
+        );
+      const affectedTeachers = affectedTeacherSubjects.map(
+        (ts: {
+          teacher: { id: string; person: { firstName: string; lastName: string } };
+        }) => ({
+          id: ts.teacher.id,
+          name: `${ts.teacher.person.firstName} ${ts.teacher.person.lastName}`,
+        }),
+      );
+
+      throw new ConflictException({
+        type: 'https://schoolflow.dev/errors/subject-has-dependents',
+        title: 'Fach hat Abhängigkeiten',
+        status: 409,
+        detail:
+          'Dieses Fach ist Klassen oder Lehrpersonen zugeordnet. Lösen Sie erst alle Zuordnungen.',
+        extensions: {
+          affectedEntities: {
+            affectedClasses,
+            affectedTeachers,
+            lessonCount: timetableLessonCount,
+            homeworkCount,
+            examCount,
+          },
+        },
+      });
+    }
+
     return this.prisma.subject.delete({ where: { id } });
   }
 
