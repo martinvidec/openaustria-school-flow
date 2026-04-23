@@ -23,7 +23,14 @@ function TeachersListPage() {
   const [toDelete, setToDelete] = useState<TeacherDto | null>(null);
   const [toArchive, setToArchive] = useState<TeacherDto | null>(null);
 
-  const { data, isLoading } = useAdminTeachers(schoolId, { limit: 200 });
+  // Phase 11 Plan 11-03 Rule-1 fix: backend SchoolPaginationQueryDto caps
+  // `limit` at 100 (apps/api/src/common/dto/pagination.dto.ts:18). Sending
+  // limit=200 returns 422 "limit must not be greater than 100", which the
+  // list hook surfaces as an empty state — making /admin/teachers render
+  // "Noch keine Lehrerinnen und Lehrer" even when the DB has dozens of rows.
+  // Capping the request at 100 matches the DTO contract; follow-up plans can
+  // add real pagination UX if a school needs >100 teachers on one page.
+  const { data, isLoading } = useAdminTeachers(schoolId, { limit: 100 });
 
   const allTeachers = data?.data ?? [];
   const filtered = search.trim()

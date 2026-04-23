@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsEnum, IsOptional, IsNumber, IsUUID, MinLength, MaxLength } from 'class-validator';
+import { IsString, IsEnum, IsOptional, IsNumber, MinLength, MaxLength } from 'class-validator';
 
 enum SubjectTypeDto {
   PFLICHT = 'PFLICHT',
@@ -9,8 +9,13 @@ enum SubjectTypeDto {
 }
 
 export class CreateSubjectDto {
-  @ApiProperty({ description: 'School ID', example: 'uuid' })
-  @IsUUID()
+  @ApiProperty({ description: 'School ID', example: 'uuid-or-seed-id' })
+  // Rule-1 fix (Phase 11 Plan 11-03): accept non-UUID seed IDs (e.g.
+  // `seed-school-bgbrg-musterstadt`). The previous `@IsUUID()` decorator
+  // was incompatible with the dev-seed data shape and broke the admin UI
+  // for /admin/subjects → POST /api/v1/subjects.
+  @IsString()
+  @MinLength(1)
   schoolId!: string;
 
   @ApiProperty({ description: 'Full subject name', example: 'Deutsch', minLength: 1, maxLength: 100 })

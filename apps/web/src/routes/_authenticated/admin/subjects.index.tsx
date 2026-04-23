@@ -29,7 +29,11 @@ function SubjectsListPage() {
   const [toDelete, setToDelete] = useState<SubjectDto | null>(null);
   const [showAffected, setShowAffected] = useState<SubjectDto | null>(null);
 
-  const { data, isLoading } = useSubjects(schoolId, { limit: 200 });
+  // Phase 11 Plan 11-03 Rule-1 fix: backend pagination DTO caps `limit` at
+  // 100. See admin/teachers.index.tsx for the full rationale — mirrored here
+  // for parity so /admin/subjects doesn't silently render empty when a school
+  // seeds >100 subjects.
+  const { data, isLoading } = useSubjects(schoolId, { limit: 100 });
   const allSubjects = data?.data ?? [];
 
   const filtered = useMemo(() => {

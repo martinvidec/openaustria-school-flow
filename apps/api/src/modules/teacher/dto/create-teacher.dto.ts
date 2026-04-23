@@ -20,7 +20,13 @@ import { CreateTeachingReductionDto } from './create-teaching-reduction.dto';
 
 export class CreateTeacherDto {
   @ApiProperty({ description: 'School this teacher belongs to' })
-  @IsUUID()
+  // Phase 11 Plan 11-03 Rule-1 fix: the seed fixture uses literal string IDs
+  // (e.g. `seed-school-bgbrg-musterstadt`) which are valid Prisma keys but not
+  // RFC 4122 UUIDs. `@IsUUID()` rejects them with 422 and breaks the admin UI
+  // for any seed-hosted dev environment. `@IsString() @MinLength(1)` preserves
+  // the non-null guard without over-constraining the key format.
+  @IsString()
+  @MinLength(1)
   schoolId!: string;
 
   @ApiProperty({ example: 'Maria', minLength: 1, maxLength: 100 })
@@ -97,7 +103,10 @@ export class CreateTeacherDto {
 
   @ApiPropertyOptional({ description: 'Home school ID for shared teachers (Stammschule)' })
   @IsOptional()
-  @IsUUID()
+  // Rule-1 fix (Phase 11 Plan 11-03): parity with `schoolId` — accept non-UUID
+  // seed IDs without compromising non-empty validation.
+  @IsString()
+  @MinLength(1)
   homeSchoolId?: string;
 
   @ApiPropertyOptional({

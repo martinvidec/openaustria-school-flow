@@ -42,5 +42,17 @@ export default defineConfig({
       use: { ...devices['iPhone 13'], viewport: { width: 375, height: 812 } },
       testMatch: /.*\.mobile\.spec\.ts$/,
     },
+    // Phase 11 Plan 11-03 — Chromium-emulated Pixel 5 mobile project.
+    // Accepted per 10.4-03/10.5-02 precedent: mobile-WebKit (iPhone 13) hits
+    // Bus-Error-10 on darwin runners, so Chromium-Pixel-5 emulation is the
+    // verification surface for Phase 11 Teacher + Subject mobile specs.
+    // Same testMatch glob as mobile-375 so every *.mobile.spec.ts runs in both
+    // emulation projects — if a spec targets a particular project, it
+    // declares so via test.use / test.describe.configure or `--project=`.
+    {
+      name: 'mobile-chrome',
+      use: { ...devices['Pixel 5'], viewport: { width: 375, height: 812 } },
+      testMatch: /.*\.mobile\.spec\.ts$/,
+    },
   ],
 });

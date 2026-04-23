@@ -8,6 +8,13 @@ interface ProblemDetail {
   instance?: string;
   traceId?: string;
   errors?: Array<{ field: string; message: string }>;
+  // RFC 9457 allows arbitrary extension members on the problem-details object.
+  // Phase 11 Plan 11-03 Rule-1 fix: propagate `extensions.affectedEntities`
+  // from Teacher/SubjectService orphan-guard ConflictExceptions so the UI can
+  // render the blocked-state DeleteTeacherDialog / DeleteSubjectDialog. Prior
+  // to this fix, the filter silently discarded the extensions payload,
+  // leaving the dialogs stuck in happy state on 409 responses.
+  extensions?: Record<string, unknown>;
 }
 
 @Catch()
@@ -21,6 +28,9 @@ export class ProblemDetailFilter implements ExceptionFilter {
     let detail = 'Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es spaeter erneut.';
     let title = 'Internal Server Error';
     let errors: Array<{ field: string; message: string }> | undefined;
+    let extensions: Record<string, unknown> | undefined;
+    let customType: string | undefined;
+    let customTitle: string | undefined;
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
@@ -39,6 +49,17 @@ export class ProblemDetailFilter implements ExceptionFilter {
         } else {
           detail = (resp.message as string) || (resp.detail as string) || detail;
         }
+
+        // RFC 9457 extensions passthrough — TeacherService / SubjectService
+        // Orphan-Guard throws ConflictException with `extensions.affectedEntities`
+        // that the admin UI's DeleteDialog blocked-state relies on.
+        if (resp.extensions && typeof resp.extensions === 'object') {
+          extensions = resp.extensions as Record<string, unknown>;
+        }
+        // Allow services to override the default type / title when they
+        // provide one (e.g. domain-specific problem URIs).
+        if (typeof resp.type === 'string') customType = resp.type;
+        if (typeof resp.title === 'string') customTitle = resp.title;
       } else if (typeof exceptionResponse === 'string') {
         detail = exceptionResponse;
       }
@@ -54,11 +75,11 @@ export class ProblemDetailFilter implements ExceptionFilter {
         429: 'Too Many Requests',
         500: 'Internal Server Error',
       };
-      title = statusTitles[status] || title;
+      title = customTitle ?? statusTitles[status] ?? title;
     }
 
     const problemDetail: ProblemDetail = {
-      type: `https://httpstatuses.com/${status}`,
+      type: customType ?? `https://httpstatuses.com/${status}`,
       title,
       status,
       detail,
@@ -68,6 +89,9 @@ export class ProblemDetailFilter implements ExceptionFilter {
 
     if (errors) {
       problemDetail.errors = errors;
+    }
+    if (extensions) {
+      problemDetail.extensions = extensions;
     }
 
     response
