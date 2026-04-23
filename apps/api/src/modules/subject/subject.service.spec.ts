@@ -192,4 +192,19 @@ describe('SubjectService', () => {
       await expect(service.removeFromClass('subj-1', 'class-1')).rejects.toThrow(NotFoundException);
     });
   });
+
+  // ──────────────────────────────────────────────────────────────────────
+  // Wave 0 TDD stubs for SUBJECT-05 Orphan-Guard — implemented in Task 2.
+  describe('remove — Orphan-Guard (SUBJECT-05)', () => {
+    it.todo('deletes subject when zero dependents');
+    it.todo('throws ConflictException when ClassSubject references subject');
+    it.todo('throws ConflictException when TeacherSubject references subject');
+    it.todo('throws ConflictException when TimetableLesson references via ClassSubject');
+    it.todo('throws ConflictException when Homework references via ClassSubject');
+    it.todo('throws ConflictException when Exam references via ClassSubject');
+    it.todo(
+      'payload contains extensions.affectedEntities.{affectedClasses, affectedTeachers, lessonCount, homeworkCount, examCount}',
+    );
+    it.todo('affectedClasses + affectedTeachers arrays capped at 50 entries each');
+  });
 });

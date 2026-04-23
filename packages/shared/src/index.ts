@@ -18,4 +18,7 @@ export * from './schemas/school-year.schema';
 export * from './schemas/teacher.schema';
 export * from './schemas/availability.schema';
 export * from './schemas/teaching-reduction.schema';
+export * from './schemas/subject.schema';
+export * from './constants/school-types';
 export * from './werteinheiten/index';
+export * from './stundentafel/index';
