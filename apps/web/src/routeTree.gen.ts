@@ -27,6 +27,7 @@ import { Route as AuthenticatedAdminSolverRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAdminResourcesRouteImport } from './routes/_authenticated/admin/resources'
 import { Route as AuthenticatedAdminImportRouteImport } from './routes/_authenticated/admin/import'
 import { Route as AuthenticatedAdminTeachersIndexRouteImport } from './routes/_authenticated/admin/teachers.index'
+import { Route as AuthenticatedAdminSubjectsIndexRouteImport } from './routes/_authenticated/admin/subjects.index'
 import { Route as AuthenticatedAdminTeachersTeacherIdRouteImport } from './routes/_authenticated/admin/teachers.$teacherId'
 import { Route as AuthenticatedAdminSchoolSettingsRouteImport } from './routes/_authenticated/admin/school.settings'
 
@@ -133,6 +134,12 @@ const AuthenticatedAdminTeachersIndexRoute =
     path: '/admin/teachers/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminSubjectsIndexRoute =
+  AuthenticatedAdminSubjectsIndexRouteImport.update({
+    id: '/admin/subjects/',
+    path: '/admin/subjects/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminTeachersTeacherIdRoute =
   AuthenticatedAdminTeachersTeacherIdRouteImport.update({
     id: '/admin/teachers/$teacherId',
@@ -165,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/timetable/': typeof AuthenticatedTimetableIndexRoute
   '/admin/school/settings': typeof AuthenticatedAdminSchoolSettingsRoute
   '/admin/teachers/$teacherId': typeof AuthenticatedAdminTeachersTeacherIdRoute
+  '/admin/subjects/': typeof AuthenticatedAdminSubjectsIndexRoute
   '/admin/teachers/': typeof AuthenticatedAdminTeachersIndexRoute
 }
 export interface FileRoutesByTo {
@@ -186,6 +194,7 @@ export interface FileRoutesByTo {
   '/timetable': typeof AuthenticatedTimetableIndexRoute
   '/admin/school/settings': typeof AuthenticatedAdminSchoolSettingsRoute
   '/admin/teachers/$teacherId': typeof AuthenticatedAdminTeachersTeacherIdRoute
+  '/admin/subjects': typeof AuthenticatedAdminSubjectsIndexRoute
   '/admin/teachers': typeof AuthenticatedAdminTeachersIndexRoute
 }
 export interface FileRoutesById {
@@ -209,6 +218,7 @@ export interface FileRoutesById {
   '/_authenticated/timetable/': typeof AuthenticatedTimetableIndexRoute
   '/_authenticated/admin/school/settings': typeof AuthenticatedAdminSchoolSettingsRoute
   '/_authenticated/admin/teachers/$teacherId': typeof AuthenticatedAdminTeachersTeacherIdRoute
+  '/_authenticated/admin/subjects/': typeof AuthenticatedAdminSubjectsIndexRoute
   '/_authenticated/admin/teachers/': typeof AuthenticatedAdminTeachersIndexRoute
 }
 export interface FileRouteTypes {
@@ -232,6 +242,7 @@ export interface FileRouteTypes {
     | '/timetable/'
     | '/admin/school/settings'
     | '/admin/teachers/$teacherId'
+    | '/admin/subjects/'
     | '/admin/teachers/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -253,6 +264,7 @@ export interface FileRouteTypes {
     | '/timetable'
     | '/admin/school/settings'
     | '/admin/teachers/$teacherId'
+    | '/admin/subjects'
     | '/admin/teachers'
   id:
     | '__root__'
@@ -275,6 +287,7 @@ export interface FileRouteTypes {
     | '/_authenticated/timetable/'
     | '/_authenticated/admin/school/settings'
     | '/_authenticated/admin/teachers/$teacherId'
+    | '/_authenticated/admin/subjects/'
     | '/_authenticated/admin/teachers/'
   fileRoutesById: FileRoutesById
 }
@@ -411,6 +424,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminTeachersIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/subjects/': {
+      id: '/_authenticated/admin/subjects/'
+      path: '/admin/subjects'
+      fullPath: '/admin/subjects/'
+      preLoaderRoute: typeof AuthenticatedAdminSubjectsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin/teachers/$teacherId': {
       id: '/_authenticated/admin/teachers/$teacherId'
       path: '/admin/teachers/$teacherId'
@@ -446,6 +466,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedTimetableIndexRoute: typeof AuthenticatedTimetableIndexRoute
   AuthenticatedAdminSchoolSettingsRoute: typeof AuthenticatedAdminSchoolSettingsRoute
   AuthenticatedAdminTeachersTeacherIdRoute: typeof AuthenticatedAdminTeachersTeacherIdRoute
+  AuthenticatedAdminSubjectsIndexRoute: typeof AuthenticatedAdminSubjectsIndexRoute
   AuthenticatedAdminTeachersIndexRoute: typeof AuthenticatedAdminTeachersIndexRoute
 }
 
@@ -471,6 +492,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminSchoolSettingsRoute: AuthenticatedAdminSchoolSettingsRoute,
   AuthenticatedAdminTeachersTeacherIdRoute:
     AuthenticatedAdminTeachersTeacherIdRoute,
+  AuthenticatedAdminSubjectsIndexRoute: AuthenticatedAdminSubjectsIndexRoute,
   AuthenticatedAdminTeachersIndexRoute: AuthenticatedAdminTeachersIndexRoute,
 }
 

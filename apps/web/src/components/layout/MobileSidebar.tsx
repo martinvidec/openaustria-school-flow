@@ -1,5 +1,6 @@
 import { Link, useRouterState } from '@tanstack/react-router';
 import {
+  BookOpen,
   Building2,
   Calendar,
   CalendarCog,
@@ -97,11 +98,18 @@ const navItems: NavItem[] = [
     icon: History,
     roles: ['admin', 'schulleitung'],
   },
-  // Phase 11 D-03: Personal & Fächer group — Plan 11-02 appends Fächer entry.
+  // Phase 11 D-03: Personal & Fächer group.
   {
     label: 'Lehrer',
     href: '/admin/teachers',
     icon: GraduationCap,
+    roles: ['admin', 'schulleitung'],
+    group: 'Personal & Fächer',
+  },
+  {
+    label: 'Fächer',
+    href: '/admin/subjects',
+    icon: BookOpen,
     roles: ['admin', 'schulleitung'],
     group: 'Personal & Fächer',
   },

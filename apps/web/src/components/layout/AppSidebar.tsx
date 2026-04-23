@@ -1,5 +1,6 @@
 import { Link, useRouterState } from '@tanstack/react-router';
 import {
+  BookOpen,
   Building2,
   Calendar,
   CalendarClock,
@@ -119,11 +120,17 @@ const navItems: NavItem[] = [
     roles: ['lehrer', 'schulleitung'],
   },
   // Phase 11 D-03: Personal & Fächer group (admin/schulleitung).
-  // Plan 11-02 will append the "Fächer" entry after merge.
   {
     label: 'Lehrer',
     href: '/admin/teachers',
     icon: GraduationCap,
+    roles: ['admin', 'schulleitung'],
+    group: 'Personal & Fächer',
+  },
+  {
+    label: 'Fächer',
+    href: '/admin/subjects',
+    icon: BookOpen,
     roles: ['admin', 'schulleitung'],
     group: 'Personal & Fächer',
   },
