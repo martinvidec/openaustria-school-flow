@@ -29,15 +29,15 @@ Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenp
 - [x] Schulkommunikation (Lehrer-Eltern, Lehrer-Schüler, Mitteilungen, Lesebestätigungen) — Validated in Phase 7: Communication
 - [x] Hausaufgaben, Prüfungen & Datenimport (Untis XML, CSV, iCal Export, SIS API) — Validated in Phase 8: Homework, Exams & Data Import
 - [x] Multi-Plattform UI (Web + Mobile) mit modernem, responsivem Design — Validated in Phase 9: Mobile, PWA & Production Readiness
+- [x] Admin UI für Lehrer-CRUD mit Lehrverpflichtung/Werteinheiten, Verfügbarkeit und Ermäßigungen — Validated in Phase 11: Lehrer- und Fächer-Verwaltung (TEACHER-01..06 + Keycloak-Verknüpfung + Orphan-Guard)
 
 ### Active
 
 **v1.1 Schuladmin Console (current milestone):**
 
 - [ ] Admin UI für Schulstammdaten, Zeitraster, Schuljahr (inkl. A/B-Wochen-Toggle)
-- [ ] Admin UI für Lehrer-CRUD mit Lehrverpflichtung/Werteinheiten, Verfügbarkeit und Ermäßigungen
 - [ ] Admin UI für Schüler- und Klassen-CRUD mit Stammklasse und Gruppenzuordnung
-- [ ] Admin UI für Fächer-CRUD und Stundentafel-Verwaltung inkl. Gruppenableitungsregeln (Religion/Leistung/Wahlpflicht)
+- [ ] Admin UI für Fächer-CRUD und Stundentafel-Verwaltung inkl. Gruppenableitungsregeln (Religion/Leistung/Wahlpflicht) — Fach-CRUD + Stundentafel-Vorlagen-Readout shipped in Phase 11 (SUBJECT-01/02/03/05); Wochenstunden-Edit (SUBJECT-04) + Gruppenableitungsregeln pending
 - [ ] Admin UI für User-Verwaltung (Keycloak-Liste, Rollenzuweisung) und CASL-ACL-Overrides pro User
 - [ ] Admin UI für Solver-Tuning (Constraint-Templates, Gewichts-Overrides, Zeit-/Fach-Restriktionen)
 - [ ] Admin UI für DSGVO-Verwaltung (Einwilligungs-Audit, Aufbewahrungs-Editor, DSFA/VVZ, manuelle Art. 15/17-Auslösung)
@@ -63,7 +63,9 @@ Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenp
 
 **v1.1 Schuladmin Console started 2026-04-18.** Brownfield UI-only milestone. All backend APIs exist from v1.0; no new endpoints or Prisma models planned (except gap fixes surfaced during build). Goal: a Schuladmin can onboard a new school and administer the running year end-to-end through the UI — no SQL, no Swagger, no seed scripts.
 
-**E2E-first directive (2026-04-21).** Per user feedback, UAT is paused until Playwright coverage exists for all roles and admin-ops surfaces. Phases 10.1–10.5 drive that hardening before v1.1 feature phases resume. Phase 10.3 (harness extension + per-role smoke) completed 2026-04-21 — all 5 roles now have login + primary-view smoke specs; global-setup health-checks the stack before any spec runs. Phase 10.4 completed 2026-04-22 (RESCOPED): closed the three 10.3-deferred pre-existing failures and shipped a reusable `getByCardTitle` E2E helper. Phase 10.5 completed 2026-04-22: Räume-Booking real-409 + Ressourcen-CRUD + Imports (Untis happy / CSV happy / CSV partial) + Solver-Workflow (Aktivieren button + E2E_RUN_SOLVER-gated spec with two documented Timefold sidecar blockers for a future solver-hardening tranche). People-CRUD E2E authoring (originally 10.4 scope) was deferred into Phase 11 (Lehrer+Fächer) and Phase 12 (Schüler+Klassen) because the target UIs haven't shipped yet. **E2E-first hardening tranche (10.1–10.5) now complete — UAT-Ban per `feedback_e2e_first_no_uat.md` lifted; v1.1 feature phases resume.** Next: Phase 11 (Lehrer-Verwaltung).
+**E2E-first directive (2026-04-21).** Per user feedback, UAT is paused until Playwright coverage exists for all roles and admin-ops surfaces. Phases 10.1–10.5 drove that hardening; Phase 10.5 completed 2026-04-22 — E2E-first hardening tranche closed, UAT-Ban per `feedback_e2e_first_no_uat.md` lifted. People-CRUD E2E coverage (originally 10.4 scope, deferred) was delivered as part of Phase 11 (Teacher + Subject) and remains pending for Phase 12 (Schüler + Klassen).
+
+**Phase 11 (Lehrer- und Fächer-Verwaltung) completed 2026-04-23.** Shipped TEACHER-01..06 (list + Stammdaten + Lehrverpflichtung/Werteinheiten + Verfügbarkeitsgrid + Ermäßigungen + Keycloak-Link + Archiv/Delete mit Orphan-Guard) and SUBJECT-01/02/03/05 (Fach-CRUD + Stundentafel-Vorlagen-Readout + Orphan-Guard). 8 Playwright specs (desktop + mobile-chrome, 23/23 green) satisfy the E2E-first directive for this surface. 4 Rule-1 production bugs fixed during E2E execution (RFC 9457 extension passthrough, DTO validator relaxation, admin-list limit cap, SubjectFormDialog edit-payload hygiene). SUBJECT-04 (Wochenstunden pro Fach pro Klassenstufe) deferred to Phase 12 because its editing UI belongs in Klassen-Management. Next: Phase 12 (Schüler-, Klassen- und Gruppenverwaltung).
 
 ## Current Milestone: v1.1 Schuladmin Console
 
@@ -150,4 +152,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-22 after Phase 10.5 (E2E admin-ops operations — rooms-booking / resources / imports / solver) completed. E2E-first hardening tranche 10.1–10.5 closed; UAT-Ban lifted.*
+*Last updated: 2026-04-23 after Phase 11 (Lehrer- und Fächer-Verwaltung) completed. TEACHER-01..06 + SUBJECT-01/02/03/05 shipped with 8 Playwright specs; SUBJECT-04 deferred to Phase 12.*
