@@ -94,17 +94,21 @@ export function SubjectFormDialog({ open, onOpenChange, schoolId, subject }: Pro
     setTouched(true);
     if (!isValid) return;
 
-    const payload = {
-      schoolId,
+    // Phase 11 Plan 11-03 Rule-1 fix: the Edit PUT's UpdateSubjectDto
+    // (apps/api/src/modules/subject/dto/update-subject.dto.ts) OMITS
+    // schoolId and the API runs with `forbidNonWhitelisted: true`, so
+    // sending schoolId on edit triggers a 422 "property schoolId should
+    // not exist". Only send schoolId on create.
+    const basePayload = {
       name: name.trim(),
       shortName: shortName.trim().toUpperCase(),
     };
 
     try {
       if (isEdit) {
-        await updateMutation.mutateAsync(payload);
+        await updateMutation.mutateAsync(basePayload);
       } else {
-        await createMutation.mutateAsync(payload);
+        await createMutation.mutateAsync({ ...basePayload, schoolId });
       }
       onOpenChange(false);
     } catch (err) {

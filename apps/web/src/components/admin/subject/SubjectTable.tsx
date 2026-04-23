@@ -42,12 +42,7 @@ export function SubjectTable({ subjects, onEdit, onDelete, onShowAffected }: Pro
             return (
               <tr
                 key={s.id}
-                className="border-b hover:bg-muted/50 cursor-pointer"
-                onClick={(e) => {
-                  // Avoid hijacking clicks on the dropdown or the Nutzung button
-                  if ((e.target as HTMLElement).closest('[data-row-action]')) return;
-                  onEdit(s);
-                }}
+                className="border-b hover:bg-muted/50"
                 data-testid={`subject-row-${s.shortName}`}
               >
                 <td className="py-2 px-3 text-center">
@@ -87,7 +82,20 @@ export function SubjectTable({ subjects, onEdit, onDelete, onShowAffected }: Pro
                 <td className="py-2 px-3 text-right" data-row-action>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" aria-label="Aktionen">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-label="Aktionen"
+                        data-row-action
+                        // Radix DropdownMenuTrigger activates on pointerdown
+                        // (Phase 11 Plan 11-03 observation) — stopping just
+                        // the click event leaked the pointerdown through to
+                        // the tr onClick handler in some cases. Stop both to
+                        // make the tr's row-click edit-dialog handler
+                        // strictly non-interfering with the Aktionen dropdown.
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
