@@ -229,6 +229,49 @@ Tier 4 is its own milestone regardless (compliance deliverables need their own p
 
 ---
 
+## 6b. Phase 12 — Schüler / Klassen / Gruppen admin surface (Plan 12-03 delivery)
+
+Shipped by Plan 12-03 (wave 3) on top of 12-01 (Schüler) + 12-02 (Klassen).
+Six Student spec files + six Klassen spec files (12 total) plus 3 API fixtures.
+Mobile-chrome (Pixel 5) is the verification baseline — iPhone 13 project runs
+the same `*.mobile.spec.ts` glob so both mobile projects must stay green.
+
+**Prefix isolation:** E2E-STD-* (students desktop), E2E-STD-MOBILE-* (mobile),
+E2E-CLS-* (classes desktop), E2E-CLS-MOBILE-*, E2E-PARENT-EXISTING-* (parent
+search-existing fixture). `afterEach` sweeps by prefix — never touches seed rows.
+
+**Silent-4xx invariant:** every error-path spec asserts
+`expect(page.getByText('gespeichert')).not.toBeVisible()` AND a red toast or
+inline red error on 4xx. Codifies the Phase 10.2-04 pattern for Phase 12 mutations.
+
+| Requirement | Surface | Spec file | Test(s) |
+|-------------|---------|-----------|---------|
+| STUDENT-01 | /admin/students — create + edit | admin-students-crud.spec.ts | E2E-STD-01 create + E2E-STD-01-EDIT |
+| STUDENT-01 (mobile) | full-screen-sheet + StickyMobileSaveBar + 44px targets | admin-students-crud.mobile.spec.ts | E2E-STD-MOBILE-01/02/03 |
+| STUDENT-02 | Orphan-Guard delete (409) | admin-students-crud.error.spec.ts | E2E-STD-02 (incl. SILENT-4XX) |
+| STUDENT-02 inline validation | email inline error | admin-students-crud.error.spec.ts | E2E-STD-01-ERR |
+| STUDENT-03 | Archive → Reaktivieren | admin-students-archive.spec.ts | E2E-STD-03 Archive/Restore |
+| STUDENT-04 | Parent link/unlink (search / inline-create / unlink preservation) | admin-students-parents.spec.ts | E2E-STD-04 search-existing / inline-create / unlink |
+| STUDENT-03 (move) | Single row + bulk class-move with avatar-stack | admin-students-move.spec.ts | E2E-STD-05 single + bulk |
+| CLASS-01 | /admin/classes — create + edit | admin-classes-crud.spec.ts | E2E-CLS-01 create + edit |
+| CLASS-01 (mobile) | full-screen-sheet + 4 tab-strip + StickyMobileSaveBar | admin-classes-crud.mobile.spec.ts | E2E-CLS-MOBILE-01/02/03 |
+| CLASS-02 | Orphan-Guard delete (409) — AffectedEntitiesList kind='class' | admin-classes-crud.error.spec.ts | E2E-CLS-02 (incl. SILENT-4XX) |
+| CLASS-02 | duplicate name 409 inline | admin-classes-crud.error.spec.ts | E2E-CLS-01-ERR |
+| CLASS-03 | Klassenvorstand Teacher-Popover + Clear-Icon | admin-classes-klassenvorstand.spec.ts | E2E-CLS-03 assign + remove |
+| CLASS-04, SUBJECT-04 | Apply + Wochenstunden edit + Reset | admin-classes-stundentafel.spec.ts | E2E-CLS-04 apply / customize / add-subject / reset |
+| CLASS-05 | Rule-Builder + Apply-Rules Dry-Run + GroupOverridesPanel Auto badge | admin-classes-gruppen.spec.ts | E2E-CLS-05 rule-create / preview / apply |
+| CLASS-05 | Manual-Override add + auto-removal info hint | admin-classes-gruppen.spec.ts | E2E-CLS-06 manual-add / auto-remove |
+
+**Fixtures shipped in Plan 12-03:**
+
+| Fixture | Purpose |
+|---------|---------|
+| apps/web/e2e/fixtures/student-with-refs.ts (`seedStudentWithRefs`) | Student + ParentStudent link → DELETE 409 (STUDENT-02) |
+| apps/web/e2e/fixtures/class-with-students.ts (`seedClassWithActiveStudents`) | Class + N active students → DELETE 409 (CLASS-02) |
+| apps/web/e2e/fixtures/parent-existing.ts (`seedExistingParent`) | Parent with known email for ParentSearchPopover search-existing leg (STUDENT-04) |
+
+---
+
 ## 7. Definition of done for "UAT ban lifted"
 
 Per `feedback_e2e_first_no_uat.md`:
