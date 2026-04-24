@@ -203,6 +203,8 @@ model PermissionOverride {
   granted    Boolean  @default(true) // true = grant, false = deny
   grantedBy  String   @map("granted_by")
   createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  reason     String?  @map("reason")
 
   @@unique([userId, action, subject])
   @@map("permission_overrides")

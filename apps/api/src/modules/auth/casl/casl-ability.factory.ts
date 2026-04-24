@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AbilityBuilder, PureAbility, createMongoAbility } from '@casl/ability';
+import { interpolateConditions } from '@schoolflow/shared';
 import { PrismaService } from '../../../config/database/prisma.service';
 import { AuthenticatedUser } from '../types/authenticated-user';
 
@@ -24,8 +25,11 @@ export class CaslAbilityFactory {
 
     // 3. Apply role permissions (base layer)
     for (const perm of rolePermissions) {
+      // Phase 13-01 Task 1: interpolateConditions moved to @schoolflow/shared
+      // so EffectivePermissionsService (Task 3) can reuse the same algorithm —
+      // no drift between what the user *can* do and what the admin UI shows.
       const conditions = perm.conditions
-        ? this.interpolateConditions(perm.conditions as Record<string, unknown>, user)
+        ? interpolateConditions(perm.conditions as Record<string, unknown>, { id: user.id })
         : undefined;
 
       if (perm.inverted) {
@@ -42,7 +46,7 @@ export class CaslAbilityFactory {
     // 4. Apply user-level overrides (override layer -- takes precedence)
     for (const override of userOverrides) {
       const conditions = override.conditions
-        ? this.interpolateConditions(override.conditions as Record<string, unknown>, user)
+        ? interpolateConditions(override.conditions as Record<string, unknown>, { id: user.id })
         : undefined;
 
       if (override.granted) {
@@ -57,20 +61,5 @@ export class CaslAbilityFactory {
     }
 
     return builder.build();
-  }
-
-  private interpolateConditions(
-    conditions: Record<string, unknown>,
-    user: AuthenticatedUser,
-  ): Record<string, unknown> {
-    const parsed: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(conditions)) {
-      if (typeof value === 'string' && value.includes('{{ id }}')) {
-        parsed[key] = value.replace('{{ id }}', user.id);
-      } else {
-        parsed[key] = value;
-      }
-    }
-    return parsed;
   }
 }
