@@ -30,14 +30,14 @@ Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenp
 - [x] Hausaufgaben, Prüfungen & Datenimport (Untis XML, CSV, iCal Export, SIS API) — Validated in Phase 8: Homework, Exams & Data Import
 - [x] Multi-Plattform UI (Web + Mobile) mit modernem, responsivem Design — Validated in Phase 9: Mobile, PWA & Production Readiness
 - [x] Admin UI für Lehrer-CRUD mit Lehrverpflichtung/Werteinheiten, Verfügbarkeit und Ermäßigungen — Validated in Phase 11: Lehrer- und Fächer-Verwaltung (TEACHER-01..06 + Keycloak-Verknüpfung + Orphan-Guard)
+- [x] Admin UI für Schüler- und Klassen-CRUD mit Stammklasse und Gruppenzuordnung — Validated in Phase 12: Schüler-, Klassen- und Gruppenverwaltung (STUDENT-01..04 + CLASS-01..05 + SUBJECT-04 Wochenstunden-Editor + GroupDerivationRule Rule-Builder + Orphan-Guard + 24 Playwright specs)
 
 ### Active
 
 **v1.1 Schuladmin Console (current milestone):**
 
 - [ ] Admin UI für Schulstammdaten, Zeitraster, Schuljahr (inkl. A/B-Wochen-Toggle)
-- [ ] Admin UI für Schüler- und Klassen-CRUD mit Stammklasse und Gruppenzuordnung
-- [ ] Admin UI für Fächer-CRUD und Stundentafel-Verwaltung inkl. Gruppenableitungsregeln (Religion/Leistung/Wahlpflicht) — Fach-CRUD + Stundentafel-Vorlagen-Readout shipped in Phase 11 (SUBJECT-01/02/03/05); Wochenstunden-Edit (SUBJECT-04) + Gruppenableitungsregeln pending
+- [ ] Admin UI für Fächer-CRUD und Stundentafel-Verwaltung inkl. Gruppenableitungsregeln (Religion/Leistung/Wahlpflicht) — Fach-CRUD + Stundentafel-Vorlagen-Readout shipped in Phase 11 (SUBJECT-01/02/03/05); Wochenstunden-Edit (SUBJECT-04) + Gruppenableitungsregeln shipped in Phase 12
 - [ ] Admin UI für User-Verwaltung (Keycloak-Liste, Rollenzuweisung) und CASL-ACL-Overrides pro User
 - [ ] Admin UI für Solver-Tuning (Constraint-Templates, Gewichts-Overrides, Zeit-/Fach-Restriktionen)
 - [ ] Admin UI für DSGVO-Verwaltung (Einwilligungs-Audit, Aufbewahrungs-Editor, DSFA/VVZ, manuelle Art. 15/17-Auslösung)
@@ -152,4 +152,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-23 after Phase 11 (Lehrer- und Fächer-Verwaltung) completed. TEACHER-01..06 + SUBJECT-01/02/03/05 shipped with 8 Playwright specs; SUBJECT-04 deferred to Phase 12.*
+*Last updated: 2026-04-24 after Phase 12 (Schüler-, Klassen- und Gruppenverwaltung) completed. STUDENT-01..04 + CLASS-01..05 + SUBJECT-04 shipped with 24 Playwright specs (11 files, desktop + mobile-375). ParentModule greenfield, GroupDerivationRule Rule-Builder with Dry-Run-Preview + Manual-Overrides, Orphan-Guards across Student + Class. 8/12 v1.1 phases complete (65%).*
