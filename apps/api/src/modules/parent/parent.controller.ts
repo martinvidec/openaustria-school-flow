@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -59,5 +60,31 @@ export class ParentController {
   @ApiResponse({ status: 409, description: 'Parent is linked to one or more students' })
   async remove(@Param('id') id: string) {
     await this.service.remove(id);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Phase 13-01 Task 3 (USER-05) — Keycloak link mirror of teacher controller
+  // ---------------------------------------------------------------------------
+
+  @Patch(':id/keycloak-link')
+  @CheckPermissions({ action: 'update', subject: 'parent' })
+  @ApiOperation({ summary: 'Link a Keycloak user to this parent' })
+  @ApiResponse({ status: 200, description: 'Parent linked to Keycloak user' })
+  @ApiResponse({ status: 404, description: 'Parent not found' })
+  async linkKeycloak(
+    @Param('id') id: string,
+    @Body() dto: { keycloakUserId: string },
+  ) {
+    return this.service.linkKeycloakUser(id, dto.keycloakUserId);
+  }
+
+  @Delete(':id/keycloak-link')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @CheckPermissions({ action: 'update', subject: 'parent' })
+  @ApiOperation({ summary: 'Remove the Keycloak link on this parent' })
+  @ApiResponse({ status: 204, description: 'Keycloak link removed' })
+  @ApiResponse({ status: 404, description: 'Parent not found' })
+  async unlinkKeycloak(@Param('id') id: string) {
+    await this.service.unlinkKeycloakUser(id);
   }
 }

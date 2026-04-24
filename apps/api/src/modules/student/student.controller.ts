@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -108,5 +109,31 @@ export class StudentController {
   @ApiOperation({ summary: 'Unlink a Parent from this student (Parent record preserved)' })
   async unlinkParent(@Param('id') id: string, @Param('parentId') parentId: string) {
     return this.studentService.unlinkParent(id, parentId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Phase 13-01 Task 3 (USER-05) — Keycloak link mirror of teacher controller
+  // ---------------------------------------------------------------------------
+
+  @Patch(':id/keycloak-link')
+  @CheckPermissions({ action: 'update', subject: 'student' })
+  @ApiOperation({ summary: 'Link a Keycloak user to this student' })
+  @ApiResponse({ status: 200, description: 'Student linked to Keycloak user' })
+  @ApiResponse({ status: 404, description: 'Student not found' })
+  async linkKeycloak(
+    @Param('id') id: string,
+    @Body() dto: { keycloakUserId: string },
+  ) {
+    return this.studentService.linkKeycloakUser(id, dto.keycloakUserId);
+  }
+
+  @Delete(':id/keycloak-link')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @CheckPermissions({ action: 'update', subject: 'student' })
+  @ApiOperation({ summary: 'Remove the Keycloak link on this student' })
+  @ApiResponse({ status: 204, description: 'Keycloak link removed' })
+  @ApiResponse({ status: 404, description: 'Student not found' })
+  async unlinkKeycloak(@Param('id') id: string) {
+    await this.studentService.unlinkKeycloakUser(id);
   }
 }

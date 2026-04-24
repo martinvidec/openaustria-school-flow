@@ -5,6 +5,7 @@ import { KeycloakAdminModule } from '../keycloak-admin/keycloak-admin.module';
 import { TeacherModule } from '../teacher/teacher.module';
 import { StudentModule } from '../student/student.module';
 import { ParentModule } from '../parent/parent.module';
+import { EffectivePermissionsModule } from '../effective-permissions/effective-permissions.module';
 
 /**
  * Phase 13-01 — admin user directory module.
@@ -17,7 +18,13 @@ import { ParentModule } from '../parent/parent.module';
  * module's imports are already wired.
  */
 @Module({
-  imports: [KeycloakAdminModule, TeacherModule, StudentModule, ParentModule],
+  imports: [
+    KeycloakAdminModule,
+    TeacherModule,
+    StudentModule,
+    ParentModule,
+    EffectivePermissionsModule,
+  ],
   controllers: [UserDirectoryController],
   providers: [UserDirectoryService],
   exports: [UserDirectoryService],

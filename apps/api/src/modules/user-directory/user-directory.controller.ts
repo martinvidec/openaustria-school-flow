@@ -20,6 +20,7 @@ import { UserDirectoryService } from './user-directory.service';
 import { UserDirectoryQueryDto } from './dto/user-directory-query.dto';
 import { LinkPersonDto } from './dto/link-person.dto';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator';
+import { EffectivePermissionsService } from '../effective-permissions/effective-permissions.service';
 
 /**
  * Phase 13-01 USER-01 + USER-05 — admin user directory.
@@ -32,7 +33,10 @@ import { CheckPermissions } from '../auth/decorators/check-permissions.decorator
 @ApiBearerAuth()
 @Controller('admin/users')
 export class UserDirectoryController {
-  constructor(private readonly service: UserDirectoryService) {}
+  constructor(
+    private readonly service: UserDirectoryService,
+    private readonly effectivePermissionsService: EffectivePermissionsService,
+  ) {}
 
   @Get()
   @CheckPermissions({ action: 'manage', subject: 'user' })
@@ -87,5 +91,15 @@ export class UserDirectoryController {
   @ApiOperation({ summary: 'Remove the Person link (idempotent no-op if absent)' })
   async unlinkPerson(@Param('userId') userId: string) {
     await this.service.unlinkPerson(userId);
+  }
+
+  @Get(':userId/effective-permissions')
+  @CheckPermissions({ action: 'manage', subject: 'user' })
+  @ApiOperation({
+    summary:
+      'Flat list of a user\'s effective permissions with source attribution',
+  })
+  async effectivePermissions(@Param('userId') userId: string) {
+    return this.effectivePermissionsService.resolve(userId);
   }
 }

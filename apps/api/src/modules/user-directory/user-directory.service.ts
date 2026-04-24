@@ -283,14 +283,12 @@ export class UserDirectoryService {
           userId,
         );
       } else if (dto.personType === 'STUDENT') {
-        // Phase 13-01 Task 3 wires StudentService.linkKeycloakUser; cast here
-        // keeps the Task-2 build green while Task 3 commits land in the same plan.
-        updatedPerson = await (this.studentService as any).linkKeycloakUser(
+        updatedPerson = await this.studentService.linkKeycloakUser(
           dto.personId,
           userId,
         );
       } else {
-        updatedPerson = await (this.parentService as any).linkKeycloakUser(
+        updatedPerson = await this.parentService.linkKeycloakUser(
           dto.personId,
           userId,
         );
@@ -343,9 +341,9 @@ export class UserDirectoryService {
     if (person.personType === 'TEACHER' && (person as any).teacher) {
       await this.teacherService.unlinkKeycloakUser((person as any).teacher.id);
     } else if (person.personType === 'STUDENT' && (person as any).student) {
-      await (this.studentService as any).unlinkKeycloakUser((person as any).student.id);
+      await this.studentService.unlinkKeycloakUser((person as any).student.id);
     } else if (person.personType === 'PARENT' && (person as any).parent) {
-      await (this.parentService as any).unlinkKeycloakUser((person as any).parent.id);
+      await this.parentService.unlinkKeycloakUser((person as any).parent.id);
     }
   }
 }

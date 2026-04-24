@@ -133,4 +133,40 @@ export class ParentService {
     }
     await this.prisma.person.delete({ where: { id: parent.personId } });
   }
+
+  /**
+   * Phase 13-01 Task 3 (USER-05) — link a Keycloak user to this parent's
+   * Person row. Mirrors TeacherService.linkKeycloakUser exactly.
+   *
+   * Routed to from UserDirectoryService.linkPerson dispatcher when
+   * personType === 'PARENT'. The user-side / person-side conflict
+   * pre-checks live in UserDirectoryService — this method assumes them.
+   */
+  async linkKeycloakUser(parentId: string, keycloakUserId: string) {
+    const parent = await this.prisma.parent.findUnique({
+      where: { id: parentId },
+      include: { person: true },
+    });
+    if (!parent) throw new NotFoundException('Parent not found');
+    return this.prisma.person.update({
+      where: { id: parent.personId },
+      data: { keycloakUserId },
+    });
+  }
+
+  /**
+   * Phase 13-01 Task 3 (USER-05) — remove the Keycloak link from this
+   * parent's Person row. Mirror of TeacherService.unlinkKeycloakUser.
+   */
+  async unlinkKeycloakUser(parentId: string) {
+    const parent = await this.prisma.parent.findUnique({
+      where: { id: parentId },
+      include: { person: true },
+    });
+    if (!parent) throw new NotFoundException('Parent not found');
+    return this.prisma.person.update({
+      where: { id: parent.personId },
+      data: { keycloakUserId: null },
+    });
+  }
 }

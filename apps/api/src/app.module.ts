@@ -31,6 +31,7 @@ import { PushModule } from './modules/push/push.module';
 import { UserDirectoryModule } from './modules/user-directory/user-directory.module';
 import { RoleManagementModule } from './modules/role-management/role-management.module';
 import { PermissionOverrideModule } from './modules/permission-override/permission-override.module';
+import { EffectivePermissionsModule } from './modules/effective-permissions/effective-permissions.module';
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { PermissionOverrideModule } from './modules/permission-override/permissi
     UserDirectoryModule,
     RoleManagementModule,
     PermissionOverrideModule,
+    EffectivePermissionsModule,
   ],
   providers: [
     {

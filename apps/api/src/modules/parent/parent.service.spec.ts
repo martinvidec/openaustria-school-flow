@@ -171,4 +171,50 @@ describe('ParentService', () => {
       expect(prisma.person.delete).not.toHaveBeenCalled();
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // Phase 13-01 Task 3 (USER-05) — Keycloak link mirror of teacher.service
+  // ---------------------------------------------------------------------------
+
+  describe('linkKeycloakUser / unlinkKeycloakUser', () => {
+    it('linkKeycloakUser sets Person.keycloakUserId for the parent', async () => {
+      mockPrismaService.parent.findUnique.mockResolvedValueOnce({
+        id: 'parent-1',
+        personId: 'person-p1',
+        person: { id: 'person-p1' },
+      });
+      await service.linkKeycloakUser('parent-1', 'kc-user-1');
+      expect(prisma.person.update).toHaveBeenCalledWith({
+        where: { id: 'person-p1' },
+        data: { keycloakUserId: 'kc-user-1' },
+      });
+    });
+
+    it('linkKeycloakUser throws NotFoundException when parent missing', async () => {
+      mockPrismaService.parent.findUnique.mockResolvedValueOnce(null);
+      await expect(
+        service.linkKeycloakUser('nope', 'kc-user-1'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('unlinkKeycloakUser clears Person.keycloakUserId for the parent', async () => {
+      mockPrismaService.parent.findUnique.mockResolvedValueOnce({
+        id: 'parent-1',
+        personId: 'person-p1',
+        person: { id: 'person-p1' },
+      });
+      await service.unlinkKeycloakUser('parent-1');
+      expect(prisma.person.update).toHaveBeenCalledWith({
+        where: { id: 'person-p1' },
+        data: { keycloakUserId: null },
+      });
+    });
+
+    it('unlinkKeycloakUser throws NotFoundException when parent missing', async () => {
+      mockPrismaService.parent.findUnique.mockResolvedValueOnce(null);
+      await expect(service.unlinkKeycloakUser('nope')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
 });

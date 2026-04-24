@@ -333,4 +333,40 @@ export class StudentService {
     // Deleting person cascades to student + cascade-FK rows
     await this.prisma.person.delete({ where: { id: student.personId } });
   }
+
+  /**
+   * Phase 13-01 Task 3 (USER-05) — link a Keycloak user to this student's
+   * Person row. Mirrors TeacherService.linkKeycloakUser exactly.
+   *
+   * Routed to from UserDirectoryService.linkPerson dispatcher when
+   * personType === 'STUDENT'. The user-side / person-side conflict
+   * pre-checks live in UserDirectoryService — this method assumes them.
+   */
+  async linkKeycloakUser(studentId: string, keycloakUserId: string) {
+    const student = await this.prisma.student.findUnique({
+      where: { id: studentId },
+      include: { person: true },
+    });
+    if (!student) throw new NotFoundException('Student not found');
+    return this.prisma.person.update({
+      where: { id: student.personId },
+      data: { keycloakUserId },
+    });
+  }
+
+  /**
+   * Phase 13-01 Task 3 (USER-05) — remove the Keycloak link from this
+   * student's Person row. Mirror of TeacherService.unlinkKeycloakUser.
+   */
+  async unlinkKeycloakUser(studentId: string) {
+    const student = await this.prisma.student.findUnique({
+      where: { id: studentId },
+      include: { person: true },
+    });
+    if (!student) throw new NotFoundException('Student not found');
+    return this.prisma.person.update({
+      where: { id: student.personId },
+      data: { keycloakUserId: null },
+    });
+  }
 }
