@@ -9,6 +9,15 @@ const kcMock = vi.hoisted(() => ({
   auth: vi.fn(),
   users: {
     find: vi.fn(),
+    count: vi.fn(),
+    findOne: vi.fn(),
+    update: vi.fn(),
+    listRealmRoleMappings: vi.fn(),
+    addRealmRoleMappings: vi.fn(),
+    delRealmRoleMappings: vi.fn(),
+  },
+  roles: {
+    findOneByName: vi.fn(),
   },
 }));
 
@@ -58,6 +67,10 @@ describe('KeycloakAdminService', () => {
   afterEach(() => {
     vi.useRealTimers();
   });
+
+  // ---------------------------------------------------------------------------
+  // Existing surface (Phase 12) — keep regression coverage
+  // ---------------------------------------------------------------------------
 
   it('caches service-account token across calls (no re-auth if within TTL)', async () => {
     kcMock.users.find.mockResolvedValue([]);
@@ -110,5 +123,84 @@ describe('KeycloakAdminService', () => {
     const results = await service.findUsersByEmail('noone');
     expect(results).toEqual([]);
     expect(mockPrisma.person.findUnique).not.toHaveBeenCalled();
+  });
+
+  // ---------------------------------------------------------------------------
+  // Phase 13-01 Task 2 additions
+  // ---------------------------------------------------------------------------
+
+  it('findUsers passes pagination + search params through to client.users.find', async () => {
+    kcMock.users.find.mockResolvedValue([{ id: 'kc-1', email: 'a@b.c' }]);
+    const result = await service.findUsers({ first: 25, max: 25, search: 'anna' });
+    expect(kcMock.users.find).toHaveBeenCalledWith({ first: 25, max: 25, search: 'anna' });
+    expect(result).toEqual([{ id: 'kc-1', email: 'a@b.c' }]);
+  });
+
+  it('countUsers returns the integer total from client.users.count', async () => {
+    kcMock.users.count.mockResolvedValue(42);
+    const total = await service.countUsers({ search: 'anna' });
+    expect(total).toBe(42);
+    expect(kcMock.users.count).toHaveBeenCalledWith({ search: 'anna' });
+  });
+
+  it('findUserById returns the user representation when found', async () => {
+    kcMock.users.findOne.mockResolvedValue({ id: 'kc-1', email: 'a@b.c' });
+    const user = await service.findUserById('kc-1');
+    expect(user).toEqual({ id: 'kc-1', email: 'a@b.c' });
+    expect(kcMock.users.findOne).toHaveBeenCalledWith({ id: 'kc-1' });
+  });
+
+  it('findUserById returns undefined when KC throws 404', async () => {
+    kcMock.users.findOne.mockRejectedValue({ response: { status: 404 } });
+    const user = await service.findUserById('missing');
+    expect(user).toBeUndefined();
+  });
+
+  it('setEnabled forwards to client.users.update with the enabled flag', async () => {
+    kcMock.users.update.mockResolvedValue(undefined);
+    await service.setEnabled('kc-1', false);
+    expect(kcMock.users.update).toHaveBeenCalledWith({ id: 'kc-1' }, { enabled: false });
+  });
+
+  it('listRealmRoleMappings returns id+name pairs', async () => {
+    kcMock.users.listRealmRoleMappings.mockResolvedValue([
+      { id: 'r1', name: 'admin', description: 'ignored' },
+    ]);
+    const roles = await service.listRealmRoleMappings('kc-1');
+    expect(roles).toEqual([{ id: 'r1', name: 'admin' }]);
+    expect(kcMock.users.listRealmRoleMappings).toHaveBeenCalledWith({ id: 'kc-1' });
+  });
+
+  it('addRealmRoleMappings forwards a non-empty role array', async () => {
+    await service.addRealmRoleMappings('kc-1', [{ id: 'r1', name: 'admin' }]);
+    expect(kcMock.users.addRealmRoleMappings).toHaveBeenCalledWith({
+      id: 'kc-1',
+      roles: [{ id: 'r1', name: 'admin' }],
+    });
+  });
+
+  it('addRealmRoleMappings short-circuits on an empty role array (no KC call)', async () => {
+    await service.addRealmRoleMappings('kc-1', []);
+    expect(kcMock.users.addRealmRoleMappings).not.toHaveBeenCalled();
+  });
+
+  it('delRealmRoleMappings forwards a non-empty role array', async () => {
+    await service.delRealmRoleMappings('kc-1', [{ id: 'r1', name: 'admin' }]);
+    expect(kcMock.users.delRealmRoleMappings).toHaveBeenCalledWith({
+      id: 'kc-1',
+      roles: [{ id: 'r1', name: 'admin' }],
+    });
+  });
+
+  it('findRealmRoleByName returns the matching role pair', async () => {
+    kcMock.roles.findOneByName.mockResolvedValue({ id: 'r1', name: 'admin' });
+    const role = await service.findRealmRoleByName('admin');
+    expect(role).toEqual({ id: 'r1', name: 'admin' });
+  });
+
+  it('findRealmRoleByName returns undefined when KC returns nothing', async () => {
+    kcMock.roles.findOneByName.mockResolvedValue(undefined);
+    const role = await service.findRealmRoleByName('nonexistent');
+    expect(role).toBeUndefined();
   });
 });

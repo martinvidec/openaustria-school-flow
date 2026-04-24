@@ -28,6 +28,9 @@ import { HomeworkModule } from './modules/homework/homework.module';
 import { ImportModule } from './modules/import/import.module';
 import { CalendarModule } from './modules/calendar/calendar.module';
 import { PushModule } from './modules/push/push.module';
+import { UserDirectoryModule } from './modules/user-directory/user-directory.module';
+import { RoleManagementModule } from './modules/role-management/role-management.module';
+import { PermissionOverrideModule } from './modules/permission-override/permission-override.module';
 
 @Module({
   imports: [
@@ -60,6 +63,9 @@ import { PushModule } from './modules/push/push.module';
     ImportModule,
     CalendarModule,
     PushModule,
+    UserDirectoryModule,
+    RoleManagementModule,
+    PermissionOverrideModule,
   ],
   providers: [
     {
