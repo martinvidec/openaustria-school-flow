@@ -815,29 +815,34 @@ packages/shared/src/
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **[CRITICAL] Role propagation strategy — mirror-write to Keycloak or refactor CASL factory?** (Pitfall 1 / A3)
    - What we know: `UserRole` table is currently unused by any service; JWT roles come straight from Keycloak realm roles.
    - What's unclear: does the user/team prefer (a) mirror-write each `PUT /admin/users/:userId/roles` to Keycloak via admin API (simpler, KC stays authoritative for JWT), or (b) refactor `casl-ability.factory.ts` to load `user.roles` from Prisma `UserRole` on every request (DB becomes authoritative, bypass JWT roles)?
    - Recommendation: **Option (a) — mirror-write.** Reasons: zero changes to `PermissionsGuard`/`CaslAbilityFactory` call sites; Keycloak stays authoritative for JWT (consistent with every other auth decision in the codebase); DB `UserRole` becomes a denormalized cache for admin-list filtering. **Planner must lock this before Plan 13-01 Task 5 starts.**
+   - **RESOLVED:** Locked as Option (a) mirror-write in `13-01-PLAN.md` frontmatter `decisions.LOCK-01`. Role-management service writes Keycloak realm-role-mappings AND mirrors to Prisma `UserRole` inside a single `$transaction({ isolationLevel: 'Serializable' })`. CASL factory stays untouched — continues reading from JWT `realm_access.roles`. No changes to PermissionsGuard call sites.
 
 2. **Admin self-verification UI.** When an admin assigns themselves a role, should the UI force a re-login to pick up the new JWT, or just show an InfoBanner?
    - What we know: D-05 copy says "Änderungen wirken spätestens nach erneutem Login vollständig" (banner). No forced logout.
    - What's unclear: is the 15-min-stale-JWT window acceptable for self-changes?
    - Recommendation: **Stick with D-05 banner approach.** No forced logout. But log `security-sensitive` audit-event when admin self-modifies roles (flag for Phase 15 audit viewer).
+   - **RESOLVED:** Pinned to `13-CONTEXT.md` D-05 — banner only, no forced logout. `security-sensitive` audit event is covered by the generic `AuditInterceptor` (Phase 1 D-07) and deferred to Phase 15 audit viewer. Plan 13-02 Task 2 renders the InfoBanner via `UserRolesTab`.
 
 3. **`totalIsApproximate` semantics.** (A6) When role-filter applies in the backend after KC paging, do we show user "Page 4 of 12 (approx.)", or redesign the filter flow so role filter pushes into a DB query first?
    - Recommendation: **Show `(approx.)` suffix in meta** when any post-filter is active. Accept that paging may end short of page N+1. UX tweak only.
+   - **RESOLVED:** Implemented in `13-01-PLAN.md` Task 2 step 6 — UserDirectoryService returns `meta.totalIsApproximate: true` whenever a post-filter (role) reduces the KC page count. UI meta row renders "(approx.)" suffix per UI-SPEC.
 
 4. **Conflict-dialog copy when AffectedEntity `kind: 'user'` has no detail route.** (D-14)
    - What we know: Teacher/Student/Parent detail routes exist post Phase 11-12.
    - What's unclear: when Person B already points to user X, the AffectedEntity displays a user. Do we deep-link to `/admin/users/$userId` (circular) or just show read-only email?
    - Recommendation: **Show read-only email + "bereits verknüpft mit"**, no deep-link (circular UX is confusing).
+   - **RESOLVED:** Pinned to `13-CONTEXT.md` D-06 + implemented in `13-02-PLAN.md` Task 1 Step 2 — `AffectedEntitiesList` renders `kind: 'user'` rows as read-only email + "bereits verknüpft mit" copy; no deep-link back to `/admin/users/$id`.
 
 5. **Override `reason` migration backfill strategy.** (A5)
    - Existing overrides have no reason. Backfill as `'Phase 13 pre-migration'`? NULL? Require admin to fill on next edit?
    - Recommendation: **NULL column; UI shows "— (Grund fehlt)" badge**; next edit forces fill.
+   - **RESOLVED:** Implemented in `13-01-PLAN.md` Task 1 migration `20260424120000_add_override_updated_at_and_reason` — `reason TEXT NULL` (no backfill value); Plan 13-02 Task 2 `OverrideRow` renders the "— (Grund fehlt)" badge when `reason === null`, and the edit dialog requires a non-empty `reason` on save.
 
 ---
 
