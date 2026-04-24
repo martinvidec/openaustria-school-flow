@@ -229,7 +229,7 @@ Plans:
 **Goal:** Admin kann Schüler, Klassen mit Stammklasse und Klassenvorstand sowie Gruppenableitungsregeln UI-gestützt pflegen.
 **Requirements:** STUDENT-01, STUDENT-02, STUDENT-03, STUDENT-04, CLASS-01, CLASS-02, CLASS-03, CLASS-04, CLASS-05, SUBJECT-04
 **Depends on:** Phase 11 (Fächer + Stundentafel-Vorlagen werden für CLASS-03 benötigt; SUBJECT-04 Wochenstunden-Editing verschoben aus Phase 11 weil ClassSubject-Model hier lebt)
-**Plans:** 0 plans
+**Plans:** 3 plans
 
 **Success criteria:**
 - [ ] Admin kann Schüler mit Person-Daten und Erziehungsberechtigten anlegen, editieren und archivieren
@@ -246,7 +246,9 @@ Plans:
 - Orphan-Guard-Backend für Student/SchoolClass DELETE fehlt in v1.0 (`StudentService.remove` + `ClassService.remove` kaskadieren ohne Dependency-Check). Plan muss Gap-Fix-Task enthalten.
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 12 to break down)
+- [ ] 12-01-PLAN.md — Shared foundation (Zod schemas + Student.isArchived migration + shadcn Command/Checkbox + AffectedEntitiesList kind=student) + Student CRUD FE/BE + Parent-Module greenfield + StudentService.remove Orphan-Guard + Sidebar Schüler-Eintrag [Wave 1]
+- [ ] 12-02-PLAN.md — Class CRUD FE/BE (with Klassenvorstand TeacherSearchPopover + Teacher-Search gap-fix) + Apply-Stundentafel + SUBJECT-04 Wochenstunden-Editor + GroupDerivationRule migration + Rule-Builder + Dry-Run-Preview + Manual-Overrides + ClassService.remove Orphan-Guard + AffectedEntitiesList kind=class + Sidebar Klassen-Eintrag [Wave 2, depends on 12-01]
+- [ ] 12-03-PLAN.md — 12 Playwright E2E specs: Schüler-CRUD happy/error/mobile + archive/parents/move; Klassen-CRUD happy/error/mobile + klassenvorstand/stundentafel/gruppen — Pixel 5 viewport, Phase 10.3 harness, SILENT-4XX invariant codified, E2E-COVERAGE-MATRIX.md bump [Wave 3, depends on 12-01 + 12-02]
 
 ---
 
