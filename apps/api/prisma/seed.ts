@@ -83,6 +83,11 @@ async function main() {
     { action: 'read', subject: 'student' },
     { action: 'update', subject: 'student' },
     { action: 'delete', subject: 'student' },
+    // Phase 12-01: parent (full CRUD -- STUDENT-02 / D-13.1)
+    { action: 'create', subject: 'parent' },
+    { action: 'read', subject: 'parent' },
+    { action: 'update', subject: 'parent' },
+    { action: 'delete', subject: 'parent' },
     // Phase 2: class (full CRUD)
     { action: 'create', subject: 'class' },
     { action: 'read', subject: 'class' },

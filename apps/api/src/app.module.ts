@@ -14,6 +14,7 @@ import { DsgvoModule } from './modules/dsgvo/dsgvo.module';
 import { TeacherModule } from './modules/teacher/teacher.module';
 import { KeycloakAdminModule } from './modules/keycloak-admin/keycloak-admin.module';
 import { StudentModule } from './modules/student/student.module';
+import { ParentModule } from './modules/parent/parent.module';
 import { SubstitutionModule } from './modules/substitution/substitution.module';
 import { ClassModule } from './modules/class/class.module';
 import { SubjectModule } from './modules/subject/subject.module';
@@ -45,6 +46,7 @@ import { PushModule } from './modules/push/push.module';
     TeacherModule,
     KeycloakAdminModule,
     StudentModule,
+    ParentModule,
     SubstitutionModule,
     ClassModule,
     SubjectModule,

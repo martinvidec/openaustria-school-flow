@@ -1,5 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsUUID, IsOptional, IsEmail, IsDateString, MinLength, MaxLength } from 'class-validator';
+import {
+  IsArray,
+  IsDateString,
+  IsEmail,
+  IsOptional,
+  IsString,
+  IsUUID,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 export class CreateStudentDto {
   @ApiProperty({ description: 'School ID', format: 'uuid' })
@@ -57,4 +66,15 @@ export class CreateStudentDto {
   @IsOptional()
   @IsDateString()
   enrollmentDate?: string;
+
+  /**
+   * Phase 12-01 STUDENT-02 / D-13.1: optional parent IDs to link on create.
+   * The service creates ParentStudent rows inside the same Prisma transaction
+   * as the Student. Zero/undefined == no ParentStudent rows (backward-compat).
+   */
+  @ApiPropertyOptional({ description: 'Parent IDs to link on create', type: [String], format: 'uuid' })
+  @IsOptional()
+  @IsArray()
+  @IsUUID('4', { each: true })
+  parentIds?: string[];
 }
