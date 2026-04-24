@@ -15,6 +15,7 @@ import {
   PanelLeftClose,
   PanelLeft,
   UserCheck,
+  UsersRound,
   MessageSquare,
   Upload,
 } from 'lucide-react';
@@ -131,6 +132,14 @@ const navItems: NavItem[] = [
     label: 'Fächer',
     href: '/admin/subjects',
     icon: BookOpen,
+    roles: ['admin', 'schulleitung'],
+    group: 'Personal & Fächer',
+  },
+  // Phase 12-01 D-16: Schüler:innen appended to 'Personal & Fächer' group.
+  {
+    label: 'Schüler:innen',
+    href: '/admin/students',
+    icon: UsersRound,
     roles: ['admin', 'schulleitung'],
     group: 'Personal & Fächer',
   },
