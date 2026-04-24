@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { SchoolPaginationQueryDto } from '../../../common/dto/pagination.dto';
 
 /**
@@ -19,9 +19,10 @@ export class StudentListQueryDto extends SchoolPaginationQueryDto {
   @IsEnum(['active', 'archived', 'all'])
   archived: StudentArchiveFilter = 'active';
 
-  @ApiPropertyOptional({ description: 'Filter by Stammklasse ID', format: 'uuid' })
+  @ApiPropertyOptional({ description: 'Filter by Stammklasse ID' })
   @IsOptional()
-  @IsUUID()
+  // Plan 12-03 Rule-1: seed class IDs are literal strings, not UUIDs.
+  @IsString()
   classId?: string;
 
   @ApiPropertyOptional({ description: 'Text search on firstName/lastName/email' })
@@ -29,8 +30,9 @@ export class StudentListQueryDto extends SchoolPaginationQueryDto {
   @IsString()
   declare search?: string;
 
-  @ApiPropertyOptional({ description: 'Filter by Schuljahr (via class.schoolYearId)', format: 'uuid' })
+  @ApiPropertyOptional({ description: 'Filter by Schuljahr (via class.schoolYearId)' })
   @IsOptional()
-  @IsUUID()
+  // Plan 12-03 Rule-1: seed school-year IDs are literal strings, not UUIDs.
+  @IsString()
   schoolYearId?: string;
 }

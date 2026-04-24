@@ -4,7 +4,6 @@ import {
   IsEnum,
   IsOptional,
   IsString,
-  IsUUID,
   MaxLength,
   MinLength,
 } from 'class-validator';
@@ -30,9 +29,10 @@ export class CreateGroupDerivationRuleDto {
   @MaxLength(100)
   level?: string;
 
-  @ApiPropertyOptional({ type: [String], format: 'uuid' })
+  @ApiPropertyOptional({ type: [String] })
   @IsOptional()
   @IsArray()
-  @IsUUID('4', { each: true })
+  // Plan 12-03 Rule-1: seed student IDs are literal strings.
+  @IsString({ each: true })
   studentIds?: string[];
 }

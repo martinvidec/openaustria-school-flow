@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString, IsUUID, Max, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
+import { IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength, ValidateIf } from 'class-validator';
 
 /**
  * Update payload for /classes/:id — Phase 12-02 CLASS-02.
@@ -23,9 +23,11 @@ export class UpdateClassDto {
   @Max(13)
   yearLevel?: number;
 
-  @ApiPropertyOptional({ format: 'uuid', nullable: true })
+  @ApiPropertyOptional({ nullable: true })
   @IsOptional()
   @ValidateIf((_, v) => v !== null)
-  @IsUUID()
+  // Plan 12-03 Rule-1: seed teacher IDs are literal strings.
+  @IsString()
+  @MinLength(1)
   klassenvorstandId?: string | null;
 }

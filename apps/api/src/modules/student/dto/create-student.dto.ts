@@ -5,14 +5,19 @@ import {
   IsEmail,
   IsOptional,
   IsString,
-  IsUUID,
   MaxLength,
   MinLength,
 } from 'class-validator';
 
 export class CreateStudentDto {
-  @ApiProperty({ description: 'School ID', format: 'uuid' })
-  @IsUUID()
+  @ApiProperty({ description: 'School ID' })
+  // Phase 12 Plan 12-03 Rule-1 fix (parity with Phase 11 Plan 11-03): seed
+  // fixture school IDs (e.g. `seed-school-bgbrg-musterstadt`) are valid
+  // Prisma keys but not RFC 4122 UUIDs. `@IsUUID()` rejects them with 422
+  // and breaks any seed-hosted dev environment. `@IsString() @MinLength(1)`
+  // preserves the non-null guard without over-constraining the key format.
+  @IsString()
+  @MinLength(1)
   schoolId!: string;
 
   @ApiProperty({ description: 'First name', example: 'Maria', minLength: 1, maxLength: 100 })
@@ -57,9 +62,12 @@ export class CreateStudentDto {
   @IsString()
   studentNumber?: string;
 
-  @ApiPropertyOptional({ description: 'Stammklasse assignment', format: 'uuid' })
+  @ApiPropertyOptional({ description: 'Stammklasse assignment' })
   @IsOptional()
-  @IsUUID()
+  // Phase 12 Plan 12-03 Rule-1 fix: same rationale as schoolId — seed class
+  // IDs are literal strings, not UUIDs.
+  @IsString()
+  @MinLength(1)
   classId?: string;
 
   @ApiPropertyOptional({ description: 'Enrollment date', example: '2026-09-01' })
@@ -72,9 +80,10 @@ export class CreateStudentDto {
    * The service creates ParentStudent rows inside the same Prisma transaction
    * as the Student. Zero/undefined == no ParentStudent rows (backward-compat).
    */
-  @ApiPropertyOptional({ description: 'Parent IDs to link on create', type: [String], format: 'uuid' })
+  @ApiPropertyOptional({ description: 'Parent IDs to link on create', type: [String] })
   @IsOptional()
   @IsArray()
-  @IsUUID('4', { each: true })
+  // Phase 12 Plan 12-03 Rule-1 fix: allow non-UUID seed IDs via string guard.
+  @IsString({ each: true })
   parentIds?: string[];
 }

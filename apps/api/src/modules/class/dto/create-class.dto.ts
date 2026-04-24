@@ -1,9 +1,11 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsUUID, IsInt, Min, Max, MinLength, MaxLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsString, IsInt, Min, Max, MinLength, MaxLength } from 'class-validator';
 
 export class CreateClassDto {
-  @ApiProperty({ description: 'School ID', format: 'uuid' })
-  @IsUUID()
+  @ApiProperty({ description: 'School ID' })
+  // Plan 12-03 Rule-1 fix: seed school IDs are literal strings, not UUIDs.
+  @IsString()
+  @MinLength(1)
   schoolId!: string;
 
   @ApiProperty({ description: 'Class name, e.g. "3B"', example: '3B', minLength: 1, maxLength: 20 })
@@ -18,7 +20,14 @@ export class CreateClassDto {
   @Max(13)
   yearLevel!: number;
 
-  @ApiProperty({ description: 'School year ID', format: 'uuid' })
-  @IsUUID()
+  @ApiProperty({ description: 'School year ID' })
+  // Plan 12-03 Rule-1 fix: seed school-year IDs are literal strings, not UUIDs.
+  @IsString()
+  @MinLength(1)
   schoolYearId!: string;
+
+  @ApiPropertyOptional({ description: 'Klassenvorstand teacher ID (optional)' })
+  @IsOptional()
+  @IsString()
+  klassenvorstandId?: string;
 }

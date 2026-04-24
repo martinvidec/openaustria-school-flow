@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
+import { IsEmail, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 /**
  * Phase 12-01 STUDENT-02 / D-13.1: create a Parent with nested Person
@@ -7,8 +7,11 @@ import { IsEmail, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'cla
  * for the InlineCreateParentForm.
  */
 export class CreateParentDto {
-  @ApiProperty({ format: 'uuid', description: 'School ID (tenant scope)' })
-  @IsUUID()
+  @ApiProperty({ description: 'School ID (tenant scope)' })
+  // Plan 12-03 Rule-1 fix: seed school IDs are literal strings, not UUIDs
+  // (parity with Phase 11 Plan 11-03).
+  @IsString()
+  @MinLength(1)
   schoolId!: string;
 
   @ApiProperty({ minLength: 1, maxLength: 100 })

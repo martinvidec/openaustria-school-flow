@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type, Transform } from 'class-transformer';
-import { IsArray, IsInt, IsOptional, IsString, IsUUID } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsArray, IsInt, IsOptional, IsString } from 'class-validator';
 import { SchoolPaginationQueryDto } from '../../../common/dto/pagination.dto';
 
 /**
@@ -12,9 +12,10 @@ import { SchoolPaginationQueryDto } from '../../../common/dto/pagination.dto';
  * shapes into a number[] before validation.
  */
 export class ClassListQueryDto extends SchoolPaginationQueryDto {
-  @ApiPropertyOptional({ format: 'uuid' })
+  @ApiPropertyOptional()
   @IsOptional()
-  @IsUUID()
+  // Plan 12-03 Rule-1: seed school-year IDs are literal strings.
+  @IsString()
   schoolYearId?: string;
 
   @ApiPropertyOptional({
