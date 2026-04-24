@@ -47,7 +47,7 @@ See [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full 
 | 10.4 | E2E Harness Hardening (Tier 3a, rescoped) | E2E-hardening | Complete    | 2026-04-22 |
 | 10.5 | E2E Admin-Ops Operations (Tier 3b) | 4/4 | Complete    | 2026-04-22 |
 | 11 | Lehrer- und Fächer-Verwaltung | 11 | Complete    | 2026-04-23 |
-| 12 | Schüler-, Klassen- & Gruppenverwaltung | 9 | Phase 11 | — |
+| 12 | Schüler-, Klassen- & Gruppenverwaltung | 9 | Complete    | 2026-04-24 |
 | 13 | User- und Rechteverwaltung | 5 | Phase 12 | — |
 | 14 | Solver-Tuning | 5 | Phase 10.5 | Parallel with Phases 11-13 |
 | 15 | DSGVO-Admin & Audit-Log-Viewer | 9 | Phase 13 | — |
@@ -229,7 +229,7 @@ Plans:
 **Goal:** Admin kann Schüler, Klassen mit Stammklasse und Klassenvorstand sowie Gruppenableitungsregeln UI-gestützt pflegen.
 **Requirements:** STUDENT-01, STUDENT-02, STUDENT-03, STUDENT-04, CLASS-01, CLASS-02, CLASS-03, CLASS-04, CLASS-05, SUBJECT-04
 **Depends on:** Phase 11 (Fächer + Stundentafel-Vorlagen werden für CLASS-03 benötigt; SUBJECT-04 Wochenstunden-Editing verschoben aus Phase 11 weil ClassSubject-Model hier lebt)
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 **Success criteria:**
 - [x] Admin kann Schüler mit Person-Daten und Erziehungsberechtigten anlegen, editieren und archivieren
