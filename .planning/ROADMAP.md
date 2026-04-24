@@ -272,7 +272,7 @@ Plans:
 
 Plans:
 - [x] 13-01 Backend foundation (USER-01..05) — complete 2026-04-24
-- [ ] 13-02 Frontend (admin UI for /admin/users + /admin/permission-overrides)
+- [x] 13-02 Frontend (admin UI for /admin/users + /admin/permission-overrides) — complete 2026-04-24
 - [ ] 13-03 E2E sweep
 
 ---

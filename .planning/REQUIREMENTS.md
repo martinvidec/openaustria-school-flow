@@ -57,11 +57,11 @@
 
 ### User & ACL Management
 
-- [ ] **USER-01**: Admin sieht User-Liste aus Keycloak mit Suche und Filter
-- [ ] **USER-02**: Admin kann Rollen (Admin, Schulleitung, Lehrer, Eltern, Schüler) einem User zuweisen
-- [ ] **USER-03**: Admin sieht pro User die wirksamen CASL-Permissions (Rollen-Vererbung)
-- [ ] **USER-04**: Admin kann per-User-ACL-Overrides anlegen, editieren und löschen
-- [ ] **USER-05**: Admin kann Keycloak-User mit einem Teacher-/Student-/Parent-Person-Record verknüpfen
+- [x] **USER-01**: Admin sieht User-Liste aus Keycloak mit Suche und Filter
+- [x] **USER-02**: Admin kann Rollen (Admin, Schulleitung, Lehrer, Eltern, Schüler) einem User zuweisen
+- [x] **USER-03**: Admin sieht pro User die wirksamen CASL-Permissions (Rollen-Vererbung)
+- [x] **USER-04**: Admin kann per-User-ACL-Overrides anlegen, editieren und löschen
+- [x] **USER-05**: Admin kann Keycloak-User mit einem Teacher-/Student-/Parent-Person-Record verknüpfen
 
 ### Solver Tuning
 
@@ -181,11 +181,11 @@ Empty initially — populated during roadmap creation by `gsd-roadmapper`.
 | SUBJECT-03 | Phase 11 | Complete (2026-04-23, Plan 11-02) |
 | SUBJECT-04 | Phase 12 (12-02) | Complete (2026-04-24) |
 | SUBJECT-05 | Phase 11 | Complete (2026-04-23, Plan 11-02) |
-| USER-01 | Phase 13 (13-01) | Backend ready (2026-04-24, awaits 13-02 UI) |
-| USER-02 | Phase 13 (13-01) | Backend ready (2026-04-24, awaits 13-02 UI) |
-| USER-03 | Phase 13 (13-01) | Backend ready (2026-04-24, awaits 13-02 UI) |
-| USER-04 | Phase 13 (13-01) | Backend ready (2026-04-24, awaits 13-02 UI) |
-| USER-05 | Phase 13 (13-01) | Backend ready (2026-04-24, awaits 13-02 UI) |
+| USER-01 | Phase 13 (13-01 + 13-02) | Backend + UI complete (2026-04-24, awaits 13-03 E2E) |
+| USER-02 | Phase 13 (13-01 + 13-02) | Backend + UI complete (2026-04-24, awaits 13-03 E2E) |
+| USER-03 | Phase 13 (13-01 + 13-02) | Backend + UI complete (2026-04-24, awaits 13-03 E2E) |
+| USER-04 | Phase 13 (13-01 + 13-02) | Backend + UI complete (2026-04-24, awaits 13-03 E2E) |
+| USER-05 | Phase 13 (13-01 + 13-02) | Backend + UI complete (2026-04-24, awaits 13-03 E2E) |
 | SOLVER-01 | Phase 14 | Pending |
 | SOLVER-02 | Phase 14 | Pending |
 | SOLVER-03 | Phase 14 | Pending |
