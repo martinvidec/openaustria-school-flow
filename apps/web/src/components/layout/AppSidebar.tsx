@@ -15,6 +15,7 @@ import {
   PanelLeftClose,
   PanelLeft,
   UserCheck,
+  UserCircle,
   UsersRound,
   MessageSquare,
   School,
@@ -151,6 +152,14 @@ const navItems: NavItem[] = [
     icon: UsersRound,
     roles: ['admin', 'schulleitung'],
     group: 'Personal & Fächer',
+  },
+  // Phase 13-02 USER-01: Zugriff & Berechtigungen group (admin only).
+  {
+    label: 'User',
+    href: '/admin/users',
+    icon: UserCircle,
+    roles: ['admin'],
+    group: 'Zugriff & Berechtigungen',
   },
 ];
 

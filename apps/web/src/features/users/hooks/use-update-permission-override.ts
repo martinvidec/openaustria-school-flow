@@ -1,0 +1,61 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { apiFetch } from '@/lib/api';
+import {
+  type PermissionOverride,
+  UserApiError,
+  readProblemDetail,
+} from '../types';
+
+/**
+ * Phase 13-02 USER-03 — update an existing per-user ACL override.
+ * Hits `PUT /api/v1/admin/permission-overrides/:id`.
+ */
+export function useUpdatePermissionOverride(userId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: {
+      id: string;
+      payload: {
+        action?: string;
+        subject?: string;
+        granted?: boolean;
+        conditions?: Record<string, unknown> | null;
+        reason: string;
+      };
+    }): Promise<PermissionOverride> => {
+      const res = await apiFetch(`/api/v1/admin/permission-overrides/${vars.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(vars.payload),
+      });
+      if (!res.ok) throw new UserApiError(res.status, await readProblemDetail(res));
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success('Override gespeichert');
+      qc.invalidateQueries({ queryKey: ['permission-overrides', userId] });
+      qc.invalidateQueries({ queryKey: ['effective-permissions', userId] });
+    },
+    onError: (err: UserApiError | Error) => {
+      // Silent-4XX-Invariante.
+      if (
+        err instanceof UserApiError &&
+        err.status === 409 &&
+        err.problem.type === 'schoolflow://errors/override-duplicate'
+      ) {
+        toast.error('Override existiert bereits', {
+          description:
+            'Für diese Kombination aus Aktion und Ressource existiert bereits ein Override.',
+        });
+        return;
+      }
+      const status = err instanceof UserApiError ? err.status : undefined;
+      const title = err instanceof UserApiError ? err.problem.title : undefined;
+      const detail = err instanceof UserApiError ? err.problem.detail : err.message;
+      toast.error(title ?? 'Aktion nicht möglich', {
+        description:
+          detail ?? `Der Server hat die Anfrage abgelehnt (Status ${status ?? 'unknown'}).`,
+      });
+    },
+  });
+}
