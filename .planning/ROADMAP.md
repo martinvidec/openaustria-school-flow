@@ -257,21 +257,23 @@ Plans:
 **Goal:** Admin kann Keycloak-User listen, Rollen zuweisen, CASL-ACL-Overrides pflegen und User mit Person-Records verknüpfen.
 **Requirements:** USER-01, USER-02, USER-03, USER-04, USER-05
 **Depends on:** Phase 12 (USER-05 verknüpft Keycloak-User mit Teacher/Student/Parent-Person-Records — alle müssen existieren)
-**Plans:** 0 plans
+**Plans:** 1 of 3 complete
 
 **Success criteria:**
-- [ ] Admin sieht User-Liste aus Keycloak mit Suche/Filter (Name, Email, Rolle)
-- [ ] Admin kann einem User eine oder mehrere der 5 Rollen (Admin, Schulleitung, Lehrer, Eltern, Schüler) zuweisen
-- [ ] Admin sieht pro User die wirksamen CASL-Permissions mit Rollen-Vererbung
-- [ ] Admin kann per-User-ACL-Overrides (subject + action + condition) anlegen, editieren und löschen
-- [ ] Admin kann einen Keycloak-User mit einem Teacher-, Student- oder Parent-Person-Record verknüpfen und die Verknüpfung wieder auflösen
+- [ ] Admin sieht User-Liste aus Keycloak mit Suche/Filter (Name, Email, Rolle) — backend ready (13-01)
+- [ ] Admin kann einem User eine oder mehrere der 5 Rollen (Admin, Schulleitung, Lehrer, Eltern, Schüler) zuweisen — backend ready (13-01)
+- [ ] Admin sieht pro User die wirksamen CASL-Permissions mit Rollen-Vererbung — backend ready (13-01)
+- [ ] Admin kann per-User-ACL-Overrides (subject + action + condition) anlegen, editieren und löschen — backend ready (13-01)
+- [ ] Admin kann einen Keycloak-User mit einem Teacher-, Student- oder Parent-Person-Record verknüpfen und die Verknüpfung wieder auflösen — backend ready (13-01)
 
 **Known risks / backend gap candidates:**
-- USER-01/02/05: Keycloak Admin API Adapter im Backend existiert möglicherweise nur für Login — Admin-User-Listing und Rollenzuweisung könnten eine kleine Service-Erweiterung benötigen (Gap-Fix-Task im Plan).
-- USER-03: Effektive Permissions-Resolution (Rolle + ACL-Overrides → wirksame Abilities) muss in einem Query-Endpoint verfügbar sein — v1.0 CASL-Factory müsste dies unterstützen, ist aber zu verifizieren.
+- USER-01/02/05: Keycloak Admin API Adapter im Backend existiert möglicherweise nur für Login — Admin-User-Listing und Rollenzuweisung könnten eine kleine Service-Erweiterung benötigen (Gap-Fix-Task im Plan). RESOLVED — KeycloakAdminService extended in 13-01 Task 2.
+- USER-03: Effektive Permissions-Resolution (Rolle + ACL-Overrides → wirksame Abilities) muss in einem Query-Endpoint verfügbar sein — v1.0 CASL-Factory müsste dies unterstützen, ist aber zu verifizieren. RESOLVED — EffectivePermissionsService greenfield in 13-01 Task 3.
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 13 to break down)
+- [x] 13-01 Backend foundation (USER-01..05) — complete 2026-04-24
+- [ ] 13-02 Frontend (admin UI for /admin/users + /admin/permission-overrides)
+- [ ] 13-03 E2E sweep
 
 ---
 

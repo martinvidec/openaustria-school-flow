@@ -181,11 +181,11 @@ Empty initially — populated during roadmap creation by `gsd-roadmapper`.
 | SUBJECT-03 | Phase 11 | Complete (2026-04-23, Plan 11-02) |
 | SUBJECT-04 | Phase 12 (12-02) | Complete (2026-04-24) |
 | SUBJECT-05 | Phase 11 | Complete (2026-04-23, Plan 11-02) |
-| USER-01 | Phase 13 | Pending |
-| USER-02 | Phase 13 | Pending |
-| USER-03 | Phase 13 | Pending |
-| USER-04 | Phase 13 | Pending |
-| USER-05 | Phase 13 | Pending |
+| USER-01 | Phase 13 (13-01) | Backend ready (2026-04-24, awaits 13-02 UI) |
+| USER-02 | Phase 13 (13-01) | Backend ready (2026-04-24, awaits 13-02 UI) |
+| USER-03 | Phase 13 (13-01) | Backend ready (2026-04-24, awaits 13-02 UI) |
+| USER-04 | Phase 13 (13-01) | Backend ready (2026-04-24, awaits 13-02 UI) |
+| USER-05 | Phase 13 (13-01) | Backend ready (2026-04-24, awaits 13-02 UI) |
 | SOLVER-01 | Phase 14 | Pending |
 | SOLVER-02 | Phase 14 | Pending |
 | SOLVER-03 | Phase 14 | Pending |
