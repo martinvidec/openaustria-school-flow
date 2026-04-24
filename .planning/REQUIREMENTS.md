@@ -37,10 +37,10 @@
 
 ### Student & Class Management
 
-- [ ] **STUDENT-01**: Admin sieht Schülerliste mit Suche und Filter (Name, Klasse, Status)
-- [ ] **STUDENT-02**: Admin kann Schüler anlegen und editieren (Person-Daten, Erziehungsberechtigte)
-- [ ] **STUDENT-03**: Admin kann Schüler einer Stammklasse zuordnen oder umziehen
-- [ ] **STUDENT-04**: Admin kann Schüler deaktivieren/archivieren ohne Datenverlust
+- [x] **STUDENT-01**: Admin sieht Schülerliste mit Suche und Filter (Name, Klasse, Status)
+- [x] **STUDENT-02**: Admin kann Schüler anlegen und editieren (Person-Daten, Erziehungsberechtigte)
+- [x] **STUDENT-03**: Admin kann Schüler einer Stammklasse zuordnen oder umziehen
+- [x] **STUDENT-04**: Admin kann Schüler deaktivieren/archivieren ohne Datenverlust
 - [ ] **CLASS-01**: Admin sieht Klassenliste mit Filter (Jahrgangsstufe, Schultyp)
 - [ ] **CLASS-02**: Admin kann Klassen anlegen und editieren (Stammklasse-Marker, Klassenvorstand-Zuweisung)
 - [ ] **CLASS-03**: Admin kann Stundentafel-Vorlage auf eine Klasse anwenden und anpassen
@@ -167,10 +167,10 @@ Empty initially — populated during roadmap creation by `gsd-roadmapper`.
 | TEACHER-04 | Phase 11-01 | Complete |
 | TEACHER-05 | Phase 11-01 | Complete |
 | TEACHER-06 | Phase 11-01 | Complete |
-| STUDENT-01 | Phase 12 | Pending |
-| STUDENT-02 | Phase 12 | Pending |
-| STUDENT-03 | Phase 12 | Pending |
-| STUDENT-04 | Phase 12 | Pending |
+| STUDENT-01 | Phase 12 (12-01) | Complete |
+| STUDENT-02 | Phase 12 (12-01) | Complete |
+| STUDENT-03 | Phase 12 (12-01) | Complete |
+| STUDENT-04 | Phase 12 (12-01) | Complete |
 | CLASS-01 | Phase 12 | Pending |
 | CLASS-02 | Phase 12 | Pending |
 | CLASS-03 | Phase 12 | Pending |

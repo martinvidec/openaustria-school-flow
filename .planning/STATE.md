@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
-status: verifying
-stopped_at: Phase 12 context gathered
-last_updated: "2026-04-24T05:15:11.257Z"
-last_activity: 2026-04-23
+status: executing
+stopped_at: Completed Plan 12-01
+last_updated: "2026-04-24T10:07:45Z"
+last_activity: 2026-04-24 -- Plan 12-01 Schüler-Admin-Surface + ParentModule shipped
 progress:
   total_phases: 12
   completed_phases: 7
-  total_plans: 28
-  completed_plans: 28
-  percent: 44
+  total_plans: 31
+  completed_plans: 29
+  percent: 45
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-18)
 
 **Core value:** Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenplanerstellung, die sie selbst hosten koennen -- ohne Vendor Lock-in, mit offenen APIs und DSGVO-Konformitaet von Tag 1.
-**Current focus:** Phase 11 — lehrer-und-f-cher-verwaltung
+**Current focus:** Phase 12 — sch-ler-klassen-und-gruppenverwaltung
 
 ## Current Position
 
-Phase: 12
-Plan: Not started
-Status: Phase 11 closed — 11-VERIFICATION.md published; Phase 12 next
-Last activity: 2026-04-23
+Phase: 12 (sch-ler-klassen-und-gruppenverwaltung) — EXECUTING
+Plan: 2 of 3
+Status: Executing Phase 12 (12-01 complete; 12-02 next)
+Last activity: 2026-04-24 -- Plan 12-01 Schüler-Admin-Surface + ParentModule shipped
 
-Progress: [████░░░░░░] 44%
+Progress: [████░░░░░░] 45%
 
 ## Performance Metrics
 
@@ -136,6 +136,7 @@ Progress: [████░░░░░░] 44%
 | Phase 11 P01 | 17min | 3 tasks | 37 files |
 | Phase 11 P02 | 76min | 3 tasks | 25 files |
 | Phase 11 P03 | 175min | 3 tasks | 22 files |
+| Phase 12 P01 | 28min | 3 tasks | 47 files |
 
 ## Accumulated Context
 
@@ -445,6 +446,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-24T05:15:11.252Z
-Stopped at: Phase 12 context gathered
-Resume file: .planning/phases/12-sch-ler-klassen-und-gruppenverwaltung/12-CONTEXT.md
+Last session: 2026-04-24T08:44:37.805Z
+Stopped at: Phase 12 UI-SPEC approved
+Resume file: .planning/phases/12-sch-ler-klassen-und-gruppenverwaltung/12-UI-SPEC.md
