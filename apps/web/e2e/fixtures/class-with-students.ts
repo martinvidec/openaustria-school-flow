@@ -53,8 +53,10 @@ export async function seedClassWithActiveStudents(
   expect(schoolYearId, 'active school year id').toBeTruthy();
 
   // 2. Create the Class. Phase 12-02 class.controller accepts
-  //    { schoolId, name, yearLevel, schoolYearId }.
-  const className = `E2E-CLS-WITH-STUDENTS-${ts}`;
+  //    { schoolId, name, yearLevel, schoolYearId }. Class.name column is
+  //    VARCHAR(20) (apps/api/prisma/schema.prisma) — keep the prefix short
+  //    so `<prefix>-<6-digit-ts>` fits.
+  const className = `E2E-CWS-${ts.toString().slice(-6)}`;
   const classRes = await request.post(`${API}/classes`, {
     headers,
     data: {

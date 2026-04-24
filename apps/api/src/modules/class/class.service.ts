@@ -33,6 +33,11 @@ export class ClassService {
         name: dto.name,
         yearLevel: dto.yearLevel,
         schoolYearId: dto.schoolYearId,
+        // Plan 12-03 Rule-2 fix: the UI ClassCreateDialog sends an optional
+        // klassenvorstandId (TeacherSearchPopover selection), the DTO accepts
+        // it, but the service previously discarded it silently. Persist it
+        // when present.
+        ...(dto.klassenvorstandId ? { klassenvorstandId: dto.klassenvorstandId } : {}),
       },
       include: {
         _count: { select: { students: true } },

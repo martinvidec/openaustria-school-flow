@@ -10,27 +10,35 @@ import { z } from 'zod';
  *   - backend-parity defence-in-depth alongside NestJS class-validator DTOs
  */
 
+// Plan 12-03 Rule-1 fix (parity with Phase 11-03 DTO relaxation): seed
+// fixture IDs (e.g. `seed-school-bgbrg-musterstadt`, `seed-class-1a`) are
+// valid Prisma keys but not RFC 4122 UUIDs. `.uuid()` rejected them with
+// "Ungültige Schul-ID" and the ClassCreateDialog form never submitted. The
+// backend DTOs are the source of truth for ID format; client-side Zod uses a
+// simpler non-empty-string guard that matches both shapes.
+const ID_GUARD = (label: string) => z.string().min(1, label);
+
 export const SchoolClassCreateSchema = z.object({
-  schoolId: z.string().uuid('Ungültige Schul-ID'),
+  schoolId: ID_GUARD('Ungültige Schul-ID'),
   name: z.string().min(1, 'Pflichtfeld').max(50, 'Maximal 50 Zeichen'),
   yearLevel: z
     .number()
     .int()
     .min(1, 'Jahrgangsstufe >= 1')
     .max(13, 'Jahrgangsstufe <= 13'),
-  schoolYearId: z.string().uuid('Ungültige Schuljahr-ID'),
-  klassenvorstandId: z.string().uuid('Ungültige Lehrer-ID').optional(),
+  schoolYearId: ID_GUARD('Ungültige Schuljahr-ID'),
+  klassenvorstandId: ID_GUARD('Ungültige Lehrer-ID').optional(),
 });
 
 export const SchoolClassUpdateSchema = z.object({
   name: z.string().min(1, 'Pflichtfeld').max(50, 'Maximal 50 Zeichen').optional(),
   yearLevel: z.number().int().min(1).max(13).optional(),
-  klassenvorstandId: z.string().uuid().nullable().optional(),
+  klassenvorstandId: ID_GUARD('Ungültige Lehrer-ID').nullable().optional(),
 });
 
 export const ClassListFiltersSchema = z.object({
-  schoolId: z.string().uuid('Ungültige Schul-ID'),
-  schoolYearId: z.string().uuid('Ungültige Schuljahr-ID').optional(),
+  schoolId: ID_GUARD('Ungültige Schul-ID'),
+  schoolYearId: ID_GUARD('Ungültige Schuljahr-ID').optional(),
   yearLevels: z.array(z.number().int().min(1).max(13)).optional(),
   search: z.string().optional(),
   page: z.number().int().min(1).default(1),
