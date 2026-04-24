@@ -1,16 +1,38 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ClassService } from './class.service';
+import { ClassSubjectService } from './class-subject.service';
 import { CreateClassDto } from './dto/create-class.dto';
 import { UpdateClassDto } from './dto/update-class.dto';
+import { ClassListQueryDto } from './dto/class-list-query.dto';
+import { ApplyStundentafelDto } from './dto/apply-stundentafel.dto';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator';
-import { SchoolPaginationQueryDto } from '../../common/dto/pagination.dto';
 
 @ApiTags('classes')
 @ApiBearerAuth()
 @Controller('classes')
 export class ClassController {
-  constructor(private classService: ClassService) {}
+  constructor(
+    private classService: ClassService,
+    private classSubjectService: ClassSubjectService,
+  ) {}
 
   @Post()
   @CheckPermissions({ action: 'create', subject: 'class' })
@@ -23,11 +45,14 @@ export class ClassController {
 
   @Get()
   @CheckPermissions({ action: 'read', subject: 'class' })
-  @ApiOperation({ summary: 'List classes by school, paginated' })
+  @ApiOperation({
+    summary:
+      'List classes filtered by school, schoolYearId, yearLevels, name substring (Phase 12-02 filters).',
+  })
   @ApiQuery({ name: 'schoolId', required: true, type: String })
   @ApiResponse({ status: 200, description: 'Paginated list of classes' })
-  async findAll(@Query() query: SchoolPaginationQueryDto) {
-    return this.classService.findAll(query.schoolId!, query);
+  async findAll(@Query() query: ClassListQueryDto) {
+    return this.classService.findAll(query);
   }
 
   @Get(':id')
@@ -41,7 +66,7 @@ export class ClassController {
 
   @Put(':id')
   @CheckPermissions({ action: 'update', subject: 'class' })
-  @ApiOperation({ summary: 'Update a class (name, yearLevel)' })
+  @ApiOperation({ summary: 'Update a class (name, yearLevel, klassenvorstandId)' })
   @ApiResponse({ status: 200, description: 'Class updated' })
   @ApiResponse({ status: 404, description: 'Class not found' })
   async update(@Param('id') id: string, @Body() dto: UpdateClassDto) {
@@ -51,9 +76,17 @@ export class ClassController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @CheckPermissions({ action: 'delete', subject: 'class' })
-  @ApiOperation({ summary: 'Delete a class (cascades groups, students get unassigned)' })
+  @ApiOperation({
+    summary:
+      'Delete a class. Refuses 409 when dependencies exist (RFC 9457 extensions.affectedEntities — D-13.4).',
+  })
   @ApiResponse({ status: 204, description: 'Class deleted' })
   @ApiResponse({ status: 404, description: 'Class not found' })
+  @ApiResponse({
+    status: 409,
+    description:
+      'Class has dependents (active students, groups, subjects, lessons, derivation rules)',
+  })
   async remove(@Param('id') id: string) {
     await this.classService.remove(id);
   }
@@ -62,7 +95,6 @@ export class ClassController {
   @CheckPermissions({ action: 'update', subject: 'class' })
   @ApiOperation({ summary: 'Assign a student to this class (Stammklasse)' })
   @ApiResponse({ status: 200, description: 'Student assigned' })
-  @ApiResponse({ status: 404, description: 'Class not found' })
   async assignStudent(@Param('id') classId: string, @Body() body: { studentId: string }) {
     return this.classService.assignStudent(classId, body.studentId);
   }
@@ -71,9 +103,41 @@ export class ClassController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @CheckPermissions({ action: 'update', subject: 'class' })
   @ApiOperation({ summary: 'Remove a student from this class' })
-  @ApiResponse({ status: 204, description: 'Student removed from class' })
-  @ApiResponse({ status: 404, description: 'Class or student not found' })
-  async removeStudent(@Param('id') classId: string, @Param('studentId') studentId: string) {
+  async removeStudent(
+    @Param('id') classId: string,
+    @Param('studentId') studentId: string,
+  ) {
     await this.classService.removeStudent(classId, studentId);
+  }
+
+  @Post(':id/apply-stundentafel')
+  @HttpCode(HttpStatus.OK)
+  @CheckPermissions({ action: 'update', subject: 'class' })
+  @ApiOperation({
+    summary:
+      'Apply an Austrian Stundentafel template to this class (CLASS-03, D-09).',
+  })
+  @ApiResponse({ status: 200, description: 'Stundentafel applied (ClassSubject rows created)' })
+  @ApiResponse({ status: 409, description: 'Stundentafel already exists for this class' })
+  async applyStundentafel(
+    @Param('id') id: string,
+    @Body() dto: ApplyStundentafelDto,
+  ) {
+    return this.classSubjectService.applyStundentafel(id, dto.schoolType);
+  }
+
+  @Post(':id/reset-stundentafel')
+  @HttpCode(HttpStatus.OK)
+  @CheckPermissions({ action: 'update', subject: 'class' })
+  @ApiOperation({
+    summary:
+      'Reset Stundentafel — delete all ClassSubject rows then re-apply template atomically (CLASS-03, D-09).',
+  })
+  @ApiResponse({ status: 200, description: 'Stundentafel reset' })
+  async resetStundentafel(
+    @Param('id') id: string,
+    @Body() dto: ApplyStundentafelDto,
+  ) {
+    return this.classSubjectService.resetStundentafel(id, dto.schoolType);
   }
 }

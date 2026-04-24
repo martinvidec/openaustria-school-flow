@@ -27,7 +27,7 @@ export class StudentListQueryDto extends SchoolPaginationQueryDto {
   @ApiPropertyOptional({ description: 'Text search on firstName/lastName/email' })
   @IsOptional()
   @IsString()
-  search?: string;
+  declare search?: string;
 
   @ApiPropertyOptional({ description: 'Filter by Schuljahr (via class.schoolYearId)', format: 'uuid' })
   @IsOptional()

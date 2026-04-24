@@ -1,21 +1,33 @@
-import { Controller, Get, Post, Delete, Body, Param, HttpCode, HttpStatus } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GroupService } from './group.service';
-import { GroupMembershipRuleService, GroupAutoAssignRule } from './group-membership-rule.service';
+import {
+  GroupAutoAssignRule,
+  GroupMembershipRuleService,
+} from './group-membership-rule.service';
 import { CreateGroupDto } from './dto/create-group.dto';
-import { AssignStudentDto } from './dto/assign-student.dto';
+import { AssignGroupMemberDto } from './dto/assign-group-member.dto';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator';
 
 @ApiTags('groups')
 @ApiBearerAuth()
-@Controller('groups')
+@Controller()
 export class GroupController {
   constructor(
     private groupService: GroupService,
     private groupMembershipRuleService: GroupMembershipRuleService,
   ) {}
 
-  @Post()
+  @Post('groups')
   @CheckPermissions({ action: 'create', subject: 'class' })
   @ApiOperation({ summary: 'Create a new group within a class' })
   @ApiResponse({ status: 201, description: 'Group created' })
@@ -23,64 +35,84 @@ export class GroupController {
     return this.groupService.create(dto);
   }
 
-  @Get('by-class/:classId')
+  @Get('groups/by-class/:classId')
   @CheckPermissions({ action: 'read', subject: 'class' })
   @ApiOperation({ summary: 'List groups for a class with members' })
-  @ApiResponse({ status: 200, description: 'List of groups' })
   async findByClass(@Param('classId') classId: string) {
     return this.groupService.findByClass(classId);
   }
 
-  @Get(':id')
+  @Get('groups/:id')
   @CheckPermissions({ action: 'read', subject: 'class' })
   @ApiOperation({ summary: 'Get a group with members' })
-  @ApiResponse({ status: 200, description: 'Group found' })
-  @ApiResponse({ status: 404, description: 'Group not found' })
   async findOne(@Param('id') id: string) {
     return this.groupService.findOne(id);
   }
 
-  @Post(':id/members')
+  @Post('groups/:id/members')
   @CheckPermissions({ action: 'update', subject: 'class' })
-  @ApiOperation({ summary: 'Add a student to a group (manual assignment)' })
+  @ApiOperation({
+    summary:
+      'Add a student to a group. Defaults to manual (isAutoAssigned=false) per CLASS-04 / D-11.',
+  })
   @ApiResponse({ status: 201, description: 'Student added to group' })
   @ApiResponse({ status: 409, description: 'Student is already a member' })
-  async addMember(@Param('id') groupId: string, @Body() dto: AssignStudentDto) {
-    return this.groupService.addMember(groupId, dto.studentId);
+  async addMember(
+    @Param('id') groupId: string,
+    @Body() dto: AssignGroupMemberDto,
+  ) {
+    return this.groupService.addMember(groupId, dto.studentId, dto.isAutoAssigned ?? false);
   }
 
-  @Delete(':id/members/:studentId')
+  @Delete('groups/:id/members/:studentId')
   @HttpCode(HttpStatus.NO_CONTENT)
   @CheckPermissions({ action: 'update', subject: 'class' })
   @ApiOperation({ summary: 'Remove a student from a group' })
-  @ApiResponse({ status: 204, description: 'Student removed from group' })
-  @ApiResponse({ status: 404, description: 'Membership not found' })
-  async removeMember(@Param('id') groupId: string, @Param('studentId') studentId: string) {
+  async removeMember(
+    @Param('id') groupId: string,
+    @Param('studentId') studentId: string,
+  ) {
     await this.groupService.removeMember(groupId, studentId);
   }
 
-  @Delete(':id')
+  @Delete('groups/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @CheckPermissions({ action: 'delete', subject: 'class' })
   @ApiOperation({ summary: 'Delete a group (cascades memberships)' })
-  @ApiResponse({ status: 204, description: 'Group deleted' })
-  @ApiResponse({ status: 404, description: 'Group not found' })
   async remove(@Param('id') id: string) {
     await this.groupService.remove(id);
   }
 
-  @Post('apply-rules/:classId')
+  @Post('groups/apply-rules/:classId')
   @CheckPermissions({ action: 'update', subject: 'class' })
-  @ApiOperation({ summary: 'Apply auto-derivation rules to create groups and assign students' })
-  @ApiResponse({ status: 200, description: 'Rules applied successfully' })
-  async applyRules(@Param('classId') classId: string, @Body() rules: GroupAutoAssignRule[]) {
-    return this.groupMembershipRuleService.applyRules(classId, rules);
+  @ApiOperation({
+    summary:
+      'Apply auto-derivation rules. When body is empty, defaults to DB-stored GroupDerivationRule rows (D-12).',
+  })
+  async applyRules(
+    @Param('classId') classId: string,
+    @Body() rules: GroupAutoAssignRule[] | undefined,
+  ) {
+    const hasInlineRules = Array.isArray(rules) && rules.length > 0;
+    return this.groupMembershipRuleService.applyRules(
+      classId,
+      hasInlineRules ? rules : undefined,
+    );
   }
 
-  @Delete('auto-assignments/:classId')
+  @Get('classes/:classId/apply-rules/preview')
+  @CheckPermissions({ action: 'read', subject: 'class' })
+  @ApiOperation({
+    summary:
+      'Dry-run preview of applyRules — surfaces new groups / memberships / manual-override conflicts (D-10).',
+  })
+  async previewApplyRules(@Param('classId') classId: string) {
+    return this.groupMembershipRuleService.applyRulesDryRun(classId);
+  }
+
+  @Delete('groups/auto-assignments/:classId')
   @CheckPermissions({ action: 'update', subject: 'class' })
   @ApiOperation({ summary: 'Clear all auto-assigned memberships for a class' })
-  @ApiResponse({ status: 200, description: 'Auto-assignments cleared' })
   async clearAutoAssignments(@Param('classId') classId: string) {
     return this.groupMembershipRuleService.clearAutoAssignments(classId);
   }

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../config/database/prisma.service';
 
 export interface GroupAutoAssignRule {
-  groupType: 'RELIGION' | 'LEISTUNG' | 'LANGUAGE';
+  groupType: 'RELIGION' | 'WAHLPFLICHT' | 'LEISTUNG' | 'LANGUAGE' | 'CUSTOM';
   groupName: string;
   level?: string;
   studentFilter?: {
@@ -15,6 +15,16 @@ export interface ApplyRulesResult {
   membershipsCreated: number;
 }
 
+export interface ApplyRulesPreview {
+  newGroups: Array<{ name: string; groupType: string; level?: string }>;
+  newMemberships: Array<{ studentId: string; groupName: string }>;
+  conflicts: Array<{
+    studentId: string;
+    groupName: string;
+    reason: 'MANUAL_ASSIGNMENT_EXISTS';
+  }>;
+}
+
 @Injectable()
 export class GroupMembershipRuleService {
   constructor(private prisma: PrismaService) {}
@@ -23,8 +33,16 @@ export class GroupMembershipRuleService {
    * Apply auto-derivation rules to create groups and assign students.
    * Only creates memberships with isAutoAssigned=true.
    * Preserves existing manual (isAutoAssigned=false) assignments.
+   *
+   * Phase 12-02 extension: when `inlineRules` is omitted, loads persisted
+   * rules from `GroupDerivationRule` so the UI does not have to ship them
+   * in the POST body.
    */
-  async applyRules(classId: string, rules: GroupAutoAssignRule[]): Promise<ApplyRulesResult> {
+  async applyRules(
+    classId: string,
+    inlineRules?: GroupAutoAssignRule[],
+  ): Promise<ApplyRulesResult> {
+    const rules = inlineRules ?? (await this.loadRulesFromDb(classId));
     let groupsCreated = 0;
     let membershipsCreated = 0;
 
@@ -82,6 +100,84 @@ export class GroupMembershipRuleService {
     }
 
     return { groupsCreated, membershipsCreated };
+  }
+
+  /**
+   * Dry-run preview of what `applyRules(classId, inlineRules?)` would do
+   * without touching the database. Consumed by ApplyRulesPreviewDialog
+   * (D-10). Surfaces conflicts where a manual assignment would block the
+   * auto-assignment.
+   */
+  async applyRulesDryRun(
+    classId: string,
+    inlineRules?: GroupAutoAssignRule[],
+  ): Promise<ApplyRulesPreview> {
+    const rules = inlineRules ?? (await this.loadRulesFromDb(classId));
+    const preview: ApplyRulesPreview = {
+      newGroups: [],
+      newMemberships: [],
+      conflicts: [],
+    };
+
+    for (const rule of rules) {
+      const existingGroup = await this.prisma.group.findFirst({
+        where: {
+          classId,
+          name: rule.groupName,
+          groupType: rule.groupType as any,
+        },
+      });
+      if (!existingGroup) {
+        preview.newGroups.push({
+          name: rule.groupName,
+          groupType: rule.groupType,
+          level: rule.level,
+        });
+      }
+
+      for (const studentId of rule.studentFilter?.studentIds ?? []) {
+        if (existingGroup) {
+          const existingMembership = await this.prisma.groupMembership.findUnique({
+            where: {
+              groupId_studentId: { groupId: existingGroup.id, studentId },
+            },
+          });
+          if (existingMembership?.isAutoAssigned === false) {
+            preview.conflicts.push({
+              studentId,
+              groupName: rule.groupName,
+              reason: 'MANUAL_ASSIGNMENT_EXISTS',
+            });
+            continue;
+          }
+          if (existingMembership) {
+            // already auto-assigned — no-op
+            continue;
+          }
+        }
+        preview.newMemberships.push({ studentId, groupName: rule.groupName });
+      }
+    }
+
+    return preview;
+  }
+
+  /** Map DB-persisted GroupDerivationRule rows to the in-memory rule shape. */
+  async loadRulesFromDb(classId: string): Promise<GroupAutoAssignRule[]> {
+    const rules = await this.prisma.groupDerivationRule.findMany({
+      where: { classId },
+      orderBy: { createdAt: 'asc' },
+    });
+    return rules.map((r) => ({
+      groupType: r.groupType as any,
+      groupName: r.groupName,
+      level: r.level ?? undefined,
+      studentFilter: {
+        studentIds: Array.isArray(r.studentIds)
+          ? (r.studentIds as string[])
+          : [],
+      },
+    }));
   }
 
   /**

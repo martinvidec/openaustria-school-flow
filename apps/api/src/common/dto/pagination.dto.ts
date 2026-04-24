@@ -33,6 +33,16 @@ export class SchoolPaginationQueryDto extends PaginationQueryDto {
   @IsOptional()
   @IsString()
   schoolId?: string;
+
+  /**
+   * Optional substring search. Phase 12-02 gap-fix for TeacherSearchPopover
+   * (D-08 / RESEARCH A2). TeacherService.findAll matches firstName / lastName
+   * / email case-insensitively via Person.OR filter.
+   */
+  @ApiPropertyOptional({ description: 'Substring search (case-insensitive)' })
+  @IsOptional()
+  @IsString()
+  search?: string;
 }
 
 export class PaginatedResponseDto<T> {

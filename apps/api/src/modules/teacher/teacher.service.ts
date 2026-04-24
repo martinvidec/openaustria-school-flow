@@ -73,11 +73,24 @@ export class TeacherService {
 
   async findAll(
     schoolId: string,
-    pagination: PaginationQueryDto,
+    pagination: PaginationQueryDto & { search?: string },
   ): Promise<PaginatedResponseDto<any>> {
+    // Phase 12-02 gap-fix: accept optional `search` substring matched
+    // case-insensitively on Person.firstName | lastName | email so the
+    // /admin/classes Klassenvorstand-Picker (TeacherSearchPopover) works.
+    const where: any = { schoolId };
+    if (pagination.search && pagination.search.length > 0) {
+      where.person = {
+        OR: [
+          { firstName: { contains: pagination.search, mode: 'insensitive' } },
+          { lastName: { contains: pagination.search, mode: 'insensitive' } },
+          { email: { contains: pagination.search, mode: 'insensitive' } },
+        ],
+      };
+    }
     const [data, total] = await Promise.all([
       this.prisma.teacher.findMany({
-        where: { schoolId },
+        where,
         skip: pagination.skip,
         take: pagination.limit,
         include: {
@@ -86,7 +99,7 @@ export class TeacherService {
         },
         orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.teacher.count({ where: { schoolId } }),
+      this.prisma.teacher.count({ where }),
     ]);
 
     return {

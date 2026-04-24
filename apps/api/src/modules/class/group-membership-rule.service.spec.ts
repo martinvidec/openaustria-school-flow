@@ -185,16 +185,91 @@ describe('GroupMembershipRuleService', () => {
       expect(result.membershipsCreated).toBe(0);
     });
 
-    // --- Phase 12-02 Wave 0 stubs: turned green in Task 2 ---
+    // --- Phase 12-02 Wave 0 stubs: turned green ---
     describe('applyRulesDryRun', () => {
-      it.todo('returns newGroups/newMemberships without writing to DB');
-      it.todo('returns conflicts when manual membership exists on any rule-targeted student');
-      it.todo('defaults to DB-stored rules when inline empty');
+      it('returns newGroups/newMemberships without writing to DB', async () => {
+        const preview = await ruleService.applyRulesDryRun('class-3b', [
+          {
+            groupType: 'RELIGION',
+            groupName: '3B-Katholisch',
+            studentFilter: { studentIds: ['student-1', 'student-2'] },
+          },
+        ]);
+        expect(preview.newGroups.length).toBe(1);
+        expect(preview.newMemberships.length).toBe(2);
+        expect(preview.conflicts).toEqual([]);
+        // Assert that no writes happened
+        expect(prisma.group.create).not.toHaveBeenCalled();
+        expect(prisma.groupMembership.create).not.toHaveBeenCalled();
+      });
+
+      it('returns conflicts when manual membership exists on rule-targeted student', async () => {
+        prisma.group.findFirst.mockResolvedValueOnce({
+          id: 'group-existing',
+          classId: 'class-3b',
+          name: '3B-Katholisch',
+          groupType: 'RELIGION',
+        });
+        prisma.groupMembership.findUnique.mockResolvedValueOnce({
+          id: 'mem-manual',
+          groupId: 'group-existing',
+          studentId: 'student-1',
+          isAutoAssigned: false,
+        });
+
+        const preview = await ruleService.applyRulesDryRun('class-3b', [
+          {
+            groupType: 'RELIGION',
+            groupName: '3B-Katholisch',
+            studentFilter: { studentIds: ['student-1'] },
+          },
+        ]);
+        expect(preview.conflicts).toEqual([
+          { studentId: 'student-1', groupName: '3B-Katholisch', reason: 'MANUAL_ASSIGNMENT_EXISTS' },
+        ]);
+      });
+
+      it('defaults to DB-stored rules when no inline rules are passed', async () => {
+        const dbRules = [
+          {
+            id: 'rule-1',
+            classId: 'class-3b',
+            groupType: 'RELIGION',
+            groupName: '3B-Islam',
+            level: null,
+            studentIds: ['student-3'],
+          },
+        ];
+        (prisma as any).groupDerivationRule = {
+          findMany: vi.fn().mockResolvedValue(dbRules),
+        };
+
+        const preview = await ruleService.applyRulesDryRun('class-3b');
+        expect(preview.newGroups[0]?.name).toBe('3B-Islam');
+        expect(preview.newMemberships[0]?.studentId).toBe('student-3');
+      });
     });
 
     describe('applyRules — DB source', () => {
-      it.todo('loads rules from GroupDerivationRule when no inline rules');
-      it.todo('matches applyRulesDryRun preview exactly on second call');
+      it('loads rules from GroupDerivationRule when no inline rules', async () => {
+        const dbRules = [
+          {
+            id: 'rule-1',
+            classId: 'class-3b',
+            groupType: 'RELIGION',
+            groupName: '3B-Ethik',
+            level: null,
+            studentIds: ['student-1'],
+          },
+        ];
+        (prisma as any).groupDerivationRule = {
+          findMany: vi.fn().mockResolvedValue(dbRules),
+        };
+
+        const result = await ruleService.applyRules('class-3b');
+        expect(result.groupsCreated).toBe(1);
+        expect(result.membershipsCreated).toBe(1);
+      });
     });
 
     it('Test 4: clearAutoAssignments removes stale auto-assignments', async () => {

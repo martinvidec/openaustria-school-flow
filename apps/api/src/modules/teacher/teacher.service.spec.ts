@@ -290,12 +290,84 @@ describe('TeacherService', () => {
     });
   });
 
-  // --- Phase 12-02 Wave 0 stubs: turned green in Task 2 ---
+  // --- Phase 12-02 Wave 0 stubs: turned green ---
   describe('findAll — search gap-fix', () => {
-    it.todo('returns teachers where person.firstName contains search (case-insensitive)');
-    it.todo('matches lastName substring');
-    it.todo('matches email substring');
-    it.todo('returns paginated empty array when no match');
+    function makeQuery(search?: string): PaginationQueryDto & { search?: string } {
+      const q = new PaginationQueryDto();
+      q.page = 1;
+      q.limit = 20;
+      (q as any).search = search;
+      return q;
+    }
+
+    it('returns teachers where person.firstName contains search (case-insensitive)', async () => {
+      mockPrisma.teacher.findMany.mockResolvedValue([{ id: 'teacher-1' }]);
+      mockPrisma.teacher.count.mockResolvedValue(1);
+
+      await service.findAll('school-1', makeQuery('Maria'));
+
+      expect(mockPrisma.teacher.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            schoolId: 'school-1',
+            person: expect.objectContaining({
+              OR: expect.arrayContaining([
+                expect.objectContaining({
+                  firstName: { contains: 'Maria', mode: 'insensitive' },
+                }),
+              ]),
+            }),
+          }),
+        }),
+      );
+    });
+
+    it('matches lastName substring', async () => {
+      mockPrisma.teacher.findMany.mockResolvedValue([]);
+      mockPrisma.teacher.count.mockResolvedValue(0);
+
+      await service.findAll('school-1', makeQuery('hub'));
+
+      const call = mockPrisma.teacher.findMany.mock.calls[0][0];
+      expect(call.where.person.OR).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ lastName: { contains: 'hub', mode: 'insensitive' } }),
+        ]),
+      );
+    });
+
+    it('matches email substring', async () => {
+      mockPrisma.teacher.findMany.mockResolvedValue([]);
+      mockPrisma.teacher.count.mockResolvedValue(0);
+
+      await service.findAll('school-1', makeQuery('@schule.at'));
+
+      const call = mockPrisma.teacher.findMany.mock.calls[0][0];
+      expect(call.where.person.OR).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ email: { contains: '@schule.at', mode: 'insensitive' } }),
+        ]),
+      );
+    });
+
+    it('returns paginated empty array when no match', async () => {
+      mockPrisma.teacher.findMany.mockResolvedValue([]);
+      mockPrisma.teacher.count.mockResolvedValue(0);
+
+      const result = await service.findAll('school-1', makeQuery('zzzz-no-match'));
+      expect(result.data).toEqual([]);
+      expect(result.meta.total).toBe(0);
+    });
+
+    it('omits person filter when search is absent (backward compat)', async () => {
+      mockPrisma.teacher.findMany.mockResolvedValue([]);
+      mockPrisma.teacher.count.mockResolvedValue(0);
+
+      await service.findAll('school-1', makeQuery(undefined));
+
+      const call = mockPrisma.teacher.findMany.mock.calls[0][0];
+      expect(call.where).toEqual({ schoolId: 'school-1' });
+    });
   });
 
   describe('getEffectiveCapacity', () => {
