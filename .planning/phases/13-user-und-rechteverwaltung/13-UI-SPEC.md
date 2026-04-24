@@ -50,7 +50,7 @@ Declared values (all multiples of 4, aligned to Tailwind 4 defaults — use Tail
 **Phase-13 mobile exceptions (MOBILE-ADM-02 hard rule — 375px viewport):**
 - **Touch targets ≥ 44×44px:** Row-action icon buttons, filter-bar toggles, role-checkboxes, Granted/Denied switches, Accordion triggers, Tab triggers MUST render at min `h-11 w-11` (44px) on viewports `<640px`. Desktop may shrink to `h-9` (36px).
 - **Mobile `StickyMobileSaveBar`:** 56px fixed height at bottom, 16px horizontal padding — inherits Phase 10 component spec, no changes. Present on Rollen-Tab and Overrides+Person-Link merged Tab.
-- **Mobile list row density:** User-list table rows on `<640px` switch to stacked `Card` layout with 12px vertical padding (exception: 12px is a multiple of 4, non-8-scale but justified by card density — flagged for checker awareness, consistent with Phase 12 exception).
+- **Mobile list row density:** User-list table rows on `<640px` switch to stacked `Card` layout with 8px vertical padding (Tailwind `p-2`) to maintain tight card density on narrow viewports.
 - **Override-Editor Row on mobile:** each row stacks vertically into a `Card` with 16px inner padding; Conditions-Panel becomes a full-width collapsible at the bottom of the card.
 - **Effective-Permissions Accordion:** subject-group headers sticky at top of scroll area (`sticky top-0 bg-card z-10`) on mobile so the current group context stays visible while long ability lists scroll.
 
@@ -178,7 +178,7 @@ German UI, English API fields (Phase 1 D-15). All user-facing strings below are 
 | User-Detail Stammdaten tab Enabled-Toggle action button | `Sperren` / `Reaktivieren` (state-dependent) |
 | User-Detail Rollen tab sticky-save | `Änderungen speichern` |
 | User-Detail Overrides section footer (add new) | `+ Override hinzufügen` |
-| User-Detail Overrides section inline per-row save | `Speichern` |
+| User-Detail Overrides section inline per-row save | `Override speichern` |
 | User-Detail Person-Link section (unlinked) | `Mit Person verknüpfen` |
 | User-Detail Person-Link section (linked) | `Verknüpfung ändern` |
 | User-Detail Person-Link section (linked) secondary | `Verknüpfung lösen` *(variant="destructive")* |
@@ -655,7 +655,7 @@ Areas deliberately NOT pinned; planner/executor to confirm via Glob against exis
 - [ ] Dimension 2 Visuals: PASS (26-component new inventory + existing shared reuse + icon inventory + layout per breakpoint documented)
 - [ ] Dimension 3 Color: PASS (60/30/10 + primary reserved-for + destructive reserved-for + success reserved-for + warning reserved-for + Access-signal pairings triad)
 - [ ] Dimension 4 Typography: PASS (4 sizes, 2 weights, line heights declared, monospace scoped to Conditions-JSON only)
-- [ ] Dimension 5 Spacing: PASS (8-point scale + mobile 44px exception declared)
+- [ ] Dimension 5 Spacing: PASS (8-point scale + mobile 44px touch-target floor; all card-padding values stay on the declared scale)
 - [ ] Dimension 6 Registry Safety: PASS (shadcn official only; `accordion` + `radio-group` install flagged for Wave 0)
 
 **Approval:** pending
@@ -668,7 +668,7 @@ Areas deliberately NOT pinned; planner/executor to confirm via Glob against exis
 **Design System:** shadcn/ui default-style + neutral base + CSS variables (detected from existing `apps/web/components.json` + `apps/web/src/app.css`)
 
 ### Contract Summary
-- Spacing: 8-point scale (4, 8, 16, 24, 32, 48) + mobile 44px touch-target exception
+- Spacing: 8-point scale (4, 8, 16, 24, 32, 48) + mobile 44px touch-target floor
 - Typography: 4 sizes (14, 14, 18, 24), 2 weights (400, 600), Inter; monospace scoped to Conditions-JSON editor
 - Color: 60 white / 30 card-neutral / 10 blue primary; destructive red, success green, warning amber — each with explicit reserved-for lists; security-critical Access-signal pairings triad (color + icon + text) codified
 - Copywriting: 16 primary-CTA labels, 5 empty states, 12 error-toast templates, 6 destructive confirmations, 4 Konsistenz-Hinweis InfoBanner variants, 50+ inline micro-copy lines — all German, verbatim
