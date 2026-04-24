@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: verifying
-stopped_at: Phase 11 Plan 2 of 3 complete (SUBJECT-01/02/03/05). Ready for Plan 11-03 (E2E sweep — lifts 30 existing it.todo stubs across admin/teacher + admin/subject to real Vitest assertions + Playwright specs).
-last_updated: "2026-04-23T19:57:54.089Z"
+stopped_at: Phase 12 context gathered
+last_updated: "2026-04-24T05:15:11.257Z"
 last_activity: 2026-04-23
 progress:
   total_phases: 12
@@ -445,6 +445,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-23T14:02:54Z
-Stopped at: Phase 11 Plan 2 of 3 complete (SUBJECT-01/02/03/05). Ready for Plan 11-03 (E2E sweep — lifts 30 existing it.todo stubs across admin/teacher + admin/subject to real Vitest assertions + Playwright specs).
-Resume file: .planning/phases/11-lehrer-und-f-cher-verwaltung/11-03-PLAN.md
+Last session: 2026-04-24T05:15:11.252Z
+Stopped at: Phase 12 context gathered
+Resume file: .planning/phases/12-sch-ler-klassen-und-gruppenverwaltung/12-CONTEXT.md
