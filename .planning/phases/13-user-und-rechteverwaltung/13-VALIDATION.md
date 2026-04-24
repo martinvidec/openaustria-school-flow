@@ -53,7 +53,7 @@ created: 2026-04-24
 | 13-01-01 | 01 | 1 | USER-04 | unit+migration | `pnpm --filter @schoolflow/api exec prisma migrate reset --force --skip-seed && bash scripts/check-migration-hygiene.sh` | ❌ W0 (new migration) | ⬜ pending |
 | 13-01-02 | 01 | 1 | USER-01, USER-02, USER-03, USER-04, USER-05 | unit (shared) | `pnpm --filter @schoolflow/shared test --run` | ✅ | ⬜ pending |
 | 13-01-03 | 01 | 1 | USER-01, USER-02, USER-03, USER-04, USER-05 | unit+integration (api) | `pnpm --filter @schoolflow/api test -- --run keycloak-admin.service.spec user-directory.service.spec role-management.service.spec permission-override.service.spec effective-permissions.service.spec casl-ability.factory.spec` | ❌ W0 (new specs) | ⬜ pending |
-| 13-02-01 | 02 | 2 | USER-01 | typecheck + manual smoke | `pnpm --filter @schoolflow/web typecheck && pnpm --filter @schoolflow/web exec tsr generate` | ✅ | ⬜ pending |
+| 13-02-01 | 02 | 2 | USER-01 | typecheck + build (route codegen) | `pnpm --filter @schoolflow/web typecheck && pnpm --filter @schoolflow/web build` | ✅ | ⬜ pending |
 | 13-02-02 | 02 | 2 | USER-02, USER-03, USER-04 | typecheck + manual smoke | `pnpm --filter @schoolflow/web typecheck` | ✅ | ⬜ pending |
 | 13-02-03 | 02 | 2 | USER-05 | typecheck + manual smoke | `pnpm --filter @schoolflow/web typecheck && pnpm --filter @schoolflow/web build` | ✅ | ⬜ pending |
 | 13-03-01 | 03 | 3 | (helper — all USER-XX) | typecheck | `cd apps/web && pnpm exec tsc --noEmit` | ❌ W0 (new helper) | ⬜ pending |
