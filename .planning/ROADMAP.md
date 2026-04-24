@@ -232,13 +232,13 @@ Plans:
 **Plans:** 3 plans
 
 **Success criteria:**
-- [ ] Admin kann Schüler mit Person-Daten und Erziehungsberechtigten anlegen, editieren und archivieren
-- [ ] Admin kann Klassen anlegen/editieren mit Stammklasse-Marker und Klassenvorstand-Zuweisung
-- [ ] Admin kann Stundentafel-Vorlage auf eine Klasse anwenden und pro Klasse anpassen (inkl. SUBJECT-04: Wochenstunden pro Fach pro Klassenstufe editieren)
-- [ ] Admin kann Gruppenableitungsregeln (Religion/Leistung/Wahlpflicht) pro Klasse definieren und Gruppenzugehörigkeiten manuell überschreiben
-- [ ] Admin kann Schüler zwischen Stammklassen umziehen ohne Datenverlust und ohne Referenz-Bruch zum Klassenbuch
-- [ ] **E2E (ex-10.4):** Schüler-CRUD (create/edit/delete, Elternlink) — je Happy + Error, Desktop + Mobile-375 für Formulare
-- [ ] **E2E (ex-10.4):** Klassen-CRUD (create/edit/delete mit Orphan-Guard, Stundentafel-Zuordnung) — je Happy + Error, Desktop + Mobile-375 für Formulare
+- [x] Admin kann Schüler mit Person-Daten und Erziehungsberechtigten anlegen, editieren und archivieren
+- [x] Admin kann Klassen anlegen/editieren mit Stammklasse-Marker und Klassenvorstand-Zuweisung
+- [x] Admin kann Stundentafel-Vorlage auf eine Klasse anwenden und pro Klasse anpassen (inkl. SUBJECT-04: Wochenstunden pro Fach pro Klassenstufe editieren)
+- [x] Admin kann Gruppenableitungsregeln (Religion/Leistung/Wahlpflicht) pro Klasse definieren und Gruppenzugehörigkeiten manuell überschreiben
+- [x] Admin kann Schüler zwischen Stammklassen umziehen ohne Datenverlust und ohne Referenz-Bruch zum Klassenbuch
+- [x] **E2E (ex-10.4):** Schüler-CRUD (create/edit/delete, Elternlink) — je Happy + Error, Desktop + Mobile-375 für Formulare (Plan 12-03: 11 Playwright specs green)
+- [x] **E2E (ex-10.4):** Klassen-CRUD (create/edit/delete mit Orphan-Guard, Stundentafel-Zuordnung) — je Happy + Error, Desktop + Mobile-375 für Formulare (Plan 12-03: 6 class specs green)
 
 **Known risks / backend gap candidates:**
 - CLASS-04 (Gruppenmitgliedschaften manuell verwalten): GroupMembership-CRUD in v1.0 unterstützt bereits `isAutoAssigned` — UI muss selective override reflektieren.
@@ -248,7 +248,7 @@ Plans:
 Plans:
 - [x] 12-01-PLAN.md — Shared foundation (Zod schemas + Student.isArchived migration + shadcn Command/Checkbox + AffectedEntitiesList kind=student) + Student CRUD FE/BE + Parent-Module greenfield + StudentService.remove Orphan-Guard + Sidebar Schüler-Eintrag [Wave 1] ✅ Complete 2026-04-24 (commits 3f4ce08, b7bc8cf, 2577860)
 - [x] 12-02-PLAN.md — Class CRUD FE/BE (with Klassenvorstand TeacherSearchPopover + Teacher-Search gap-fix) + Apply-Stundentafel + SUBJECT-04 Wochenstunden-Editor + GroupDerivationRule migration + Rule-Builder + Dry-Run-Preview + Manual-Overrides + ClassService.remove Orphan-Guard + AffectedEntitiesList kind=class + Sidebar Klassen-Eintrag [Wave 2, depends on 12-01] ✅ Complete 2026-04-24 (commits 7a58260, e263340, 08ba000)
-- [ ] 12-03-PLAN.md — 12 Playwright E2E specs: Schüler-CRUD happy/error/mobile + archive/parents/move; Klassen-CRUD happy/error/mobile + klassenvorstand/stundentafel/gruppen — Pixel 5 viewport, Phase 10.3 harness, SILENT-4XX invariant codified, E2E-COVERAGE-MATRIX.md bump [Wave 3, depends on 12-01 + 12-02]
+- [x] 12-03-PLAN.md — 11 Playwright E2E specs: Schüler-CRUD happy/error/mobile + archive/parents/move; Klassen-CRUD happy/error/mobile + klassenvorstand/stundentafel/gruppen — Pixel 5 viewport, Phase 10.3 harness, SILENT-4XX invariant codified, E2E-COVERAGE-MATRIX.md bump [Wave 3, depends on 12-01 + 12-02] ✅ Complete 2026-04-24 (commits c692ac5, 26c4282, 5e86796, 44628a9, 2791aa6). 19/19 desktop + 5/5 mobile-chrome green. 5 Rule-1/2/3 backend fixes (11 DTOs @IsUUID→@IsString, shared Zod school-class .uuid→.min(1), ClassService.create persist klassenvorstandId, pagination Max 100→500).
 
 ---
 

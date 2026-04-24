@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
-stopped_at: Completed Plan 12-02
-last_updated: "2026-04-24T10:40:53Z"
-last_activity: 2026-04-24 -- Plan 12-02 Klassen-Admin-Surface + GroupDerivationRule + Stundentafel-Flow shipped
+stopped_at: Completed Plan 12-03
+last_updated: "2026-04-24T11:44:02Z"
+last_activity: 2026-04-24 -- Plan 12-03 E2E Playwright sweep shipped (11 specs, STUDENT-01..04 + CLASS-01..05 + SUBJECT-04 locked)
 progress:
   total_phases: 12
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 31
-  completed_plans: 30
-  percent: 48
+  completed_plans: 31
+  percent: 65
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 
 ## Current Position
 
-Phase: 12 (sch-ler-klassen-und-gruppenverwaltung) — EXECUTING
+Phase: 12 (sch-ler-klassen-und-gruppenverwaltung) — COMPLETE
 Plan: 3 of 3
-Status: Executing Phase 12 (12-01 complete; 12-02 complete; 12-03 next)
-Last activity: 2026-04-24 -- Plan 12-02 Klassen-Admin-Surface + GroupDerivationRule + Stundentafel-Flow shipped
+Status: Phase 12 complete (12-01 ✓, 12-02 ✓, 12-03 ✓)
+Last activity: 2026-04-24 -- Plan 12-03 E2E Playwright sweep shipped (11 specs, STUDENT-01..04 + CLASS-01..05 + SUBJECT-04 locked)
 
-Progress: [█████░░░░░] 48%
+Progress: [██████░░░░] 65%
 
 ## Performance Metrics
 
@@ -138,6 +138,7 @@ Progress: [█████░░░░░] 48%
 | Phase 11 P03 | 175min | 3 tasks | 22 files |
 | Phase 12 P01 | 28min | 3 tasks | 47 files |
 | Phase 12 P02 | 28min | 3 tasks | 61 files |
+| Phase 12 P03 | 54min | 3 tasks | 30 files |
 
 ## Accumulated Context
 
@@ -421,6 +422,13 @@ Recent decisions affecting current work:
 - [Phase 11-02]: SubjectApiError + inline-error-for-409 mutation idiom — when 409 maps to a field-level validation issue (unique index), the mutation hook's onError suppresses the toast for status 409 so the caller (dialog/form) can call setError to render inline. All other 4xx still toast. Applied to useCreateSubject + useUpdateSubject (Kürzel uniqueness → inline on shortName field, dialog stays open). Also reused by useDeleteSubject (409 → DeleteSubjectDialog blocks + fires its own toast) to avoid double-toast.
 - [Phase 11-02]: AffectedEntitiesList discriminated-union refactor (kind: 'teacher' | 'subject') — single component covers both Orphan-Guard domains. Teacher payload remains backward-compat (default kind='teacher'); Plan 11-01 DeleteTeacherDialog unchanged. Pattern ready for any future entity that needs an Orphan-Guard blocked-state view.
 - [Phase 11-02]: SubjectAffectedEntitiesDialog uses existing useSubject(id) findOne include — no dedicated /subjects/:id/affected-entities endpoint needed for Phase 11. Scalar category counts (lesson/homework/exam) are 0 in the informational preview (they come from SubjectService.remove's extensions in the destructive 409 path where they matter).
+- [Phase 12-03]: 11 DTOs + 1 Zod schema pre-existing Rule-1 bug — @IsUUID() / z.string().uuid() rejected seed Prisma slug IDs (seed-school-bgbrg-musterstadt, seed-class-1a, seed-subject-m) with 422. Live E2E runs surfaced this during Plan 12-03 wiring. Relaxed to @IsString() @MinLength(1) + z.string().min(1) across student/parent/class/group-derivation-rule DTOs + SchoolClassCreateSchema (parity with Phase 11-03 Teacher DTO fix).
+- [Phase 12-03]: ClassService.create silently discarded klassenvorstandId (Rule-2 missing critical). UI create dialog sent it, DTO accepted it, service never copied it into Prisma.data. Fix: spread {klassenvorstandId} when present.
+- [Phase 12-03]: PaginationQueryDto.limit raised from Max(100) to Max(500) — admin pickers (MoveStudentDialog, ClassStudentsTab) request limit=200 and was rejected with 422. Bump gives headroom for tenant-scoped "all classes in one page" scenarios.
+- [Phase 12-03]: E2E prefix isolation: each Phase-12 spec uses a distinct short prefix (E2E-STD-CRUD-, E2E-STD-ERR-, E2E-STD-MOBILE-, E2E-STD-ARCH-, E2E-STD-PARENT-, E2E-STD-MOVE- for students; E2E-CC-, E2E-CE-, E2E-CM-, E2E-KV-, E2E-ST-, E2E-GR-, E2E-MV- for classes). Class prefixes shortened to ≤15 chars to fit SchoolClass.name VARCHAR(20).
+- [Phase 12-03]: Dialog-scoped selectors (`page.getByRole('dialog').getByLabel(field)`) prevent strict-mode violations when the filter bar Input and form Input share label-like text. Default pattern for admin forms with list-level filters.
+- [Phase 12-03]: Popover combobox role — TeacherSearchPopover + ParentSearchPopover expose their CommandInput as role='combobox'; specs must use `getByRole('combobox', { name })` instead of `getByLabel()` (matches textbox fallback).
+- [Phase 12-03]: Phase-12 canonical E2E gate = `playwright test admin-students admin-classes --project=desktop` (19/19) + `--project=mobile-chrome` (5/5). Admin-import + screenshots failures are pre-existing environmental flakes, tracked in Phase-12 deferred-items, don't block Phase-12 closure.
 
 ### Pending Todos
 
@@ -445,9 +453,10 @@ None yet.
 - Phase 11 Plan 2 complete 2026-04-23: Plan 11-02 ships SUBJECT-01/02/03/05 production-ready UI — /admin/subjects list (search Name oder Kürzel + empty-state `Erstes Fach anlegen` CTA + SubjectTable desktop 6-col + SubjectMobileCards) + SubjectFormDialog (Name + Kürzel ONLY per D-11 rollback — Kürzel auto-uppercases on blur, 409 uniqueness → inline `Dieses Kürzel ist bereits vergeben.` error, info note `Manuelle Farbauswahl folgt in einer späteren Phase`) + DeleteSubjectDialog (happy/blocked two-state reusing AffectedEntitiesList kind='subject') + SubjectAffectedEntitiesDialog (informational variant with Info icon) + StundentafelVorlagenSection (read-only shadcn Tabs per Schultyp sourced from @schoolflow/shared's AUSTRIAN_STUNDENTAFELN, merged Fach table with Jg.1-4 columns + footer totals + disabled `Zur Klassenverwaltung →` tooltip); SubjectService.remove Orphan-Guard gap-fix closes silent-cascade risk via two-phase query (pre-query dependent ClassSubject IDs → $transaction with IN filter for TimetableLesson/Homework/Exam + findMany for affectedClasses/Teachers take 50) — 8 new Vitest specs + RFC 9457 extensions.affectedEntities={affectedClasses, affectedTeachers, lessonCount, homeworkCount, examCount}; AUSTRIAN_STUNDENTAFELN moved from apps/api to packages/shared/src/stundentafel/ (VERBATIM copy) — apps/api is now 9-line pure re-export shim; SubjectCreateSchema + SubjectUpdateSchema authored in @schoolflow/shared (Name + Kürzel, shortName .transform → uppercase); SCHOOL_TYPES_LABELS (7 modern) + LEGACY_SCHOOL_TYPES_LABELS (AHS_UNTER/AHS_OBER/MS) + getSchoolTypeLabel unified lookup; AppSidebar + MobileSidebar now render BOTH Lehrer + Fächer entries in "Personal & Fächer" group; AffectedEntitiesList refactored to discriminated union (kind: 'teacher' | 'subject') — Plan 11-01 DeleteTeacherDialog unchanged (backward-compat default). 3 atomic commits (dc60fd5 Wave-0 shared move + c8cc3e8 Orphan-Guard + e0b5ccf admin Fächer UI), 25 files touched, 75/75 shared + 29/29 API subject + 57/66-todo web tests green, zero new TS errors on subject code (same 12 pre-existing Phase-10.1-deferred errors unchanged). 2 Rule-1/3 auto-fixes documented (TimetableLesson nested-relation filter drift, mock Prisma shape expansion for $transaction + dependent-entity handles). Ready for Plan 11-03 (E2E sweep — final plan of Phase 11).
 - Phase 12 Plan 2 complete 2026-04-24: Plan 12-02 ships CLASS-01..05 + SUBJECT-04 production-ready admin — /admin/classes list (Filter-Bar with Schuljahr/Jahrgangsstufe/Name-Search 300ms debounce + ClassListTable dense 6-col + ClassMobileCards) + ClassCreateDialog (RHF zodResolver + TeacherSearchPopover picker) + 4-tab detail (/admin/classes/$classId?tab=stammdaten|stundentafel|students|groups) with UnsavedChangesDialog on dirty-tab-switch; backend gap-fixes: ClassService.remove Orphan-Guard (RFC 9457 409 with 6-count extensions.affectedEntities + top-50 sampleStudents — counts activeStudents/classSubjects/groups/groupMemberships/timetableRuns/derivationRules; TimetableLesson count split outside $transaction because no Prisma relation exists, uses classSubjectId IN clause), ClassService.findAll filters (schoolYearId/yearLevels[]/name-search) + Klassenvorstand.person include, ClassService.update accepts explicit null klassenvorstandId via ValidateIf, ClassSubjectService greenfield (applyStundentafel delegates to Phase-11 StundentafelTemplateService + 409 when rows exist, updateClassSubjects replace-all-in-tx with isCustomized auto-flip based on template comparison, resetStundentafel deleteMany + re-apply), GroupDerivationRule Prisma model + CRUD service/controller (cascade on SchoolClass delete), GroupMembershipRuleService extended (applyRulesDryRun no-writes + conflict detection for manual-override, loadRulesFromDb defaults applyRules to DB when body empty), GroupController manual-member endpoints accept isAutoAssigned flag + GET /classes/:classId/apply-rules/preview, TeacherService.findAll gap-fix (case-insensitive search on Person.firstName|lastName|email for TeacherSearchPopover), SchoolPaginationQueryDto gains shared optional search field (subclasses use `declare` modifier); Prisma migration `20260424000001_group_derivation_rule` (CLAUDE.md hard rule, hygiene check green); 4 shared Zod schemas (school-class/class-subject/group-derivation-rule/group-membership) with 38 new tests; AffectedEntitiesList extended with kind='class' + ClassAffectedEntities (kinds teacher/subject/student preserved byte-for-byte); sidebar Klassen entry with School lucide icon between Fächer and Schüler:innen (final order: Lehrer → Fächer → Klassen → Schüler:innen); Silent-4xx invariant locked in across 5 new hooks (12 useMutation + 16 onError); 3 atomic commits (7a58260 Wave 0 + e263340 backend + 08ba000 frontend), 61 files touched (42 created + 19 modified), 162/162 shared + 86/86 API class+teacher + 93/93 web tests green, API boots clean, zero new TS errors on class code. 5 Rule-1/3 auto-fixes documented (Zod 4 UUID version fixture, SchoolPaginationQueryDto.search subclass collision → `declare` modifier, UnsavedChangesDialog API alignment, PageShell has no actions prop, shared dist .js post-process per memory). Ready for Plan 12-03 (final plan of Phase 12 — E2E sweep).
 - Phase 11 Plan 1 complete 2026-04-22: Plan 11-01 ships TEACHER-01..06 production-ready UI — /admin/teachers list (search + empty-state CTA) + /admin/teachers/$teacherId detail with 4 tabs (Stammdaten/Lehrverpflichtung with live-WE-compute/Verfügbarkeits-Grid desktop + Day-Picker mobile/Ermässigungen row-add) + KeycloakLinkDialog (300ms debounce, alreadyLinked warning) + DeleteTeacherDialog (409 orphan-guard blocked-state with AffectedEntitiesList); TeacherService.remove orphan-guard gap-fix closes silent-zombification of denormalized-FK history (klassenvorstand + TimetableLesson + ClassBookEntry + GradeEntry + Substitution.original/substitute — 9 new Vitest specs); new KeycloakAdmin NestJS module with @keycloak/keycloak-admin-client + service-account token cache (5min TTL, 30s pre-expiry refresh) + Person.keycloakUserId enrichment for duplicate-link warning; 3 shared Zod schemas + werteinheiten util moved to @schoolflow/shared (FE/BE byte-identical per D-05); AppSidebar + MobileSidebar grouping refactor with "Personal & Fächer" group ready for 11-02 Fächer append. 3 atomic commits (09790da + f89079e + f3e7be0), 37 files touched, 28/28 API + 59/59 shared tests green, zero new TS errors on teacher code (12 pre-existing Phase-10.1-deferred errors unchanged). 6 Rule-1/2/3 auto-fixes documented (Zod enum drift from Prisma, Zod v4 UUID version-nibble, legacy useTeachers hook preservation, Vitest 4 constructor mock shape, TeacherDetailTabs onSave return type, Orphan-Guard mock Prisma shape expansion). Ready for Plan 11-02.
+- Phase 12 Plan 3 complete 2026-04-24: Plan 12-03 ships the Phase-12 E2E coverage campaign — 11 Playwright spec files (5 Schüler + 6 Klassen = 24 tests) locking STUDENT-01..04 + CLASS-01..05 + SUBJECT-04 at the E2E layer against the live dev API + Keycloak + Prisma stack. 3 API fixtures (student-with-refs, class-with-students, parent-existing) + helpers/students.ts shared admin token seeders + prefix-isolated cleanup. Silent-4xx invariant codified in every error-path spec (expect green-toast.not.toBeVisible() + red-alert/inline-error required). Pixel 5 mobile-chrome emulation is the verification baseline (5/5 mobile + 19/19 desktop green). Phase-canonical gate: `playwright test admin-students admin-classes --project=desktop` 19/19, `--project=mobile-chrome` 5/5. 5 atomic commits (c692ac5 fixtures + 26c4282 Rule-1 DTO relaxation + 5e86796 first spec + 44628a9 remaining 5 student specs + pagination bump + 2791aa6 6 class specs + backend fixes). 5 Rule-1/2/3 auto-fixes: (1) 11 backend DTOs @IsUUID()→@IsString() for seed slug IDs; (2) shared Zod school-class schema .uuid()→.min(1); (3) ClassService.create persist klassenvorstandId (was silently discarded); (4) PaginationQueryDto.limit Max(100)→Max(500) for admin pickers; (5) shared dist .js-extension post-process per memory. Phase-12 is COMPLETE — ROADMAP ready to mark. Pre-existing admin-import + screenshots failures documented in deferred-items (environmental, not Phase-12 regressions).
 
 ## Session Continuity
 
-Last session: 2026-04-24T10:40:53Z
-Stopped at: Completed Plan 12-02
-Resume file: .planning/phases/12-sch-ler-klassen-und-gruppenverwaltung/12-03-PLAN.md
+Last session: 2026-04-24T11:44:02Z
+Stopped at: Completed Plan 12-03 (Phase 12 complete)
+Resume file: None — Phase 12 closed, next phase TBD
