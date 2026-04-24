@@ -290,6 +290,14 @@ describe('TeacherService', () => {
     });
   });
 
+  // --- Phase 12-02 Wave 0 stubs: turned green in Task 2 ---
+  describe('findAll — search gap-fix', () => {
+    it.todo('returns teachers where person.firstName contains search (case-insensitive)');
+    it.todo('matches lastName substring');
+    it.todo('matches email substring');
+    it.todo('returns paginated empty array when no match');
+  });
+
   describe('getEffectiveCapacity', () => {
     it('returns correct Werteinheiten calculation with reductions', async () => {
       const teacher = {

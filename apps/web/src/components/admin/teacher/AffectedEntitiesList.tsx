@@ -40,13 +40,29 @@ export interface StudentAffectedEntities {
   parentLinkCount: number;
 }
 
+/**
+ * Class-side affected-entities payload (Phase 12-02, CLASS-01 / D-13.4).
+ * Mirrors ClassService.remove's extensions.affectedEntities
+ * (apps/api/.../class.service.ts).
+ */
+export interface ClassAffectedEntities {
+  activeStudentCount: number;
+  classSubjectCount: number;
+  groupCount: number;
+  groupMembershipCount: number;
+  timetableRunCount: number;
+  derivationRuleCount: number;
+  sampleStudents?: Array<{ id: string; name: string }>;
+}
+
 /** Back-compat alias for Plan 11-01 callers. */
 export type AffectedEntities = TeacherAffectedEntities;
 
 type Props =
   | { kind?: 'teacher'; entities: TeacherAffectedEntities }
   | { kind: 'subject'; entities: SubjectAffectedEntities }
-  | { kind: 'student'; entities: StudentAffectedEntities };
+  | { kind: 'student'; entities: StudentAffectedEntities }
+  | { kind: 'class'; entities: ClassAffectedEntities };
 
 export function AffectedEntitiesList(props: Props) {
   if (props.kind === 'subject') {
@@ -54,6 +70,9 @@ export function AffectedEntitiesList(props: Props) {
   }
   if (props.kind === 'student') {
     return <StudentAffected entities={props.entities} />;
+  }
+  if (props.kind === 'class') {
+    return <ClassAffected entities={props.entities} />;
   }
   return <TeacherAffected entities={props.entities} />;
 }
@@ -250,6 +269,90 @@ function StudentAffected({ entities }: { entities: StudentAffectedEntities }) {
   return (
     <ScrollArea className="max-h-64 pr-2">
       <div className="space-y-3">
+        {categories
+          .filter((c) => c.count > 0)
+          .map((c) => (
+            <section key={c.label}>
+              <div className="flex items-baseline justify-between gap-2">
+                <h4 className="text-sm font-semibold">
+                  {c.label} ({c.count})
+                </h4>
+                <span className="text-xs text-muted-foreground" title={c.helper}>
+                  {c.helper}
+                </span>
+              </div>
+            </section>
+          ))}
+      </div>
+    </ScrollArea>
+  );
+}
+
+function ClassAffected({ entities }: { entities: ClassAffectedEntities }) {
+  const categories: Array<{ label: string; count: number; helper: string }> = [
+    {
+      label: 'Aktive Schüler:innen',
+      count: entities.activeStudentCount,
+      helper: 'Nicht archivierte Schüler:innen in dieser Klasse',
+    },
+    {
+      label: 'Stundentafel-Einträge',
+      count: entities.classSubjectCount,
+      helper: 'ClassSubject-Zuordnungen',
+    },
+    {
+      label: 'Gruppen',
+      count: entities.groupCount,
+      helper: 'Gruppen der Klasse (Religion, Wahlpflicht, Leistung, …)',
+    },
+    {
+      label: 'Gruppen-Mitgliedschaften',
+      count: entities.groupMembershipCount,
+      helper: 'Aktive Mitgliedschaften in Klassen-Gruppen',
+    },
+    {
+      label: 'Stundenplan-Läufe',
+      count: entities.timetableRunCount,
+      helper: 'Solver-Läufe, die diese Klasse betreffen',
+    },
+    {
+      label: 'Gruppenableitungsregeln',
+      count: entities.derivationRuleCount,
+      helper: 'Gespeicherte Regel-Builder-Einträge',
+    },
+  ];
+
+  const samples = entities.sampleStudents ?? [];
+  const topFive = samples.slice(0, 5);
+
+  return (
+    <ScrollArea className="max-h-64 pr-2">
+      <div className="space-y-3">
+        {topFive.length > 0 && (
+          <section>
+            <h4 className="text-sm font-semibold mb-1">
+              Betroffene Schüler:innen ({samples.length})
+            </h4>
+            <ul className="space-y-1 text-sm">
+              {topFive.map((s) => (
+                <li key={s.id}>
+                  <a
+                    href={`/admin/students/${s.id}`}
+                    className="text-primary hover:underline"
+                  >
+                    {s.name}
+                  </a>
+                </li>
+              ))}
+              {samples.length > topFive.length && (
+                <li className="text-xs text-muted-foreground">
+                  … und {samples.length - topFive.length} weitere
+                </li>
+              )}
+            </ul>
+          </section>
+        )}
+
         {categories
           .filter((c) => c.count > 0)
           .map((c) => (

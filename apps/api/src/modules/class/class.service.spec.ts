@@ -142,4 +142,25 @@ describe('ClassService', () => {
       await expect(service.removeStudent('class-3b', 'student-1')).rejects.toThrow(NotFoundException);
     });
   });
+
+  // --- Phase 12-02 Wave 0 stubs: turned green in Task 2 ---
+
+  describe('remove — Orphan-Guard', () => {
+    it.todo('deletes class + cascades when every dependency count is zero');
+    it.todo('throws ConflictException when Student with classId exists (active, isArchived=false)');
+    it.todo('throws ConflictException when ClassSubject exists');
+    it.todo('throws ConflictException when Group exists');
+    it.todo('throws ConflictException when GroupMembership exists (indirect via groups)');
+    it.todo('throws ConflictException when TimetableLesson.classSubjectId references class (indirect)');
+    it.todo('throws ConflictException when GroupDerivationRule exists for class');
+    it.todo(
+      'payload contains extensions.affectedEntities.{activeStudentCount, classSubjectCount, groupCount, groupMembershipCount, timetableRunCount, derivationRuleCount, sampleStudents}',
+    );
+  });
+
+  describe('findAll — filters', () => {
+    it.todo('filters by schoolYearId');
+    it.todo('filters by yearLevels array (IN clause)');
+    it.todo('filters by name substring (case-insensitive)');
+  });
 });

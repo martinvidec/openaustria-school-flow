@@ -185,6 +185,18 @@ describe('GroupMembershipRuleService', () => {
       expect(result.membershipsCreated).toBe(0);
     });
 
+    // --- Phase 12-02 Wave 0 stubs: turned green in Task 2 ---
+    describe('applyRulesDryRun', () => {
+      it.todo('returns newGroups/newMemberships without writing to DB');
+      it.todo('returns conflicts when manual membership exists on any rule-targeted student');
+      it.todo('defaults to DB-stored rules when inline empty');
+    });
+
+    describe('applyRules — DB source', () => {
+      it.todo('loads rules from GroupDerivationRule when no inline rules');
+      it.todo('matches applyRulesDryRun preview exactly on second call');
+    });
+
     it('Test 4: clearAutoAssignments removes stale auto-assignments', async () => {
       prisma.groupMembership.deleteMany.mockResolvedValue({ count: 5 });
 

@@ -665,6 +665,25 @@ async function main() {
     }
   }
 
+  // --- GroupDerivationRule (Phase 12-02 seed fixture — 1 RELIGION rule on class1A) ---
+  // Provides Plan 12-03 E2E specs with a realistic derivation rule to round-trip.
+
+  const existingRule = await prisma.groupDerivationRule.findFirst({
+    where: { classId: class1A.id, groupName: 'Röm.-Kath.' },
+  });
+  if (!existingRule) {
+    await prisma.groupDerivationRule.create({
+      data: {
+        id: 'seed-rule-religion-1a',
+        classId: class1A.id,
+        groupType: 'RELIGION',
+        groupName: 'Röm.-Kath.',
+        level: 'Katholisch',
+        studentIds: ['seed-student-1', 'seed-student-2'],
+      },
+    });
+  }
+
   // =====================================================
   // Section 4: Default retention policies
   // =====================================================

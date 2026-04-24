@@ -465,11 +465,12 @@ model SchoolClass {
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
-  klassenvorstand Teacher?       @relation("Klassenvorstand", fields: [klassenvorstandId], references: [id])
-  students        Student[]
-  groups          Group[]
-  classSubjects   ClassSubject[]
-  exams           Exam[]
+  klassenvorstand  Teacher?              @relation("Klassenvorstand", fields: [klassenvorstandId], references: [id])
+  students         Student[]
+  groups           Group[]
+  classSubjects    ClassSubject[]
+  exams            Exam[]
+  derivationRules  GroupDerivationRule[]
 
   @@unique([schoolId, name, schoolYearId])
   @@map("school_classes")
@@ -504,6 +505,23 @@ model GroupMembership {
 
   @@unique([groupId, studentId])
   @@map("group_memberships")
+}
+
+// --- GroupDerivationRule (Phase 12 D-12, persists Group-derivation rules per class) ---
+
+model GroupDerivationRule {
+  id         String      @id @default(uuid())
+  classId    String      @map("class_id")
+  class      SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  groupType  GroupType   @map("group_type")
+  groupName  String      @map("group_name")
+  level      String?
+  studentIds Json?       @map("student_ids")
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+
+  @@index([classId])
+  @@map("group_derivation_rules")
 }
 
 // --- Subject (D-09, D-10, D-11) ---
