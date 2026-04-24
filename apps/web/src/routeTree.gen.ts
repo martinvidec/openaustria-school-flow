@@ -29,9 +29,11 @@ import { Route as AuthenticatedAdminImportRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAdminTeachersIndexRouteImport } from './routes/_authenticated/admin/teachers.index'
 import { Route as AuthenticatedAdminSubjectsIndexRouteImport } from './routes/_authenticated/admin/subjects.index'
 import { Route as AuthenticatedAdminStudentsIndexRouteImport } from './routes/_authenticated/admin/students.index'
+import { Route as AuthenticatedAdminClassesIndexRouteImport } from './routes/_authenticated/admin/classes.index'
 import { Route as AuthenticatedAdminTeachersTeacherIdRouteImport } from './routes/_authenticated/admin/teachers.$teacherId'
 import { Route as AuthenticatedAdminStudentsStudentIdRouteImport } from './routes/_authenticated/admin/students.$studentId'
 import { Route as AuthenticatedAdminSchoolSettingsRouteImport } from './routes/_authenticated/admin/school.settings'
+import { Route as AuthenticatedAdminClassesClassIdRouteImport } from './routes/_authenticated/admin/classes.$classId'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -148,6 +150,12 @@ const AuthenticatedAdminStudentsIndexRoute =
     path: '/admin/students/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminClassesIndexRoute =
+  AuthenticatedAdminClassesIndexRouteImport.update({
+    id: '/admin/classes/',
+    path: '/admin/classes/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminTeachersTeacherIdRoute =
   AuthenticatedAdminTeachersTeacherIdRouteImport.update({
     id: '/admin/teachers/$teacherId',
@@ -164,6 +172,12 @@ const AuthenticatedAdminSchoolSettingsRoute =
   AuthenticatedAdminSchoolSettingsRouteImport.update({
     id: '/admin/school/settings',
     path: '/admin/school/settings',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdminClassesClassIdRoute =
+  AuthenticatedAdminClassesClassIdRouteImport.update({
+    id: '/admin/classes/$classId',
+    path: '/admin/classes/$classId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 
@@ -184,9 +198,11 @@ export interface FileRoutesByFullPath {
   '/messages/': typeof AuthenticatedMessagesIndexRoute
   '/rooms/': typeof AuthenticatedRoomsIndexRoute
   '/timetable/': typeof AuthenticatedTimetableIndexRoute
+  '/admin/classes/$classId': typeof AuthenticatedAdminClassesClassIdRoute
   '/admin/school/settings': typeof AuthenticatedAdminSchoolSettingsRoute
   '/admin/students/$studentId': typeof AuthenticatedAdminStudentsStudentIdRoute
   '/admin/teachers/$teacherId': typeof AuthenticatedAdminTeachersTeacherIdRoute
+  '/admin/classes/': typeof AuthenticatedAdminClassesIndexRoute
   '/admin/students/': typeof AuthenticatedAdminStudentsIndexRoute
   '/admin/subjects/': typeof AuthenticatedAdminSubjectsIndexRoute
   '/admin/teachers/': typeof AuthenticatedAdminTeachersIndexRoute
@@ -208,9 +224,11 @@ export interface FileRoutesByTo {
   '/messages': typeof AuthenticatedMessagesIndexRoute
   '/rooms': typeof AuthenticatedRoomsIndexRoute
   '/timetable': typeof AuthenticatedTimetableIndexRoute
+  '/admin/classes/$classId': typeof AuthenticatedAdminClassesClassIdRoute
   '/admin/school/settings': typeof AuthenticatedAdminSchoolSettingsRoute
   '/admin/students/$studentId': typeof AuthenticatedAdminStudentsStudentIdRoute
   '/admin/teachers/$teacherId': typeof AuthenticatedAdminTeachersTeacherIdRoute
+  '/admin/classes': typeof AuthenticatedAdminClassesIndexRoute
   '/admin/students': typeof AuthenticatedAdminStudentsIndexRoute
   '/admin/subjects': typeof AuthenticatedAdminSubjectsIndexRoute
   '/admin/teachers': typeof AuthenticatedAdminTeachersIndexRoute
@@ -234,9 +252,11 @@ export interface FileRoutesById {
   '/_authenticated/messages/': typeof AuthenticatedMessagesIndexRoute
   '/_authenticated/rooms/': typeof AuthenticatedRoomsIndexRoute
   '/_authenticated/timetable/': typeof AuthenticatedTimetableIndexRoute
+  '/_authenticated/admin/classes/$classId': typeof AuthenticatedAdminClassesClassIdRoute
   '/_authenticated/admin/school/settings': typeof AuthenticatedAdminSchoolSettingsRoute
   '/_authenticated/admin/students/$studentId': typeof AuthenticatedAdminStudentsStudentIdRoute
   '/_authenticated/admin/teachers/$teacherId': typeof AuthenticatedAdminTeachersTeacherIdRoute
+  '/_authenticated/admin/classes/': typeof AuthenticatedAdminClassesIndexRoute
   '/_authenticated/admin/students/': typeof AuthenticatedAdminStudentsIndexRoute
   '/_authenticated/admin/subjects/': typeof AuthenticatedAdminSubjectsIndexRoute
   '/_authenticated/admin/teachers/': typeof AuthenticatedAdminTeachersIndexRoute
@@ -260,9 +280,11 @@ export interface FileRouteTypes {
     | '/messages/'
     | '/rooms/'
     | '/timetable/'
+    | '/admin/classes/$classId'
     | '/admin/school/settings'
     | '/admin/students/$studentId'
     | '/admin/teachers/$teacherId'
+    | '/admin/classes/'
     | '/admin/students/'
     | '/admin/subjects/'
     | '/admin/teachers/'
@@ -284,9 +306,11 @@ export interface FileRouteTypes {
     | '/messages'
     | '/rooms'
     | '/timetable'
+    | '/admin/classes/$classId'
     | '/admin/school/settings'
     | '/admin/students/$studentId'
     | '/admin/teachers/$teacherId'
+    | '/admin/classes'
     | '/admin/students'
     | '/admin/subjects'
     | '/admin/teachers'
@@ -309,9 +333,11 @@ export interface FileRouteTypes {
     | '/_authenticated/messages/'
     | '/_authenticated/rooms/'
     | '/_authenticated/timetable/'
+    | '/_authenticated/admin/classes/$classId'
     | '/_authenticated/admin/school/settings'
     | '/_authenticated/admin/students/$studentId'
     | '/_authenticated/admin/teachers/$teacherId'
+    | '/_authenticated/admin/classes/'
     | '/_authenticated/admin/students/'
     | '/_authenticated/admin/subjects/'
     | '/_authenticated/admin/teachers/'
@@ -464,6 +490,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminStudentsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/classes/': {
+      id: '/_authenticated/admin/classes/'
+      path: '/admin/classes'
+      fullPath: '/admin/classes/'
+      preLoaderRoute: typeof AuthenticatedAdminClassesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin/teachers/$teacherId': {
       id: '/_authenticated/admin/teachers/$teacherId'
       path: '/admin/teachers/$teacherId'
@@ -485,6 +518,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSchoolSettingsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/classes/$classId': {
+      id: '/_authenticated/admin/classes/$classId'
+      path: '/admin/classes/$classId'
+      fullPath: '/admin/classes/$classId'
+      preLoaderRoute: typeof AuthenticatedAdminClassesClassIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -504,9 +544,11 @@ interface AuthenticatedRouteChildren {
   AuthenticatedMessagesIndexRoute: typeof AuthenticatedMessagesIndexRoute
   AuthenticatedRoomsIndexRoute: typeof AuthenticatedRoomsIndexRoute
   AuthenticatedTimetableIndexRoute: typeof AuthenticatedTimetableIndexRoute
+  AuthenticatedAdminClassesClassIdRoute: typeof AuthenticatedAdminClassesClassIdRoute
   AuthenticatedAdminSchoolSettingsRoute: typeof AuthenticatedAdminSchoolSettingsRoute
   AuthenticatedAdminStudentsStudentIdRoute: typeof AuthenticatedAdminStudentsStudentIdRoute
   AuthenticatedAdminTeachersTeacherIdRoute: typeof AuthenticatedAdminTeachersTeacherIdRoute
+  AuthenticatedAdminClassesIndexRoute: typeof AuthenticatedAdminClassesIndexRoute
   AuthenticatedAdminStudentsIndexRoute: typeof AuthenticatedAdminStudentsIndexRoute
   AuthenticatedAdminSubjectsIndexRoute: typeof AuthenticatedAdminSubjectsIndexRoute
   AuthenticatedAdminTeachersIndexRoute: typeof AuthenticatedAdminTeachersIndexRoute
@@ -531,11 +573,13 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedMessagesIndexRoute: AuthenticatedMessagesIndexRoute,
   AuthenticatedRoomsIndexRoute: AuthenticatedRoomsIndexRoute,
   AuthenticatedTimetableIndexRoute: AuthenticatedTimetableIndexRoute,
+  AuthenticatedAdminClassesClassIdRoute: AuthenticatedAdminClassesClassIdRoute,
   AuthenticatedAdminSchoolSettingsRoute: AuthenticatedAdminSchoolSettingsRoute,
   AuthenticatedAdminStudentsStudentIdRoute:
     AuthenticatedAdminStudentsStudentIdRoute,
   AuthenticatedAdminTeachersTeacherIdRoute:
     AuthenticatedAdminTeachersTeacherIdRoute,
+  AuthenticatedAdminClassesIndexRoute: AuthenticatedAdminClassesIndexRoute,
   AuthenticatedAdminStudentsIndexRoute: AuthenticatedAdminStudentsIndexRoute,
   AuthenticatedAdminSubjectsIndexRoute: AuthenticatedAdminSubjectsIndexRoute,
   AuthenticatedAdminTeachersIndexRoute: AuthenticatedAdminTeachersIndexRoute,

@@ -14,6 +14,7 @@ import {
   X,
   UsersRound,
   MessageSquare,
+  School,
   Upload,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -111,6 +112,14 @@ const navItems: NavItem[] = [
     label: 'Fächer',
     href: '/admin/subjects',
     icon: BookOpen,
+    roles: ['admin', 'schulleitung'],
+    group: 'Personal & Fächer',
+  },
+  // Phase 12-02 D-06: Klassen placed between Fächer and Schüler:innen.
+  {
+    label: 'Klassen',
+    href: '/admin/classes',
+    icon: School,
     roles: ['admin', 'schulleitung'],
     group: 'Personal & Fächer',
   },
