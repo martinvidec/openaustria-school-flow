@@ -247,7 +247,7 @@ Plans:
 
 Plans:
 - [x] 12-01-PLAN.md — Shared foundation (Zod schemas + Student.isArchived migration + shadcn Command/Checkbox + AffectedEntitiesList kind=student) + Student CRUD FE/BE + Parent-Module greenfield + StudentService.remove Orphan-Guard + Sidebar Schüler-Eintrag [Wave 1] ✅ Complete 2026-04-24 (commits 3f4ce08, b7bc8cf, 2577860)
-- [ ] 12-02-PLAN.md — Class CRUD FE/BE (with Klassenvorstand TeacherSearchPopover + Teacher-Search gap-fix) + Apply-Stundentafel + SUBJECT-04 Wochenstunden-Editor + GroupDerivationRule migration + Rule-Builder + Dry-Run-Preview + Manual-Overrides + ClassService.remove Orphan-Guard + AffectedEntitiesList kind=class + Sidebar Klassen-Eintrag [Wave 2, depends on 12-01]
+- [x] 12-02-PLAN.md — Class CRUD FE/BE (with Klassenvorstand TeacherSearchPopover + Teacher-Search gap-fix) + Apply-Stundentafel + SUBJECT-04 Wochenstunden-Editor + GroupDerivationRule migration + Rule-Builder + Dry-Run-Preview + Manual-Overrides + ClassService.remove Orphan-Guard + AffectedEntitiesList kind=class + Sidebar Klassen-Eintrag [Wave 2, depends on 12-01] ✅ Complete 2026-04-24 (commits 7a58260, e263340, 08ba000)
 - [ ] 12-03-PLAN.md — 12 Playwright E2E specs: Schüler-CRUD happy/error/mobile + archive/parents/move; Klassen-CRUD happy/error/mobile + klassenvorstand/stundentafel/gruppen — Pixel 5 viewport, Phase 10.3 harness, SILENT-4XX invariant codified, E2E-COVERAGE-MATRIX.md bump [Wave 3, depends on 12-01 + 12-02]
 
 ---

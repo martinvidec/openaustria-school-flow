@@ -41,18 +41,18 @@
 - [x] **STUDENT-02**: Admin kann Schüler anlegen und editieren (Person-Daten, Erziehungsberechtigte)
 - [x] **STUDENT-03**: Admin kann Schüler einer Stammklasse zuordnen oder umziehen
 - [x] **STUDENT-04**: Admin kann Schüler deaktivieren/archivieren ohne Datenverlust
-- [ ] **CLASS-01**: Admin sieht Klassenliste mit Filter (Jahrgangsstufe, Schultyp)
-- [ ] **CLASS-02**: Admin kann Klassen anlegen und editieren (Stammklasse-Marker, Klassenvorstand-Zuweisung)
-- [ ] **CLASS-03**: Admin kann Stundentafel-Vorlage auf eine Klasse anwenden und anpassen
-- [ ] **CLASS-04**: Admin kann Gruppenzugehörigkeiten (Religion/Leistung/Wahlpflicht) pro Klasse verwalten
-- [ ] **CLASS-05**: Admin kann Gruppenableitungsregeln pro Klasse definieren
+- [x] **CLASS-01**: Admin sieht Klassenliste mit Filter (Jahrgangsstufe, Schultyp)
+- [x] **CLASS-02**: Admin kann Klassen anlegen und editieren (Stammklasse-Marker, Klassenvorstand-Zuweisung)
+- [x] **CLASS-03**: Admin kann Stundentafel-Vorlage auf eine Klasse anwenden und anpassen
+- [x] **CLASS-04**: Admin kann Gruppenzugehörigkeiten (Religion/Leistung/Wahlpflicht) pro Klasse verwalten
+- [x] **CLASS-05**: Admin kann Gruppenableitungsregeln pro Klasse definieren
 
 ### Subject & Stundentafel
 
 - [x] **SUBJECT-01**: Admin sieht Fächerliste mit Filter
 - [x] **SUBJECT-02**: Admin kann Fächer anlegen und editieren (Name, Kürzel) — Farbe wird automatisch aus Standard-Palette vergeben (manuelle Farbauswahl in späterer Phase, siehe Phase 11 CONTEXT D-11)
 - [x] **SUBJECT-03**: Admin kann Stundentafel-Vorlagen pro Schultyp einsehen und auswählen
-- [ ] **SUBJECT-04**: Admin kann Wochenstunden pro Fach pro Klassenstufe anpassen
+- [x] **SUBJECT-04**: Admin kann Wochenstunden pro Fach pro Klassenstufe anpassen
 - [x] **SUBJECT-05**: Admin kann ungenutzte Fächer löschen (Orphan-Schutz gegen Fächer mit Zuordnungen)
 
 ### User & ACL Management
@@ -171,15 +171,15 @@ Empty initially — populated during roadmap creation by `gsd-roadmapper`.
 | STUDENT-02 | Phase 12 (12-01) | Complete |
 | STUDENT-03 | Phase 12 (12-01) | Complete |
 | STUDENT-04 | Phase 12 (12-01) | Complete |
-| CLASS-01 | Phase 12 | Pending |
-| CLASS-02 | Phase 12 | Pending |
-| CLASS-03 | Phase 12 | Pending |
-| CLASS-04 | Phase 12 | Pending |
-| CLASS-05 | Phase 12 | Pending |
+| CLASS-01 | Phase 12 (12-02) | Complete (2026-04-24) |
+| CLASS-02 | Phase 12 (12-02) | Complete (2026-04-24) |
+| CLASS-03 | Phase 12 (12-02) | Complete (2026-04-24) |
+| CLASS-04 | Phase 12 (12-02) | Complete (2026-04-24) |
+| CLASS-05 | Phase 12 (12-02) | Complete (2026-04-24) |
 | SUBJECT-01 | Phase 11 | Complete (2026-04-23, Plan 11-02) |
 | SUBJECT-02 | Phase 11 | Complete (2026-04-23, Plan 11-02) |
 | SUBJECT-03 | Phase 11 | Complete (2026-04-23, Plan 11-02) |
-| SUBJECT-04 | Phase 12 | Pending |
+| SUBJECT-04 | Phase 12 (12-02) | Complete (2026-04-24) |
 | SUBJECT-05 | Phase 11 | Complete (2026-04-23, Plan 11-02) |
 | USER-01 | Phase 13 | Pending |
 | USER-02 | Phase 13 | Pending |
