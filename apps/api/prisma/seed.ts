@@ -582,15 +582,17 @@ async function main() {
     },
   });
 
-  // --- Students (6 students, 3 per class) ---
+  // --- Students (6 active + 1 archived fixture for Plan 12-01 filter verification) ---
 
   const studentNames = [
-    { firstName: 'Lisa', lastName: 'Huber', classId: class1A.id, num: 1 },
-    { firstName: 'Felix', lastName: 'Bauer', classId: class1A.id, num: 2 },
-    { firstName: 'Sophie', lastName: 'Wagner', classId: class1A.id, num: 3 },
-    { firstName: 'Lukas', lastName: 'Gruber', classId: class1B.id, num: 4 },
-    { firstName: 'Emma', lastName: 'Steiner', classId: class1B.id, num: 5 },
-    { firstName: 'Maximilian', lastName: 'Hofer', classId: class1B.id, num: 6 },
+    { firstName: 'Lisa', lastName: 'Huber', classId: class1A.id, num: 1, isArchived: false },
+    { firstName: 'Felix', lastName: 'Bauer', classId: class1A.id, num: 2, isArchived: false },
+    { firstName: 'Sophie', lastName: 'Wagner', classId: class1A.id, num: 3, isArchived: false },
+    { firstName: 'Lukas', lastName: 'Gruber', classId: class1B.id, num: 4, isArchived: false },
+    { firstName: 'Emma', lastName: 'Steiner', classId: class1B.id, num: 5, isArchived: false },
+    { firstName: 'Maximilian', lastName: 'Hofer', classId: class1B.id, num: 6, isArchived: false },
+    // Phase 12-01: archived fixture student used by E2E spec admin-students-archive.spec.ts (Plan 12-03)
+    { firstName: 'Fixture', lastName: 'Archived', classId: class1A.id, num: 7, isArchived: true },
   ];
 
   for (const s of studentNames) {
@@ -612,7 +614,10 @@ async function main() {
 
     await prisma.student.upsert({
       where: { personId },
-      update: {},
+      update: {
+        isArchived: s.isArchived,
+        archivedAt: s.isArchived ? new Date('2026-01-15') : null,
+      },
       create: {
         id: studentId,
         personId,
@@ -620,6 +625,8 @@ async function main() {
         classId: s.classId,
         studentNumber: `2025-${String(s.num).padStart(4, '0')}`,
         enrollmentDate: new Date('2025-09-01'),
+        isArchived: s.isArchived,
+        archivedAt: s.isArchived ? new Date('2026-01-15') : null,
       },
     });
   }

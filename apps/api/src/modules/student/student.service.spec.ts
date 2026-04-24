@@ -168,4 +168,38 @@ describe('StudentService', () => {
       });
     });
   });
+
+  // Wave-0 TDD stubs — Phase 12-01 Task 1; implementations land in Task 2.
+  describe('remove — Orphan-Guard', () => {
+    it.todo('deletes person (cascading student) when zero dependents (204)');
+    it.todo('throws ConflictException when AttendanceRecord.studentId references student');
+    it.todo('throws ConflictException when GradeEntry.studentId references student');
+    it.todo('throws ConflictException when StudentNote.studentId references student');
+    it.todo('throws ConflictException when AbsenceExcuse.studentId references student');
+    it.todo('throws ConflictException when GroupMembership has student row');
+    it.todo('throws ConflictException when ParentStudent has student row');
+    it.todo(
+      'payload contains extensions.affectedEntities.{attendanceCount, gradeCount, studentNoteCount, excuseCount, groupMembershipCount, parentLinkCount}',
+    );
+  });
+
+  describe('archive + restore', () => {
+    it.todo('archive sets isArchived=true + archivedAt=now');
+    it.todo('restore sets isArchived=false + archivedAt=null');
+    it.todo('findAll default (archived=active) excludes archived students');
+    it.todo('findAll archived=archived returns ONLY archived students');
+    it.todo('findAll archived=all returns both');
+  });
+
+  describe('create — parentIds', () => {
+    it.todo('creates Student + ParentStudent rows in single transaction when parentIds provided');
+    it.todo('empty parentIds (or undefined) creates zero ParentStudent rows');
+    it.todo('invalid parentId throws validation error before tx');
+  });
+
+  describe('linkParent + unlinkParent', () => {
+    it.todo('linkParent creates ParentStudent row when (studentId, parentId) pair not yet linked');
+    it.todo('linkParent is idempotent (no duplicate, no error) when already linked');
+    it.todo('unlinkParent removes ParentStudent row but preserves Parent record');
+  });
 });

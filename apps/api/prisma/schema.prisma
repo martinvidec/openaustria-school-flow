@@ -380,6 +380,8 @@ model Student {
   schoolClass    SchoolClass? @relation(fields: [classId], references: [id], onDelete: SetNull)
   studentNumber  String?      @map("student_number")
   enrollmentDate DateTime?    @map("enrollment_date")
+  isArchived     Boolean      @default(false) @map("is_archived")
+  archivedAt     DateTime?    @map("archived_at")
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
 

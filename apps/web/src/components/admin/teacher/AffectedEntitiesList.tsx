@@ -26,16 +26,34 @@ export interface SubjectAffectedEntities {
   examCount: number;
 }
 
+/**
+ * Student-side affected-entities payload (Phase 12-01, STUDENT-04 / D-13.3).
+ * Mirrors StudentService.remove's extensions.affectedEntities
+ * (apps/api/.../student.service.ts).
+ */
+export interface StudentAffectedEntities {
+  attendanceCount: number;
+  gradeCount: number;
+  studentNoteCount: number;
+  excuseCount: number;
+  groupMembershipCount: number;
+  parentLinkCount: number;
+}
+
 /** Back-compat alias for Plan 11-01 callers. */
 export type AffectedEntities = TeacherAffectedEntities;
 
 type Props =
   | { kind?: 'teacher'; entities: TeacherAffectedEntities }
-  | { kind: 'subject'; entities: SubjectAffectedEntities };
+  | { kind: 'subject'; entities: SubjectAffectedEntities }
+  | { kind: 'student'; entities: StudentAffectedEntities };
 
 export function AffectedEntitiesList(props: Props) {
   if (props.kind === 'subject') {
     return <SubjectAffected entities={props.entities} />;
+  }
+  if (props.kind === 'student') {
+    return <StudentAffected entities={props.entities} />;
   }
   return <TeacherAffected entities={props.entities} />;
 }
@@ -177,6 +195,62 @@ function SubjectAffected({ entities }: { entities: SubjectAffectedEntities }) {
         )}
 
         {scalarCategories
+          .filter((c) => c.count > 0)
+          .map((c) => (
+            <section key={c.label}>
+              <div className="flex items-baseline justify-between gap-2">
+                <h4 className="text-sm font-semibold">
+                  {c.label} ({c.count})
+                </h4>
+                <span className="text-xs text-muted-foreground" title={c.helper}>
+                  {c.helper}
+                </span>
+              </div>
+            </section>
+          ))}
+      </div>
+    </ScrollArea>
+  );
+}
+
+function StudentAffected({ entities }: { entities: StudentAffectedEntities }) {
+  const categories: Array<{ label: string; count: number; helper: string }> = [
+    {
+      label: 'Anwesenheiten',
+      count: entities.attendanceCount,
+      helper: 'Klassenbuch / Anwesenheitsprotokoll',
+    },
+    {
+      label: 'Noten-Einträge',
+      count: entities.gradeCount,
+      helper: 'Notenlisten',
+    },
+    {
+      label: 'Schüler:innen-Notizen',
+      count: entities.studentNoteCount,
+      helper: 'Persönliche Notizen von Lehrkräften',
+    },
+    {
+      label: 'Abwesenheits-Entschuldigungen',
+      count: entities.excuseCount,
+      helper: 'Entschuldigungs-Datensätze',
+    },
+    {
+      label: 'Gruppen-Mitgliedschaften',
+      count: entities.groupMembershipCount,
+      helper: 'Wahlpflicht / Religion / Leistungsgruppen',
+    },
+    {
+      label: 'Eltern-Verknüpfungen',
+      count: entities.parentLinkCount,
+      helper: 'Erziehungsberechtigte',
+    },
+  ];
+
+  return (
+    <ScrollArea className="max-h-64 pr-2">
+      <div className="space-y-3">
+        {categories
           .filter((c) => c.count > 0)
           .map((c) => (
             <section key={c.label}>
