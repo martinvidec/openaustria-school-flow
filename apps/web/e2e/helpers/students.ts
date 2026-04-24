@@ -108,13 +108,16 @@ export async function createClassViaAPI(
   const token = await getAdminToken(request);
   let schoolYearId = fields.schoolYearId;
   if (!schoolYearId) {
+    // School years are exposed under the nested /schools/:schoolId/school-years
+    // path (not a flat /school-years collection).
     const syRes = await request.get(
-      `${STUDENT_API}/school-years?schoolId=${STUDENT_SCHOOL_ID}&isActive=true`,
+      `${STUDENT_API}/schools/${STUDENT_SCHOOL_ID}/school-years`,
       { headers: { Authorization: `Bearer ${token}` } },
     );
-    expect(syRes.ok(), `GET active school year`).toBeTruthy();
-    const syBody = (await syRes.json()) as { data?: Array<{ id: string }> };
-    schoolYearId = syBody.data?.[0]?.id;
+    expect(syRes.ok(), `GET /schools/:id/school-years`).toBeTruthy();
+    const years = (await syRes.json()) as Array<{ id: string; isActive?: boolean }>;
+    const active = years.find((y) => y.isActive) ?? years[0];
+    schoolYearId = active?.id;
     expect(schoolYearId, 'active school year id').toBeTruthy();
   }
   const res = await request.post(`${STUDENT_API}/classes`, {
@@ -130,7 +133,12 @@ export async function createClassViaAPI(
       klassenvorstandId: fields.klassenvorstandId,
     },
   });
-  expect(res.ok(), `POST /classes seed (${fields.name})`).toBeTruthy();
+  if (!res.ok()) {
+    const errBody = await res.text().catch(() => '<no body>');
+    throw new Error(
+      `POST /classes seed (${fields.name}) failed ${res.status()}: ${errBody}`,
+    );
+  }
   const body = (await res.json()) as { id: string };
   return { id: body.id, schoolYearId: schoolYearId! };
 }

@@ -60,8 +60,11 @@ test.describe('Phase 12 — Admin Students CRUD (desktop)', () => {
     ).toBeVisible();
 
     // StudentStammdatenTab uses <Label htmlFor> so getByLabel works.
-    await page.getByLabel('Vorname').fill(vorname);
-    await page.getByLabel('Nachname').fill('Mustermann');
+    // Scope to the dialog — when the list is populated, the filter bar
+    // sibling Input also matches "E-Mail" text patterns in strict mode.
+    const dialog = page.getByRole('dialog');
+    await dialog.getByLabel('Vorname').fill(vorname);
+    await dialog.getByLabel('Nachname').fill('Mustermann');
 
     // Submit: footer button text is the `submitLabel` prop =
     // "Schüler:in anlegen" (StudentCreateDialog.tsx:69). Use .last() to

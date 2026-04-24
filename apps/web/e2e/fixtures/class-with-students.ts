@@ -40,14 +40,16 @@ export async function seedClassWithActiveStudents(
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
   const ts = Date.now();
 
-  // 1. Find the active school year — the class POST requires one.
+  // 1. Find the active school year — the class POST requires one. Exposed
+  //    under the nested /schools/:schoolId/school-years path.
   const syRes = await request.get(
-    `${API}/school-years?schoolId=${schoolId}&isActive=true`,
+    `${API}/schools/${schoolId}/school-years`,
     { headers: { Authorization: `Bearer ${token}` } },
   );
-  expect(syRes.ok(), `GET /school-years?isActive=true`).toBeTruthy();
-  const syBody = (await syRes.json()) as { data?: Array<{ id: string }> };
-  const schoolYearId = syBody.data?.[0]?.id;
+  expect(syRes.ok(), `GET /schools/:id/school-years`).toBeTruthy();
+  const years = (await syRes.json()) as Array<{ id: string; isActive?: boolean }>;
+  const active = years.find((y) => y.isActive) ?? years[0];
+  const schoolYearId = active?.id;
   expect(schoolYearId, 'active school year id').toBeTruthy();
 
   // 2. Create the Class. Phase 12-02 class.controller accepts

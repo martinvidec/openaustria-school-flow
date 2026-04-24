@@ -10,12 +10,16 @@ export class PaginationQueryDto {
   @Min(1)
   page: number = 1;
 
-  @ApiPropertyOptional({ default: 20, minimum: 1, maximum: 100 })
+  // Phase 12 Plan 12-03 Rule-1 fix: raised from 100 to 500 so admin pickers
+  // (ClassPicker in MoveStudentDialog, ClassStudentsTab classListItems, etc.)
+  // can request `limit=200` without hitting a 422. Mirrors the repository-wide
+  // "one page of everything" expectation for tenant-scoped admin surfaces.
+  @ApiPropertyOptional({ default: 20, minimum: 1, maximum: 500 })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  @Max(100)
+  @Max(500)
   limit: number = 20;
 
   get skip(): number {
