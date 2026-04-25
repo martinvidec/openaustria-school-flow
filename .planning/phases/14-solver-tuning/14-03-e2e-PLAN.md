@@ -13,6 +13,7 @@ files_modified:
   - apps/web/e2e/admin-solver-tuning-integration.spec.ts
   - apps/web/e2e/admin-solver-tuning-audit.spec.ts
   - apps/web/e2e/admin-solver-tuning-mobile.spec.ts
+  - apps/web/e2e/admin-solver-tuning-rbac.spec.ts
   - .planning/E2E-COVERAGE-MATRIX.md
   - .planning/phases/14-solver-tuning/14-VALIDATION.md
 autonomous: true
@@ -22,9 +23,10 @@ user_setup: []
 
 must_haves:
   truths:
-    - "12 Playwright specs exist under apps/web/e2e/ with prefix E2E-SOLVER-"
+    - "13 Playwright specs exist under apps/web/e2e/ with prefix E2E-SOLVER- (12 SOLVER + 1 RBAC)"
     - "All specs run via `pnpm --filter @schoolflow/web exec playwright test --project=desktop` and exit 0"
-    - "E2E-SOLVER-01 proves the catalog tab shows 14 rows with Hard/Soft sections (SOLVER-01)"
+    - "E2E-SOLVER-01 proves the catalog tab shows 15 rows with Hard/Soft sections — 6 HARD + 9 SOFT (SOLVER-01)"
+    - "E2E-SOLVER-RBAC-01 proves schulleitung is blocked from /admin/solver-tuning and the sidebar entry is hidden for that role (D-03)"
     - "E2E-SOLVER-02 proves weights save + reload + reset cycle (SOLVER-02)"
     - "E2E-SOLVER-03 proves bounds validation surfaces a destructive toast (SOLVER-02 silent-4xx-invariante)"
     - "E2E-SOLVER-04..06 prove ClassRestriction CRUD + cross-reference 422 + multi-row banner (SOLVER-04)"
@@ -52,6 +54,8 @@ must_haves:
       provides: "E2E-SOLVER-11"
     - path: "apps/web/e2e/admin-solver-tuning-mobile.spec.ts"
       provides: "E2E-SOLVER-MOBILE-01"
+    - path: "apps/web/e2e/admin-solver-tuning-rbac.spec.ts"
+      provides: "E2E-SOLVER-RBAC-01 (schulleitung negative case for D-03)"
   key_links:
     - from: "apps/web/e2e/helpers/constraints.ts"
       to: "Plan 14-01 backend endpoints"
@@ -67,7 +71,7 @@ must_haves:
 Ship the 12 Playwright specs covering Phase 14 per CONTEXT.md D-16 (USER-OVERRIDE on recommended 8-9). These specs codify the SOLVER-01..05 requirements as automated regression guards, satisfy `feedback_e2e_first_no_uat.md`, and enforce the silent-4xx invariant for every Phase 14 mutation.
 
 Purpose: Lock the surface so future refactors don't regress; produce CI-grade evidence that all 5 admin requirements work end-to-end.
-Output: 7 spec files (12 logical specs grouped by feature) + 1 helper file + matrix update + validation table fill.
+Output: 8 spec files (13 logical specs grouped by feature: 12 SOLVER + 1 RBAC) + 1 helper file + matrix update + validation table fill.
 </objective>
 
 <execution_context>
@@ -264,7 +268,7 @@ Solver-run E2E gating (from Phase 10.5-04 precedent):
 
     Sub-task C — Spec-file scaffolding (skeleton-only, fill in Tasks 2-3):
 
-    3. Create each of the 7 spec files with this skeleton (replace `<X>` with the spec ID):
+    3. Create each of the 8 spec files (7 SOLVER spec files + 1 RBAC spec file `admin-solver-tuning-rbac.spec.ts`) with this skeleton (replace `<X>` with the spec ID):
        ```typescript
        import { test, expect } from '@playwright/test';
        import { loginAsAdmin } from './helpers/login';
@@ -322,7 +326,7 @@ Solver-run E2E gating (from Phase 10.5-04 precedent):
 
     Sub-task E — Smoke test the helpers + scaffolding:
 
-    5. Run `pnpm --filter @schoolflow/web exec playwright test admin-solver-tuning- --project=desktop --list`. All 12 tests should be DISCOVERED (even if skipped). If discovery fails, fix imports.
+    5. Run `pnpm --filter @schoolflow/web exec playwright test admin-solver-tuning- --project=desktop --list`. All 13 tests (12 SOLVER + 1 RBAC) should be DISCOVERED (even if skipped). If discovery fails, fix imports.
   </action>
   <verify>
     <automated>
@@ -343,7 +347,7 @@ Solver-run E2E gating (from Phase 10.5-04 precedent):
   </verify>
   <acceptance_criteria>
     - `apps/web/e2e/helpers/constraints.ts` exports `createConstraintWeightOverrideViaAPI`, `createConstraintTemplateViaAPI`, `cleanupConstraintTemplatesViaAPI`, `cleanupConstraintWeightOverridesViaAPI`, `CONSTRAINT_PREFIX`
-    - All 7 spec files exist with test discovery working (`playwright test --list` shows ≥12 tests)
+    - All 8 spec files exist with test discovery working (`playwright test --list` shows ≥13 tests: 12 SOLVER + 1 RBAC) — verify `apps/web/e2e/admin-solver-tuning-rbac.spec.ts` exists
     - `.planning/E2E-COVERAGE-MATRIX.md` contains 12 new rows in an `E2E-SOLVER-*` section
     - `apps/web/e2e/admin-solver-tuning-mobile.spec.ts` contains `viewport: { width: 375` AND a WebKit skip clause
     - `apps/web/e2e/admin-solver-tuning-integration.spec.ts` contains `E2E_RUN_SOLVER` guard
@@ -440,6 +444,10 @@ Solver-run E2E gating (from Phase 10.5-04 precedent):
       const res = await putPromise;
       expect(res.status()).toBe(200);
       await expect(page.getByText('Gewichtungen gespeichert.')).toBeVisible();
+      // DriftBanner: weight just saved → lastUpdatedAt > any prior solve completedAt → banner visible.
+      // (E2E uses an unseeded school-state with no prior solve, so completedAt is null
+      // and any non-null lastUpdatedAt triggers the banner per Plan 14-02-T3 DriftBanner contract.)
+      await expect(page.getByText(/Gewichtungen wurden.*geändert.*Stundenplan/i)).toBeVisible();
       // Reload and verify persistence
       await page.reload();
       await expect(numberInput).toHaveValue('50');
@@ -736,15 +744,23 @@ Solver-run E2E gating (from Phase 10.5-04 precedent):
       const body = await audit.json();
       // Accept either { data: [...] } or [...] response shape
       const entries = Array.isArray(body) ? body : body.data ?? [];
-      expect(entries.some((e: any) => e.action === 'update' || e.action === 'manage')).toBe(true);
-      // Same for constraint-template
+      // Strict assertions per checker B6 — no `.some()` (would pass with 0 relevant entries
+      // if list is non-empty from prior test state). Plan 14-01-T2 wires
+      // @CheckPermissions({ subject: 'constraint-weight-override' }) and the audit interceptor
+      // logs entries newest-first, so the most recent PUT just performed is at index 0.
+      expect(entries.length).toBeGreaterThan(0);
+      expect(entries[0].subject).toBe('constraint-weight-override');
+      expect(entries[0].action).toBe('update');
+      // Same for constraint-template — strict assertion on most recent CREATE
       const audit2 = await request.get(
         'http://localhost:3000/api/v1/audit-log?subject=constraint-template&limit=10',
         { headers: { Authorization: `Bearer ${token}` } },
       );
       const body2 = await audit2.json();
       const entries2 = Array.isArray(body2) ? body2 : body2.data ?? [];
-      expect(entries2.some((e: any) => e.action === 'create')).toBe(true);
+      expect(entries2.length).toBeGreaterThan(0);
+      expect(entries2[0].subject).toBe('constraint-template');
+      expect(entries2[0].action).toBe('create');
     });
     ```
 
@@ -781,7 +797,7 @@ Solver-run E2E gating (from Phase 10.5-04 precedent):
 
     --- Update matrix + validation ---
 
-    1. Update `.planning/E2E-COVERAGE-MATRIX.md` rows from `scaffolded` → `green` for all 12 specs (post-task-3 confirmation).
+    1. Update `.planning/E2E-COVERAGE-MATRIX.md` rows from `scaffolded` → `green` for all 13 specs (12 SOLVER + 1 RBAC, post-task-3 confirmation).
 
     2. Fill `.planning/phases/14-solver-tuning/14-VALIDATION.md` per-task table:
        ```markdown
@@ -798,7 +814,7 @@ Solver-run E2E gating (from Phase 10.5-04 precedent):
 
     3. Set `nyquist_compliant: true` in `.planning/phases/14-solver-tuning/14-VALIDATION.md` frontmatter and `wave_0_complete: true`.
 
-    4. Run the full Phase 14 suite to confirm all 12 specs green:
+    4. Run the full Phase 14 suite to confirm all 13 specs green:
        ```bash
        pnpm --filter @schoolflow/web exec playwright test admin-solver-tuning- --project=desktop
        ```
@@ -809,7 +825,7 @@ Solver-run E2E gating (from Phase 10.5-04 precedent):
     </automated>
   </verify>
   <acceptance_criteria>
-    - `pnpm --filter @schoolflow/web exec playwright test admin-solver-tuning- --project=desktop` exits 0 with all 12 spec tests run (E2E-SOLVER-10 may show as `skipped` unless `E2E_RUN_SOLVER=1`)
+    - `pnpm --filter @schoolflow/web exec playwright test admin-solver-tuning- --project=desktop` exits 0 with all 13 spec tests run (E2E-SOLVER-10 may show as `skipped` unless `E2E_RUN_SOLVER=1`)
     - With `E2E_RUN_SOLVER=1` set: integration spec passes (run separately and document in summary)
     - `.planning/E2E-COVERAGE-MATRIX.md` shows 12 `E2E-SOLVER-*` rows with status `green`
     - `.planning/phases/14-solver-tuning/14-VALIDATION.md` per-task table is filled with concrete commands per requirement; `nyquist_compliant: true` in frontmatter
@@ -817,7 +833,7 @@ Solver-run E2E gating (from Phase 10.5-04 precedent):
     - All specs use `cleanupConstraintTemplatesViaAPI` + `cleanupConstraintWeightOverridesViaAPI` in afterEach
     - No `test.skip(true)` placeholders remain
   </acceptance_criteria>
-  <done>All 12 specs green; coverage matrix updated; validation table reflects reality; UAT-ban (per `feedback_e2e_first_no_uat.md`) is satisfied for Phase 14.</done>
+  <done>All 13 specs green; coverage matrix updated; validation table reflects reality; UAT-ban (per `feedback_e2e_first_no_uat.md`) is satisfied for Phase 14.</done>
 </task>
 
 </tasks>
@@ -840,7 +856,7 @@ Solver-run E2E gating (from Phase 10.5-04 precedent):
 
 <verification>
 1. `pnpm --filter @schoolflow/web exec playwright test admin-solver-tuning- --project=desktop` exits 0
-2. `pnpm --filter @schoolflow/web exec playwright test admin-solver-tuning- --project=desktop --list` shows 12 tests
+2. `pnpm --filter @schoolflow/web exec playwright test admin-solver-tuning- --project=desktop --list` shows 13 tests (12 SOLVER + 1 RBAC)
 3. With local stack running (api+web+keycloak+postgres+sidecar): all 12 green (E2E-SOLVER-10 needs E2E_RUN_SOLVER=1)
 4. `.planning/E2E-COVERAGE-MATRIX.md` updated
 5. `.planning/phases/14-solver-tuning/14-VALIDATION.md` complete
