@@ -285,11 +285,11 @@ Plans:
 **Plans:** 3 plans
 
 **Success criteria:**
-- [ ] Admin sieht Constraint-Template-Liste mit klarer Hard/Soft-Unterscheidung und aktueller Gewichtung
-- [ ] Admin kann ConstraintWeightOverrides pro Schule setzen mit sofortiger Validierung (Min/Max/Typ)
-- [ ] Admin kann ClassTimeslotRestrictions (geblockte Zeitfenster pro Klasse) anlegen und löschen
-- [ ] Admin kann SubjectTimePreferences (bevorzugte Zeitfenster pro Fach) anlegen und löschen
-- [ ] Erneute Stundenplan-Generierung reflektiert geänderte Weights nachvollziehbar (manuelle Verifikation gegen Pre-Change-Baseline)
+- [x] Admin sieht Constraint-Template-Liste mit klarer Hard/Soft-Unterscheidung und aktueller Gewichtung — E2E-SOLVER-01 (catalog 6 HARD + 9 SOFT)
+- [x] Admin kann ConstraintWeightOverrides pro Schule setzen mit sofortiger Validierung (Min/Max/Typ) — E2E-SOLVER-02 + E2E-SOLVER-03 (bounds 422)
+- [x] Admin kann ClassTimeslotRestrictions (geblockte Zeitfenster pro Klasse) anlegen und löschen — E2E-SOLVER-04/05/06 (CRUD + cross-ref 422 + multi-row banner)
+- [x] Admin kann SubjectTimePreferences (bevorzugte Zeitfenster pro Fach) anlegen und löschen — E2E-SOLVER-07/08/09 (SUBJECT_MORNING + SUBJECT_PREFERRED_SLOT CRUD + sub-tab isolation)
+- [x] Erneute Stundenplan-Generierung reflektiert geänderte Weights nachvollziehbar (manuelle Verifikation gegen Pre-Change-Baseline) — E2E-SOLVER-10 (gated, verified the saved weight reaches TimetableRun.constraintConfig)
 
 **Known risks / backend gap candidates:**
 - SOLVER-01/02: ConstraintTemplate CRUD existiert aus v1.0 Phase 3 — UI muss die Input-Form für Hard/Soft-Constraint-Parameter generisch gestalten.
@@ -300,7 +300,7 @@ Plans:
 Plans:
 - [x] 14-01-backend-PLAN.md — Prisma migration + ConstraintWeightOverride CRUD + cross-reference validation + resolution chain (DB > DTO > defaults) + SUBJECT_PREFERRED_SLOT case + Java sidecar gap-fix [Wave 1] — complete 2026-04-25
 - [x] 14-02-frontend-PLAN.md — /admin/solver-tuning 4-tab page (Constraints / Gewichtungen / Klassen-Sperrzeiten / Fach-Präferenzen) + sidebar entry + Generator-Page deep-link card [Wave 2, depends on 14-01] — complete 2026-04-25
-- [ ] 14-03-e2e-PLAN.md — 12 Playwright specs (E2E-SOLVER-*) covering catalog + weights + restrictions + preferences + integration + audit + mobile-375 [Wave 3, depends on 14-01 + 14-02]
+- [x] 14-03-e2e-PLAN.md — 12 Playwright specs (E2E-SOLVER-*) + 1 RBAC + 1 mobile-chrome covering catalog + weights + restrictions + preferences + integration + audit + mobile-375 [Wave 3, depends on 14-01 + 14-02] — complete 2026-04-25
 
 ---
 

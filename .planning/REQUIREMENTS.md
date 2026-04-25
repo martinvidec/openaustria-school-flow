@@ -65,11 +65,11 @@
 
 ### Solver Tuning
 
-- [ ] **SOLVER-01**: Admin sieht Constraint-Template-Liste mit Hard/Soft-Unterscheidung
-- [ ] **SOLVER-02**: Admin kann Constraint-Templates editieren (Gewicht, Parameter)
-- [ ] **SOLVER-03**: Admin kann ConstraintWeightOverrides pro Schule setzen
-- [ ] **SOLVER-04**: Admin kann ClassTimeslotRestrictions (Klassen-Zeitsperren) pflegen
-- [ ] **SOLVER-05**: Admin kann SubjectTimePreferences (Fach-Zeitfenster-Präferenzen) pflegen
+- [x] **SOLVER-01**: Admin sieht Constraint-Template-Liste mit Hard/Soft-Unterscheidung
+- [x] **SOLVER-02**: Admin kann Constraint-Templates editieren (Gewicht, Parameter)
+- [x] **SOLVER-03**: Admin kann ConstraintWeightOverrides pro Schule setzen
+- [x] **SOLVER-04**: Admin kann ClassTimeslotRestrictions (Klassen-Zeitsperren) pflegen
+- [x] **SOLVER-05**: Admin kann SubjectTimePreferences (Fach-Zeitfenster-Präferenzen) pflegen
 
 ### DSGVO Admin
 
@@ -186,11 +186,11 @@ Empty initially — populated during roadmap creation by `gsd-roadmapper`.
 | USER-03 | Phase 13 (13-01 + 13-02) | Backend + UI complete (2026-04-24, awaits 13-03 E2E) |
 | USER-04 | Phase 13 (13-01 + 13-02) | Backend + UI complete (2026-04-24, awaits 13-03 E2E) |
 | USER-05 | Phase 13 (13-01 + 13-02) | Backend + UI complete (2026-04-24, awaits 13-03 E2E) |
-| SOLVER-01 | Phase 14 (14-01 + 14-02) | Backend + UI complete (2026-04-25, awaits 14-03 E2E) |
-| SOLVER-02 | Phase 14 (14-01 + 14-02) | Backend + UI complete (2026-04-25, awaits 14-03 E2E) |
-| SOLVER-03 | Phase 14 (14-01 + 14-02) | Backend + UI complete (2026-04-25, awaits 14-03 E2E) |
-| SOLVER-04 | Phase 14 (14-01 + 14-02) | Backend + UI complete (2026-04-25, awaits 14-03 E2E) |
-| SOLVER-05 | Phase 14 (14-01 + 14-02) | Backend + UI complete (2026-04-25, awaits 14-03 E2E) |
+| SOLVER-01 | Phase 14 (14-01 + 14-02 + 14-03) | Complete (2026-04-25) — E2E-SOLVER-01 |
+| SOLVER-02 | Phase 14 (14-01 + 14-02 + 14-03) | Complete (2026-04-25) — E2E-SOLVER-02 + E2E-SOLVER-03 |
+| SOLVER-03 | Phase 14 (14-01 + 14-02 + 14-03) | Complete (2026-04-25) — E2E-SOLVER-10 (gated E2E_RUN_SOLVER=1, verified) |
+| SOLVER-04 | Phase 14 (14-01 + 14-02 + 14-03) | Complete (2026-04-25) — E2E-SOLVER-04 + 05 + 06 |
+| SOLVER-05 | Phase 14 (14-01 + 14-02 + 14-03) | Complete (2026-04-25) — E2E-SOLVER-07 + 08 + 09 |
 | DSGVO-ADM-01 | Phase 15 | Pending |
 | DSGVO-ADM-02 | Phase 15 | Pending |
 | DSGVO-ADM-03 | Phase 15 | Pending |

@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
-stopped_at: Phase 14 Plan 2 (frontend) complete
-last_updated: "2026-04-25T18:30:00Z"
-last_activity: 2026-04-25 -- Phase 14 Plan 14-02 frontend complete
+stopped_at: Phase 14 Plan 3 (E2E) complete — phase ready for /gsd-verify-work
+last_updated: "2026-04-25T18:50:00Z"
+last_activity: 2026-04-25 -- Phase 14 Plan 14-03 E2E complete (12 SOLVER + 1 RBAC + 1 mobile, all green)
 progress:
   total_phases: 12
   completed_phases: 9
   total_plans: 37
-  completed_plans: 36
-  percent: 75
+  completed_plans: 37
+  percent: 77
 ---
 
 # Project State
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 
 ## Current Position
 
-Phase: 14 (solver-tuning) — EXECUTING
-Plan: 3 of 3
-Status: Plan 14-02 (frontend) complete; ready for Plan 14-03 (E2E)
-Last activity: 2026-04-25 -- Phase 14 Plan 14-02 frontend complete
+Phase: 14 (solver-tuning) — EXECUTION COMPLETE
+Plan: 3 of 3 ✅
+Status: All 3 plans (14-01 backend, 14-02 frontend, 14-03 E2E) green; phase ready for /gsd-verify-work
+Last activity: 2026-04-25 -- Phase 14 Plan 14-03 E2E complete (12 SOLVER + 1 RBAC + 1 mobile, all green)
 
-Progress: [████████░░] 75%
+Progress: [████████░░] 77%
 
 ## Performance Metrics
 
@@ -143,6 +143,7 @@ Progress: [████████░░] 75%
 | Phase 13 P02 | 20min | 3 tasks | 51 files |
 | Phase 14 P01 | 27min | 6 tasks | 26 files |
 | Phase 14 P02 | 30min | 3 tasks | 36 files |
+| Phase 14 P03 | 25min | 3 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -198,6 +199,11 @@ Recent decisions affecting current work:
 - [Phase 13]: Person-side link-theft pre-check on POST /admin/users/:userId/link-person — bare UPDATE Person.keycloakUserId silently steals existing link without P2002, so the service-layer pre-check fires BEFORE the dispatcher (USER-05-LINK-02 invariant)
 - [Phase 13]: interpolateConditions extracted to @schoolflow/shared so CaslAbilityFactory (runtime) and EffectivePermissionsService (admin read) share the same {{ id }} replacement util — no algorithm drift between "what the user can do" and "what the admin sees"
 - [Phase 13]: Permission_overrides migration uses DEFAULT CURRENT_TIMESTAMP NOT NULL on updated_at; Prisma's auto-generator omitted the default (would have failed migrate replay on any non-empty table) — rewrote SQL by hand (Rule 1)
+- [Phase 14-03]: Audit endpoint contract for E2E specs is GET /api/v1/audit?resource=schools (NOT /audit-log; the AuditInterceptor extracts the URL's first segment as resource — both Phase 14 surfaces nest under /schools/:schoolId/...). Phase 14 entries are disambiguated by metadata.body.weights / metadata.body.templateType inspection.
+- [Phase 14-03]: Tab 4 sub-tab dual-render — SubjectPreferencesTab mounts BOTH the desktop <Tabs> branch AND the mobile <ToggleGroup> branch in the DOM at all times (Tailwind responsive only flips visibility). E2E count assertions use `tr[data-template-type=...]:visible` to count only the active branch.
+- [Phase 14-03]: Solver integration spec (E2E-SOLVER-10) accepts FAILED outcomes — the contract is "resolution chain writes the school override into TimetableRun.constraintConfig", not solver feasibility. The constraintConfig is populated before the solver returns, so it's verifiable on both COMPLETE and FAILED.
+- [Phase 14-03]: Mobile slider tap-zone fix targeted to ConstraintWeightSliderRow only (Tailwind `[&_[role=slider]]:h-11 sm:[&_[role=slider]]:h-5`) — does not affect other Sliders in the codebase.
+- [Phase 14-03]: Phase 14 cleanup helpers wipe school-wide state — specs MUST run with --workers=1 to avoid cross-file race conditions where one spec's afterEach deletes another's in-flight constraint-template.
 - [Phase 03]: Nested resource routing (/api/v1/schools/:schoolId/rooms) for school-scoped room management
 - [Phase 03]: Equipment stored as PostgreSQL text[] (Prisma String[]) for flexible equipment tagging without separate Equipment model
 - [Phase 03]: Quarkus 3.32.2 (not 3.17 LTS) required for Timefold 1.32.0 compatibility
