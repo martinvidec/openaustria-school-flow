@@ -8,6 +8,7 @@ import ai.timefold.solver.core.api.score.stream.Joiners;
 
 import at.schoolflow.solver.domain.ClassTimeslotRestriction;
 import at.schoolflow.solver.domain.Lesson;
+import at.schoolflow.solver.domain.SubjectPreferredSlot;
 import at.schoolflow.solver.domain.SubjectTimePreference;
 import at.schoolflow.solver.domain.TeacherAvailability;
 
@@ -31,6 +32,7 @@ import at.schoolflow.solver.domain.TeacherAvailability;
  * 12. Minimize room changes: penalize unnecessary room switches during the day
  * 13. Prefer morning for main subjects: main subjects penalized for afternoon scheduling
  * 14. Subject time preference: penalize subjects scheduled after their preferred latest period (SUBJECT_MORNING)
+ * 15. Subject preferred slot: reward lessons matching admin-configured (subject, day, period) — Phase 14 D-12
  *
  * Soft constraint weights are defined in TimetableConstraintConfiguration and can be
  * overridden at runtime via the constraint template API (D-03, D-04).
@@ -56,6 +58,7 @@ public class TimetableConstraintProvider implements ConstraintProvider {
                 minimizeRoomChanges(constraintFactory),
                 preferMorningForMainSubjects(constraintFactory),
                 subjectTimePreference(constraintFactory),
+                subjectPreferredSlot(constraintFactory),
         };
     }
 
@@ -297,6 +300,34 @@ public class TimetableConstraintProvider implements ConstraintProvider {
                                 && lesson.getTimeslot().getPeriodNumber() > pref.getLatestPeriod())
                 .penalizeConfigurable()
                 .asConstraint("Subject time preference");
+    }
+
+    /**
+     * Phase 14 D-12 — Reward lessons that match a SUBJECT_PREFERRED_SLOT
+     * preference triple (subjectId, dayOfWeek, period).
+     *
+     * Admins specify preferred slots (e.g., "Sport Tuesday Period 1");
+     * matching assignments earn positive soft reward.
+     *
+     * The weight is a NEW @ConstraintWeight("Subject preferred slot") in
+     * TimetableConstraintConfiguration — do NOT share the name with
+     * "Subject time preference" or Timefold throws IllegalStateException
+     * on shared constraint names. CONFIGURABLE_CONSTRAINT_NAMES on the
+     * NestJS side exposes both names as separate sliders.
+     */
+    public Constraint subjectPreferredSlot(ConstraintFactory constraintFactory) {
+        return constraintFactory
+                .forEach(Lesson.class)
+                .join(SubjectPreferredSlot.class,
+                        Joiners.equal(Lesson::getSubjectId, SubjectPreferredSlot::getSubjectId),
+                        Joiners.equal(
+                                lesson -> lesson.getTimeslot().getDayOfWeek(),
+                                SubjectPreferredSlot::getDayOfWeek),
+                        Joiners.equal(
+                                lesson -> lesson.getTimeslot().getPeriodNumber(),
+                                SubjectPreferredSlot::getPeriod))
+                .rewardConfigurable()
+                .asConstraint("Subject preferred slot");
     }
 
     // ===== Helper Methods =====

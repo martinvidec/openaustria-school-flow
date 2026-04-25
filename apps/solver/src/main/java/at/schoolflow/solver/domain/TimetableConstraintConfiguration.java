@@ -33,6 +33,7 @@ import ai.timefold.solver.core.api.score.buildin.hardsoft.HardSoftScore;
  * - "Minimize room changes": 3
  * - "Prefer morning for main subjects": 1
  * - "Subject time preference": 3
+ * - "Subject preferred slot": 5  // Phase 14 — admin-configurable reward for matching slots
  */
 @ConstraintConfiguration
 public class TimetableConstraintConfiguration {
@@ -80,6 +81,12 @@ public class TimetableConstraintConfiguration {
 
     @ConstraintWeight("Subject time preference")
     private HardSoftScore subjectTimePreferenceWeight = HardSoftScore.ofSoft(3);
+
+    // Phase 14 D-12 — admin-configurable reward weight for SUBJECT_PREFERRED_SLOT.
+    // Default 5 mirrors apps/api/src/modules/timetable/dto/constraint-weight.dto.ts
+    // DEFAULT_CONSTRAINT_WEIGHTS['Subject preferred slot'].
+    @ConstraintWeight("Subject preferred slot")
+    private HardSoftScore subjectPreferredSlotWeight = HardSoftScore.ofSoft(5);
 
     // No-arg constructor with defaults
     public TimetableConstraintConfiguration() {
@@ -151,6 +158,14 @@ public class TimetableConstraintConfiguration {
         this.subjectTimePreferenceWeight = subjectTimePreferenceWeight;
     }
 
+    public HardSoftScore getSubjectPreferredSlotWeight() {
+        return subjectPreferredSlotWeight;
+    }
+
+    public void setSubjectPreferredSlotWeight(HardSoftScore subjectPreferredSlotWeight) {
+        this.subjectPreferredSlotWeight = subjectPreferredSlotWeight;
+    }
+
     /**
      * Apply weight overrides from a map of constraint name -> soft weight value.
      * Only recognized constraint names are applied; unknown names are ignored.
@@ -170,6 +185,7 @@ public class TimetableConstraintConfiguration {
                 case "Minimize room changes" -> this.minimizeRoomChangesWeight = weight;
                 case "Prefer morning for main subjects" -> this.preferMorningForMainSubjectsWeight = weight;
                 case "Subject time preference" -> this.subjectTimePreferenceWeight = weight;
+                case "Subject preferred slot" -> this.subjectPreferredSlotWeight = weight;
                 default -> { /* unknown constraint name, ignore */ }
             }
         }

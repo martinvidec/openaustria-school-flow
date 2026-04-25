@@ -41,6 +41,15 @@ public class SchoolTimetable {
     @ProblemFactCollectionProperty
     private List<SubjectTimePreference> subjectTimePreferences;
 
+    /**
+     * Phase 14 D-12: SUBJECT_PREFERRED_SLOT preferences (admin-configured).
+     * The matching constraint stream lives in TimetableConstraintProvider
+     * (subjectPreferredSlot) and the configurable weight is registered in
+     * TimetableConstraintConfiguration as @ConstraintWeight("Subject preferred slot").
+     */
+    @ProblemFactCollectionProperty
+    private List<SubjectPreferredSlot> subjectPreferredSlots;
+
     @ConstraintConfigurationProvider
     private TimetableConstraintConfiguration constraintConfiguration;
 
@@ -55,6 +64,7 @@ public class SchoolTimetable {
         this.blockedSlots = new ArrayList<>();
         this.classTimeslotRestrictions = new ArrayList<>();
         this.subjectTimePreferences = new ArrayList<>();
+        this.subjectPreferredSlots = new ArrayList<>();
         this.constraintConfiguration = new TimetableConstraintConfiguration();
     }
 
@@ -68,6 +78,7 @@ public class SchoolTimetable {
         this.blockedSlots = blockedSlots != null ? blockedSlots : new ArrayList<>();
         this.classTimeslotRestrictions = new ArrayList<>();
         this.subjectTimePreferences = new ArrayList<>();
+        this.subjectPreferredSlots = new ArrayList<>();
         this.constraintConfiguration = new TimetableConstraintConfiguration();
     }
 
@@ -84,6 +95,25 @@ public class SchoolTimetable {
         this.blockedSlots = blockedSlots != null ? blockedSlots : new ArrayList<>();
         this.classTimeslotRestrictions = classTimeslotRestrictions != null ? classTimeslotRestrictions : new ArrayList<>();
         this.subjectTimePreferences = subjectTimePreferences != null ? subjectTimePreferences : new ArrayList<>();
+        this.subjectPreferredSlots = new ArrayList<>();
+        this.constraintConfiguration = constraintConfiguration != null ? constraintConfiguration : new TimetableConstraintConfiguration();
+    }
+
+    public SchoolTimetable(List<Lesson> lessons,
+                           List<SolverTimeslot> timeslots,
+                           List<SolverRoom> rooms,
+                           List<TeacherAvailability> blockedSlots,
+                           List<ClassTimeslotRestriction> classTimeslotRestrictions,
+                           List<SubjectTimePreference> subjectTimePreferences,
+                           List<SubjectPreferredSlot> subjectPreferredSlots,
+                           TimetableConstraintConfiguration constraintConfiguration) {
+        this.lessons = lessons;
+        this.timeslots = timeslots;
+        this.rooms = rooms;
+        this.blockedSlots = blockedSlots != null ? blockedSlots : new ArrayList<>();
+        this.classTimeslotRestrictions = classTimeslotRestrictions != null ? classTimeslotRestrictions : new ArrayList<>();
+        this.subjectTimePreferences = subjectTimePreferences != null ? subjectTimePreferences : new ArrayList<>();
+        this.subjectPreferredSlots = subjectPreferredSlots != null ? subjectPreferredSlots : new ArrayList<>();
         this.constraintConfiguration = constraintConfiguration != null ? constraintConfiguration : new TimetableConstraintConfiguration();
     }
 
@@ -111,6 +141,10 @@ public class SchoolTimetable {
 
     public List<SubjectTimePreference> getSubjectTimePreferences() {
         return subjectTimePreferences;
+    }
+
+    public List<SubjectPreferredSlot> getSubjectPreferredSlots() {
+        return subjectPreferredSlots;
     }
 
     public TimetableConstraintConfiguration getConstraintConfiguration() {
@@ -145,6 +179,10 @@ public class SchoolTimetable {
 
     public void setSubjectTimePreferences(List<SubjectTimePreference> subjectTimePreferences) {
         this.subjectTimePreferences = subjectTimePreferences;
+    }
+
+    public void setSubjectPreferredSlots(List<SubjectPreferredSlot> subjectPreferredSlots) {
+        this.subjectPreferredSlots = subjectPreferredSlots;
     }
 
     public void setConstraintConfiguration(TimetableConstraintConfiguration constraintConfiguration) {
