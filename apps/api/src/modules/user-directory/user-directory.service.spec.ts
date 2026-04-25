@@ -16,6 +16,15 @@ const mockPrisma = {
     findMany: vi.fn(),
     findUnique: vi.fn(),
   },
+  teacher: {
+    findUnique: vi.fn(),
+  },
+  student: {
+    findUnique: vi.fn(),
+  },
+  parent: {
+    findUnique: vi.fn(),
+  },
 };
 
 const mockKc = {
@@ -42,7 +51,7 @@ describe('UserDirectoryService', () => {
   let service: UserDirectoryService;
 
   beforeEach(async () => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserDirectoryService,
@@ -212,6 +221,7 @@ describe('UserDirectoryService', () => {
           firstName: 'Anna',
           lastName: 'Müller',
         });
+      mockPrisma.teacher.findUnique.mockResolvedValue({ personId: 'p1' });
       mockTeacher.linkKeycloakUser.mockResolvedValue({ id: 'p1' });
 
       const result = await service.linkPerson('kc-1', { personType: 'TEACHER', personId: 't1' });
@@ -243,6 +253,7 @@ describe('UserDirectoryService', () => {
           firstName: 'Maria',
           lastName: 'Huber',
         });
+      mockPrisma.teacher.findUnique.mockResolvedValue({ personId: 't1' });
       mockKc.findUserById.mockResolvedValue({
         id: 'kc-OTHER',
         email: 'maria@x',
@@ -278,6 +289,7 @@ describe('UserDirectoryService', () => {
           firstName: 'Maria',
           lastName: 'Huber',
         });
+      mockPrisma.teacher.findUnique.mockResolvedValue({ personId: 't1' });
       mockTeacher.linkKeycloakUser.mockRejectedValue({ code: 'P2002' });
 
       await expect(
@@ -295,6 +307,7 @@ describe('UserDirectoryService', () => {
           firstName: 'S',
           lastName: 'T',
         });
+      mockPrisma.student.findUnique.mockResolvedValue({ personId: 's1' });
       mockStudent.linkKeycloakUser.mockResolvedValue({ id: 's1' });
 
       await service.linkPerson('kc-2', { personType: 'STUDENT', personId: 's1' });
@@ -311,6 +324,7 @@ describe('UserDirectoryService', () => {
           firstName: 'P',
           lastName: 'A',
         });
+      mockPrisma.parent.findUnique.mockResolvedValue({ personId: 'p1' });
       mockParent.linkKeycloakUser.mockResolvedValue({ id: 'p1' });
 
       await service.linkPerson('kc-3', { personType: 'PARENT', personId: 'p1' });
