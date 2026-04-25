@@ -186,11 +186,11 @@ Empty initially — populated during roadmap creation by `gsd-roadmapper`.
 | USER-03 | Phase 13 (13-01 + 13-02) | Backend + UI complete (2026-04-24, awaits 13-03 E2E) |
 | USER-04 | Phase 13 (13-01 + 13-02) | Backend + UI complete (2026-04-24, awaits 13-03 E2E) |
 | USER-05 | Phase 13 (13-01 + 13-02) | Backend + UI complete (2026-04-24, awaits 13-03 E2E) |
-| SOLVER-01 | Phase 14 (14-01) | Backend complete (2026-04-25, Plan 14-01); awaits Plan 14-02 UI + 14-03 E2E |
-| SOLVER-02 | Phase 14 (14-01) | Backend complete (2026-04-25, Plan 14-01); awaits Plan 14-02 UI + 14-03 E2E |
-| SOLVER-03 | Phase 14 (14-01) | Backend complete (2026-04-25, Plan 14-01); awaits Plan 14-02 UI + 14-03 E2E |
-| SOLVER-04 | Phase 14 (14-01) | Backend complete (2026-04-25, Plan 14-01); awaits Plan 14-02 UI + 14-03 E2E |
-| SOLVER-05 | Phase 14 (14-01) | Backend complete (2026-04-25, Plan 14-01); awaits Plan 14-02 UI + 14-03 E2E |
+| SOLVER-01 | Phase 14 (14-01 + 14-02) | Backend + UI complete (2026-04-25, awaits 14-03 E2E) |
+| SOLVER-02 | Phase 14 (14-01 + 14-02) | Backend + UI complete (2026-04-25, awaits 14-03 E2E) |
+| SOLVER-03 | Phase 14 (14-01 + 14-02) | Backend + UI complete (2026-04-25, awaits 14-03 E2E) |
+| SOLVER-04 | Phase 14 (14-01 + 14-02) | Backend + UI complete (2026-04-25, awaits 14-03 E2E) |
+| SOLVER-05 | Phase 14 (14-01 + 14-02) | Backend + UI complete (2026-04-25, awaits 14-03 E2E) |
 | DSGVO-ADM-01 | Phase 15 | Pending |
 | DSGVO-ADM-02 | Phase 15 | Pending |
 | DSGVO-ADM-03 | Phase 15 | Pending |
