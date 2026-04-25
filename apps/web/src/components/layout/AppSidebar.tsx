@@ -14,6 +14,7 @@ import {
   History,
   PanelLeftClose,
   PanelLeft,
+  SlidersHorizontal,
   UserCheck,
   UserCircle,
   UsersRound,
@@ -97,6 +98,14 @@ const navItems: NavItem[] = [
     href: '/admin/solver',
     icon: CalendarCog,
     roles: ['admin', 'schulleitung'],
+  },
+  // Phase 14-02 SOLVER-01..05: admin-only Tuning entry.
+  // Strict role-gating per D-03 (Schulleitung must not see this).
+  {
+    label: 'Solver-Tuning',
+    href: '/admin/solver-tuning',
+    icon: SlidersHorizontal,
+    roles: ['admin'],
   },
   {
     label: 'Stundenplan bearbeiten',

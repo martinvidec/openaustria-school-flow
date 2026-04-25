@@ -11,6 +11,7 @@ import {
   Package,
   PencilRuler,
   History,
+  SlidersHorizontal,
   X,
   UserCircle,
   UsersRound,
@@ -88,6 +89,13 @@ const navItems: NavItem[] = [
     href: '/admin/solver',
     icon: CalendarCog,
     roles: ['admin', 'schulleitung'],
+  },
+  // Phase 14-02 SOLVER-01..05: admin-only Tuning entry (D-03 strict).
+  {
+    label: 'Solver-Tuning',
+    href: '/admin/solver-tuning',
+    icon: SlidersHorizontal,
+    roles: ['admin'],
   },
   {
     label: 'Stundenplan bearbeiten',

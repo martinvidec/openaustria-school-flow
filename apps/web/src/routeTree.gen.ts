@@ -23,6 +23,7 @@ import { Route as AuthenticatedClassbookLessonIdRouteImport } from './routes/_au
 import { Route as AuthenticatedAdminTimetableHistoryRouteImport } from './routes/_authenticated/admin/timetable-history'
 import { Route as AuthenticatedAdminTimetableEditRouteImport } from './routes/_authenticated/admin/timetable-edit'
 import { Route as AuthenticatedAdminSubstitutionsRouteImport } from './routes/_authenticated/admin/substitutions'
+import { Route as AuthenticatedAdminSolverTuningRouteImport } from './routes/_authenticated/admin/solver-tuning'
 import { Route as AuthenticatedAdminSolverRouteImport } from './routes/_authenticated/admin/solver'
 import { Route as AuthenticatedAdminResourcesRouteImport } from './routes/_authenticated/admin/resources'
 import { Route as AuthenticatedAdminImportRouteImport } from './routes/_authenticated/admin/import'
@@ -116,6 +117,12 @@ const AuthenticatedAdminSubstitutionsRoute =
     path: '/admin/substitutions',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminSolverTuningRoute =
+  AuthenticatedAdminSolverTuningRouteImport.update({
+    id: '/admin/solver-tuning',
+    path: '/admin/solver-tuning',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminSolverRoute =
   AuthenticatedAdminSolverRouteImport.update({
     id: '/admin/solver',
@@ -201,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/admin/import': typeof AuthenticatedAdminImportRoute
   '/admin/resources': typeof AuthenticatedAdminResourcesRoute
   '/admin/solver': typeof AuthenticatedAdminSolverRoute
+  '/admin/solver-tuning': typeof AuthenticatedAdminSolverTuningRoute
   '/admin/substitutions': typeof AuthenticatedAdminSubstitutionsRoute
   '/admin/timetable-edit': typeof AuthenticatedAdminTimetableEditRoute
   '/admin/timetable-history': typeof AuthenticatedAdminTimetableHistoryRoute
@@ -229,6 +237,7 @@ export interface FileRoutesByTo {
   '/admin/import': typeof AuthenticatedAdminImportRoute
   '/admin/resources': typeof AuthenticatedAdminResourcesRoute
   '/admin/solver': typeof AuthenticatedAdminSolverRoute
+  '/admin/solver-tuning': typeof AuthenticatedAdminSolverTuningRoute
   '/admin/substitutions': typeof AuthenticatedAdminSubstitutionsRoute
   '/admin/timetable-edit': typeof AuthenticatedAdminTimetableEditRoute
   '/admin/timetable-history': typeof AuthenticatedAdminTimetableHistoryRoute
@@ -259,6 +268,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/import': typeof AuthenticatedAdminImportRoute
   '/_authenticated/admin/resources': typeof AuthenticatedAdminResourcesRoute
   '/_authenticated/admin/solver': typeof AuthenticatedAdminSolverRoute
+  '/_authenticated/admin/solver-tuning': typeof AuthenticatedAdminSolverTuningRoute
   '/_authenticated/admin/substitutions': typeof AuthenticatedAdminSubstitutionsRoute
   '/_authenticated/admin/timetable-edit': typeof AuthenticatedAdminTimetableEditRoute
   '/_authenticated/admin/timetable-history': typeof AuthenticatedAdminTimetableHistoryRoute
@@ -289,6 +299,7 @@ export interface FileRouteTypes {
     | '/admin/import'
     | '/admin/resources'
     | '/admin/solver'
+    | '/admin/solver-tuning'
     | '/admin/substitutions'
     | '/admin/timetable-edit'
     | '/admin/timetable-history'
@@ -317,6 +328,7 @@ export interface FileRouteTypes {
     | '/admin/import'
     | '/admin/resources'
     | '/admin/solver'
+    | '/admin/solver-tuning'
     | '/admin/substitutions'
     | '/admin/timetable-edit'
     | '/admin/timetable-history'
@@ -346,6 +358,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/import'
     | '/_authenticated/admin/resources'
     | '/_authenticated/admin/solver'
+    | '/_authenticated/admin/solver-tuning'
     | '/_authenticated/admin/substitutions'
     | '/_authenticated/admin/timetable-edit'
     | '/_authenticated/admin/timetable-history'
@@ -474,6 +487,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSubstitutionsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/solver-tuning': {
+      id: '/_authenticated/admin/solver-tuning'
+      path: '/admin/solver-tuning'
+      fullPath: '/admin/solver-tuning'
+      preLoaderRoute: typeof AuthenticatedAdminSolverTuningRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin/solver': {
       id: '/_authenticated/admin/solver'
       path: '/admin/solver'
@@ -573,6 +593,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminImportRoute: typeof AuthenticatedAdminImportRoute
   AuthenticatedAdminResourcesRoute: typeof AuthenticatedAdminResourcesRoute
   AuthenticatedAdminSolverRoute: typeof AuthenticatedAdminSolverRoute
+  AuthenticatedAdminSolverTuningRoute: typeof AuthenticatedAdminSolverTuningRoute
   AuthenticatedAdminSubstitutionsRoute: typeof AuthenticatedAdminSubstitutionsRoute
   AuthenticatedAdminTimetableEditRoute: typeof AuthenticatedAdminTimetableEditRoute
   AuthenticatedAdminTimetableHistoryRoute: typeof AuthenticatedAdminTimetableHistoryRoute
@@ -601,6 +622,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminImportRoute: AuthenticatedAdminImportRoute,
   AuthenticatedAdminResourcesRoute: AuthenticatedAdminResourcesRoute,
   AuthenticatedAdminSolverRoute: AuthenticatedAdminSolverRoute,
+  AuthenticatedAdminSolverTuningRoute: AuthenticatedAdminSolverTuningRoute,
   AuthenticatedAdminSubstitutionsRoute: AuthenticatedAdminSubstitutionsRoute,
   AuthenticatedAdminTimetableEditRoute: AuthenticatedAdminTimetableEditRoute,
   AuthenticatedAdminTimetableHistoryRoute:
