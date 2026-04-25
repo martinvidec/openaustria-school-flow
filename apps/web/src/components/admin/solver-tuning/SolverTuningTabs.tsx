@@ -1,20 +1,25 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
+import { UnsavedChangesDialog } from '@/components/admin/shared/UnsavedChangesDialog';
+import { ConstraintCatalogTab } from './ConstraintCatalogTab';
+import { ConstraintWeightsTab } from './ConstraintWeightsTab';
 
 /**
- * STUB — fleshed out in Tasks 2 & 3.
+ * Phase 14-02: 4-tab container for /admin/solver-tuning.
  *
- * Renders the 4-tab shell (Constraints / Gewichtungen / Klassen-Sperrzeiten /
- * Fach-Präferenzen) so the route loads end-to-end before tab content lands.
+ * Owns tab navigation + dirty-state interception:
+ *  - Tab 2 ("Gewichtungen") is the only dirty-tracking tab. When the user
+ *    tries to leave with unsaved weights, an UnsavedChangesDialog opens.
+ *    Confirm "Verwerfen" → switch tab; Cancel → stay.
+ *  - Tab 1 ("Constraints") deep-link "Gewichtung bearbeiten" switches to
+ *    Tab 2 and passes the constraintName to scroll-into-view + flash.
  *
- * The dirty-state interception (UnsavedChangesDialog when leaving Tab 2 with
- * unsaved weights) is wired in Task 2 once `ConstraintWeightsTab` exposes
- * `onDirtyChange`.
+ * Tabs 3+4 are wired in Task 3.
  */
 
 export type SolverTuningTabValue =
@@ -28,7 +33,7 @@ interface Props {
   initialTab?: string;
 }
 
-export function SolverTuningTabs({ schoolId: _schoolId, initialTab }: Props) {
+export function SolverTuningTabs({ schoolId, initialTab }: Props) {
   const safeInitial: SolverTuningTabValue =
     initialTab === 'weights' ||
     initialTab === 'restrictions' ||
@@ -36,39 +41,96 @@ export function SolverTuningTabs({ schoolId: _schoolId, initialTab }: Props) {
       ? initialTab
       : 'constraints';
   const [active, setActive] = useState<SolverTuningTabValue>(safeInitial);
+  const [weightsDirty, setWeightsDirty] = useState(false);
+  const [pendingTab, setPendingTab] = useState<SolverTuningTabValue | null>(null);
+  const [pendingFocusName, setPendingFocusName] = useState<string | null>(null);
+  const [discardSignal, setDiscardSignal] = useState(0);
+
+  const requestTab = useCallback(
+    (next: SolverTuningTabValue) => {
+      if (active === next) return;
+      if (active === 'weights' && weightsDirty) {
+        setPendingTab(next);
+        return;
+      }
+      setActive(next);
+    },
+    [active, weightsDirty],
+  );
+
+  const handleEditWeight = useCallback((constraintName: string) => {
+    setPendingFocusName(constraintName);
+    setActive('weights');
+  }, []);
+
+  // Bump discardSignal so ConstraintWeightsTab can react to "discard then switch".
+  const handleDiscardAndSwitch = () => {
+    setDiscardSignal((s) => s + 1);
+    setWeightsDirty(false);
+    if (pendingTab) {
+      setActive(pendingTab);
+      setPendingTab(null);
+    }
+  };
 
   return (
-    <Tabs
-      value={active}
-      onValueChange={(v) => setActive(v as SolverTuningTabValue)}
-      className="w-full"
-    >
-      <TabsList className="overflow-x-auto h-auto flex w-full justify-start sm:w-auto sm:inline-flex">
-        <TabsTrigger value="constraints" className="min-h-11">
-          Constraints
-        </TabsTrigger>
-        <TabsTrigger value="weights" className="min-h-11">
-          Gewichtungen
-        </TabsTrigger>
-        <TabsTrigger value="restrictions" className="min-h-11">
-          Klassen-Sperrzeiten
-        </TabsTrigger>
-        <TabsTrigger value="preferences" className="min-h-11">
-          Fach-Präferenzen
-        </TabsTrigger>
-      </TabsList>
-      <TabsContent value="constraints">
-        <div className="py-6 text-sm text-muted-foreground">TODO Task 2 — Constraint-Catalog</div>
-      </TabsContent>
-      <TabsContent value="weights">
-        <div className="py-6 text-sm text-muted-foreground">TODO Task 2 — Gewichtungen</div>
-      </TabsContent>
-      <TabsContent value="restrictions">
-        <div className="py-6 text-sm text-muted-foreground">TODO Task 3 — Klassen-Sperrzeiten</div>
-      </TabsContent>
-      <TabsContent value="preferences">
-        <div className="py-6 text-sm text-muted-foreground">TODO Task 3 — Fach-Präferenzen</div>
-      </TabsContent>
-    </Tabs>
+    <>
+      <Tabs
+        value={active}
+        onValueChange={(v) => requestTab(v as SolverTuningTabValue)}
+        className="w-full"
+      >
+        <TabsList className="overflow-x-auto h-auto flex w-full justify-start sm:w-auto sm:inline-flex">
+          <TabsTrigger value="constraints" className="min-h-11">
+            Constraints
+          </TabsTrigger>
+          <TabsTrigger value="weights" className="min-h-11">
+            Gewichtungen
+          </TabsTrigger>
+          <TabsTrigger value="restrictions" className="min-h-11">
+            Klassen-Sperrzeiten
+          </TabsTrigger>
+          <TabsTrigger value="preferences" className="min-h-11">
+            Fach-Präferenzen
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="constraints" className="pt-4">
+          <ConstraintCatalogTab
+            schoolId={schoolId}
+            onNavigateToWeight={handleEditWeight}
+          />
+        </TabsContent>
+
+        <TabsContent value="weights" className="pt-4">
+          <ConstraintWeightsTab
+            key={`weights-${discardSignal}`}
+            schoolId={schoolId}
+            onDirtyChange={setWeightsDirty}
+            focusName={pendingFocusName}
+            onFocusConsumed={() => setPendingFocusName(null)}
+          />
+        </TabsContent>
+
+        <TabsContent value="restrictions" className="pt-4">
+          <div className="py-6 text-sm text-muted-foreground">
+            TODO Task 3 — Klassen-Sperrzeiten
+          </div>
+        </TabsContent>
+
+        <TabsContent value="preferences" className="pt-4">
+          <div className="py-6 text-sm text-muted-foreground">
+            TODO Task 3 — Fach-Präferenzen
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      <UnsavedChangesDialog
+        open={pendingTab !== null}
+        onCancel={() => setPendingTab(null)}
+        onDiscard={handleDiscardAndSwitch}
+        onSaveAndContinue={handleDiscardAndSwitch}
+      />
+    </>
   );
 }

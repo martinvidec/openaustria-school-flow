@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useSchoolContext } from '@/stores/school-context-store';
 import { useSolverSocket } from '@/hooks/useSolverSocket';
 import { apiFetch } from '@/lib/api';
+import { GeneratorPageWeightsCard } from '@/components/admin/solver/GeneratorPageWeightsCard';
 
 export const Route = createFileRoute('/_authenticated/admin/solver')({
   component: AdminSolverPage,
@@ -101,6 +102,10 @@ function AdminSolverPage() {
           den definierten Constraints. Der Vorgang kann einige Minuten dauern.
         </p>
       </div>
+
+      {/* Phase 14-02 D-06: read-only Schul-Gewichtungen card with deep-link
+          to /admin/solver-tuning?tab=weights. */}
+      {schoolId && <GeneratorPageWeightsCard schoolId={schoolId} />}
 
       {/* Status + trigger card */}
       <Card>
