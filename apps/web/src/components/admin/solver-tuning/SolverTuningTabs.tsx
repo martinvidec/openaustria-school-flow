@@ -8,6 +8,8 @@ import {
 import { UnsavedChangesDialog } from '@/components/admin/shared/UnsavedChangesDialog';
 import { ConstraintCatalogTab } from './ConstraintCatalogTab';
 import { ConstraintWeightsTab } from './ConstraintWeightsTab';
+import { ClassRestrictionsTab } from './ClassRestrictionsTab';
+import { SubjectPreferencesTab } from './SubjectPreferencesTab';
 
 /**
  * Phase 14-02: 4-tab container for /admin/solver-tuning.
@@ -113,15 +115,11 @@ export function SolverTuningTabs({ schoolId, initialTab }: Props) {
         </TabsContent>
 
         <TabsContent value="restrictions" className="pt-4">
-          <div className="py-6 text-sm text-muted-foreground">
-            TODO Task 3 — Klassen-Sperrzeiten
-          </div>
+          <ClassRestrictionsTab schoolId={schoolId} />
         </TabsContent>
 
         <TabsContent value="preferences" className="pt-4">
-          <div className="py-6 text-sm text-muted-foreground">
-            TODO Task 3 — Fach-Präferenzen
-          </div>
+          <SubjectPreferencesTab schoolId={schoolId} />
         </TabsContent>
       </Tabs>
 
