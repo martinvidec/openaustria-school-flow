@@ -31,6 +31,7 @@ Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenp
 - [x] Multi-Plattform UI (Web + Mobile) mit modernem, responsivem Design — Validated in Phase 9: Mobile, PWA & Production Readiness
 - [x] Admin UI für Lehrer-CRUD mit Lehrverpflichtung/Werteinheiten, Verfügbarkeit und Ermäßigungen — Validated in Phase 11: Lehrer- und Fächer-Verwaltung (TEACHER-01..06 + Keycloak-Verknüpfung + Orphan-Guard)
 - [x] Admin UI für Schüler- und Klassen-CRUD mit Stammklasse und Gruppenzuordnung — Validated in Phase 12: Schüler-, Klassen- und Gruppenverwaltung (STUDENT-01..04 + CLASS-01..05 + SUBJECT-04 Wochenstunden-Editor + GroupDerivationRule Rule-Builder + Orphan-Guard + 24 Playwright specs)
+- [x] Admin UI für User-Verwaltung (Keycloak-Liste, Rollenzuweisung) und CASL-ACL-Overrides pro User — Validated in Phase 13: User- und Rechteverwaltung (USER-01..05 + Silent-4xx invariant + Last-admin-guard + Link-theft guard + 25 Playwright tests across 9 spec files)
 
 ### Active
 
@@ -38,7 +39,6 @@ Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenp
 
 - [ ] Admin UI für Schulstammdaten, Zeitraster, Schuljahr (inkl. A/B-Wochen-Toggle)
 - [ ] Admin UI für Fächer-CRUD und Stundentafel-Verwaltung inkl. Gruppenableitungsregeln (Religion/Leistung/Wahlpflicht) — Fach-CRUD + Stundentafel-Vorlagen-Readout shipped in Phase 11 (SUBJECT-01/02/03/05); Wochenstunden-Edit (SUBJECT-04) + Gruppenableitungsregeln shipped in Phase 12
-- [ ] Admin UI für User-Verwaltung (Keycloak-Liste, Rollenzuweisung) und CASL-ACL-Overrides pro User
 - [ ] Admin UI für Solver-Tuning (Constraint-Templates, Gewichts-Overrides, Zeit-/Fach-Restriktionen)
 - [ ] Admin UI für DSGVO-Verwaltung (Einwilligungs-Audit, Aufbewahrungs-Editor, DSFA/VVZ, manuelle Art. 15/17-Auslösung)
 - [ ] Admin UI für Audit-Log-Viewer mit Such- und Filterfunktion
@@ -66,6 +66,8 @@ Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenp
 **E2E-first directive (2026-04-21).** Per user feedback, UAT is paused until Playwright coverage exists for all roles and admin-ops surfaces. Phases 10.1–10.5 drove that hardening; Phase 10.5 completed 2026-04-22 — E2E-first hardening tranche closed, UAT-Ban per `feedback_e2e_first_no_uat.md` lifted. People-CRUD E2E coverage (originally 10.4 scope, deferred) was delivered as part of Phase 11 (Teacher + Subject) and remains pending for Phase 12 (Schüler + Klassen).
 
 **Phase 11 (Lehrer- und Fächer-Verwaltung) completed 2026-04-23.** Shipped TEACHER-01..06 (list + Stammdaten + Lehrverpflichtung/Werteinheiten + Verfügbarkeitsgrid + Ermäßigungen + Keycloak-Link + Archiv/Delete mit Orphan-Guard) and SUBJECT-01/02/03/05 (Fach-CRUD + Stundentafel-Vorlagen-Readout + Orphan-Guard). 8 Playwright specs (desktop + mobile-chrome, 23/23 green) satisfy the E2E-first directive for this surface. 4 Rule-1 production bugs fixed during E2E execution (RFC 9457 extension passthrough, DTO validator relaxation, admin-list limit cap, SubjectFormDialog edit-payload hygiene). SUBJECT-04 (Wochenstunden pro Fach pro Klassenstufe) deferred to Phase 12 because its editing UI belongs in Klassen-Management. Next: Phase 12 (Schüler-, Klassen- und Gruppenverwaltung).
+
+**Phase 13 (User- und Rechteverwaltung) completed 2026-04-25.** Shipped USER-01..05 admin/users surface — KeycloakAdminService extension (8 new methods), 4 NestJS modules (UserDirectory, RoleManagement, PermissionOverride, EffectivePermissions), shared Zod schemas + interpolateConditions util, LOCK-01 mirror-write under Serializable transaction with last-admin guard, person-side link-theft guard surfacing RFC 9457 409. Frontend ships 26 components + 15 hooks + 4-tab User-Detail (Stammdaten/Rollen/Berechtigungen/Overrides & Verknüpfung) with Silent-4xx invariant, Self-Lockout warn, and last-admin server-409 dialog. 8 Playwright spec files (25 tests across desktop + mobile-chrome) lock USER-01..05 + Silent-4xx + access-guard + 44px touch-targets at the E2E layer. 1 unit-test mock alignment fix during verification (user-directory.service.spec.ts). Pre-existing web build drift in 11 unrelated files documented in deferred-items.md for a follow-up "Web build hygiene" plan. Next: Phase 14 (Solver-Tuning) or Phase 15 (DSGVO-Admin), both unblocked.
 
 ## Current Milestone: v1.1 Schuladmin Console
 
@@ -152,4 +154,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-24 after Phase 12 (Schüler-, Klassen- und Gruppenverwaltung) completed. STUDENT-01..04 + CLASS-01..05 + SUBJECT-04 shipped with 24 Playwright specs (11 files, desktop + mobile-375). ParentModule greenfield, GroupDerivationRule Rule-Builder with Dry-Run-Preview + Manual-Overrides, Orphan-Guards across Student + Class. 8/12 v1.1 phases complete (65%).*
+*Last updated: 2026-04-25 after Phase 13 (User- und Rechteverwaltung) completed. USER-01..05 shipped with 25 Playwright tests across 9 spec files (8 admin-user-* + admin-users-list). 4 NestJS modules + KeycloakAdminService extension; 26 components + 15 hooks frontend; LOCK-01 mirror-write + Last-admin-guard + Link-theft guard; Silent-4xx invariant locked across all mutations. 9/12 v1.1 phases complete (75%). Next: Phase 14 (Solver-Tuning) or Phase 15 (DSGVO-Admin).*
