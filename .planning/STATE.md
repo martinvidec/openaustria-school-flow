@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
-status: completed
-stopped_at: Phase 14 context gathered
-last_updated: "2026-04-25T07:57:29.915Z"
-last_activity: 2026-04-25
+status: executing
+stopped_at: Phase 14 Plan 1 (backend) complete
+last_updated: "2026-04-25T17:52:34Z"
+last_activity: 2026-04-25 -- Phase 14 Plan 14-01 backend complete
 progress:
   total_phases: 12
   completed_phases: 9
-  total_plans: 34
-  completed_plans: 34
-  percent: 70
+  total_plans: 37
+  completed_plans: 35
+  percent: 73
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-18)
 
 **Core value:** Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenplanerstellung, die sie selbst hosten koennen -- ohne Vendor Lock-in, mit offenen APIs und DSGVO-Konformitaet von Tag 1.
-**Current focus:** Phase 13 — user-und-rechteverwaltung
+**Current focus:** Phase 14 — solver-tuning
 
 ## Current Position
 
-Phase: 14
-Plan: Not started
-Status: Plan 13-02 complete; Plan 13-03 (E2E) ready
-Last activity: 2026-04-25
+Phase: 14 (solver-tuning) — EXECUTING
+Plan: 2 of 3
+Status: Plan 14-01 (backend) complete; ready for Plan 14-02 (frontend)
+Last activity: 2026-04-25 -- Phase 14 Plan 14-01 backend complete
 
-Progress: [███████░░░] 70%
+Progress: [███████░░░] 73%
 
 ## Performance Metrics
 
@@ -141,6 +141,7 @@ Progress: [███████░░░] 70%
 | Phase 12 P03 | 54min | 3 tasks | 30 files |
 | Phase 13 P01 | 41min | 3 tasks | 41 files |
 | Phase 13 P02 | 20min | 3 tasks | 51 files |
+| Phase 14 P01 | 27min | 6 tasks | 26 files |
 
 ## Accumulated Context
 
@@ -461,10 +462,11 @@ None yet.
 - Phase 11 Plan 1 complete 2026-04-22: Plan 11-01 ships TEACHER-01..06 production-ready UI — /admin/teachers list (search + empty-state CTA) + /admin/teachers/$teacherId detail with 4 tabs (Stammdaten/Lehrverpflichtung with live-WE-compute/Verfügbarkeits-Grid desktop + Day-Picker mobile/Ermässigungen row-add) + KeycloakLinkDialog (300ms debounce, alreadyLinked warning) + DeleteTeacherDialog (409 orphan-guard blocked-state with AffectedEntitiesList); TeacherService.remove orphan-guard gap-fix closes silent-zombification of denormalized-FK history (klassenvorstand + TimetableLesson + ClassBookEntry + GradeEntry + Substitution.original/substitute — 9 new Vitest specs); new KeycloakAdmin NestJS module with @keycloak/keycloak-admin-client + service-account token cache (5min TTL, 30s pre-expiry refresh) + Person.keycloakUserId enrichment for duplicate-link warning; 3 shared Zod schemas + werteinheiten util moved to @schoolflow/shared (FE/BE byte-identical per D-05); AppSidebar + MobileSidebar grouping refactor with "Personal & Fächer" group ready for 11-02 Fächer append. 3 atomic commits (09790da + f89079e + f3e7be0), 37 files touched, 28/28 API + 59/59 shared tests green, zero new TS errors on teacher code (12 pre-existing Phase-10.1-deferred errors unchanged). 6 Rule-1/2/3 auto-fixes documented (Zod enum drift from Prisma, Zod v4 UUID version-nibble, legacy useTeachers hook preservation, Vitest 4 constructor mock shape, TeacherDetailTabs onSave return type, Orphan-Guard mock Prisma shape expansion). Ready for Plan 11-02.
 - Phase 13 Plan 1 complete 2026-04-24: Plan 13-01 ships USER-01..05 backend foundation — 4 new admin modules (UserDirectory, RoleManagement, PermissionOverride, EffectivePermissions) + extended KeycloakAdminService (8 new methods: findUsers/countUsers/findUserById/setEnabled + listRealmRoleMappings/addRealmRoleMappings/delRealmRoleMappings/findRealmRoleByName) + Prisma migration `20260424120000_add_override_updated_at_and_reason` (DEFAULT CURRENT_TIMESTAMP backfill, hand-rewrote auto-generator's missing default per Rule 1) + @schoolflow/shared interpolateConditions util + 4 shared Zod schemas (updateUserRoles/permissionOverride/personLink/keycloakUserQuery) consumed by both CaslAbilityFactory (refactored to drop private interpolation) and EffectivePermissionsService (no algorithm drift). LOCK-01 mirror-write implemented in role-management.service.ts inside Serializable transaction with min-1-admin guard surfacing as RFC 9457 409 schoolflow://errors/last-admin-guard; KC mirror-failure logs but does NOT throw (T-13-10 residual risk). UserDirectoryService.linkPerson includes USER-side AND PERSON-side conflict pre-checks — the latter prevents silent link-theft (USER-05-LINK-02 invariant: bare UPDATE Person.keycloakUserId would succeed without P2002 because the new value is unique on the column). StudentService + ParentService now mirror TeacherService.{link,unlink}KeycloakUser (Phase 11 pattern) + PATCH/DELETE /:id/keycloak-link controller endpoints. Full /api/v1/admin/* surface (15 endpoints) reachable behind manage user / manage permission-override CheckPermissions guards. 3 atomic commits (0214148 Task 1 + 17ad173 Task 2 + bc4c42a Task 3), 41 files touched, 101/101 plan-level Vitest specs green, API build clean (426 files compiled). 5 Rule-1/2/3 auto-fixes (Prisma migration default rewrite, folder timestamp rename, KC mirror empty-diff short-circuit, controller method/field name collision, Task-2 dispatcher casts removed in Task-3). 1 verification step deferred to CI (Prisma 7 AI-safety guard blocks `migrate reset` under Claude Code; verified via `migrate deploy` + DB inspection instead). Plan 13-02 (frontend) UNBLOCKED.
 - Phase 12 Plan 3 complete 2026-04-24: Plan 12-03 ships the Phase-12 E2E coverage campaign — 11 Playwright spec files (5 Schüler + 6 Klassen = 24 tests) locking STUDENT-01..04 + CLASS-01..05 + SUBJECT-04 at the E2E layer against the live dev API + Keycloak + Prisma stack. 3 API fixtures (student-with-refs, class-with-students, parent-existing) + helpers/students.ts shared admin token seeders + prefix-isolated cleanup. Silent-4xx invariant codified in every error-path spec (expect green-toast.not.toBeVisible() + red-alert/inline-error required). Pixel 5 mobile-chrome emulation is the verification baseline (5/5 mobile + 19/19 desktop green). Phase-canonical gate: `playwright test admin-students admin-classes --project=desktop` 19/19, `--project=mobile-chrome` 5/5. 5 atomic commits (c692ac5 fixtures + 26c4282 Rule-1 DTO relaxation + 5e86796 first spec + 44628a9 remaining 5 student specs + pagination bump + 2791aa6 6 class specs + backend fixes). 5 Rule-1/2/3 auto-fixes: (1) 11 backend DTOs @IsUUID()→@IsString() for seed slug IDs; (2) shared Zod school-class schema .uuid()→.min(1); (3) ClassService.create persist klassenvorstandId (was silently discarded); (4) PaginationQueryDto.limit Max(100)→Max(500) for admin pickers; (5) shared dist .js-extension post-process per memory. Phase-12 is COMPLETE — ROADMAP ready to mark. Pre-existing admin-import + screenshots failures documented in deferred-items (environmental, not Phase-12 regressions).
+- Phase 14 Plan 1 complete 2026-04-25: Plan 14-01 ships SOLVER-01..05 backend foundation — new Prisma model `ConstraintWeightOverride` (D-05 tall-format `[schoolId, constraintName]`) via migration `20260425172608_add_constraint_weight_overrides` (CLAUDE.md hard rule via `prisma migrate dev --name`); 15-entry `CONSTRAINT_CATALOG` (6 HARD + 9 SOFT) on api side + mirrored to `@schoolflow/shared` (consumed by Plan 14-02 frontend without second source-of-truth); GET `/api/v1/schools/:schoolId/timetable/constraint-catalog` endpoint returns 15 entries; new `ConstraintWeightOverrideService` (findBySchool / findOverridesOnly / findLastUpdatedAt / bulkReplace / resetOne) + Controller at `/schools/:schoolId/constraint-weights` (GET returns `{weights, lastUpdatedAt}` ISO-8601 — DriftBanner-ready for Plan 14-02; subject literal `'constraint-weight-override'` grep-stable for E2E-SOLVER-11 audit spec). Bulk-replace empty-weights short-circuits to `deleteMany` only (no `createMany([])` ESM error). Whitelist + bounds 422 with RFC 9457 `schoolflow://errors/unknown-constraint-name` and `weight-out-of-range`. `DEFAULT_CONSTRAINT_WEIGHTS` extended from 8→9 in lockstep across api DTO + shared (new `'Subject preferred slot': 5`). `ConstraintTemplateService.create/update` gain `validateCrossReference` (D-13: classId/teacherId/subjectId in school + maxPeriod/period/latestPeriod ≤ school's TimeGrid maximum + BLOCK_TIMESLOT periods[] check; skipped when grid has 0 periods to keep mid-setup schools unblocked). `PATCH /:id/active` endpoint + `setActive(id, isActive)` service method for granular audit (UI-SPEC §Restriction CRUD §7). `SolverInputService.processConstraintTemplates` extended with previously-missing `SUBJECT_PREFERRED_SLOT` case + dedupe (strictest-wins for NO_LESSONS_AFTER + SUBJECT_MORNING via Map<string, T>; cumulative for SUBJECT_PREFERRED_SLOT) — returns 4th list `subjectPreferredSlots`. `TimetableService.startSolve` injects `ConstraintWeightOverrideService` and applies D-06 resolution chain `defaults < school DB < per-run DTO`; resolved map (not delta) snapshotted into `TimetableRun.constraintConfig` for run-history comparison. Java sidecar end-to-end SUBJECT_PREFERRED_SLOT scoring: new `SubjectPreferredSlot.java` domain class (subjectId, dayOfWeek, period — Jackson camelCase parity with TS `SolverPayload.subjectPreferredSlots`); new `@ProblemFactCollectionProperty subjectPreferredSlots` on `SchoolTimetable.java`; new `@ConstraintWeight("Subject preferred slot")` field on `TimetableConstraintConfiguration.java` (default `ofSoft(5)` matches TS-side); new `subjectPreferredSlot(constraintFactory)` `rewardConfigurable()` constraint stream registered in `defineConstraints()` (15 unique `asConstraint()` names); `applyOverrides` switch handles new constraint name. Maven compile (JDK 21): BUILD SUCCESS (15 source files). 28 new Vitest tests across 4 specs (13 weight-override + 7 solver-input + 4 timetable resolution-chain + 7 cross-ref + setActive) — 59/64 green / 5 todo (legacy validateMove TIME-08 stubs). 6 atomic commits (cc671e1 Task 0 scaffolds + 8960033 Task 1 migration+catalog+shared + 075756c Task 2 CRUD+permission + 602cf8b Task 3 cross-ref+PATCH + 81e8341 Task 4 dedupe+resolution-chain + 578b765 Task 5 Java sidecar). 26 files touched (10 created + 16 modified). 3 Rule-3 toolchain deviations (Java 21 `brew install openjdk@21`, shared dist `.js` extension post-process per memory note, plan-mandated `validation/` subdir created alongside existing `schemas/`). Plan 14-02 (frontend) UNBLOCKED — can consume shared 9-entry `DEFAULT_CONSTRAINT_WEIGHTS`, 15-entry `CONSTRAINT_CATALOG`, Zod schemas, and 4 stable HTTP endpoints with `lastUpdatedAt` for DriftBanner.
 - Phase 13 Plan 2 complete 2026-04-24: Plan 13-02 ships USER-01..05 admin/users frontend — 26 components + 15 hooks + 2 routes + 2 sidebar updates. Sidebar adds 'Zugriff & Berechtigungen' group (admin-only, schulleitung locked out per UI-SPEC §586-592). 4-tab User-Detail (Stammdaten / Rollen / Berechtigungen / Overrides & Verknüpfung) consumes the Plan 13-01 backend; per-tab dirty-state with UnsavedChangesDialog tab-switch interception. Self-Lockout-Warn (D-06 client guard) + LastAdminGuardDialog (D-07 server 409 RFC 9457 schoolflow://errors/last-admin-guard) on Rollen tab; Konsistenz-Hinweis amber InfoBanner per D-08 divergence detection (lehrer/TEACHER + schueler/STUDENT + eltern/PARENT). EffectivePermissionsTab uses installed shadcn accordion with first-item open default + sticky header + manual RefreshCw refetch. OverridesSection per-row CRUD with 2-click inline delete ('Zum Bestätigen erneut klicken' for 3s) + ConditionsJsonEditor (font-mono Textarea + JSON.parse validation + variable hints). PersonLinkSection + LinkPersonDialog + ReLinkConflictDialog 2-stage (D-14 conflicting-USER auto-resolve; person-side conflict surfaces guidance toast for v1.1 manual resolution). Silent-4XX-Invariante locked in across all 7 mutation hooks (every onError wired explicit, typed 409 problem-types suppress hook-level toast for dialog-driven UX). All UI-SPEC copy verbatim (verified via grep for `Rollen aktualisiert` / `Override gespeichert` / `Override gelöscht` / `User gesperrt` / `User reaktiviert` / `Verknüpfung aktualisiert` / `Verknüpfung entfernt` / `Override existiert bereits` / `Bestehende Verknüpfung ersetzen?` / `Sich selbst die Admin-Rolle entziehen?` / `Mindestens ein Admin muss bestehen bleiben`). 3 atomic commits (9d641c9 Task-1 sidebar+routes+15 hooks+primitives+AffectedEntitiesList extension + ddd6500 Task-2 list page+Stammdaten+Rollen+4 dialogs + f172ecc Task-3 Berechtigungen+Overrides & Verknüpfung+person-link dialogs). 51 files touched (47 created + 4 modified). 2 Rule-3 auto-fixes (shadcn CLI rejected components.json — hand-authored accordion + radio-group matching Phase 5 CLI-incompat pattern with new @radix-ui deps; pre-existing web build errors in 11 files NOT touched by Plan 13-02 deferred to follow-up Web build hygiene plan, verification limited to `tsc --noEmit` filtered to Plan 13-02 surface = 0 errors). Plan 13-03 (E2E coverage) UNBLOCKED.
 
 ## Session Continuity
 
-Last session: 2026-04-25T07:57:29.908Z
-Stopped at: Phase 14 context gathered
-Resume file: .planning/phases/14-solver-tuning/14-CONTEXT.md
+Last session: 2026-04-25T17:52:34Z
+Stopped at: Phase 14 Plan 1 (backend) complete — Plan 14-02 frontend ready to start
+Resume file: /Users/vid/Documents/GitHub/agentic-research/openaustria-school-flow/.planning/phases/14-solver-tuning/14-02-frontend-PLAN.md

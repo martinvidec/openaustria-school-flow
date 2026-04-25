@@ -298,7 +298,7 @@ Plans:
 **Parallelism:** Kann parallel zu Phasen 11–13 ausgeführt werden (via `/gsd:new-workspace`), sobald Phase 10 gelandet ist.
 
 Plans:
-- [ ] 14-01-backend-PLAN.md — Prisma migration + ConstraintWeightOverride CRUD + cross-reference validation + resolution chain (DB > DTO > defaults) + SUBJECT_PREFERRED_SLOT case + Java sidecar gap-fix [Wave 1]
+- [x] 14-01-backend-PLAN.md — Prisma migration + ConstraintWeightOverride CRUD + cross-reference validation + resolution chain (DB > DTO > defaults) + SUBJECT_PREFERRED_SLOT case + Java sidecar gap-fix [Wave 1] — complete 2026-04-25
 - [ ] 14-02-frontend-PLAN.md — /admin/solver-tuning 4-tab page (Constraints / Gewichtungen / Klassen-Sperrzeiten / Fach-Präferenzen) + sidebar entry + Generator-Page deep-link card [Wave 2, depends on 14-01]
 - [ ] 14-03-e2e-PLAN.md — 12 Playwright specs (E2E-SOLVER-*) covering catalog + weights + restrictions + preferences + integration + audit + mobile-375 [Wave 3, depends on 14-01 + 14-02]
 
