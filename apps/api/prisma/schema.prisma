@@ -62,9 +62,10 @@ model School {
   dsgvoJobs         DsgvoJob[]
 
   // Phase 3 relations
-  rooms               Room[]
-  timetableRuns       TimetableRun[]
-  constraintTemplates ConstraintTemplate[]
+  rooms                     Room[]
+  timetableRuns             TimetableRun[]
+  constraintTemplates       ConstraintTemplate[]
+  constraintWeightOverrides ConstraintWeightOverride[]
 
   // Phase 4 relations
   resources Resource[]
@@ -846,6 +847,22 @@ model ConstraintTemplate {
   createdAt    DateTime @default(now()) @map("created_at")
 
   @@map("constraint_templates")
+}
+
+// --- ConstraintWeightOverride (Phase 14 D-05) ---
+
+model ConstraintWeightOverride {
+  id             String   @id @default(uuid())
+  schoolId       String   @map("school_id")
+  school         School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  constraintName String   @map("constraint_name")
+  weight         Int
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  updatedBy      String?  @map("updated_by")
+
+  @@unique([schoolId, constraintName])
+  @@index([schoolId])
+  @@map("constraint_weight_overrides")
 }
 
 // --- Phase 5: Digital Class Book ---

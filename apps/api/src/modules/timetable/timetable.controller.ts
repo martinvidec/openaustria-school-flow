@@ -36,6 +36,7 @@ import { CheckPermissions } from '../auth/decorators/check-permissions.decorator
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../auth/types/authenticated-user';
 import { Public } from '../auth/decorators/public.decorator';
+import { CONSTRAINT_CATALOG } from './constraint-catalog';
 
 /**
  * Admin-facing endpoints for timetable solve operations.
@@ -50,6 +51,14 @@ export class TimetableController {
     private timetableEditService: TimetableEditService,
     private timetableExportService: TimetableExportService,
   ) {}
+
+  @Get('constraint-catalog')
+  @CheckPermissions({ action: 'read', subject: 'timetable' })
+  @ApiOperation({ summary: 'Get the static catalog of all 15 solver constraints (6 HARD + 9 SOFT)' })
+  @ApiResponse({ status: 200, description: 'Constraint catalog' })
+  getConstraintCatalog() {
+    return CONSTRAINT_CATALOG;
+  }
 
   @Post('solve')
   @HttpCode(HttpStatus.ACCEPTED)

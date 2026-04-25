@@ -35,3 +35,10 @@ export * from './permissions/interpolate-conditions';
 export * from './constants/school-types';
 export * from './werteinheiten/index';
 export * from './stundentafel/index';
+// Phase 14: Solver-Tuning shared catalog + validation schemas
+// Re-exports: CONSTRAINT_CATALOG, ConstraintCatalogEntry, constraintTemplateParamsSchema,
+// createConstraintTemplateSchema, constraintWeightsSchema, bulkConstraintWeightsSchema,
+// DEFAULT_CONSTRAINT_WEIGHTS, dayOfWeekEnum
+export * from './constraint-catalog';
+export * from './validation/constraint-template';
+export * from './validation/constraint-weight';
