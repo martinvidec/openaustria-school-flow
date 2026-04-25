@@ -272,6 +272,63 @@ inline red error on 4xx. Codifies the Phase 10.2-04 pattern for Phase 12 mutatio
 
 ---
 
+## 6c. Phase 14 — Solver-Tuning admin surface (Plan 14-03 delivery)
+
+Shipped by Plan 14-03 (wave 3) on top of 14-01 (Backend) + 14-02 (Frontend).
+Eight spec files: 7 desktop SOLVER specs + 1 mobile spec + 1 RBAC spec.
+12 + 1 logical specs (12 SOLVER + 1 RBAC) cover SOLVER-01..05 + D-08 audit
+trail + D-04 mobile parity + D-03 admin-only RBAC.
+
+**Prefix isolation:** `E2E-SOLVER-*` for the 12 SOLVER specs and
+`E2E-SOLVER-RBAC-*` for the negative-role spec. `afterEach` calls
+`cleanupConstraintTemplatesViaAPI` + `cleanupConstraintWeightOverridesViaAPI`
+to reset the school back to defaults — never touches seed rows.
+
+**Helper module:** `apps/web/e2e/helpers/constraints.ts` exports
+`createConstraintWeightOverrideViaAPI`, `createConstraintTemplateViaAPI`,
+`cleanupConstraintTemplatesViaAPI`, `cleanupConstraintWeightOverridesViaAPI`,
+`CONSTRAINT_PREFIX`.
+
+**Silent-4xx invariant:** every Phase 14 mutation has an explicit error
+path. E2E-SOLVER-03 asserts `weight=200` returns 422 with type URI
+`weight-out-of-range`; E2E-SOLVER-05 asserts cross-reference 422 with type
+URIs `period-out-of-range` and `cross-reference-missing`. Plan 14-02
+mutation hooks all have explicit `onError` → destructive toast (verified
+by grep).
+
+**Audit endpoint contract (Plan 14-03 Task 1 sub-task B):** real path is
+`GET /api/v1/audit?resource=schools&startDate=...&limit=N` (NOT
+`/audit-log` and NOT filterable by `subject=constraint-weight-override` —
+the AuditInterceptor extracts `resource` from the URL's first segment,
+which is `schools` for both Phase 14 surfaces). Strict assertions filter
+the response by `metadata.body.weights` (constraint-weight PUT) and
+`metadata.body.templateType === 'NO_LESSONS_AFTER'` (constraint-template
+POST) to disambiguate the entries.
+
+| Spec ID | File | Requirement | Status |
+|---------|------|-------------|--------|
+| E2E-SOLVER-01 | admin-solver-tuning-catalog.spec.ts | SOLVER-01 (catalog read-only, Hard/Soft sections, deep-link) | implemented |
+| E2E-SOLVER-02 | admin-solver-tuning-weights.spec.ts | SOLVER-02 (edit + save + reset cycle) | implemented |
+| E2E-SOLVER-03 | admin-solver-tuning-weights.spec.ts | SOLVER-02 silent-4xx (bounds 422, weight-out-of-range URI) | implemented |
+| E2E-SOLVER-04 | admin-solver-tuning-restrictions.spec.ts | SOLVER-04 (NO_LESSONS_AFTER CRUD happy path) | implemented |
+| E2E-SOLVER-05 | admin-solver-tuning-restrictions.spec.ts | SOLVER-04 cross-reference 422 (period-out-of-range + cross-reference-missing) | implemented |
+| E2E-SOLVER-06 | admin-solver-tuning-restrictions.spec.ts | SOLVER-04 multi-row strictest-wins banner | implemented |
+| E2E-SOLVER-07 | admin-solver-tuning-preferences.spec.ts | SOLVER-05 SUBJECT_MORNING CRUD | implemented |
+| E2E-SOLVER-08 | admin-solver-tuning-preferences.spec.ts | SOLVER-05 SUBJECT_PREFERRED_SLOT CRUD | implemented |
+| E2E-SOLVER-09 | admin-solver-tuning-preferences.spec.ts | SOLVER-05 sub-tab isolation | implemented |
+| E2E-SOLVER-10 | admin-solver-tuning-integration.spec.ts | SOLVER-03 weights survive solve-run (gated E2E_RUN_SOLVER=1) | implemented |
+| E2E-SOLVER-11 | admin-solver-tuning-audit.spec.ts | D-08 audit trail for weight + template mutations | implemented |
+| E2E-SOLVER-MOBILE-01 | admin-solver-tuning-mobile.spec.ts | D-04 + MOBILE-ADM-01/02 (375 viewport, sticky save, sub-tab toggle) | implemented |
+| E2E-SOLVER-RBAC-01 | admin-solver-tuning-rbac.spec.ts | D-03 schulleitung blocked from /admin/solver-tuning | implemented |
+
+**Project routing:** the desktop project (1280×800) runs the 11 desktop
+specs (12 SOLVER tests including E2E-SOLVER-10 which itself is gated by
+`E2E_RUN_SOLVER=1`) plus the RBAC spec — `--project=desktop --list` shows
+12 entries (mobile spec is in `mobile-chrome`/`mobile-375` project per
+playwright.config.ts:42 `testIgnore` rule for `*-mobile.spec.ts`).
+
+---
+
 ## 7. Definition of done for "UAT ban lifted"
 
 Per `feedback_e2e_first_no_uat.md`:
