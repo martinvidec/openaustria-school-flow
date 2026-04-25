@@ -187,4 +187,11 @@ describe('ConstraintTemplateService', () => {
       expect(result).toEqual([]);
     });
   });
+
+  describe('validateCrossReference', () => {
+    it.todo('throws 422 cross-reference-missing when classId not in school');
+    it.todo('throws 422 cross-reference-missing when subjectId not in school');
+    it.todo('throws 422 period-out-of-range when maxPeriod > school.maxPeriodNumber');
+    it.todo('passes when classId + maxPeriod are valid');
+  });
 });

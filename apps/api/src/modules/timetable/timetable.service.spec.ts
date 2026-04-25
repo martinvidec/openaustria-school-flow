@@ -360,4 +360,11 @@ describe('TimetableService', () => {
     it.todo('returns soft warning for max hours per day exceeded');
     it.todo('blocks move when hard violations exist');
   });
+
+  describe('startSolve resolution chain (D-06)', () => {
+    it.todo('Step 0: loads ConstraintWeightOverride.findBySchool before buildSolverInput');
+    it.todo('Step 1: per-run DTO weights override DB weights');
+    it.todo('Step 2: defaults fill missing constraint names');
+    it.todo('snapshots resolved map into TimetableRun.constraintConfig');
+  });
 });
