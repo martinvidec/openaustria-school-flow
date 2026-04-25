@@ -295,10 +295,16 @@ export async function findUnlinkedTeacher(
   };
   const teachers = body.data ?? [];
   const unlinked = teachers.find(
-    (t) => t.person && (t.person.keycloakUserId == null || t.person.keycloakUserId === ''),
+    (t) =>
+      t.person &&
+      (t.person.keycloakUserId == null || t.person.keycloakUserId === '') &&
+      // Person-search autocomplete requires min 2 chars in the lastName.
+      (t.person.lastName ?? '').length >= 2,
   );
   if (!unlinked) {
-    throw new Error('findUnlinkedTeacher: no teacher with null keycloakUserId in seed');
+    throw new Error(
+      'findUnlinkedTeacher: no teacher with null keycloakUserId AND lastName.length>=2 in seed',
+    );
   }
   return {
     id: unlinked.id,

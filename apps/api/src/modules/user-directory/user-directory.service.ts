@@ -245,10 +245,42 @@ export class UserDirectoryService {
       });
     }
 
-    // (b) person-side pre-check (silent link-theft guard)
-    const targetPerson = await this.prisma.person.findUnique({
-      where: { id: dto.personId },
-    });
+    // (b) person-side pre-check (silent link-theft guard).
+    //
+    // CRITICAL: `dto.personId` is the *domain* id (Teacher.id /
+    // Student.id / Parent.id) — NOT the underlying Person.id. Each
+    // {teacher,student,parent} row has its own `personId` FK to the
+    // Person row that owns `keycloakUserId`. Querying
+    // `person.findUnique({ where: { id: dto.personId } })` directly
+    // returns null in the common case (a Teacher.id is never a
+    // Person.id) and silently skips this guard, re-introducing the
+    // link-theft bug the helper exists to prevent (Phase 13-03 USER-05
+    // E2E LINK-02 caught the gap).
+    let targetPersonId: string | null = null;
+    if (dto.personType === 'TEACHER') {
+      const teacher = await this.prisma.teacher.findUnique({
+        where: { id: dto.personId },
+        select: { personId: true },
+      });
+      targetPersonId = teacher?.personId ?? null;
+    } else if (dto.personType === 'STUDENT') {
+      const student = await this.prisma.student.findUnique({
+        where: { id: dto.personId },
+        select: { personId: true },
+      });
+      targetPersonId = student?.personId ?? null;
+    } else {
+      const parent = await this.prisma.parent.findUnique({
+        where: { id: dto.personId },
+        select: { personId: true },
+      });
+      targetPersonId = parent?.personId ?? null;
+    }
+    const targetPerson = targetPersonId
+      ? await this.prisma.person.findUnique({
+          where: { id: targetPersonId },
+        })
+      : null;
     if (
       targetPerson &&
       targetPerson.keycloakUserId &&
