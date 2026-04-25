@@ -282,7 +282,7 @@ Plans:
 **Goal:** Admin kann Constraint-Templates, Gewichtungen und Zeit-/Fach-Restriktionen UI-gestützt pflegen, ohne den Backend-Code oder die DB direkt anzufassen.
 **Requirements:** SOLVER-01, SOLVER-02, SOLVER-03, SOLVER-04, SOLVER-05
 **Depends on:** Phase 10 (Schule + Zeitraster müssen existieren für schul-scoped Constraint-Tuning)
-**Plans:** 0 plans
+**Plans:** 3 plans
 
 **Success criteria:**
 - [ ] Admin sieht Constraint-Template-Liste mit klarer Hard/Soft-Unterscheidung und aktueller Gewichtung
@@ -298,7 +298,9 @@ Plans:
 **Parallelism:** Kann parallel zu Phasen 11–13 ausgeführt werden (via `/gsd:new-workspace`), sobald Phase 10 gelandet ist.
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 14 to break down)
+- [ ] 14-01-backend-PLAN.md — Prisma migration + ConstraintWeightOverride CRUD + cross-reference validation + resolution chain (DB > DTO > defaults) + SUBJECT_PREFERRED_SLOT case + Java sidecar gap-fix [Wave 1]
+- [ ] 14-02-frontend-PLAN.md — /admin/solver-tuning 4-tab page (Constraints / Gewichtungen / Klassen-Sperrzeiten / Fach-Präferenzen) + sidebar entry + Generator-Page deep-link card [Wave 2, depends on 14-01]
+- [ ] 14-03-e2e-PLAN.md — 12 Playwright specs (E2E-SOLVER-*) covering catalog + weights + restrictions + preferences + integration + audit + mobile-375 [Wave 3, depends on 14-01 + 14-02]
 
 ---
 

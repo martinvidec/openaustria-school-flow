@@ -537,15 +537,19 @@ All Phase 14 endpoints follow the same pattern:
 
 ---
 
-## Open Questions / Decisions Deferred to Planning
+## Open Questions (RESOLVED)
 
 1. **SUBJECT_PREFERRED_SLOT Java payload field name** — The Java `TimetableSolveRequest` may have a separate field for `subjectSlotPreferences` (day + period pairs) vs `subjectTimePreferences` (latest-period-only for SUBJECT_MORNING). Planner must include a read task for `apps/solver/src/main/java/at/schoolflow/solver/api/TimetableSolveRequest.java` in Plan 14-01 Wave 0, before implementing the `processConstraintTemplates` case.
+   **RESOLVED:** Plan 14-01-T0 read_first now includes `TimetableSolveRequest.java`; T0 acceptance requires the field name be confirmed and documented in the task summary; T4 (SolverPayload extension) consumes the confirmed field name. Plan 14-01-T5 ships a dedicated 9th SOFT constraint `Subject preferred slot` (own `@ConstraintWeight`) — the dual-stream-shared-name approach was abandoned because Timefold disallows it.
 
 2. **`school.maxPeriodNumber` exact path** — Cross-reference validation needs the school's max period number. From `solver-input.service.ts`, this comes from `timeGrid.periods` (max `periodNumber`). The cross-reference validator in `ConstraintTemplateService` must either (a) inject `TimeGridService` or (b) do a direct Prisma query `prisma.timeGrid.findUnique({ where: { schoolId }, include: { periods: true } })`. Option (b) is simpler and avoids circular DI. Planner should specify this.
+   **RESOLVED:** Direct Prisma query (option b) — implemented in `ConstraintTemplateService` cross-reference validation in Plan 14-01-T3.
 
 3. **`ConstraintWeightOverride.findBySchool()` return format for `TimetableService`** — Should the service return a `Map<string, number>` or `Record<string, number>`? The existing `mergeWeightOverrides()` takes `Record<string, number>`. Recommend service returns `Record<string, number>` directly (Object.fromEntries on the DB rows). Planner should make this explicit.
+   **RESOLVED:** `Record<string, number>` (Object.fromEntries on DB rows) — Plan 14-01-T2 service returns this shape; controller GET response wraps it as `{ weights: Record<string,number>, lastUpdatedAt: string | null }` (added to support DriftBanner per Plan 14-02-T3).
 
 4. **Audit subject for bulk weight PUT** — D-08 says "one `update` per affected row for clear history." Since AuditInterceptor fires per HTTP request (not per DB row), achieving per-row granularity requires either: (a) calling `AuditService.log()` explicitly in the service for each changed weight, or (b) accepting one `replace-all` audit event per request. Planner should decide which approach to implement (recommendation: option (b) is simpler and consistent with Phase 13 bulk-replace pattern).
+   **RESOLVED:** Option (b) — one `replace-all` audit event per bulk PUT request, subject `constraint-weight-override`. Plan 14-01-T2 wires `@CheckPermissions` with this exact subject; Plan 14-03 E2E-SOLVER-11 strict-asserts `entries[0].subject === 'constraint-weight-override'` and `entries[0].action === 'update'`.
 
 ---
 
