@@ -9,6 +9,7 @@ import { UserListTable } from '@/components/admin/user/UserListTable';
 import { UserMobileCards } from '@/components/admin/user/UserMobileCards';
 import { DisableUserDialog } from '@/components/admin/user/DisableUserDialog';
 import { EnableUserDialog } from '@/components/admin/user/EnableUserDialog';
+import { useAuth } from '@/hooks/useAuth';
 import type {
   UserDirectoryQuery,
   UserDirectorySummary,
@@ -35,10 +36,37 @@ function isFilterApplied(f: UserDirectoryQuery): boolean {
 }
 
 function UsersIndexPage() {
+  // Phase 13-03 USER-GUARD-02: client-side role gate matching the
+  // sidebar gating in AppSidebar.tsx (UI-SPEC §590 — `roles: ['admin']`
+  // only). Without this gate, schulleitung can paste the URL and reach
+  // a page that 403s every API call but still renders the PageShell.
+  const { user: currentUser } = useAuth();
+  const isAdmin = (currentUser?.roles ?? []).includes('admin');
+
   const [filter, setFilter] = useState<UserDirectoryQuery>(DEFAULT_FILTER);
   const { data, isLoading } = useUsers(filter);
   const [toDisable, setToDisable] = useState<UserDirectorySummary | null>(null);
   const [toEnable, setToEnable] = useState<UserDirectorySummary | null>(null);
+
+  if (!isAdmin) {
+    return (
+      <PageShell
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin/school/settings' },
+          { label: 'User & Berechtigungen' },
+        ]}
+        title="Aktion nicht erlaubt"
+      >
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <UsersRound className="h-10 w-10 text-muted-foreground mb-3" aria-hidden />
+          <h3 className="text-lg font-semibold">Aktion nicht erlaubt</h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Diese Funktion ist nur für Administratoren verfügbar.
+          </p>
+        </div>
+      </PageShell>
+    );
+  }
 
   const users = data?.data ?? [];
   const meta = data?.meta;

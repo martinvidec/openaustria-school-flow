@@ -27,6 +27,25 @@ function UserDetailPage() {
   const setTab = (next: UserDetailTab) =>
     navigate({ search: () => ({ tab: next }), replace: true });
 
+  // Phase 13-03 USER-GUARD-02: client-side role gate matching the
+  // sidebar gating in AppSidebar.tsx (UI-SPEC §590).
+  const isAdmin = (currentUser?.roles ?? []).includes('admin');
+  if (!isAdmin) {
+    return (
+      <PageShell
+        breadcrumbs={[
+          { label: 'Admin', href: '/admin/school/settings' },
+          { label: 'User & Berechtigungen' },
+        ]}
+        title="Aktion nicht erlaubt"
+      >
+        <p className="text-sm text-muted-foreground">
+          Diese Funktion ist nur für Administratoren verfügbar.
+        </p>
+      </PageShell>
+    );
+  }
+
   if (isLoading) {
     return (
       <PageShell
