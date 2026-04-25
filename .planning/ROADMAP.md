@@ -49,7 +49,7 @@ See [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full 
 | 11 | Lehrer- und Fächer-Verwaltung | 11 | Complete    | 2026-04-23 |
 | 12 | Schüler-, Klassen- & Gruppenverwaltung | 9 | Complete    | 2026-04-24 |
 | 13 | User- und Rechteverwaltung | 3/3 | Complete    | 2026-04-25 |
-| 14 | Solver-Tuning | 5 | Phase 10.5 | Parallel with Phases 11-13 |
+| 14 | Solver-Tuning | 5 | Complete    | 2026-04-25 |
 | 15 | DSGVO-Admin & Audit-Log-Viewer | 9 | Phase 13 | — |
 | 16 | Admin-Dashboard & Mobile-Härtung | 6 | Phases 10-15 | — |
 
@@ -282,7 +282,7 @@ Plans:
 **Goal:** Admin kann Constraint-Templates, Gewichtungen und Zeit-/Fach-Restriktionen UI-gestützt pflegen, ohne den Backend-Code oder die DB direkt anzufassen.
 **Requirements:** SOLVER-01, SOLVER-02, SOLVER-03, SOLVER-04, SOLVER-05
 **Depends on:** Phase 10 (Schule + Zeitraster müssen existieren für schul-scoped Constraint-Tuning)
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 **Success criteria:**
 - [x] Admin sieht Constraint-Template-Liste mit klarer Hard/Soft-Unterscheidung und aktueller Gewichtung — E2E-SOLVER-01 (catalog 6 HARD + 9 SOFT)
