@@ -4,6 +4,7 @@ import { getQueueToken } from '@nestjs/bullmq';
 import { TimetableService } from '../timetable.service';
 import { PrismaService } from '../../../config/database/prisma.service';
 import { SolverClientService } from '../solver-client.service';
+import { ConstraintWeightOverrideService } from '../constraint-weight-override.service';
 import { SOLVER_QUEUE } from '../../../config/queue/queue.constants';
 
 /**
@@ -86,6 +87,10 @@ describe('TimetableService.getView overlay behavior (SUBST-05)', () => {
         { provide: PrismaService, useValue: prisma },
         { provide: SolverClientService, useValue: { terminateEarly: vi.fn() } },
         { provide: getQueueToken(SOLVER_QUEUE), useValue: { add: vi.fn() } },
+        {
+          provide: ConstraintWeightOverrideService,
+          useValue: { findOverridesOnly: vi.fn().mockResolvedValue({}) },
+        },
       ],
     }).compile();
 
