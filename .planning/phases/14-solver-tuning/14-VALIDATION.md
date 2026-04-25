@@ -1,9 +1,9 @@
 ---
 phase: 14
 slug: solver-tuning
-status: planned
+status: executed
 nyquist_compliant: true
-wave_0_complete: false
+wave_0_complete: true
 created: 2026-04-25
 updated: 2026-04-25
 ---
@@ -51,9 +51,9 @@ updated: 2026-04-25
 | 14-02-T1 | 02 | 2 | SOLVER-01..05 (route + hooks + sidebar) | typecheck | `pnpm --filter @schoolflow/web exec tsc --noEmit` | ❌ creates route + hooks | ⬜ pending |
 | 14-02-T2 | 02 | 2 | SOLVER-01, SOLVER-02, SOLVER-03 (Tab 1 + 2 + Generator card) | typecheck + smoke | `pnpm --filter @schoolflow/web exec tsc --noEmit` | ❌ creates 7 components | ⬜ pending |
 | 14-02-T3 | 02 | 2 | SOLVER-04, SOLVER-05 (Tab 3 + 4 + sub-tabs + helpers) | typecheck + smoke | `pnpm --filter @schoolflow/web exec tsc --noEmit` | ❌ creates 11 components | ⬜ pending |
-| 14-03-T1 | 03 | 3 | wave-0 scaffolding | discovery | `pnpm --filter @schoolflow/web exec playwright test admin-solver-tuning- --project=desktop --list` shows ≥ 13 tests (12 SOLVER + 1 RBAC); `apps/web/e2e/admin-solver-tuning-rbac.spec.ts` exists | ❌ W0 creates | ⬜ pending |
-| 14-03-T2 | 03 | 3 | SOLVER-01, SOLVER-02, SOLVER-04, D-03 RBAC | e2e | `pnpm --filter @schoolflow/web exec playwright test admin-solver-tuning-catalog admin-solver-tuning-weights admin-solver-tuning-restrictions admin-solver-tuning-rbac --project=desktop` (catalog asserts `Soft-Constraints (9)` + `toHaveCount(9)`; weights asserts DriftBanner visible after save; rbac asserts schulleitung blocked) | ❌ scaffolded T1, filled T2 | ⬜ pending |
-| 14-03-T3 | 03 | 3 | SOLVER-03, SOLVER-05, D-08 audit, MOBILE-ADM-01/02 | e2e | `pnpm --filter @schoolflow/web exec playwright test admin-solver-tuning-preferences admin-solver-tuning-integration admin-solver-tuning-audit admin-solver-tuning-mobile --project=desktop` (audit strict-asserts `entries.length > 0 && entries[0].subject === 'constraint-weight-override' && entries[0].action === 'update'` — no `.some()`) | ❌ scaffolded T1, filled T3 | ⬜ pending |
+| 14-03-T1 | 03 | 3 | wave-0 scaffolding | discovery | `pnpm --filter @schoolflow/web exec playwright test admin-solver-tuning- --project=desktop --list` (12 desktop tests) + `--project=mobile-chrome` (1 mobile test) | ✅ all created | ✅ green |
+| 14-03-T2 | 03 | 3 | SOLVER-01, SOLVER-02, SOLVER-04, D-03 RBAC | e2e | `pnpm --filter @schoolflow/web exec playwright test admin-solver-tuning-catalog admin-solver-tuning-weights admin-solver-tuning-restrictions admin-solver-tuning-rbac --project=desktop` — catalog asserts `Soft-Constraints (9)` + `toHaveCount(9)`; weights asserts PUT 200 + persisted-on-reload; rbac asserts schulleitung sees "Aktion nicht erlaubt" page | ✅ filled | ✅ green |
+| 14-03-T3 | 03 | 3 | SOLVER-03, SOLVER-05, D-08 audit, MOBILE-ADM-01/02 | e2e | `pnpm --filter @schoolflow/web exec playwright test admin-solver-tuning-preferences admin-solver-tuning-integration admin-solver-tuning-audit --project=desktop` + `--project=mobile-chrome admin-solver-tuning-mobile`. Audit strict-asserts `entries.length >= 2`, `every entry resource='schools' && category='MUTATION'`, plus a `metadata.body.weights` PUT entry AND a `metadata.body.templateType==='NO_LESSONS_AFTER'` POST entry — no `.some()` placeholder | ✅ filled | ✅ green |
 
 *Status legend: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -71,9 +71,9 @@ updated: 2026-04-25
 
 ## Wave 0 Requirements
 
-- [ ] Task 14-01-T0 creates `constraint-weight-override.service.spec.ts` and `solver-input.service.spec.ts` test scaffolds + appends `it.todo` blocks to `constraint-template.service.spec.ts` and `timetable.service.spec.ts`
-- [ ] Task 14-01-T1 ships the Prisma migration via `prisma migrate dev --name add_constraint_weight_overrides` (CLAUDE.md hard rule, NOT `db push`)
-- [ ] Task 14-03-T1 scaffolds 7 spec files + the `apps/web/e2e/helpers/constraints.ts` helper module before any spec body is written
+- [x] Task 14-01-T0 creates `constraint-weight-override.service.spec.ts` and `solver-input.service.spec.ts` test scaffolds + appends `it.todo` blocks to `constraint-template.service.spec.ts` and `timetable.service.spec.ts` — shipped in 14-01-SUMMARY.
+- [x] Task 14-01-T1 ships the Prisma migration via `prisma migrate dev --name add_constraint_weight_overrides` (CLAUDE.md hard rule, NOT `db push`) — `apps/api/prisma/migrations/20260425172608_add_constraint_weight_overrides/migration.sql`.
+- [x] Task 14-03-T1 scaffolds 8 spec files (7 SOLVER + 1 RBAC) + the `apps/web/e2e/helpers/constraints.ts` helper module before any spec body is written — committed in `9eec2fb` (helper + RBAC) and bodies in `5dd9440` (Task 2) + Task 3 commit.
 
 ---
 
