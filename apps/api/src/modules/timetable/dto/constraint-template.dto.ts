@@ -71,6 +71,20 @@ export class UpdateConstraintTemplateDto {
 }
 
 /**
+ * DTO for inline isActive toggle (Phase 14 D-11 / UI-SPEC §Restriction CRUD §7).
+ * Used by PATCH /:id/active so audit can capture the focused toggle as a
+ * distinct action vs full PUT update.
+ */
+export class SetActiveDto {
+  @IsBoolean()
+  @ApiProperty({
+    description: 'New isActive state for the constraint template',
+    example: false,
+  })
+  isActive!: boolean;
+}
+
+/**
  * Response DTO for constraint template queries.
  */
 export class ConstraintTemplateResponseDto {

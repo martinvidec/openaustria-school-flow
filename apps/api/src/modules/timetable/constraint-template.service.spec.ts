@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConstraintTemplateService } from './constraint-template.service';
 import { PrismaService } from '../../config/database/prisma.service';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { ConstraintTemplateType } from './dto/constraint-template.dto';
 
 describe('ConstraintTemplateService', () => {
@@ -26,6 +26,9 @@ describe('ConstraintTemplateService', () => {
     createdAt: new Date('2026-03-29T10:00:00Z'),
   };
 
+  // Phase 14 D-13: cross-reference validation requires School/SchoolClass/Subject/Teacher
+  // mocks AND a TimeGrid mock that exposes maxPeriodNumber via periods[]. Defaults below
+  // resolve happy-path (entity present, periods 1..8); individual tests override per-case.
   const mockPrismaService = {
     constraintTemplate: {
       create: vi.fn().mockResolvedValue(mockTemplate),
@@ -33,6 +36,25 @@ describe('ConstraintTemplateService', () => {
       findUnique: vi.fn().mockResolvedValue(mockTemplate),
       update: vi.fn().mockResolvedValue({ ...mockTemplate, isActive: false }),
       delete: vi.fn().mockResolvedValue(mockTemplate),
+    },
+    timeGrid: {
+      findUnique: vi.fn().mockResolvedValue({
+        id: 'tg-1',
+        schoolId: 'school-1',
+        periods: Array.from({ length: 8 }, (_, i) => ({
+          id: `p-${i + 1}`,
+          periodNumber: i + 1,
+        })),
+      }),
+    },
+    schoolClass: {
+      findFirst: vi.fn().mockResolvedValue({ id: 'class-1a' }),
+    },
+    subject: {
+      findFirst: vi.fn().mockResolvedValue({ id: 'sub-mathe' }),
+    },
+    teacher: {
+      findFirst: vi.fn().mockResolvedValue({ id: 'teacher-1' }),
     },
   };
 
@@ -189,9 +211,93 @@ describe('ConstraintTemplateService', () => {
   });
 
   describe('validateCrossReference', () => {
-    it.todo('throws 422 cross-reference-missing when classId not in school');
-    it.todo('throws 422 cross-reference-missing when subjectId not in school');
-    it.todo('throws 422 period-out-of-range when maxPeriod > school.maxPeriodNumber');
-    it.todo('passes when classId + maxPeriod are valid');
+    // validateCrossReference is private; we exercise it via create()
+    it('throws 422 cross-reference-missing when classId not in school', async () => {
+      prismaService.schoolClass.findFirst.mockResolvedValueOnce(null);
+
+      await expect(
+        service.create('school-1', {
+          templateType: ConstraintTemplateType.NO_LESSONS_AFTER,
+          params: { classId: 'class-foreign', maxPeriod: 5 },
+        }),
+      ).rejects.toThrow(UnprocessableEntityException);
+
+      try {
+        await service.create('school-1', {
+          templateType: ConstraintTemplateType.NO_LESSONS_AFTER,
+          params: { classId: 'class-foreign', maxPeriod: 5 },
+        });
+      } catch (err: any) {
+        expect(err.response.type).toBe('schoolflow://errors/cross-reference-missing');
+        expect(err.response.field).toBe('classId');
+      }
+    });
+
+    it('throws 422 cross-reference-missing when subjectId not in school', async () => {
+      prismaService.subject.findFirst.mockResolvedValueOnce(null);
+
+      await expect(
+        service.create('school-1', {
+          templateType: ConstraintTemplateType.SUBJECT_MORNING,
+          params: { subjectId: 'sub-foreign', latestPeriod: 4 },
+        }),
+      ).rejects.toThrow(UnprocessableEntityException);
+    });
+
+    it('throws 422 period-out-of-range when maxPeriod > school.maxPeriodNumber', async () => {
+      // Default mock has 8 periods; passing maxPeriod=99 must throw
+      await expect(
+        service.create('school-1', {
+          templateType: ConstraintTemplateType.NO_LESSONS_AFTER,
+          params: { classId: 'class-1a', maxPeriod: 99 },
+        }),
+      ).rejects.toThrow(UnprocessableEntityException);
+
+      try {
+        await service.create('school-1', {
+          templateType: ConstraintTemplateType.NO_LESSONS_AFTER,
+          params: { classId: 'class-1a', maxPeriod: 99 },
+        });
+      } catch (err: any) {
+        expect(err.response.type).toBe('schoolflow://errors/period-out-of-range');
+        expect(err.response.field).toBe('maxPeriod');
+        expect(err.response.maxPeriodNumber).toBe(8);
+      }
+    });
+
+    it('passes when classId + maxPeriod are valid', async () => {
+      const result = await service.create('school-1', {
+        templateType: ConstraintTemplateType.NO_LESSONS_AFTER,
+        params: { classId: 'class-1a', maxPeriod: 5 },
+      });
+
+      expect(result).toEqual(mockTemplate);
+      expect(prismaService.constraintTemplate.create).toHaveBeenCalled();
+    });
+
+    it('throws 422 period-out-of-range for BLOCK_TIMESLOT periods[] overflow', async () => {
+      await expect(
+        service.create('school-1', {
+          templateType: ConstraintTemplateType.BLOCK_TIMESLOT,
+          params: { teacherId: 'teacher-1', dayOfWeek: 'MONDAY', periods: [3, 99] },
+        }),
+      ).rejects.toThrow(UnprocessableEntityException);
+    });
+  });
+
+  describe('setActive', () => {
+    it('updates only the isActive flag', async () => {
+      await service.setActive('ct-1', false);
+
+      expect(prismaService.constraintTemplate.update).toHaveBeenCalledWith({
+        where: { id: 'ct-1' },
+        data: { isActive: false },
+      });
+    });
+
+    it('throws NotFoundException when template not found', async () => {
+      prismaService.constraintTemplate.findUnique.mockResolvedValueOnce(null);
+      await expect(service.setActive('nonexistent', true)).rejects.toThrow(NotFoundException);
+    });
   });
 });

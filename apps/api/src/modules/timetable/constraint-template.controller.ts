@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -17,7 +18,7 @@ import {
 } from '@nestjs/swagger';
 import { ConstraintTemplateService } from './constraint-template.service';
 import { CreateConstraintTemplateDto } from './dto/constraint-template.dto';
-import { UpdateConstraintTemplateDto } from './dto/constraint-template.dto';
+import { UpdateConstraintTemplateDto, SetActiveDto } from './dto/constraint-template.dto';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator';
 
 @ApiTags('constraint-templates')
@@ -66,6 +67,18 @@ export class ConstraintTemplateController {
     @Body() dto: UpdateConstraintTemplateDto,
   ) {
     return this.constraintTemplateService.update(id, dto);
+  }
+
+  @Patch(':id/active')
+  @CheckPermissions({ action: 'update', subject: 'timetable' })
+  @ApiOperation({ summary: 'Toggle isActive flag on a constraint template (granular audit)' })
+  @ApiResponse({ status: 200, description: 'isActive updated' })
+  @ApiResponse({ status: 404, description: 'Constraint template not found' })
+  async setActive(
+    @Param('id') id: string,
+    @Body() dto: SetActiveDto,
+  ) {
+    return this.constraintTemplateService.setActive(id, dto.isActive);
   }
 
   @Delete(':id')
