@@ -16,6 +16,8 @@ import {
   PeriodDto,
 } from './dto/timetable-view.dto';
 import { isWeekCompatible } from './ab-week.util';
+import { ConstraintWeightOverrideService } from './constraint-weight-override.service';
+import { mergeWithSchoolDefaults } from './dto/constraint-weight.dto';
 
 /** Maximum number of solve runs kept per school (D-11) */
 const MAX_RUNS_PER_SCHOOL = 3;
@@ -28,11 +30,20 @@ export class TimetableService {
     private prisma: PrismaService,
     private solverClient: SolverClientService,
     @InjectQueue(SOLVER_QUEUE) private solverQueue: Queue,
+    private constraintWeightOverrideService: ConstraintWeightOverrideService,
   ) {}
 
   /**
    * Start a new solve run.
-   * Creates a TimetableRun record, enqueues BullMQ job, and enforces D-11 (max 3 runs).
+   *
+   * Phase 14 D-06 resolution chain:
+   *   defaults < school overrides (DB) < per-run override (DTO).
+   *
+   * The resolved map is what gets passed to the BullMQ worker AND snapshotted
+   * into TimetableRun.constraintConfig — so /admin/timetable-history shows
+   * the EXACT weights that influenced the solve, not the per-run delta.
+   *
+   * Creates a TimetableRun record, enqueues BullMQ job, enforces D-11 (max 3 runs).
    */
   async startSolve(
     schoolId: string,
@@ -44,25 +55,28 @@ export class TimetableService {
       where: { id: schoolId },
     });
 
-    // Create TimetableRun with QUEUED status
+    // D-06 Step 0: load school-scoped DB overrides BEFORE building the payload
+    const dbWeights = await this.constraintWeightOverrideService.findOverridesOnly(schoolId);
+    // D-06 Steps 1-2: layer per-run DTO on top, fill gaps with DEFAULT_CONSTRAINT_WEIGHTS
+    const resolvedWeights = mergeWithSchoolDefaults(dbWeights, constraintWeights);
+
+    // Create TimetableRun with the RESOLVED snapshot (not the per-run delta)
     const run = await this.prisma.timetableRun.create({
       data: {
         schoolId,
         status: 'QUEUED',
         maxSolveSeconds,
         abWeekEnabled: school.abWeekEnabled ?? false,
-        constraintConfig: constraintWeights
-          ? (constraintWeights as unknown as Prisma.InputJsonValue)
-          : undefined,
+        constraintConfig: resolvedWeights as unknown as Prisma.InputJsonValue,
       },
     });
 
-    // Enqueue BullMQ job
+    // Pass the RESOLVED map to the BullMQ job (not the raw per-run DTO)
     const jobData: SolveJobData = {
       schoolId,
       runId: run.id,
       maxSolveSeconds,
-      constraintWeights,
+      constraintWeights: resolvedWeights,
     };
 
     await this.solverQueue.add('solve', jobData, {

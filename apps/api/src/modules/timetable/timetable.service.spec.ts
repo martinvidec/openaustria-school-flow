@@ -7,6 +7,8 @@ import { SolverClientService } from './solver-client.service';
 import { SOLVER_QUEUE } from '../../config/queue/queue.constants';
 import { SolveProgressDto, ViolationGroupDto } from './dto/solve-progress.dto';
 import { SolveResultDto } from './dto/solve-result.dto';
+import { ConstraintWeightOverrideService } from './constraint-weight-override.service';
+import { DEFAULT_CONSTRAINT_WEIGHTS } from './dto/constraint-weight.dto';
 
 describe('TimetableService', () => {
   let service: TimetableService;
@@ -75,6 +77,13 @@ describe('TimetableService', () => {
     add: vi.fn().mockResolvedValue({ id: 'job-1' }),
   };
 
+  // Phase 14 D-06: TimetableService now depends on ConstraintWeightOverrideService
+  // for the resolution chain. Default mock returns no school-scoped overrides so
+  // legacy tests behave identically.
+  const mockWeightOverrideService = {
+    findOverridesOnly: vi.fn().mockResolvedValue({}),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -82,6 +91,7 @@ describe('TimetableService', () => {
         { provide: PrismaService, useValue: mockPrismaService },
         { provide: SolverClientService, useValue: mockSolverClient },
         { provide: getQueueToken(SOLVER_QUEUE), useValue: mockQueue },
+        { provide: ConstraintWeightOverrideService, useValue: mockWeightOverrideService },
       ],
     }).compile();
 
@@ -131,13 +141,20 @@ describe('TimetableService', () => {
       });
     });
 
-    it('should store constraintWeights in constraintConfig', async () => {
-      const weights = { 'Prefer double periods': 10 };
-      await service.startSolve('school-1', 300, weights);
+    it('should snapshot the RESOLVED weight map into constraintConfig (D-06)', async () => {
+      const perRunWeights = { 'Prefer double periods': 10 };
+      await service.startSolve('school-1', 300, perRunWeights);
+
+      // The resolved map is defaults overlaid by DB (none in this test)
+      // and finally per-run override on top.
+      const expectedResolved = {
+        ...DEFAULT_CONSTRAINT_WEIGHTS,
+        'Prefer double periods': 10,
+      };
 
       expect(prismaService.timetableRun.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
-          constraintConfig: weights,
+          constraintConfig: expectedResolved,
         }),
       });
     });
@@ -362,9 +379,64 @@ describe('TimetableService', () => {
   });
 
   describe('startSolve resolution chain (D-06)', () => {
-    it.todo('Step 0: loads ConstraintWeightOverride.findBySchool before buildSolverInput');
-    it.todo('Step 1: per-run DTO weights override DB weights');
-    it.todo('Step 2: defaults fill missing constraint names');
-    it.todo('snapshots resolved map into TimetableRun.constraintConfig');
+    it('Step 0: calls findOverridesOnly before queueing the BullMQ job', async () => {
+      mockWeightOverrideService.findOverridesOnly.mockResolvedValueOnce({});
+
+      await service.startSolve('school-1', 300);
+
+      expect(mockWeightOverrideService.findOverridesOnly).toHaveBeenCalledWith(
+        'school-1',
+      );
+      // ordering: prisma.school lookup before override lookup before run.create
+      const overrideCall = mockWeightOverrideService.findOverridesOnly.mock.invocationCallOrder[0];
+      const queueAddCall = mockQueue.add.mock.invocationCallOrder[0];
+      expect(overrideCall).toBeLessThan(queueAddCall);
+    });
+
+    it('Step 1: per-run DTO overrides DB weights', async () => {
+      mockWeightOverrideService.findOverridesOnly.mockResolvedValueOnce({
+        'No same subject doubling': 25,
+      });
+      const perRun = { 'No same subject doubling': 75 };
+
+      await service.startSolve('school-1', 300, perRun);
+
+      const created = prismaService.timetableRun.create.mock.calls[0][0];
+      expect(created.data.constraintConfig['No same subject doubling']).toBe(75);
+    });
+
+    it('Step 2: defaults fill constraint names absent from DB and DTO', async () => {
+      mockWeightOverrideService.findOverridesOnly.mockResolvedValueOnce({
+        'No same subject doubling': 25,
+      });
+
+      await service.startSolve('school-1', 300);
+
+      const created = prismaService.timetableRun.create.mock.calls[0][0];
+      expect(created.data.constraintConfig['No same subject doubling']).toBe(25);
+      // 'Subject preferred slot' was untouched, must come from defaults (5)
+      expect(created.data.constraintConfig['Subject preferred slot']).toBe(
+        DEFAULT_CONSTRAINT_WEIGHTS['Subject preferred slot'],
+      );
+      // resolved map has all 9 keys
+      expect(Object.keys(created.data.constraintConfig)).toHaveLength(9);
+    });
+
+    it('snapshots resolved map into constraintConfig AND passes it to the job (not the raw DTO)', async () => {
+      mockWeightOverrideService.findOverridesOnly.mockResolvedValueOnce({
+        'Subject preferred slot': 8,
+      });
+      const perRun = { 'Prefer double periods': 12 };
+
+      await service.startSolve('school-1', 300, perRun);
+
+      const created = prismaService.timetableRun.create.mock.calls[0][0];
+      const resolved = created.data.constraintConfig;
+      expect(resolved['Subject preferred slot']).toBe(8); // from DB
+      expect(resolved['Prefer double periods']).toBe(12); // from per-run
+
+      const jobData = mockQueue.add.mock.calls[0][1];
+      expect(jobData.constraintWeights).toEqual(resolved);
+    });
   });
 });

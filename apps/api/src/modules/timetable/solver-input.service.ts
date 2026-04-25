@@ -57,6 +57,18 @@ export interface SubjectTimePreference {
   latestPeriod: number;
 }
 
+/**
+ * Phase 14 D-12 / D-14: SUBJECT_PREFERRED_SLOT solver fact.
+ * Mirrors apps/solver/.../domain/SubjectPreferredSlot.java field names verbatim
+ * (Task 0-confirmed: `subjectPreferredSlots` is the SchoolTimetable collection
+ * field name; Jackson keys must match camelCase).
+ */
+export interface SubjectPreferredSlotInput {
+  subjectId: string;
+  dayOfWeek: string; // 'MONDAY' | 'TUESDAY' | ... | 'FRIDAY'
+  period: number;
+}
+
 export interface SolverPayload {
   lessons: SolverLesson[];
   timeslots: SolverTimeslot[];
@@ -64,6 +76,8 @@ export interface SolverPayload {
   blockedSlots: TeacherBlockedSlot[];
   classTimeslotRestrictions: ClassTimeslotRestriction[];
   subjectTimePreferences: SubjectTimePreference[];
+  /** Phase 14 D-12 / D-14 — cumulative SUBJECT_PREFERRED_SLOT preferences */
+  subjectPreferredSlots: SubjectPreferredSlotInput[];
   constraintWeightOverrides: Record<string, number>;
 }
 
@@ -165,9 +179,13 @@ export class SolverInputService {
     // Build blocked slots from teacher AvailabilityRules
     const blockedSlots = this.buildBlockedSlots(teachers);
 
-    // Process constraint templates (TIME-03)
-    const { additionalBlockedSlots, classTimeslotRestrictions, subjectTimePreferences } =
-      await this.processConstraintTemplates(schoolId);
+    // Process constraint templates (TIME-03 + Phase 14 D-12/D-14)
+    const {
+      additionalBlockedSlots,
+      classTimeslotRestrictions,
+      subjectTimePreferences,
+      subjectPreferredSlots,
+    } = await this.processConstraintTemplates(schoolId);
 
     // Merge blocked slots
     blockedSlots.push(...additionalBlockedSlots);
@@ -178,7 +196,10 @@ export class SolverInputService {
     this.logger.log(
       `Built solver input for school ${schoolId}: ${lessons.length} lessons, ` +
       `${timeslots.length} timeslots, ${solverRooms.length} rooms, ` +
-      `${blockedSlots.length} blocked slots`,
+      `${blockedSlots.length} blocked slots, ` +
+      `${classTimeslotRestrictions.length} class restrictions, ` +
+      `${subjectTimePreferences.length} subject morning prefs, ` +
+      `${subjectPreferredSlots.length} subject preferred slots`,
     );
 
     return {
@@ -188,6 +209,7 @@ export class SolverInputService {
       blockedSlots,
       classTimeslotRestrictions,
       subjectTimePreferences,
+      subjectPreferredSlots,
       constraintWeightOverrides: mergedWeights,
     };
   }
@@ -344,18 +366,30 @@ export class SolverInputService {
 
   /**
    * Process active ConstraintTemplates into solver constructs.
-   * Maps template types to blocked slots, class restrictions, and subject preferences.
+   *
+   * Phase 14 D-14 dedupe semantics:
+   *   - NO_LESSONS_AFTER: group by classId, keep min(maxPeriod) — strictest wins
+   *   - SUBJECT_MORNING:  group by subjectId, keep min(latestPeriod) — strictest wins
+   *   - SUBJECT_PREFERRED_SLOT: ALL entries kept (cumulative reward semantics)
+   *   - BLOCK_TIMESLOT: ALL entries kept (additive blocked-slot semantics)
+   *
+   * Phase 14 D-12: SUBJECT_PREFERRED_SLOT was previously silently dropped (no
+   * case in the switch). This now produces a fourth output list so the Java
+   * sidecar's new `subjectPreferredSlot` constraint stream (Task 5) can
+   * actually score it.
    */
-  private async processConstraintTemplates(schoolId: string): Promise<{
+  async processConstraintTemplates(schoolId: string): Promise<{
     additionalBlockedSlots: TeacherBlockedSlot[];
     classTimeslotRestrictions: ClassTimeslotRestriction[];
     subjectTimePreferences: SubjectTimePreference[];
+    subjectPreferredSlots: SubjectPreferredSlotInput[];
   }> {
     const templates = await this.constraintTemplateService.findActive(schoolId);
 
     const additionalBlockedSlots: TeacherBlockedSlot[] = [];
-    const classTimeslotRestrictions: ClassTimeslotRestriction[] = [];
-    const subjectTimePreferences: SubjectTimePreference[] = [];
+    const classTimeslotRestrictionsRaw: ClassTimeslotRestriction[] = [];
+    const subjectTimePreferencesRaw: SubjectTimePreference[] = [];
+    const subjectPreferredSlotsRaw: SubjectPreferredSlotInput[] = [];
 
     for (const template of templates) {
       const params = template.params as Record<string, any>;
@@ -376,7 +410,7 @@ export class SolverInputService {
 
         case 'NO_LESSONS_AFTER': {
           // params: { classId, maxPeriod }
-          classTimeslotRestrictions.push({
+          classTimeslotRestrictionsRaw.push({
             classId: params.classId,
             maxPeriod: params.maxPeriod,
           });
@@ -384,10 +418,20 @@ export class SolverInputService {
         }
 
         case 'SUBJECT_MORNING': {
-          // params: { subjectId, maxPeriod (or latestPeriod) }
-          subjectTimePreferences.push({
+          // params: { subjectId, latestPeriod (or maxPeriod legacy) }
+          subjectTimePreferencesRaw.push({
             subjectId: params.subjectId,
             latestPeriod: params.latestPeriod ?? params.maxPeriod,
+          });
+          break;
+        }
+
+        case 'SUBJECT_PREFERRED_SLOT': {
+          // params: { subjectId, dayOfWeek, period }
+          subjectPreferredSlotsRaw.push({
+            subjectId: params.subjectId,
+            dayOfWeek: params.dayOfWeek,
+            period: params.period,
           });
           break;
         }
@@ -399,6 +443,34 @@ export class SolverInputService {
       }
     }
 
-    return { additionalBlockedSlots, classTimeslotRestrictions, subjectTimePreferences };
+    // Phase 14 D-14 dedupe: NO_LESSONS_AFTER per classId, keep min(maxPeriod)
+    const classRestrictionsByClassId = new Map<string, ClassTimeslotRestriction>();
+    for (const r of classTimeslotRestrictionsRaw) {
+      const existing = classRestrictionsByClassId.get(r.classId);
+      if (!existing || r.maxPeriod < existing.maxPeriod) {
+        classRestrictionsByClassId.set(r.classId, r);
+      }
+    }
+    const classTimeslotRestrictions = Array.from(classRestrictionsByClassId.values());
+
+    // Phase 14 D-14 dedupe: SUBJECT_MORNING per subjectId, keep min(latestPeriod)
+    const subjectPreferencesBySubjectId = new Map<string, SubjectTimePreference>();
+    for (const p of subjectTimePreferencesRaw) {
+      const existing = subjectPreferencesBySubjectId.get(p.subjectId);
+      if (!existing || p.latestPeriod < existing.latestPeriod) {
+        subjectPreferencesBySubjectId.set(p.subjectId, p);
+      }
+    }
+    const subjectTimePreferences = Array.from(subjectPreferencesBySubjectId.values());
+
+    // SUBJECT_PREFERRED_SLOT: cumulative (no dedupe) per D-14
+    const subjectPreferredSlots = subjectPreferredSlotsRaw;
+
+    return {
+      additionalBlockedSlots,
+      classTimeslotRestrictions,
+      subjectTimePreferences,
+      subjectPreferredSlots,
+    };
   }
 }
