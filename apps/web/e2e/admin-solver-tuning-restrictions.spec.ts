@@ -77,11 +77,14 @@ test.describe('Phase 14 — Solver-Tuning Class Restrictions (Tab 3)', () => {
       `POST /constraint-templates must succeed → got ${postRes.status()}`,
     ).toBeLessThan(300);
 
-    // Row appears with display copy "Bis Periode 5 erlaubt".
+    // Row appears with display copy "Bis Periode 5 erlaubt". The component
+    // renders BOTH the desktop <tr> AND the mobile-card <div> in the DOM
+    // (responsive `sm:hidden` toggles visibility), so the same text appears
+    // twice. We .first() to dodge strict-mode violations.
     await expect(
-      page.locator('[data-template-type="NO_LESSONS_AFTER"]').first(),
+      page.locator('tr[data-template-type="NO_LESSONS_AFTER"]').first(),
     ).toBeVisible();
-    await expect(page.getByText('Bis Periode 5 erlaubt')).toBeVisible();
+    await expect(page.getByText('Bis Periode 5 erlaubt').first()).toBeVisible();
 
     // Edit — change maxPeriod from 5 → 4.
     await page.getByRole('button', { name: 'Eintrag bearbeiten' }).first().click();
@@ -102,7 +105,7 @@ test.describe('Phase 14 — Solver-Tuning Class Restrictions (Tab 3)', () => {
     const putRes = await putPromise;
     expect(putRes.status(), 'PUT must succeed').toBeLessThan(300);
 
-    await expect(page.getByText('Bis Periode 4 erlaubt')).toBeVisible();
+    await expect(page.getByText('Bis Periode 4 erlaubt').first()).toBeVisible();
 
     // Delete — open WarnDialog and confirm.
     await page.getByRole('button', { name: 'Eintrag löschen' }).first().click();
@@ -119,7 +122,7 @@ test.describe('Phase 14 — Solver-Tuning Class Restrictions (Tab 3)', () => {
     await warn.getByRole('button', { name: 'Löschen' }).click();
     await delPromise;
 
-    // Row removed.
+    // Row removed. (Counts both desktop+mobile DOM nodes — both should be 0.)
     await expect(page.getByText('Bis Periode 4 erlaubt')).toHaveCount(0);
   });
 
@@ -188,7 +191,7 @@ test.describe('Phase 14 — Solver-Tuning Class Restrictions (Tab 3)', () => {
 
     // Both rows visible.
     await expect(
-      page.locator('[data-template-type="NO_LESSONS_AFTER"]'),
+      page.locator('tr[data-template-type="NO_LESSONS_AFTER"]'),
     ).toHaveCount(2);
 
     // MultiRowConflictBanner copy: "Mehrfache Einträge für Klasse 1A vorhanden"

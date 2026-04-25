@@ -75,7 +75,7 @@ test.describe('Phase 14 — Solver-Tuning Subject Preferences (Tab 4)', () => {
 
     // Row visible with template-type lock + display copy.
     await expect(
-      page.locator('[data-template-type="SUBJECT_MORNING"]'),
+      page.locator('tr[data-template-type="SUBJECT_MORNING"]:visible'),
     ).toHaveCount(1);
 
     // Edit — change latestPeriod 4 → 3.
@@ -113,7 +113,7 @@ test.describe('Phase 14 — Solver-Tuning Subject Preferences (Tab 4)', () => {
     await delPromise;
 
     await expect(
-      page.locator('[data-template-type="SUBJECT_MORNING"]'),
+      page.locator('tr[data-template-type="SUBJECT_MORNING"]:visible'),
     ).toHaveCount(0);
   });
 
@@ -157,7 +157,7 @@ test.describe('Phase 14 — Solver-Tuning Subject Preferences (Tab 4)', () => {
 
     // Row visible — WochentagBadge renders short label "DI" for TUESDAY.
     await expect(
-      page.locator('[data-template-type="SUBJECT_PREFERRED_SLOT"]'),
+      page.locator('tr[data-template-type="SUBJECT_PREFERRED_SLOT"]:visible'),
     ).toHaveCount(1);
     await expect(page.getByText('DI', { exact: true }).first()).toBeVisible();
 
@@ -178,7 +178,7 @@ test.describe('Phase 14 — Solver-Tuning Subject Preferences (Tab 4)', () => {
     await delPromise;
 
     await expect(
-      page.locator('[data-template-type="SUBJECT_PREFERRED_SLOT"]'),
+      page.locator('tr[data-template-type="SUBJECT_PREFERRED_SLOT"]:visible'),
     ).toHaveCount(0);
   });
 
@@ -201,19 +201,19 @@ test.describe('Phase 14 — Solver-Tuning Subject Preferences (Tab 4)', () => {
 
     // Sub-tab a (default) shows ONLY the SUBJECT_MORNING row.
     await expect(
-      page.locator('[data-template-type="SUBJECT_MORNING"]'),
+      page.locator('tr[data-template-type="SUBJECT_MORNING"]:visible'),
     ).toHaveCount(1);
     await expect(
-      page.locator('[data-template-type="SUBJECT_PREFERRED_SLOT"]'),
+      page.locator('tr[data-template-type="SUBJECT_PREFERRED_SLOT"]:visible'),
     ).toHaveCount(0);
 
     // Switch to sub-tab b. Now ONLY the SUBJECT_PREFERRED_SLOT row.
     await page.getByRole('tab', { name: /Bevorzugte Slots/ }).click();
     await expect(
-      page.locator('[data-template-type="SUBJECT_PREFERRED_SLOT"]'),
+      page.locator('tr[data-template-type="SUBJECT_PREFERRED_SLOT"]:visible'),
     ).toHaveCount(1);
     await expect(
-      page.locator('[data-template-type="SUBJECT_MORNING"]'),
+      page.locator('tr[data-template-type="SUBJECT_MORNING"]:visible'),
     ).toHaveCount(0);
   });
 });

@@ -85,20 +85,30 @@ test.describe('Phase 14 — Solver-Tuning Mobile (375)', () => {
     const stickyBar = page.getByRole('region', { name: 'Speichern' });
     await expect(stickyBar).toBeVisible();
 
-    // 4) Sub-Tab ToggleGroup in Tab 4 ("Fach-Präferenzen"). On <sm the
-    //    component renders a vertical role="group" ToggleGroup (Radix
-    //    ToggleGroup type='single' → role='group' on the root, not
-    //    'radiogroup'; UI-SPEC §Tab 4 Mobile assumed radiogroup but the
-    //    actual Radix primitive emits role='group' — adapted accordingly).
+    // 4) Sub-Tab ToggleGroup in Tab 4 ("Fach-Präferenzen"). The dirty Tab 2
+    //    state from step 3 above intercepts the tab switch with an
+    //    UnsavedChangesDialog ("Aenderungen verwerfen?"). Click "Verwerfen"
+    //    so the switch can proceed.
     await page.getByRole('tab', { name: 'Fach-Präferenzen' }).click();
-    // The mobile branch renders the ToggleGroup with two ToggleGroupItem
-    // buttons "Vormittags-Präferenzen" + "Bevorzugte Slots".
-    const morningToggle = page.getByRole('button', {
-      name: 'Vormittags-Präferenzen',
-    });
-    const slotToggle = page.getByRole('button', {
-      name: 'Bevorzugte Slots',
-    });
+    const verwerfenBtn = page
+      .getByRole('dialog')
+      .getByRole('button', { name: /Verwerfen|Aenderungen verwerfen/ });
+    if (await verwerfenBtn.isVisible().catch(() => false)) {
+      await verwerfenBtn.click();
+    }
+
+    // The mobile branch (<sm) renders a Radix ToggleGroup with two items:
+    // "Vormittags-Präferenzen" + "Bevorzugte Slots". Both labels also
+    // appear in the desktop Tabs trigger (rendered hidden in DOM via
+    // sm:block), so we use `.first()` and rely on Playwright's visibility
+    // check. Radix ToggleGroup type='single' uses role='radio' for items
+    // (role='group' on the root is the new ARIA naming spec).
+    const morningToggle = page
+      .getByRole('radio', { name: /Vormittags-Präferenzen/ })
+      .first();
+    const slotToggle = page
+      .getByRole('radio', { name: /Bevorzugte Slots/ })
+      .first();
     await expect(morningToggle).toBeVisible();
     await expect(slotToggle).toBeVisible();
   });

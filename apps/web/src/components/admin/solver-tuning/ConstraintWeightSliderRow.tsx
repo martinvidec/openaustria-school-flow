@@ -85,7 +85,8 @@ export const ConstraintWeightSliderRow = forwardRef<HTMLDivElement, Props>(
             </TooltipProvider>
           </div>
 
-          {/* Slider */}
+          {/* Slider — thumb is 44px on mobile (MOBILE-ADM-02 touch target),
+              shrinks back to the shadcn default on sm+ (Plan 14-03 E2E-SOLVER-MOBILE-01 contract). */}
           <div className="px-1">
             <Slider
               min={0}
@@ -95,6 +96,7 @@ export const ConstraintWeightSliderRow = forwardRef<HTMLDivElement, Props>(
               onValueChange={(vals) => onChange(vals[0] ?? 0)}
               aria-label={`Gewichtung ${entry.displayName} (0 bis 100)`}
               className={cn(
+                '[&_[role=slider]]:h-11 [&_[role=slider]]:w-11 sm:[&_[role=slider]]:h-5 sm:[&_[role=slider]]:w-5',
                 isCustom && '[&_[role=slider]]:ring-2 [&_[role=slider]]:ring-primary [&_[role=slider]]:ring-offset-2',
               )}
             />
