@@ -48,7 +48,7 @@ See [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full 
 | 10.5 | E2E Admin-Ops Operations (Tier 3b) | 4/4 | Complete    | 2026-04-22 |
 | 11 | Lehrer- und Fächer-Verwaltung | 11 | Complete    | 2026-04-23 |
 | 12 | Schüler-, Klassen- & Gruppenverwaltung | 9 | Complete    | 2026-04-24 |
-| 13 | User- und Rechteverwaltung | 5 | Phase 12 | — |
+| 13 | User- und Rechteverwaltung | 3/3 | Complete    | 2026-04-25 |
 | 14 | Solver-Tuning | 5 | Phase 10.5 | Parallel with Phases 11-13 |
 | 15 | DSGVO-Admin & Audit-Log-Viewer | 9 | Phase 13 | — |
 | 16 | Admin-Dashboard & Mobile-Härtung | 6 | Phases 10-15 | — |
@@ -257,14 +257,14 @@ Plans:
 **Goal:** Admin kann Keycloak-User listen, Rollen zuweisen, CASL-ACL-Overrides pflegen und User mit Person-Records verknüpfen.
 **Requirements:** USER-01, USER-02, USER-03, USER-04, USER-05
 **Depends on:** Phase 12 (USER-05 verknüpft Keycloak-User mit Teacher/Student/Parent-Person-Records — alle müssen existieren)
-**Plans:** 1 of 3 complete
+**Plans:** 3/3 plans complete
 
 **Success criteria:**
-- [ ] Admin sieht User-Liste aus Keycloak mit Suche/Filter (Name, Email, Rolle) — backend ready (13-01)
-- [ ] Admin kann einem User eine oder mehrere der 5 Rollen (Admin, Schulleitung, Lehrer, Eltern, Schüler) zuweisen — backend ready (13-01)
-- [ ] Admin sieht pro User die wirksamen CASL-Permissions mit Rollen-Vererbung — backend ready (13-01)
-- [ ] Admin kann per-User-ACL-Overrides (subject + action + condition) anlegen, editieren und löschen — backend ready (13-01)
-- [ ] Admin kann einen Keycloak-User mit einem Teacher-, Student- oder Parent-Person-Record verknüpfen und die Verknüpfung wieder auflösen — backend ready (13-01)
+- [x] Admin sieht User-Liste aus Keycloak mit Suche/Filter (Name, Email, Rolle) — backend (13-01) + UI (13-02) + E2E (13-03)
+- [x] Admin kann einem User eine oder mehrere der 5 Rollen (Admin, Schulleitung, Lehrer, Eltern, Schüler) zuweisen
+- [x] Admin sieht pro User die wirksamen CASL-Permissions mit Rollen-Vererbung
+- [x] Admin kann per-User-ACL-Overrides (subject + action + condition) anlegen, editieren und löschen
+- [x] Admin kann einen Keycloak-User mit einem Teacher-, Student- oder Parent-Person-Record verknüpfen und die Verknüpfung wieder auflösen
 
 **Known risks / backend gap candidates:**
 - USER-01/02/05: Keycloak Admin API Adapter im Backend existiert möglicherweise nur für Login — Admin-User-Listing und Rollenzuweisung könnten eine kleine Service-Erweiterung benötigen (Gap-Fix-Task im Plan). RESOLVED — KeycloakAdminService extended in 13-01 Task 2.
@@ -273,7 +273,7 @@ Plans:
 Plans:
 - [x] 13-01 Backend foundation (USER-01..05) — complete 2026-04-24
 - [x] 13-02 Frontend (admin UI for /admin/users + /admin/permission-overrides) — complete 2026-04-24
-- [ ] 13-03 E2E sweep
+- [x] 13-03 E2E sweep
 
 ---
 

@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
-status: executing
-stopped_at: Phase 13 Plan 2 complete
-last_updated: "2026-04-24T22:56:00Z"
-last_activity: 2026-04-24 -- Phase 13-02 complete (frontend admin/users surface)
+status: completed
+stopped_at: Phase 13 Plan 2 complete (frontend admin/users surface)
+last_updated: "2026-04-25T06:43:21.892Z"
+last_activity: 2026-04-25
 progress:
   total_phases: 12
-  completed_phases: 8
+  completed_phases: 9
   total_plans: 34
-  completed_plans: 33
+  completed_plans: 34
   percent: 70
 ---
 
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 
 ## Current Position
 
-Phase: 13 (user-und-rechteverwaltung) — EXECUTING
-Plan: 3 of 3
+Phase: 14
+Plan: Not started
 Status: Plan 13-02 complete; Plan 13-03 (E2E) ready
-Last activity: 2026-04-24 -- Phase 13-02 complete (frontend admin/users surface)
+Last activity: 2026-04-25
 
 Progress: [███████░░░] 70%
 
