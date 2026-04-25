@@ -55,6 +55,8 @@ async function main() {
     { action: 'manage', subject: 'poll' },
     // Phase 10: plural SchoolYears + A/B weeks (SCHOOL-03..SCHOOL-05)
     { action: 'manage', subject: 'school-year' },
+    // Phase 14: Solver-Tuning (SOLVER-02/03 — D-03 strictness, admin-only)
+    { action: 'manage', subject: 'constraint-weight-override' },
   ];
 
   // Schulleitung: pedagogical management (D-03) + Phase 2 subjects

@@ -10,9 +10,16 @@ import { SolverClientService } from './solver-client.service';
 import { SolveProcessor } from './processors/solve.processor';
 import { ConstraintTemplateController } from './constraint-template.controller';
 import { ConstraintTemplateService } from './constraint-template.service';
+import { ConstraintWeightOverrideController } from './constraint-weight-override.controller';
+import { ConstraintWeightOverrideService } from './constraint-weight-override.service';
 
 @Module({
-  controllers: [TimetableController, SolverCallbackController, ConstraintTemplateController],
+  controllers: [
+    TimetableController,
+    SolverCallbackController,
+    ConstraintTemplateController,
+    ConstraintWeightOverrideController,
+  ],
   providers: [
     TimetableService,
     TimetableEditService,
@@ -23,7 +30,16 @@ import { ConstraintTemplateService } from './constraint-template.service';
     SolverClientService,
     SolveProcessor,
     ConstraintTemplateService,
+    ConstraintWeightOverrideService,
   ],
-  exports: [TimetableService, TimetableEditService, TimetableExportService, TimetableGateway, TimetableEventsGateway, ConstraintTemplateService],
+  exports: [
+    TimetableService,
+    TimetableEditService,
+    TimetableExportService,
+    TimetableGateway,
+    TimetableEventsGateway,
+    ConstraintTemplateService,
+    ConstraintWeightOverrideService,
+  ],
 })
 export class TimetableModule {}
