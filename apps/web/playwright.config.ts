@@ -35,12 +35,16 @@ export default defineConfig({
       name: 'desktop',
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
       testMatch: /.*\.spec\.ts$/,
-      testIgnore: /.*\.mobile\.spec\.ts$/,
+      // Phase 13-03: also ignore `*-mobile.spec.ts` (hyphen variant) — the
+      // Phase 13 mobile spec ships as `admin-user-mobile.spec.ts` per plan
+      // file naming. Both `.mobile.spec.ts` and `-mobile.spec.ts` route to
+      // the mobile-375 / mobile-chrome projects.
+      testIgnore: /(.*\.mobile\.spec\.ts|.*-mobile\.spec\.ts)$/,
     },
     {
       name: 'mobile-375',
       use: { ...devices['iPhone 13'], viewport: { width: 375, height: 812 } },
-      testMatch: /.*\.mobile\.spec\.ts$/,
+      testMatch: /(.*\.mobile\.spec\.ts|.*-mobile\.spec\.ts)$/,
     },
     // Phase 11 Plan 11-03 — Chromium-emulated Pixel 5 mobile project.
     // Accepted per 10.4-03/10.5-02 precedent: mobile-WebKit (iPhone 13) hits
@@ -52,7 +56,7 @@ export default defineConfig({
     {
       name: 'mobile-chrome',
       use: { ...devices['Pixel 5'], viewport: { width: 375, height: 812 } },
-      testMatch: /.*\.mobile\.spec\.ts$/,
+      testMatch: /(.*\.mobile\.spec\.ts|.*-mobile\.spec\.ts)$/,
     },
   ],
 });
