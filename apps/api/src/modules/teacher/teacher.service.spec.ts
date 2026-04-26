@@ -132,6 +132,53 @@ describe('TeacherService', () => {
       expect(result.meta.total).toBe(2);
       expect(result.meta.page).toBe(1);
     });
+
+    /**
+     * Tenant-isolation regression guard (debug session
+     * `useteachers-tenant-isolation-leak`, 2026-04-26):
+     *
+     * Before this guard, calling `findAll(undefined, ...)` produced a Prisma
+     * query with `where: { schoolId: undefined }` — Prisma silently strips
+     * `undefined` keys from the where clause, so the call returned teachers
+     * from EVERY school in the database. The frontend useTeachers() hook was
+     * shipping requests without `?schoolId=` (controller's `query.schoolId!`
+     * non-null assertion lied about it being defined), exposing teachers
+     * across tenants to any authenticated reader of `subject: teacher`.
+     *
+     * Mirrors the canonical guard in ClassService.findAll (class.service.ts
+     * L49-52). NotFoundException (not BadRequestException) is intentional for
+     * cross-module consistency — both surface as the same "missing schoolId"
+     * 404 to clients regardless of which entity they query.
+     *
+     * If this test goes red after a refactor, the schoolId guard has been
+     * removed and the tenant leak is back. Restore the `if (!schoolId) throw`
+     * line in TeacherService.findAll.
+     */
+    it('throws NotFoundException when schoolId is undefined (tenant-isolation guard)', async () => {
+      const pagination = new PaginationQueryDto();
+      pagination.page = 1;
+      pagination.limit = 20;
+
+      await expect(
+        service.findAll(undefined as unknown as string, pagination),
+      ).rejects.toThrow(NotFoundException);
+
+      // Critical: the leak occurred *because* findMany was called. Asserting it
+      // was NEVER called proves the guard short-circuits before reaching Prisma.
+      expect(mockPrisma.teacher.findMany).not.toHaveBeenCalled();
+      expect(mockPrisma.teacher.count).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException when schoolId is empty string', async () => {
+      const pagination = new PaginationQueryDto();
+      pagination.page = 1;
+      pagination.limit = 20;
+
+      await expect(service.findAll('', pagination)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(mockPrisma.teacher.findMany).not.toHaveBeenCalled();
+    });
   });
 
   describe('findOne', () => {

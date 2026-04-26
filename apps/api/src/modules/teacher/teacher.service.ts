@@ -75,6 +75,17 @@ export class TeacherService {
     schoolId: string,
     pagination: PaginationQueryDto & { search?: string },
   ): Promise<PaginatedResponseDto<any>> {
+    // Tenant-isolation guard (debug session `useteachers-tenant-isolation-leak`,
+    // 2026-04-26): without this check, Prisma silently strips the undefined
+    // `schoolId` key from the where clause and returns teachers from EVERY
+    // school in the database — a cross-tenant data leak. Mirrors
+    // ClassService.findAll (class.service.ts L49-52). The TeacherController
+    // forwards `query.schoolId!` from a SchoolPaginationQueryDto where
+    // schoolId is `@IsOptional()`; the non-null assertion does not enforce
+    // anything at runtime, so the service must validate.
+    if (!schoolId) {
+      throw new NotFoundException('schoolId query parameter is required');
+    }
     // Phase 12-02 gap-fix: accept optional `search` substring matched
     // case-insensitively on Person.firstName | lastName | email so the
     // /admin/classes Klassenvorstand-Picker (TeacherSearchPopover) works.
