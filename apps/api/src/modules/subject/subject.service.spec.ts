@@ -121,6 +121,65 @@ describe('SubjectService', () => {
     });
   });
 
+  describe('findAll', () => {
+    /**
+     * Tenant-isolation regression guard (debug session
+     * `subject-tenant-isolation-leak`, 2026-04-26):
+     *
+     * Before this guard, calling `findAll(undefined, ...)` produced a Prisma
+     * query with `where: { schoolId: undefined }` — Prisma silently strips
+     * `undefined` keys from the where clause, so the call returned subjects
+     * from EVERY school in the database. The SubjectController forwards
+     * `query.schoolId!` from a SchoolPaginationQueryDto where schoolId is
+     * `@IsOptional()`; the non-null assertion lied at runtime.
+     *
+     * Mirrors the canonical guards in TeacherService.findAll (teacher.service.ts
+     * L86-88) and ClassService.findAll (class.service.ts L49-52).
+     * NotFoundException (not BadRequestException) is intentional for
+     * cross-module consistency — class/teacher/subject endpoints all surface
+     * the same "missing schoolId" 404 to clients.
+     *
+     * If this test goes red after a refactor, the schoolId guard has been
+     * removed and the tenant leak is back. Restore the `if (!schoolId) throw`
+     * line in SubjectService.findAll.
+     */
+    it('throws NotFoundException when schoolId is undefined (tenant-isolation guard)', async () => {
+      await expect(
+        service.findAll(undefined as unknown as string, { skip: 0, limit: 20 }),
+      ).rejects.toThrow(NotFoundException);
+
+      // Critical: the leak occurred *because* findMany was called. Asserting it
+      // was NEVER called proves the guard short-circuits before reaching Prisma.
+      expect(mockPrismaService.subject.findMany).not.toHaveBeenCalled();
+      expect(mockPrismaService.subject.count).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException when schoolId is empty string', async () => {
+      await expect(
+        service.findAll('', { skip: 0, limit: 20 }),
+      ).rejects.toThrow(NotFoundException);
+      expect(mockPrismaService.subject.findMany).not.toHaveBeenCalled();
+      expect(mockPrismaService.subject.count).not.toHaveBeenCalled();
+    });
+
+    it('returns paginated subjects filtered by schoolId when guard passes', async () => {
+      mockPrismaService.subject.findMany.mockResolvedValueOnce([mockSubject]);
+      mockPrismaService.subject.count.mockResolvedValueOnce(1);
+
+      const result = await service.findAll('school-1', { skip: 0, limit: 20 });
+
+      expect(mockPrismaService.subject.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { schoolId: 'school-1' },
+          skip: 0,
+          take: 20,
+        }),
+      );
+      expect(result.data).toHaveLength(1);
+      expect(result.meta.total).toBe(1);
+    });
+  });
+
   describe('findOne', () => {
     it('should return subject with classSubjects', async () => {
       mockPrismaService.subject.findUnique.mockResolvedValueOnce({

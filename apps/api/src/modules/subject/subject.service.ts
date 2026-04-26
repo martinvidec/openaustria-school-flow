@@ -40,6 +40,19 @@ export class SubjectService {
   }
 
   async findAll(schoolId: string, pagination: { skip: number; limit: number }) {
+    // Tenant-isolation guard (debug session `subject-tenant-isolation-leak`,
+    // 2026-04-26): without this check, Prisma silently strips the undefined
+    // `schoolId` key from the where clause and returns subjects from EVERY
+    // school in the database — a cross-tenant data leak. Mirrors
+    // TeacherService.findAll (teacher.service.ts L86-88) and ClassService.findAll
+    // (class.service.ts L49-52). The SubjectController forwards `query.schoolId!`
+    // from a SchoolPaginationQueryDto where schoolId is `@IsOptional()`; the
+    // non-null assertion does not enforce anything at runtime, so the service
+    // must validate. Closes the last Category C site per the audit taxonomy
+    // documented in `useteachers-tenant-isolation-leak`.
+    if (!schoolId) {
+      throw new NotFoundException('schoolId query parameter is required');
+    }
     const [data, total] = await Promise.all([
       this.prisma.subject.findMany({
         where: { schoolId },
