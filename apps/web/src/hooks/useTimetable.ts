@@ -84,12 +84,25 @@ export function useTeachers(schoolId: string | undefined) {
 
 /**
  * Fetches the list of classes for a school (for PerspectiveSelector).
+ *
+ * The /api/v1/classes endpoint REQUIRES `?schoolId=...` — ClassService.findAll
+ * throws NotFoundException without it (apps/api/src/modules/class/class.service.ts).
+ * Without the param the request 404s, useQuery surfaces the error, and the
+ * consumer's `data: classes = []` default silently hides the Klassen group in
+ * PerspectiveSelector (the SelectGroup is wrapped in `{classes.length > 0 && ...}`).
+ * Using `limit=500` matches the "one page of everything" expectation for
+ * tenant-scoped admin pickers (see SchoolPaginationQueryDto, raised in Phase 12).
  */
 export function useClasses(schoolId: string | undefined) {
   return useQuery<EntityOption[]>({
     queryKey: ['classes', schoolId],
     queryFn: async () => {
-      const res = await apiFetch(`/api/v1/classes`);
+      const params = new URLSearchParams({
+        schoolId: schoolId ?? '',
+        page: '1',
+        limit: '500',
+      });
+      const res = await apiFetch(`/api/v1/classes?${params.toString()}`);
       if (!res.ok) throw new Error('Failed to load classes');
       const json = await res.json();
       const items = json.data ?? json;
