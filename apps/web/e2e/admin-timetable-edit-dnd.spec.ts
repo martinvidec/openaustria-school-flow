@@ -139,23 +139,17 @@ test.describe('Phase 04 regression — DnD timetable-edit (commit de9ee2b)', () 
     await expect(sourceLesson).toBeVisible();
     await expect(targetCell).toBeVisible();
 
-    // Read the FRESH bounding box right before driving the drag — Playwright
-    // re-measures every call, but doing it last (after `expect.toBeVisible`)
-    // guarantees the grid has settled. We also nudge tx/ty INWARD by 30%
-    // off-center to defend against single-pixel column-boundary mis-hits
-    // (the grid uses `gap-px`, so geometric centers are safe but the
-    // 0.5-pixel boundary between cells is not).
+    // Read the source bbox first — it's stable. The target bbox MUST be
+    // re-measured after drag-start because the timetable-edit page hides the
+    // Aenderungsverlauf side panel during drag (timetable-edit.tsx:411
+    // `!activeLesson`), which widens the main grid area and shifts every
+    // column's x. Measuring tBox before drag-start landed the cursor on a
+    // different column than intended (Wednesday instead of Thursday) due to
+    // CSS Grid auto-sizing redistributing the freed space.
     const sBox = await sourceLesson.boundingBox();
-    const tBox = await targetCell.boundingBox();
-    if (!sBox || !tBox) throw new Error('source/target bounding box missing');
-
+    if (!sBox) throw new Error('source bounding box missing');
     const sx = sBox.x + sBox.width / 2;
     const sy = sBox.y + sBox.height / 2;
-    // Target a point clearly inside the cell — 60% across × 50% down. This
-    // pushes well clear of the WEDNESDAY/THURSDAY column boundary on the
-    // left and the THURSDAY/FRIDAY boundary on the right.
-    const tx = tBox.x + tBox.width * 0.6;
-    const ty = tBox.y + tBox.height / 2;
 
     // Watch for the move PATCH so we can assert on its status before
     // checking the post-drop DOM state.
@@ -171,6 +165,21 @@ test.describe('Phase 04 regression — DnD timetable-edit (commit de9ee2b)', () 
     // Cross the 8px PointerSensor activation threshold in 5 steps so dnd-kit
     // sees real pointermove events rather than a single jump.
     await page.mouse.move(sx + 20, sy, { steps: 5 });
+
+    // Drag is now ACTIVE — side panel has been removed from the layout, the
+    // main grid area has expanded, and column x-positions have settled into
+    // their during-drag values. Re-measure the target cell NOW so tx/ty
+    // reflect the actual on-screen geometry the dnd-kit pointerWithin
+    // detector will see at drop-time.
+    const tBox = await targetCell.boundingBox();
+    if (!tBox) throw new Error('target bounding box missing post-drag-start');
+    // Target the geometric center of the THURSDAY/period 5 cell. Using the
+    // exact center (not 60% offset) keeps the cursor maximally far from any
+    // column boundary, which is the safest defense against subpixel layout
+    // drift from the validation request that fires on each onDragOver.
+    const tx = tBox.x + tBox.width / 2;
+    const ty = tBox.y + tBox.height / 2;
+
     // Slow traverse to the target so onDragOver fires for intermediate
     // cells and pointerWithin can settle on the cell under the cursor.
     await page.mouse.move(tx, ty, { steps: 20 });
