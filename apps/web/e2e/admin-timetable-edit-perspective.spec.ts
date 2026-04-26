@@ -1,7 +1,8 @@
 /**
- * Regression spec for the useClasses() schoolId fix.
+ * Regression spec for the useClasses() schoolId fix AND the useRooms()
+ * pagination-params fix.
  *
- * Background — the bug this guards:
+ * Background — the bugs this guards:
  *   useClasses() in apps/web/src/hooks/useTimetable.ts previously fetched
  *   `/api/v1/classes` with no query string. The API requires `?schoolId=...`
  *   (ClassService.findAll throws NotFoundException → HTTP 404 without it),
@@ -14,6 +15,29 @@
  *   Full debug session: .planning/debug/resolved/useclasses-missing-schoolid.md
  *   Knowledge-base entry pattern: .planning/debug/knowledge-base.md
  *
+ * Background — second guard added 2026-04-26:
+ *   useRooms() in apps/web/src/hooks/useTimetable.ts had a structurally
+ *   similar (but quantitative) bug — it fetched
+ *   `/api/v1/schools/:schoolId/rooms` with no pagination params. The
+ *   backend `PaginationQueryDto.limit` defaults to 20, so schools with >20
+ *   rooms got silently truncated. Earlier, in 2026-04-02 (commit 1fb7abf),
+ *   the unwrap+map shape of the same hook was fixed (returning the raw
+ *   paginated envelope as `EntityOption[]` had broken iteration in
+ *   PerspectiveSelector — the Räume group disappeared entirely). The
+ *   present spec asserts the Räume group renders inside the open dropdown
+ *   with at least one selectable option, guarding both fixes end-to-end:
+ *     - if useRooms reverts to bare path → backend may truncate to 20 rows
+ *       but the spec still has at least one option (the seedTimetableRun
+ *       fixture self-provisions a Room → guaranteed presence). The
+ *       quantitative regression is locked by the unit test from the same
+ *       commit (Vitest, "useRooms — pagination params regression guard").
+ *     - if useRooms unwrap is reverted to `return res.json()` → iteration
+ *       breaks and the Räume SelectGroup vanishes entirely → label
+ *       expectation fails loudly.
+ *
+ *   Closes deferred items 1-3 from
+ *   `.planning/debug/resolved/missing-raeume-perspective.md`.
+ *
  * What this spec asserts:
  *   1. After navigating to /admin/timetable-edit and opening the
  *      perspective dropdown, the "Klassen" SelectLabel is visible AND
@@ -23,6 +47,11 @@
  *   2. Picking a Klassen option mounts the timetable grid for that
  *      perspective (proves end-to-end wire-up: hook → selector → store
  *      → useTimetableView → grid).
+ *   3. The "Raeume" SelectLabel (umlaut-less ASCII) is visible in the
+ *      same open dropdown AND the Räume group contains at least one
+ *      selectable option (proves the `/api/v1/schools/:schoolId/rooms`
+ *      request returned data, the response was correctly unwrapped to
+ *      `EntityOption[]`, and the length>0 conditional render fires).
  *
  * Why a sibling spec (not extending admin-timetable-edit-dnd.spec.ts):
  *   The DnD spec deliberately drives via the teacher perspective so the
@@ -45,7 +74,7 @@ import {
 
 const SCHOOL_ID = process.env.E2E_SCHOOL_ID ?? 'seed-school-bgbrg-musterstadt';
 
-test.describe('Admin timetable-edit — Klassen perspective renders (useClasses schoolId fix)', () => {
+test.describe('Admin timetable-edit — Klassen + Räume perspectives render (useClasses schoolId fix + useRooms pagination fix)', () => {
   // Mobile projects run their own viewport-sized specs; this regression
   // guard only needs one platform and the dropdown interaction is identical
   // across viewports. Belt-and-braces guard against ad-hoc --project=mobile-*.
@@ -73,7 +102,7 @@ test.describe('Admin timetable-edit — Klassen perspective renders (useClasses 
     }
   });
 
-  test('PerspectiveSelector exposes the Klassen group with at least one selectable class, and selecting one renders the grid', async ({
+  test('PerspectiveSelector exposes the Klassen and Räume groups with at least one option each, and selecting a class renders the grid', async ({
     page,
   }) => {
     await page.goto('/admin/timetable-edit');
@@ -122,6 +151,44 @@ test.describe('Admin timetable-edit — Klassen perspective renders (useClasses 
     await expect(
       seededClass,
       'At least one Klassen option matching seed naming (e.g. "1A", "2B") must be selectable.',
+    ).toBeVisible();
+
+    // ── PRIMARY ASSERTION (Räume) ────────────────────────────────────────
+    // The Raeume SelectGroup is wrapped in `{rooms.length > 0 && ...}`
+    // (PerspectiveSelector.tsx:119). If useRooms returned [] (the bug
+    // state — either the original 2026-04-02 unwrap-shape bug or the new
+    // pagination-truncation bug for schools with >20 rooms), the
+    // SelectLabel "Raeume" would be absent from the DOM entirely and this
+    // expectation would fail.
+    //
+    // The seedTimetableRun fixture self-provisions at least one Room
+    // when the seed school has none (per quick-task 260425-u72 SUMMARY)
+    // → precondition is guaranteed.
+    //
+    // NOTE: The label text is "Raeume" (umlaut-less ASCII), NOT "Räume" —
+    // see PerspectiveSelector.tsx:121 SelectLabel content.
+    const raeumeLabel = dropdown.getByText('Raeume', { exact: true });
+    await expect(
+      raeumeLabel,
+      'Raeume SelectLabel must render inside the open dropdown — proves useRooms returned a non-empty array, which proves the GET /api/v1/schools/:schoolId/rooms request succeeded AND the response was correctly unwrapped to EntityOption[].',
+    ).toBeVisible();
+
+    // The group must contain at least one selectable option. Unlike the
+    // Klassen group, Room names follow no fixed naming convention (the
+    // seedTimetableRun fixture creates a Room with an arbitrary name when
+    // the seed school has none). We cannot use a regex like /^\d+[A-Z]$/.
+    //
+    // Strategy: use the Radix listbox group structure. Each SelectGroup
+    // renders as role=group with the SelectLabel as the first child div.
+    // Find the group whose label is "Raeume" and assert it contains at
+    // least one role=option child. Locator chain:
+    //   listbox > group:has(div:text-is("Raeume")) > [role="option"]
+    const raeumeGroup = dropdown.locator('[role="group"]').filter({
+      has: page.getByText('Raeume', { exact: true }),
+    });
+    await expect(
+      raeumeGroup.getByRole('option').first(),
+      'At least one Raeume option must be selectable inside the Raeume SelectGroup — the seedTimetableRun fixture self-provisions a Room, so this is guaranteed by the fixture contract.',
     ).toBeVisible();
 
     // ── BONUS ASSERTION ──────────────────────────────────────────────────
