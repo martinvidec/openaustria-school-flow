@@ -68,13 +68,36 @@ const { PrismaClient } = require('../../../api/dist/config/database/generated/cl
       findFirst: (args: {
         where: Record<string, unknown>;
         orderBy?: Record<string, unknown>;
-      }) => Promise<{ id: string } | null>;
+        include?: Record<string, unknown>;
+      }) => Promise<
+        | {
+            id: string;
+            person?: { firstName: string; lastName: string } | null;
+          }
+        | null
+      >;
+    };
+    schoolDay: {
+      findMany: (args: { where: Record<string, unknown> }) => Promise<
+        Array<{ dayOfWeek: string; isActive: boolean }>
+      >;
+      upsert: (args: {
+        where: Record<string, unknown>;
+        update: Record<string, unknown>;
+        create: Record<string, unknown>;
+      }) => Promise<unknown>;
+      updateMany: (args: {
+        where: Record<string, unknown>;
+        data: Record<string, unknown>;
+      }) => Promise<unknown>;
     };
     room: {
       findFirst: (args: {
         where: Record<string, unknown>;
         orderBy?: Record<string, unknown>;
       }) => Promise<{ id: string } | null>;
+      create: (args: { data: Record<string, unknown> }) => Promise<{ id: string }>;
+      deleteMany: (args: { where: { id: string } }) => Promise<unknown>;
     };
     timetableRun: {
       create: (args: { data: Record<string, unknown> }) => Promise<{ id: string }>;
@@ -93,6 +116,8 @@ const { PrismaPg } = require('../../../api/node_modules/@prisma/adapter-pg') as 
 };
 
 export interface TimetableRunFixture {
+  /** Echoed back so cleanup can scope its updates to the fixture's school. */
+  schoolId: string;
   runId: string;
   /** The lesson seeded at (MONDAY, period 1) for class 1A. */
   lessonId: string;
@@ -102,7 +127,41 @@ export interface TimetableRunFixture {
   sourcePeriod: 1;
   classSubjectId: string;
   teacherId: string;
+  /**
+   * Display name for the seeded teacher in the format the
+   * PerspectiveSelector renders: `${lastName} ${firstName}` (per
+   * apps/web/src/hooks/useTimetable.ts:78). The spec uses this to pick
+   * the right "Lehrer" option in the perspective dropdown so the
+   * timetable view filters down to our seeded lesson.
+   *
+   * NOTE on workaround: useClasses() in apps/web/src/hooks/useTimetable.ts
+   * calls `/api/v1/classes` without the required `?schoolId=...` query
+   * param, so the API returns 404 and the "Klassen" group never renders
+   * in the perspective selector. Fixing that frontend bug is out of scope
+   * for this quick task; instead we drive the spec via the teacher
+   * perspective (which works today) — the three FIXes under test are
+   * orthogonal to perspective choice. Logged as a deviation in SUMMARY.
+   */
+  teacherDisplayName: string;
   roomId: string;
+  /**
+   * Set when the fixture had to create its own Room because the seed didn't
+   * provide one. cleanupTimetableRun() deletes this room as well so the
+   * fixture leaves no residue. (Standard prisma:seed creates ZERO Room
+   * rows — Phase 03 rooms are introduced via the Schuladmin Console UI in
+   * the live workflow, not the seed script.)
+   */
+  fixtureRoomId: string | null;
+  /**
+   * SchoolDays the fixture had to activate from inactive/missing state. The
+   * timetable view filters days by `school.schoolDays where isActive: true`
+   * (apps/api/src/modules/timetable/timetable.service.ts:272) — if MON–FRI
+   * aren't all active in the test DB, the grid won't render those columns
+   * and the spec can't drop into them. The fixture defensively turns on
+   * MONDAY–FRIDAY and remembers which it had to flip so cleanup can flip
+   * them back. Empty array = nothing changed.
+   */
+  reactivatedDays: string[];
   /**
    * Subject.shortName for the seeded ClassSubject. The timetable-view API
    * surfaces this verbatim as TimetableViewLesson.subjectAbbreviation
@@ -146,26 +205,77 @@ export async function seedTimetableRun(schoolId: string): Promise<TimetableRunFi
     }
 
     // 2. Teacher — TimetableLesson.teacherId references Teacher.id directly
-    //    (NOT User.id). Pick the FIRST teacher for this school.
+    //    (NOT User.id). Pin to the KC seed teacher `kc-lehrer-teacher`
+    //    (Maria Mueller, apps/api/prisma/seed.ts:754) so the spec can
+    //    deterministically select "Mueller Maria" in the perspective
+    //    selector. The KC teacher is created by every prisma:seed run
+    //    with a stable id, which avoids the createdAt-asc fragility that
+    //    breaks if a developer adds new teachers via the Schuladmin UI.
     const teacher = await prisma.teacher.findFirst({
-      where: { schoolId },
-      orderBy: { createdAt: 'asc' },
+      where: { schoolId, id: 'kc-lehrer-teacher' },
+      include: { person: true },
     });
     if (!teacher) {
       throw new Error(
-        `No Teacher found for schoolId=${schoolId} — re-run prisma:seed`,
+        `Teacher kc-lehrer-teacher not found — re-run prisma:seed (created by apps/api/prisma/seed.ts:754)`,
       );
     }
+    const teacherDisplayName = teacher.person
+      ? `${teacher.person.lastName} ${teacher.person.firstName}`
+      : teacher.id;
 
-    // 3. Room — FIRST room for this school.
-    const room = await prisma.room.findFirst({
+    // 3. Room — FIRST room for this school. The standard prisma:seed creates
+    //    ZERO Room rows (rooms are introduced via the Schuladmin Console UI
+    //    in the live workflow), so we self-provision a fixture room when
+    //    none exists. The timestamp suffix keeps the @@unique([schoolId, name])
+    //    constraint clear of any future seed-defined rooms.
+    let room = await prisma.room.findFirst({
       where: { schoolId },
       orderBy: { createdAt: 'asc' },
     });
+    let fixtureRoomId: string | null = null;
     if (!room) {
-      throw new Error(
-        `No Room found for schoolId=${schoolId} — re-run prisma:seed (Phase 03 should have created at least one room)`,
-      );
+      const ts = Date.now();
+      room = await prisma.room.create({
+        data: {
+          schoolId,
+          name: `e2e-fixture-room-${ts}`,
+          roomType: 'KLASSENZIMMER',
+          capacity: 30,
+          equipment: [],
+        },
+      });
+      fixtureRoomId = room.id;
+    }
+
+    // 4a. SchoolDays — defensively ensure MON–FRI are active. Test DBs in
+    //     this repo have been observed with only MONDAY active (other days
+    //     deactivated by an earlier admin-school-settings spec run). The
+    //     timetable view filters days by `isActive: true`, so a missing
+    //     THURSDAY would mean the grid never renders a THURSDAY column and
+    //     the spec couldn't drop a lesson into it. We remember which days
+    //     we had to flip so cleanup restores them.
+    const targetWeekdays = [
+      'MONDAY',
+      'TUESDAY',
+      'WEDNESDAY',
+      'THURSDAY',
+      'FRIDAY',
+    ] as const;
+    const existingDays = await prisma.schoolDay.findMany({
+      where: { schoolId, dayOfWeek: { in: targetWeekdays as unknown as string[] } },
+    });
+    const existingDayMap = new Map(existingDays.map((d) => [d.dayOfWeek, d.isActive]));
+    const reactivatedDays: string[] = [];
+    for (const day of targetWeekdays) {
+      const existing = existingDayMap.get(day);
+      if (existing === true) continue; // already active — leave alone
+      reactivatedDays.push(day);
+      await prisma.schoolDay.upsert({
+        where: { schoolId_dayOfWeek: { schoolId, dayOfWeek: day } },
+        update: { isActive: true },
+        create: { schoolId, dayOfWeek: day, isActive: true },
+      });
     }
 
     // 4. TimetableRun — status COMPLETED so the timetable-view query treats
@@ -201,6 +311,7 @@ export async function seedTimetableRun(schoolId: string): Promise<TimetableRunFi
     });
 
     return {
+      schoolId,
       runId: run.id,
       lessonId: lesson.id,
       classId: classSubject.classId,
@@ -208,7 +319,10 @@ export async function seedTimetableRun(schoolId: string): Promise<TimetableRunFi
       sourcePeriod: 1,
       classSubjectId: classSubject.id,
       teacherId: teacher.id,
+      teacherDisplayName,
       roomId: room.id,
+      fixtureRoomId,
+      reactivatedDays,
       subjectAbbreviation: classSubject.subject.shortName,
     };
   } finally {
@@ -229,7 +343,26 @@ export async function cleanupTimetableRun(fixture: TimetableRunFixture): Promise
     adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL ?? '' }),
   });
   try {
+    // Delete the run first so the cascade removes TimetableLesson rows and
+    // releases the FK on Room.
     await prisma.timetableRun.deleteMany({ where: { id: fixture.runId } });
+    if (fixture.fixtureRoomId) {
+      await prisma.room.deleteMany({ where: { id: fixture.fixtureRoomId } });
+    }
+    // Restore school-day activation state. Days the fixture flipped to
+    // active were either inactive or missing originally — both states are
+    // semantically equivalent to "not part of the school's working week",
+    // so we set them to isActive: false. This avoids polluting the test DB
+    // with a five-day week if the developer's environment was three-day.
+    if (fixture.reactivatedDays.length > 0) {
+      await prisma.schoolDay.updateMany({
+        where: {
+          schoolId: fixture.schoolId,
+          dayOfWeek: { in: fixture.reactivatedDays },
+        },
+        data: { isActive: false },
+      });
+    }
   } catch (err) {
     // eslint-disable-next-line no-console
     console.warn(
