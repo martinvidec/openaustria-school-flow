@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 Phase: 15
 Plan: Not started
 Status: All 3 plans (14-01 backend, 14-02 frontend, 14-03 E2E) green; phase ready for /gsd-verify-work
-Last activity: 2026-04-25 - Completed quick task 260425-u72: Add Playwright E2E coverage for timetable-edit DnD and constraint validation
+Last activity: 2026-04-26 - Completed quick task 260426-eyf: Harden useRooms pagination params + unit tests + E2E Räume assertion
 
 Progress: [████████░░] 77%
 
@@ -459,6 +459,7 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260425-u72 | Add Playwright E2E coverage for timetable-edit DnD and constraint validation | 2026-04-25 | 8a6bc63 | [260425-u72-add-playwright-e2e-coverage-for-timetabl](./quick/260425-u72-add-playwright-e2e-coverage-for-timetabl/) |
+| 260426-eyf | Harden useRooms pagination params + unit tests + E2E Räume assertion | 2026-04-26 | 6ebad74 | [260426-eyf-harden-userooms-pagination-params-unit-t](./quick/260426-eyf-harden-userooms-pagination-params-unit-t/) |
 
 ### Roadmap Evolution
 
