@@ -1,10 +1,11 @@
 ---
 phase: 15
 slug: dsgvo-admin-audit-log-viewer
-status: draft
+status: approved
 shadcn_initialized: true
 preset: "default / neutral / cssVariables (apps/web/components.json)"
 created: 2026-04-26
+reviewed_at: 2026-04-26
 ---
 
 # Phase 15 — UI Design Contract
@@ -331,11 +332,11 @@ These are not in the template's six dimensions but the orchestrator marks them a
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS — every CTA, empty state, error, and destructive confirmation prescribed in German verbatim.
-- [ ] Dimension 2 Visuals: PASS — component inventory enumerated; primitives sourced from existing shadcn copies; no new dependencies.
-- [ ] Dimension 3 Color: PASS — 60/30/10 mapped to existing `--color-*` tokens; accent reserved-for list explicit; destructive/success/warning scoped to listed surfaces only.
-- [ ] Dimension 4 Typography: PASS — 4 sizes (14/14/20/28) declared with reserved 28; 2 weights (400/600); label vs body separation via `text-muted-foreground` color (not weight); mono exception localized to `<JsonTree>`.
-- [ ] Dimension 5 Spacing: PASS — Tailwind 8-point scale; touch-target floors (40/44px); JSON-tree indent step (16px) declared.
-- [ ] Dimension 6 Registry Safety: PASS — no third-party registries; no new shadcn blocks; safety gate not applicable.
+- [x] Dimension 1 Copywriting: PASS — every CTA, empty state, error, and destructive confirmation prescribed in German verbatim.
+- [x] Dimension 2 Visuals: PASS — component inventory enumerated; primitives sourced from existing shadcn copies; no new dependencies.
+- [x] Dimension 3 Color: PASS — 60/30/10 mapped to existing `--color-*` tokens; accent reserved-for list explicit; destructive/success/warning scoped to listed surfaces only.
+- [x] Dimension 4 Typography: PASS — 4 sizes (14/14/20/28) declared with reserved 28; 2 weights (400/600); label vs body separation via `text-muted-foreground` color (not weight); mono exception localized to `<JsonTree>`.
+- [x] Dimension 5 Spacing: PASS — Tailwind 8-point scale; touch-target floors (40/44px); JSON-tree indent step (16px) declared.
+- [x] Dimension 6 Registry Safety: PASS — no third-party registries; no new shadcn blocks; safety gate not applicable.
 
-**Approval:** pending
+**Approval:** approved 2026-04-26
