@@ -132,12 +132,45 @@ export function useClasses(schoolId: string | undefined) {
 
 /**
  * Fetches the list of rooms for a school (for PerspectiveSelector).
+ *
+ * Route shape — Category A SAFE per the audit taxonomy in
+ * `.planning/debug/resolved/useteachers-tenant-isolation-leak.md`:
+ * `/api/v1/schools/:schoolId/rooms` carries the tenant scope as a URL path
+ * segment, so Nest's routing layer enforces it (cannot be undefined when the
+ * route matches). Unlike useClasses/useTeachers — which previously sent the
+ * scope as `?schoolId=...` and were vulnerable to silent filter-drop —
+ * useRooms does NOT need a defense-in-depth schoolId query param, and adding
+ * one would weaken the route's contract by signaling that the path-segment
+ * scope is somehow optional.
+ *
+ * Pagination params (`?page=1&limit=500`) are sent for a different reason:
+ * the backend `PaginationQueryDto.limit` defaults to 20
+ * (apps/api/src/common/dto/pagination.dto.ts), so without an explicit limit a
+ * school with >20 rooms gets silently truncated and the Räume dropdown looks
+ * incomplete to the admin (there is no error toast, no console warning — the
+ * 20-row response is structurally identical to a complete one). The
+ * unit-test regression guard in useTimetable.spec.ts ("useRooms — pagination
+ * params regression guard") locks both `page=1` AND `limit=500` so reverting
+ * to the bare path fails CI loudly.
+ *
+ * History:
+ *   - 2026-04-02 (commit 1fb7abf): unwrap+map fix — original Räume-perspective
+ *     bug where useRooms returned the raw paginated envelope as
+ *     `EntityOption[]`, breaking PerspectiveSelector's iteration. The
+ *     `json.data ?? json` + `.map(...)` block below is the canonical fix and
+ *     MUST remain unchanged (the unit test deep-equals the mapped output).
+ *   - 2026-04-26 (this hardening pass): pagination params + unit + E2E
+ *     regression guards. Closes deferred items 1-3 from
+ *     `.planning/debug/resolved/missing-raeume-perspective.md`.
  */
 export function useRooms(schoolId: string | undefined) {
   return useQuery<EntityOption[]>({
     queryKey: ['rooms', schoolId],
     queryFn: async () => {
-      const res = await apiFetch(`/api/v1/schools/${schoolId}/rooms`);
+      const params = new URLSearchParams({ page: '1', limit: '500' });
+      const res = await apiFetch(
+        `/api/v1/schools/${schoolId}/rooms?${params.toString()}`,
+      );
       if (!res.ok) throw new Error('Failed to load rooms');
       const json = await res.json();
       const items = json.data ?? json;
