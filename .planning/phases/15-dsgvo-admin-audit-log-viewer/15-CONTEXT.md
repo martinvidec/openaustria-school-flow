@@ -72,6 +72,13 @@ Out of scope (deferred):
 - Pagination-Strategie für Audit-Log (cursor vs offset — abhängig von existing audit.findAll)
 - Error-State-Design für Job-Status-Polling-Failures
 
+### Amendments after research (2026-04-26)
+- **D-23:** 5th Backend-Gap — `GET /dsgvo/jobs` school-wide list endpoint fehlt. Phase 15 implementiert ihn als Wave-1 Backend-Task: status + jobType Query-Filter, school-scoped via tenant guard. Ohne diesen Endpoint kann der "Jobs"-Tab aus D-02 nicht ohne UX-Degradation gebaut werden.
+- **D-24:** Audit `before`-Snapshot wird NICHT PII-redacted. Audit-Log ist admin-only; Tenant-Scoping + Role-Guard ist die Security-Boundary. Forensische Genauigkeit hat Vorrang.
+- **D-25:** CSV-Export verwendet Semikolon als Delimiter (DACH/Excel-Default). Implementierung via existierendem `papaparse` (`Papa.unparse(rows, { delimiter: ';' })`) — kein RFC-4180-Hand-Rolling und keine neue Dependency.
+- **D-26 (research-precision):** D-04 wird präzisiert — Phase 14 nutzt `useState` + `Route.useSearch()` (kein `useTab` Hook). Phase 15 folgt diesem konkreten Pattern.
+- **D-27 (research-precision):** D-06 wird präzisiert — VVZ-CRUD lebt bereits in `dsfa.controller.ts:50-84` (kein separates `vvz.controller.ts`). Frontend konsumiert die existierende Route-Group.
+
 </decisions>
 
 <canonical_refs>
