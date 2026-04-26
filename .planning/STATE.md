@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 Phase: 15
 Plan: Not started
 Status: All 3 plans (14-01 backend, 14-02 frontend, 14-03 E2E) green; phase ready for /gsd-verify-work
-Last activity: 2026-04-25
+Last activity: 2026-04-25 - Completed quick task 260425-u72: Add Playwright E2E coverage for timetable-edit DnD and constraint validation
 
 Progress: [████████░░] 77%
 
@@ -453,6 +453,12 @@ None yet.
 - Phase 3 (Solver): Timefold constraint modeling for Austrian school types needs spike/prototyping
 - Phase 5 (ClassBook): Austrian Schulunterrichtsgesetz requirements need domain expert review
 - Phase 8 (Import): Untis XML/DIF format documentation is sparse -- may need reverse-engineering
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260425-u72 | Add Playwright E2E coverage for timetable-edit DnD and constraint validation | 2026-04-25 | 8a6bc63 | [260425-u72-add-playwright-e2e-coverage-for-timetabl](./quick/260425-u72-add-playwright-e2e-coverage-for-timetabl/) |
 
 ### Roadmap Evolution
 
