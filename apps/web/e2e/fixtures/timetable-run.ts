@@ -134,13 +134,14 @@ export interface TimetableRunFixture {
    * the right "Lehrer" option in the perspective dropdown so the
    * timetable view filters down to our seeded lesson.
    *
-   * NOTE on workaround: useClasses() in apps/web/src/hooks/useTimetable.ts
-   * calls `/api/v1/classes` without the required `?schoolId=...` query
-   * param, so the API returns 404 and the "Klassen" group never renders
-   * in the perspective selector. Fixing that frontend bug is out of scope
-   * for this quick task; instead we drive the spec via the teacher
-   * perspective (which works today) — the three FIXes under test are
-   * orthogonal to perspective choice. Logged as a deviation in SUMMARY.
+   * Note: the underlying useClasses bug (missing ?schoolId on
+   * /api/v1/classes → Klassen group never rendered) was fixed in commit
+   * d76b5a3. The field is retained here because the 260425-u72 DnD spec
+   * still drives via the teacher perspective for unrelated reasons (the
+   * three FIXes under test are perspective-agnostic, and switching to
+   * the class perspective would conflate two regression guards). The
+   * Klassen-perspective render is now covered separately in
+   * admin-timetable-edit-perspective.spec.ts.
    */
   teacherDisplayName: string;
   roomId: string;
