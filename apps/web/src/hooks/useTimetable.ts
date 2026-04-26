@@ -64,12 +64,27 @@ interface EntityOption {
 
 /**
  * Fetches the list of teachers for a school (for PerspectiveSelector).
+ *
+ * The /api/v1/teachers endpoint silently leaked teachers across ALL tenants
+ * when called without `?schoolId=` (TeacherService.findAll built
+ * `where: { schoolId: undefined }` which Prisma treats as "no filter"). Until
+ * 2026-04-26 this hook fetched `/api/v1/teachers` with no query string,
+ * exposing every school's teachers to anyone with `subject: teacher / read`.
+ *
+ * Backend now rejects schoolId-less requests with 404 (mirrors ClassService),
+ * AND this hook now sends `schoolId + page=1 + limit=500` — defense in depth.
+ * Mirrors the useClasses pattern fixed in d76b5a3.
  */
 export function useTeachers(schoolId: string | undefined) {
   return useQuery<EntityOption[]>({
     queryKey: ['teachers', schoolId],
     queryFn: async () => {
-      const res = await apiFetch(`/api/v1/teachers`);
+      const params = new URLSearchParams({
+        schoolId: schoolId ?? '',
+        page: '1',
+        limit: '500',
+      });
+      const res = await apiFetch(`/api/v1/teachers?${params.toString()}`);
       if (!res.ok) throw new Error('Failed to load teachers');
       const json = await res.json();
       const items = json.data ?? json;
