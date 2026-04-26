@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 Phase: 15
 Plan: Not started
 Status: All 3 plans (14-01 backend, 14-02 frontend, 14-03 E2E) green; phase ready for /gsd-verify-work
-Last activity: 2026-04-26 - Completed quick task 260426-fwb: Lock down rooms-filter with component test + E2E regression spec
+Last activity: 2026-04-26 - Completed quick task 260426-gtr: apiFetch Content-Type header regression guards
 
 Progress: [████████░░] 77%
 
@@ -461,6 +461,7 @@ None yet.
 | 260425-u72 | Add Playwright E2E coverage for timetable-edit DnD and constraint validation | 2026-04-25 | 8a6bc63 | [260425-u72-add-playwright-e2e-coverage-for-timetabl](./quick/260425-u72-add-playwright-e2e-coverage-for-timetabl/) |
 | 260426-eyf | Harden useRooms pagination params + unit tests + E2E Räume assertion | 2026-04-26 | 6ebad74 | [260426-eyf-harden-userooms-pagination-params-unit-t](./quick/260426-eyf-harden-userooms-pagination-params-unit-t/) |
 | 260426-fwb | Lock down rooms-filter with component test + E2E regression spec | 2026-04-26 | 4d1b09c | [260426-fwb-lock-down-rooms-filter-behavior-with-com](./quick/260426-fwb-lock-down-rooms-filter-behavior-with-com/) |
+| 260426-gtr | apiFetch Content-Type header regression guards (3-test Vitest spec) | 2026-04-26 | 65d03df | [260426-gtr-apifetch-content-type-header-regression-](./quick/260426-gtr-apifetch-content-type-header-regression-/) |
 
 ### Roadmap Evolution
 
