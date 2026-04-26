@@ -62,13 +62,13 @@ Diff/JSON tree: hand-rolled recursive `<JsonTree value indent={0} />` (~30 LOC, 
 | Role | Size | Weight | Line height | Tailwind | Phase 15 usage |
 |------|------|--------|-------------|----------|---------------|
 | Body | 14px | 400 | 1.5 (`leading-6`) | `text-sm font-normal leading-6` | Table cell text, dialog body, drawer JSON tree leaf values, German microcopy |
-| Label | 14px | 500 | 1.4 (`leading-5`) | `text-sm font-medium leading-5` | Filter-toolbar field labels ("Von", "Bis", "Aktion"…); form labels in CRUD dialogs; tab triggers |
+| Label | 14px | 400 | 1.4 (`leading-5`) | `text-sm font-normal leading-5 text-muted-foreground` | Filter-toolbar field labels ("Von", "Bis", "Aktion"…); form labels in CRUD dialogs; tab triggers. **Differentiation via color (`text-muted-foreground`) — NOT weight.** Where stronger separation is required (e.g. tab triggers when active), add `uppercase tracking-wide` instead of bumping weight. |
 | Heading | 20px | 600 | 1.3 (`leading-7`) | `text-xl font-semibold leading-7` | `PageShell` title ("DSGVO-Verwaltung", "Audit-Log"); dialog titles ("Datenexport anstoßen", "User endgültig löschen") |
 | Display | 28px | 600 | 1.2 (`leading-8`) | `text-2xl font-semibold leading-8` | Reserved — Phase 15 has no display-rank text. Listed for design-system completeness; do not introduce. |
 
-**Two weights only**: `font-normal` (400) for body, `font-medium`/`font-semibold` (500/600) for label+heading. No italic, no bold-700, no underlines except the implicit underline on focused links.
+**Two weights only**: `font-normal` (400) for body and label, `font-semibold` (600) for heading and display. No `font-medium` (500), no italic, no bold-700, no underlines except the implicit underline on focused links. Label vs body separation comes from `text-muted-foreground` color (and `uppercase tracking-wide` where additional emphasis is warranted) — never from weight. Heading prominence is carried by the size+weight pair (`text-xl` + `font-semibold`), not by stepping up label weight underneath it.
 
-**Mono**: `<JsonTree>` leaves render in `font-mono text-xs leading-5` (12px) inside the audit detail drawer. Defined as a localized exception, not a global token.
+**Mono**: `<JsonTree>` leaves render in `font-mono text-xs leading-5` (12px) inside the audit detail drawer. Defined as a localized exception, not a global token. Mono inherits the body weight (400); object keys inside the tree use `text-foreground` color (no weight bump) for visual separation from string/number leaves.
 
 ---
 
@@ -252,7 +252,7 @@ These are not in the template's six dimensions but the orchestrator marks them a
   3. Section "Vorzustand": if `entry.before` → `<JsonTree value={entry.before} />`; else inline muted banner copy from Empty States table above.
   4. `Separator`
   5. Section "Nachzustand": `<JsonTree value={entry.metadata.body ?? entry.metadata} />`
-- `JsonTree` styling: monospace 12px, `pl-4` per nesting level, color tokens — string=`text-primary`, number=`text-foreground`, boolean=`text-foreground font-medium`, null=`text-muted-foreground italic`. Object/array nodes show key in `text-foreground font-medium`.
+- `JsonTree` styling: monospace 12px, `pl-4` per nesting level, color tokens — string=`text-primary`, number=`text-foreground`, boolean=`text-foreground`, null=`text-muted-foreground italic`. Object/array nodes show key in `text-foreground` (no weight bump — separation comes from the structural indent and the colon glyph). All weight stays at 400.
 
 ### Mobile fallback (Phase 14 carry-forward)
 
@@ -325,6 +325,7 @@ These are not in the template's six dimensions but the orchestrator marks them a
 | JSON tree (no library) | RESEARCH § 7 + § 10 #1 | Hand-rolled ~30 LOC recursive |
 | Mobile parity scope | CONTEXT.md "Out of scope" line 24 | Mobile hardening DEFERRED to Phase 16 |
 | No new shadcn blocks | Inventory check vs `apps/web/src/components/ui/` (24 files present) | Every primitive needed already in repo |
+| Typography 2-weight rule | Checker revision 2026-04-26 (Dimension 4 fix) | Label differentiation via `text-muted-foreground` color, not via weight 500. Final retained weights: 400 (body+label) + 600 (heading+display). |
 
 ---
 
@@ -333,7 +334,7 @@ These are not in the template's six dimensions but the orchestrator marks them a
 - [ ] Dimension 1 Copywriting: PASS — every CTA, empty state, error, and destructive confirmation prescribed in German verbatim.
 - [ ] Dimension 2 Visuals: PASS — component inventory enumerated; primitives sourced from existing shadcn copies; no new dependencies.
 - [ ] Dimension 3 Color: PASS — 60/30/10 mapped to existing `--color-*` tokens; accent reserved-for list explicit; destructive/success/warning scoped to listed surfaces only.
-- [ ] Dimension 4 Typography: PASS — 4 sizes (14/14/20/28) declared with reserved 28; 2 weights (400/600 with 500 used only for labels); mono exception localized to `<JsonTree>`.
+- [ ] Dimension 4 Typography: PASS — 4 sizes (14/14/20/28) declared with reserved 28; 2 weights (400/600); label vs body separation via `text-muted-foreground` color (not weight); mono exception localized to `<JsonTree>`.
 - [ ] Dimension 5 Spacing: PASS — Tailwind 8-point scale; touch-target floors (40/44px); JSON-tree indent step (16px) declared.
 - [ ] Dimension 6 Registry Safety: PASS — no third-party registries; no new shadcn blocks; safety gate not applicable.
 
