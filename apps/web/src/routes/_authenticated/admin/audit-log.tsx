@@ -2,13 +2,14 @@ import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
 import { PageShell } from '@/components/admin/shared/PageShell';
 import { useAuth } from '@/hooks/useAuth';
+import { AuditFilterToolbar } from '@/components/admin/audit-log/AuditFilterToolbar';
+import { AuditTable } from '@/components/admin/audit-log/AuditTable';
 
 /**
- * Phase 15-05: /admin/audit-log route shell.
+ * Phase 15-05 + 15-09: /admin/audit-log route.
  *
- * Plan 15-05 (this plan) ships only the route shell + admin gate +
- * URL search-param contract. Filter toolbar + table + drawer + JsonTree
- * land in plan 15-09.
+ * 15-05 shipped the route shell + admin gate + Zod search-param contract.
+ * 15-09 wires the filter toolbar + table + drawer + JsonTree.
  *
  * Strict admin-only per D-22 + D-03 (T-15-05-02 mitigation, mirrors
  * solver-tuning.tsx + dsgvo.tsx).
@@ -34,6 +35,7 @@ export const Route = createFileRoute('/_authenticated/admin/audit-log')({
 
 function AuditLogPage() {
   const { user } = useAuth();
+  const search = Route.useSearch();
   const isAdmin = (user?.roles ?? []).includes('admin');
 
   if (!isAdmin) {
@@ -61,15 +63,9 @@ function AuditLogPage() {
       title="Audit-Log"
       subtitle="Sämtliche protokollierten Aktionen durchsuchen, einsehen und für DSGVO-Berichte exportieren."
     >
-      <div
-        data-audit-log-placeholder="15-09"
-        className="rounded-md border border-dashed p-8 text-sm text-muted-foreground"
-      >
-        <p className="font-semibold text-foreground">Audit-Log Viewer</p>
-        <p>
-          Wird in Plan 15-09 ausgeliefert (Filter-Toolbar, Tabelle,
-          Detail-Drawer, JSON-Baum, CSV-Export-Button).
-        </p>
+      <div className="space-y-6">
+        <AuditFilterToolbar />
+        <AuditTable filters={search} />
       </div>
     </PageShell>
   );
