@@ -16,6 +16,8 @@ import { PdfExportService } from './export/pdf-export.service';
 import { DeletionProcessor } from './processors/deletion.processor';
 import { ExportProcessor } from './processors/export.processor';
 import { RetentionProcessor } from './processors/retention.processor';
+import { DsgvoJobsController } from './jobs/dsgvo-jobs.controller';
+import { DsgvoJobsService } from './jobs/dsgvo-jobs.service';
 
 @Module({
   controllers: [
@@ -24,6 +26,7 @@ import { RetentionProcessor } from './processors/retention.processor';
     DsfaController,
     DataDeletionController,
     DataExportController,
+    DsgvoJobsController,
   ],
   providers: [
     ConsentService,
@@ -35,6 +38,7 @@ import { RetentionProcessor } from './processors/retention.processor';
     DeletionProcessor,
     ExportProcessor,
     RetentionProcessor,
+    DsgvoJobsService,
   ],
   exports: [ConsentService, RetentionService, DsfaService, DataDeletionService, DataExportService],
 })
