@@ -7,6 +7,7 @@ export default defineConfig({
     root: './',
     include: [
       'src/**/*.spec.ts',
+      'src/**/*.e2e-spec.ts',
       'test/**/*.spec.ts',
       'test/**/*.e2e-spec.ts',
       'prisma/__tests__/**/*.spec.ts',
