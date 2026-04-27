@@ -74,9 +74,9 @@
 ### DSGVO Admin
 
 - [x] **DSGVO-ADM-01**: Admin kann Einwilligungs-Records nach Zweck/Status filtern und durchsuchen
-- [ ] **DSGVO-ADM-02**: Admin kann Aufbewahrungsrichtlinien pro Datenkategorie editieren
-- [ ] **DSGVO-ADM-03**: Admin kann DSFA-Einträge (Datenschutz-Folgenabschätzung) anlegen und editieren
-- [ ] **DSGVO-ADM-04**: Admin kann VVZ-Einträge (Verarbeitungsverzeichnis) anlegen und editieren
+- [x] **DSGVO-ADM-02**: Admin kann Aufbewahrungsrichtlinien pro Datenkategorie editieren
+- [x] **DSGVO-ADM-03**: Admin kann DSFA-Einträge (Datenschutz-Folgenabschätzung) anlegen und editieren
+- [x] **DSGVO-ADM-04**: Admin kann VVZ-Einträge (Verarbeitungsverzeichnis) anlegen und editieren
 - [x] **DSGVO-ADM-05**: Admin kann Art. 15 Datenexport für einen User aus der UI anstoßen und den BullMQ-Job-Status verfolgen
 - [x] **DSGVO-ADM-06**: Admin kann Art. 17 Anonymisierung/Löschung für einen User aus der UI anstoßen und bestätigen
 
@@ -192,9 +192,9 @@ Empty initially — populated during roadmap creation by `gsd-roadmapper`.
 | SOLVER-04 | Phase 14 (14-01 + 14-02 + 14-03) | Complete (2026-04-25) — E2E-SOLVER-04 + 05 + 06 |
 | SOLVER-05 | Phase 14 (14-01 + 14-02 + 14-03) | Complete (2026-04-25) — E2E-SOLVER-07 + 08 + 09 |
 | DSGVO-ADM-01 | Phase 15 | Complete |
-| DSGVO-ADM-02 | Phase 15 | Pending |
-| DSGVO-ADM-03 | Phase 15 | Pending |
-| DSGVO-ADM-04 | Phase 15 | Pending |
+| DSGVO-ADM-02 | Phase 15 | Complete |
+| DSGVO-ADM-03 | Phase 15 | Complete |
+| DSGVO-ADM-04 | Phase 15 | Complete |
 | DSGVO-ADM-05 | Phase 15 | Complete |
 | DSGVO-ADM-06 | Phase 15 | Complete |
 | AUDIT-VIEW-01 | Phase 15 | Pending |
