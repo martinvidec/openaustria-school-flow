@@ -59,6 +59,7 @@ export class AuditService {
     userId?: string;
     resource?: string;
     category?: string;
+    action?: string;
     startDate?: Date;
     endDate?: Date;
     page: number;
@@ -82,6 +83,7 @@ export class AuditService {
     if (params.userId) where.userId = params.userId;
     if (params.resource) where.resource = params.resource;
     if (params.category) where.category = params.category;
+    if (params.action) where.action = params.action;
     if (params.startDate || params.endDate) {
       where.createdAt = {};
       if (params.startDate) where.createdAt.gte = params.startDate;
