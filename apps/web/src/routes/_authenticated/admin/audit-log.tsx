@@ -22,7 +22,7 @@ const AuditLogSearchSchema = z.object({
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   action: z.enum(['create', 'update', 'delete', 'read']).optional(),
   resource: z.string().max(64).optional(),
-  userId: z.string().uuid().optional(),
+  userId: z.string().max(64).optional(),
   category: z.enum(['MUTATION', 'SENSITIVE_READ']).optional(),
   page: z.coerce.number().int().min(1).optional(),
 });
