@@ -31,6 +31,7 @@ export class AuditController {
       userId: query.userId,
       resource: query.resource,
       category: query.category,
+      action: query.action,
       startDate: query.startDate ? new Date(query.startDate) : undefined,
       endDate: query.endDate ? new Date(query.endDate) : undefined,
       page: query.page,

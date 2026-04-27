@@ -24,6 +24,7 @@ export interface AuditLogInput {
   resourceId?: string;
   category: 'MUTATION' | 'SENSITIVE_READ';
   metadata?: Record<string, unknown>;
+  before?: Record<string, unknown> | null; // pre-mutation snapshot, sanitized (D-10, D-24)
   ipAddress?: string;
   userAgent?: string;
 }
@@ -41,6 +42,7 @@ export class AuditService {
         resourceId: input.resourceId,
         category: input.category as any,
         metadata: input.metadata as any,
+        before: input.before as any, // pre-mutation snapshot (D-10)
         ipAddress: input.ipAddress,
         userAgent: input.userAgent,
       },
@@ -57,6 +59,7 @@ export class AuditService {
     userId?: string;
     resource?: string;
     category?: string;
+    action?: string;
     startDate?: Date;
     endDate?: Date;
     page: number;
@@ -80,6 +83,7 @@ export class AuditService {
     if (params.userId) where.userId = params.userId;
     if (params.resource) where.resource = params.resource;
     if (params.category) where.category = params.category;
+    if (params.action) where.action = params.action;
     if (params.startDate || params.endDate) {
       where.createdAt = {};
       if (params.startDate) where.createdAt.gte = params.startDate;

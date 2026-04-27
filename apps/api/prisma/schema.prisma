@@ -236,6 +236,7 @@ model AuditEntry {
   resourceId String?       @map("resource_id")
   category   AuditCategory
   metadata   Json? // Changed fields, request body
+  before     Json? // pre-mutation snapshot for UPDATE/DELETE; null for create/read or legacy entries (D-10, D-24)
   ipAddress  String?       @map("ip_address")
   userAgent  String?       @map("user_agent")
   createdAt  DateTime      @default(now()) @map("created_at")
