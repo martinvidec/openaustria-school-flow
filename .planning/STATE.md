@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
-stopped_at: Phase 15 UI-SPEC approved (6/6 dimensions PASS)
+stopped_at: Wave 1 Round 1 complete — 15-01, 15-03, 15-04
 last_updated: "2026-04-27T18:46:08.157Z"
-last_activity: 2026-04-27 -- Phase 15 plan 15-01 complete
+last_activity: 2026-04-27 -- Phase 15 Wave 1 Round 1 complete (15-01 + 15-03)
 progress:
   total_phases: 12
   completed_phases: 10
@@ -145,6 +145,7 @@ Progress: [████████░░] 79%
 | Phase 14 P02 | 30min | 3 tasks | 36 files |
 | Phase 14 P03 | 25min | 3 tasks | 12 files |
 | Phase 15 P01 | 15min | 3 tasks | 8 files |
+| Phase 15 P03 | 11min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -448,6 +449,10 @@ Recent decisions affecting current work:
 - [Phase 15]: AuditInterceptor pre-state capture is opt-in via RESOURCE_MODEL_MAP (11 entries) — Bounds snapshot read cost; unmapped resources get before=undefined
 - [Phase 15]: Pre-state capture skips tenant guard at interceptor level — Audit findAll role-scopes downstream (RESEARCH §8, D-24)
 - [Phase 15]: email/phone NOT redacted in audit before snapshot — D-24: admin-only audit log, forensic accuracy > PII minimization
+- [Phase 15]: Plan 15-03: Role gate lives in service (mirrors AuditService.findAll), not @Roles decorator — consistency with existing pattern
+- [Phase 15]: Plan 15-03: Dual-layer tenant guard — DTO @IsUUID() (422) + service if-check (BadRequestException 400) — belt-and-braces against MEMORY useTeachers/subject/useClasses regression family
+- [Phase 15]: Plan 15-03: Single composed personFilter object — Prisma key-overwrite-safe; personSearch OR clause merged INTO the same filter that carries schoolId
+- [Phase 15]: Plan 15-03: @Get('admin') route declared above @Get('school/:schoolId') for Fastify static-before-parametric ordering
 
 ### Pending Todos
 
@@ -490,5 +495,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-04-27T18:46:08.151Z
-Stopped at: Phase 15 UI-SPEC approved (6/6 dimensions PASS)
+Stopped at: Wave 1 Round 1 complete — 15-01, 15-03, 15-04 merged; 15-02 next
 Resume file: None

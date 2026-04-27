@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { ConsentService } from './consent.service';
 import { PrismaService } from '../../../config/database/prisma.service';
 
@@ -185,6 +185,104 @@ describe('ConsentService', () => {
       expect(result.data).toHaveLength(1);
       expect(result.meta.total).toBe(1);
       expect(result.meta.page).toBe(1);
+    });
+  });
+
+  describe('findAllForAdmin', () => {
+    const adminUser = { id: 'admin-1', roles: ['admin'] };
+    const baseQuery = {
+      schoolId: 'school-1',
+      page: 1,
+      limit: 20,
+      skip: 0,
+    };
+
+    beforeEach(() => {
+      mockPrisma.consentRecord.findMany.mockResolvedValue([]);
+      mockPrisma.consentRecord.count.mockResolvedValue(0);
+    });
+
+    it('scopes rows by schoolId via person.schoolId join (Pitfall 4 / RESEARCH §8)', async () => {
+      await service.findAllForAdmin(baseQuery, adminUser);
+      const args = mockPrisma.consentRecord.findMany.mock.calls[0][0];
+      expect(args.where.person).toEqual({ schoolId: 'school-1' });
+      expect(args.skip).toBe(0);
+      expect(args.take).toBe(20);
+      expect(args.orderBy).toEqual({ createdAt: 'desc' });
+      expect(args.include.person.select).toMatchObject({
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+      });
+    });
+
+    it('applies purpose filter when provided', async () => {
+      await service.findAllForAdmin({ ...baseQuery, purpose: 'KOMMUNIKATION' }, adminUser);
+      const args = mockPrisma.consentRecord.findMany.mock.calls[0][0];
+      expect(args.where.purpose).toBe('KOMMUNIKATION');
+    });
+
+    it('maps status=granted to { granted: true, withdrawnAt: null }', async () => {
+      await service.findAllForAdmin({ ...baseQuery, status: 'granted' }, adminUser);
+      const args = mockPrisma.consentRecord.findMany.mock.calls[0][0];
+      expect(args.where.granted).toBe(true);
+      expect(args.where.withdrawnAt).toBeNull();
+    });
+
+    it('maps status=withdrawn to { withdrawnAt: { not: null } }', async () => {
+      await service.findAllForAdmin({ ...baseQuery, status: 'withdrawn' }, adminUser);
+      const args = mockPrisma.consentRecord.findMany.mock.calls[0][0];
+      expect(args.where.withdrawnAt).toEqual({ not: null });
+    });
+
+    it('maps status=expired to { granted: false, withdrawnAt: null }', async () => {
+      await service.findAllForAdmin({ ...baseQuery, status: 'expired' }, adminUser);
+      const args = mockPrisma.consentRecord.findMany.mock.calls[0][0];
+      expect(args.where.granted).toBe(false);
+      expect(args.where.withdrawnAt).toBeNull();
+    });
+
+    it('personSearch composes OR over firstName/lastName/email AND keeps schoolId scope', async () => {
+      await service.findAllForAdmin({ ...baseQuery, personSearch: 'maria' }, adminUser);
+      const args = mockPrisma.consentRecord.findMany.mock.calls[0][0];
+      // schoolId scope MUST survive the merge (regression guard against split `person` keys)
+      expect(args.where.person.schoolId).toBe('school-1');
+      expect(args.where.person.OR).toEqual([
+        { firstName: { contains: 'maria', mode: 'insensitive' } },
+        { lastName: { contains: 'maria', mode: 'insensitive' } },
+        { email: { contains: 'maria', mode: 'insensitive' } },
+      ]);
+    });
+
+    it.each([['schulleitung'], ['lehrer'], ['eltern'], ['schueler']])(
+      'throws ForbiddenException for non-admin role: %s',
+      async (role) => {
+        await expect(
+          service.findAllForAdmin(baseQuery, { id: 'u-1', roles: [role] }),
+        ).rejects.toThrow(ForbiddenException);
+        // Database must NOT be queried at all when the role gate fails
+        expect(mockPrisma.consentRecord.findMany).not.toHaveBeenCalled();
+        expect(mockPrisma.consentRecord.count).not.toHaveBeenCalled();
+      },
+    );
+
+    it('throws BadRequestException when schoolId is empty string (defensive guard)', async () => {
+      await expect(
+        service.findAllForAdmin({ ...baseQuery, schoolId: '' }, adminUser),
+      ).rejects.toThrow(BadRequestException);
+      expect(mockPrisma.consentRecord.findMany).not.toHaveBeenCalled();
+    });
+
+    it('returns paginated meta envelope { page, limit, total, totalPages }', async () => {
+      mockPrisma.consentRecord.findMany.mockResolvedValue([{ id: 'c-1' }, { id: 'c-2' }]);
+      mockPrisma.consentRecord.count.mockResolvedValue(45);
+      const result = await service.findAllForAdmin(
+        { ...baseQuery, page: 2, limit: 20, skip: 20 },
+        adminUser,
+      );
+      expect(result.data).toHaveLength(2);
+      expect(result.meta).toEqual({ page: 2, limit: 20, total: 45, totalPages: 3 });
     });
   });
 });

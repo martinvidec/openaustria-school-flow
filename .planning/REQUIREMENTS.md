@@ -73,7 +73,7 @@
 
 ### DSGVO Admin
 
-- [ ] **DSGVO-ADM-01**: Admin kann Einwilligungs-Records nach Zweck/Status filtern und durchsuchen
+- [x] **DSGVO-ADM-01**: Admin kann Einwilligungs-Records nach Zweck/Status filtern und durchsuchen
 - [ ] **DSGVO-ADM-02**: Admin kann Aufbewahrungsrichtlinien pro Datenkategorie editieren
 - [ ] **DSGVO-ADM-03**: Admin kann DSFA-Einträge (Datenschutz-Folgenabschätzung) anlegen und editieren
 - [ ] **DSGVO-ADM-04**: Admin kann VVZ-Einträge (Verarbeitungsverzeichnis) anlegen und editieren
@@ -191,7 +191,7 @@ Empty initially — populated during roadmap creation by `gsd-roadmapper`.
 | SOLVER-03 | Phase 14 (14-01 + 14-02 + 14-03) | Complete (2026-04-25) — E2E-SOLVER-10 (gated E2E_RUN_SOLVER=1, verified) |
 | SOLVER-04 | Phase 14 (14-01 + 14-02 + 14-03) | Complete (2026-04-25) — E2E-SOLVER-04 + 05 + 06 |
 | SOLVER-05 | Phase 14 (14-01 + 14-02 + 14-03) | Complete (2026-04-25) — E2E-SOLVER-07 + 08 + 09 |
-| DSGVO-ADM-01 | Phase 15 | Pending |
+| DSGVO-ADM-01 | Phase 15 | Complete |
 | DSGVO-ADM-02 | Phase 15 | Pending |
 | DSGVO-ADM-03 | Phase 15 | Pending |
 | DSGVO-ADM-04 | Phase 15 | Pending |
