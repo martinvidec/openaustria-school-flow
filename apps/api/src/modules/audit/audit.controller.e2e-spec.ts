@@ -23,7 +23,7 @@ import { ExportAuditQueryDto } from './dto/export-audit.query.dto';
  * would require booting the full app. The metadata check guarantees the route
  * is wired with the same gate as `findAll`.
  */
-describe('AuditController.exportCsv (integration)', () => {
+describe('GET /audit/export.csv (AuditController.exportCsv integration)', () => {
   let controller: AuditController;
   let serviceMock: any;
   const adminUser = { id: 'admin-1', roles: ['admin'] } as any;
