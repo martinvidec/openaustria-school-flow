@@ -84,7 +84,7 @@
 
 - [ ] **AUDIT-VIEW-01**: Admin kann Audit-Log mit Suche und Filter (Actor, Action, Subject, Zeitraum) durchsuchen
 - [ ] **AUDIT-VIEW-02**: Admin sieht Audit-Eintrag-Detail mit Before/After-Diff
-- [ ] **AUDIT-VIEW-03**: Admin kann gefilterten Audit-Log als CSV für DSGVO-Berichte exportieren
+- [x] **AUDIT-VIEW-03**: Admin kann gefilterten Audit-Log als CSV für DSGVO-Berichte exportieren
 
 ### Mobile Parity
 
@@ -199,7 +199,7 @@ Empty initially — populated during roadmap creation by `gsd-roadmapper`.
 | DSGVO-ADM-06 | Phase 15 | Complete |
 | AUDIT-VIEW-01 | Phase 15 | Pending |
 | AUDIT-VIEW-02 | Phase 15 | Pending |
-| AUDIT-VIEW-03 | Phase 15 | Pending |
+| AUDIT-VIEW-03 | Phase 15 | Complete |
 | MOBILE-ADM-01 | Phase 16 | Pending |
 | MOBILE-ADM-02 | Phase 16 | Pending |
 | MOBILE-ADM-03 | Phase 16 | Pending |

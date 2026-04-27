@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
-stopped_at: Wave 1 Round 1 complete — 15-01, 15-03, 15-04 merged
-last_updated: "2026-04-27T18:46:08.157Z"
-last_activity: 2026-04-27 -- Phase 15 Wave 1 Round 1 complete (15-01 + 15-03 + 15-04)
+stopped_at: Completed 15-02 audit-csv-export — Wave 1 Round 2
+last_updated: "2026-04-27T19:16:35.062Z"
+last_activity: 2026-04-27
 progress:
   total_phases: 12
   completed_phases: 10
   total_plans: 48
-  completed_plans: 38
-  percent: 79
+  completed_plans: 41
+  percent: 85
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 ## Current Position
 
 Phase: 15 (dsgvo-admin-audit-log-viewer) — EXECUTING
-Plan: 1 of 11
-Status: Executing Phase 15
-Last activity: 2026-04-27 -- Phase 15 execution started
+Plan: 2 of 11
+Status: Ready to execute
+Last activity: 2026-04-27
 
-Progress: [████████░░] 79%
+Progress: [█████████░] 85%
 
 ## Performance Metrics
 
@@ -147,6 +147,7 @@ Progress: [████████░░] 79%
 | Phase 15 P01 | 15min | 3 tasks | 8 files |
 | Phase 15 P03 | 11min | 3 tasks | 4 files |
 | Phase 15 P04 | 21min | 3 tasks | 5 files |
+| Phase 15 P02 | 12 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -455,6 +456,10 @@ Recent decisions affecting current work:
 - [Phase 15]: Plan 15-03: Single composed personFilter object — Prisma key-overwrite-safe; personSearch OR clause merged INTO the same filter that carries schoolId
 - [Phase 15]: Plan 15-03: @Get('admin') route declared above @Get('school/:schoolId') for Fastify static-before-parametric ordering
 - [Phase 15]: Plan 15-04: Two-query Person hydration in DsgvoJobsService instead of Prisma include — preserves response contract without schema migration when DsgvoJob has scalar personId without Prisma navigation relation. Plan frontmatter forbade schema changes; must_haves required joined Person per row. Two queries (paginate jobs, then IN-list fetch tenant-scoped persons) give identical response shape with extra cross-tenant defense.
+- [Phase 15]: Plan 15-02: Papa.unparse default minimal quoting (quotes:false) — quotes:true wraps every cell breaking Excel empty-trailing-column heuristics
+- [Phase 15]: Plan 15-02: Empty-result fallback via columns.join(';') — Papa.unparse([]) returns '' not the header row
+- [Phase 15]: Plan 15-02: BOM stored as JS-escape literal in source — survives grep/PR-review; raw character is invisible
+- [Phase 15]: Plan 15-02: vitest.config.ts include extended with src/**/*.e2e-spec.ts — must-have artifact path was silently skipped by prior glob set
 
 ### Pending Todos
 
@@ -496,6 +501,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-27T18:46:08.151Z
-Stopped at: Wave 1 Round 1 complete — 15-01, 15-03, 15-04 merged; 15-02 next
+Last session: 2026-04-27T19:16:35.056Z
+Stopped at: Completed 15-02 audit-csv-export — Wave 1 Round 2
 Resume file: None
