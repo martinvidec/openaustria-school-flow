@@ -301,7 +301,7 @@ Backend endpoints used by helpers:
   <behavior>
     - Spec covers: filter by purpose, filter by status, person search, withdraw flow + toast
     - Pre-seeds 2 consent records with different purposes via `seedConsent`
-    - Asserts URL deep-link round-trip: visit `/admin/dsgvo?tab=consents&purpose=NEWSLETTER`, observe URL persists + filtered table
+    - Asserts URL deep-link round-trip: visit `/admin/dsgvo?tab=consents&purpose=KOMMUNIKATION`, observe URL persists + filtered table
     - `afterAll`: no cleanup needed (consents are state-managed, not removable)
   </behavior>
   <action>
@@ -322,7 +322,7 @@ Backend endpoints used by helpers:
         if (!personId) {
           test.skip(true, 'E2E_SEED_PERSON_ID not set — wire to a real seed person');
         }
-        const c = await seedConsent(request, { personId, purpose: 'NEWSLETTER' });
+        const c = await seedConsent(request, { personId, purpose: 'KOMMUNIKATION' });
         seededConsentId = c.id;
       });
 
