@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
-stopped_at: Phase 15 UI-SPEC approved (6/6 dimensions PASS)
-last_updated: "2026-04-27T16:25:58.661Z"
+stopped_at: Completed 15-03-consent-admin-filter (parallel executor)
+last_updated: "2026-04-27T18:34:31.758Z"
 last_activity: 2026-04-27 -- Phase 15 planning complete
 progress:
   total_phases: 12
   completed_phases: 10
   total_plans: 48
-  completed_plans: 37
-  percent: 77
+  completed_plans: 38
+  percent: 79
 ---
 
 # Project State
@@ -30,7 +30,7 @@ Plan: Not started
 Status: Ready to execute
 Last activity: 2026-04-27 -- Phase 15 planning complete
 
-Progress: [████████░░] 77%
+Progress: [████████░░] 79%
 
 ## Performance Metrics
 
@@ -144,6 +144,7 @@ Progress: [████████░░] 77%
 | Phase 14 P01 | 27min | 6 tasks | 26 files |
 | Phase 14 P02 | 30min | 3 tasks | 36 files |
 | Phase 14 P03 | 25min | 3 tasks | 12 files |
+| Phase 15 P03 | 11min | 3 tasks tasks | 4 files files |
 
 ## Accumulated Context
 
@@ -443,6 +444,10 @@ Recent decisions affecting current work:
 - [Phase 12-03]: Dialog-scoped selectors (`page.getByRole('dialog').getByLabel(field)`) prevent strict-mode violations when the filter bar Input and form Input share label-like text. Default pattern for admin forms with list-level filters.
 - [Phase 12-03]: Popover combobox role — TeacherSearchPopover + ParentSearchPopover expose their CommandInput as role='combobox'; specs must use `getByRole('combobox', { name })` instead of `getByLabel()` (matches textbox fallback).
 - [Phase 12-03]: Phase-12 canonical E2E gate = `playwright test admin-students admin-classes --project=desktop` (19/19) + `--project=mobile-chrome` (5/5). Admin-import + screenshots failures are pre-existing environmental flakes, tracked in Phase-12 deferred-items, don't block Phase-12 closure.
+- [Phase ?]: Plan 15-03: Role gate lives in service (mirrors AuditService.findAll), not @Roles decorator — consistency with existing pattern
+- [Phase ?]: Plan 15-03: Dual-layer tenant guard — DTO @IsUUID() (422) + service if-check (BadRequestException 400) — belt-and-braces against MEMORY useTeachers/subject/useClasses regression family
+- [Phase ?]: Plan 15-03: Single composed personFilter object — Prisma key-overwrite-safe; personSearch OR clause merged INTO the same filter that carries schoolId
+- [Phase ?]: Plan 15-03: @Get('admin') route declared above @Get('school/:schoolId') for Fastify static-before-parametric ordering
 
 ### Pending Todos
 
@@ -484,6 +489,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-26T16:38:30.582Z
-Stopped at: Phase 15 UI-SPEC approved (6/6 dimensions PASS)
-Resume file: .planning/phases/15-dsgvo-admin-audit-log-viewer/15-UI-SPEC.md
+Last session: 2026-04-27T18:34:31.752Z
+Stopped at: Completed 15-03-consent-admin-filter (parallel executor)
+Resume file: None
