@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
-stopped_at: Completed 15-05 frontend-foundation — Wave 2
-last_updated: "2026-04-27T19:56:18.489Z"
+stopped_at: Completed 15-09 audit-log-frontend
+last_updated: "2026-04-27T20:23:08.600Z"
 last_activity: 2026-04-27
 progress:
   total_phases: 12
   completed_phases: 10
   total_plans: 48
-  completed_plans: 42
-  percent: 88
+  completed_plans: 43
+  percent: 90
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 ## Current Position
 
 Phase: 15 (dsgvo-admin-audit-log-viewer) — EXECUTING
-Plan: 3 of 11
+Plan: 4 of 11
 Status: Ready to execute
 Last activity: 2026-04-27
 
-Progress: [█████████░] 88%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
@@ -149,6 +149,8 @@ Progress: [█████████░] 88%
 | Phase 15 P04 | 21min | 3 tasks | 5 files |
 | Phase 15 P02 | 12 | 2 tasks | 6 files |
 | Phase 15 P05 | 19m | 6 tasks | 9 files |
+| Phase 15 P09 | 11 | - tasks | - files |
+| Phase 15 P09 | 11 | 6 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -466,6 +468,9 @@ Recent decisions affecting current work:
 - [Phase ?]: Phase 15-05: PageShell prop is 'subtitle' not 'description' — verbatim UI-SPEC copy mapped to subtitle in /admin/dsgvo + /admin/audit-log
 - [Phase ?]: Phase 15-05: Body-less DELETE in 3 CRUD hook files — no body, no Content-Type (memory apifetch_bodyless_delete_resolved)
 - [Phase ?]: Phase 15-05: Defense-in-depth admin gate — sidebar roles ['admin'] + route-component admin check on direct URL access (T-15-05-02)
+- [Phase ?]: Action filter is single-select for v1; multi-select via Popover+Command deferred
+- [Phase ?]: Audit-log Drawer state is local React useState — not URL-synced (ephemeral, would clutter deep-link contract)
+- [Phase ?]: Backend GET /audit response does NOT include actor join; AuditEntryDto.actor is optional, frontend falls back to userId
 
 ### Pending Todos
 
@@ -507,6 +512,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-27T19:56:18.483Z
-Stopped at: Completed 15-05 frontend-foundation — Wave 2
+Last session: 2026-04-27T20:23:08.593Z
+Stopped at: Completed 15-09 audit-log-frontend
 Resume file: 
