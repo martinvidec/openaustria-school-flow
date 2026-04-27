@@ -24,6 +24,7 @@ export interface AuditLogInput {
   resourceId?: string;
   category: 'MUTATION' | 'SENSITIVE_READ';
   metadata?: Record<string, unknown>;
+  before?: Record<string, unknown> | null; // pre-mutation snapshot, sanitized (D-10, D-24)
   ipAddress?: string;
   userAgent?: string;
 }
@@ -41,6 +42,7 @@ export class AuditService {
         resourceId: input.resourceId,
         category: input.category as any,
         metadata: input.metadata as any,
+        before: input.before as any, // pre-mutation snapshot (D-10)
         ipAddress: input.ipAddress,
         userAgent: input.userAgent,
       },
