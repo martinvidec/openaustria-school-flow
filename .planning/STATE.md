@@ -4,14 +4,14 @@ milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
 stopped_at: Completed 15-05 frontend-foundation — Wave 2
-last_updated: "2026-04-27T19:56:18.489Z"
+last_updated: "2026-04-27T20:17:36.744Z"
 last_activity: 2026-04-27
 progress:
   total_phases: 12
   completed_phases: 10
   total_plans: 48
-  completed_plans: 42
-  percent: 88
+  completed_plans: 43
+  percent: 90
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 ## Current Position
 
 Phase: 15 (dsgvo-admin-audit-log-viewer) — EXECUTING
-Plan: 3 of 11
+Plan: 4 of 11
 Status: Ready to execute
 Last activity: 2026-04-27
 
-Progress: [█████████░] 88%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
@@ -149,6 +149,7 @@ Progress: [█████████░] 88%
 | Phase 15 P04 | 21min | 3 tasks | 5 files |
 | Phase 15 P02 | 12 | 2 tasks | 6 files |
 | Phase 15 P05 | 19m | 6 tasks | 9 files |
+| Phase 15 P07 | 7m | 4 tasks tasks | 5 files files |
 
 ## Accumulated Context
 
@@ -466,6 +467,9 @@ Recent decisions affecting current work:
 - [Phase ?]: Phase 15-05: PageShell prop is 'subtitle' not 'description' — verbatim UI-SPEC copy mapped to subtitle in /admin/dsgvo + /admin/audit-log
 - [Phase ?]: Phase 15-05: Body-less DELETE in 3 CRUD hook files — no body, no Content-Type (memory apifetch_bodyless_delete_resolved)
 - [Phase ?]: Phase 15-05: Defense-in-depth admin gate — sidebar roles ['admin'] + route-component admin check on direct URL access (T-15-05-02)
+- [Phase 15]: Plan 15-07: comma-separated string-array inputs (no chip primitive — registry-safe)
+- [Phase 15]: Plan 15-07: DsfaVvzTab.tsx wrapper omitted (sub-tab logic lives in DsgvoTabs.tsx)
+- [Phase 15]: Plan 15-07: Corrected DTO field names at execution — DSFA description+title, VVZ activityName+affectedPersons
 
 ### Pending Todos
 
@@ -507,6 +511,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-27T19:56:18.483Z
+Last session: 2026-04-27T20:14:55.965Z
 Stopped at: Completed 15-05 frontend-foundation — Wave 2
 Resume file: 
+None
