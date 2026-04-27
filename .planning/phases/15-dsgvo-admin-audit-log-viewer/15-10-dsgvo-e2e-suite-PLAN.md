@@ -786,3 +786,14 @@ After completion, create `.planning/phases/15-dsgvo-admin-audit-log-viewer/15-10
 - Any deviations from assumed seed-route paths (especially `/api/v1/persons` if it doesn't exist or is named differently)
 - Confirmation that no production-data risk paths exist
 </output>
+
+<context_decisions>
+## Truths — CONTEXT.md Decision Coverage
+
+_Citations in `D-NN:` format for the decision-coverage gate (workflow step 13a)._
+
+- D-19: 2-step Art. 17 confirmation — warning dialog then email-token confirmation
+- D-21: Table rows carry data-* attributes for E2E selectors
+- D-22: Sidebar entries are admin-only (roles: ['admin'])
+
+</context_decisions>

@@ -978,3 +978,16 @@ After completion, create `.planning/phases/15-dsgvo-admin-audit-log-viewer/15-09
 - Manual smoke + CSV-import-into-Excel verification status
 - Typecheck + build outcomes
 </output>
+
+<context_decisions>
+## Truths — CONTEXT.md Decision Coverage
+
+_Citations in `D-NN:` format for the decision-coverage gate (workflow step 13a)._
+
+- D-03: /admin/audit-log is single-page list with filter toolbar + detail drawer
+- D-09: v1 audit detail rendering is After-only JSON tree with banner for missing pre-state
+- D-10: AuditInterceptor refactor for pre-mutation state capture; legacy entries stay After-only
+- D-12: Side-by-side diff via react-diff-viewer-continued is DEFERRED
+- D-16: CSV server-side via dedicated GET /audit/export.csv endpoint
+
+</context_decisions>

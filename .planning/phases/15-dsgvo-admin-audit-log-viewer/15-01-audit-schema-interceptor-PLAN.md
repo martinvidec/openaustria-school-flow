@@ -561,3 +561,15 @@ model AuditEntry {
 <output>
 After completion, create `.planning/phases/15-dsgvo-admin-audit-log-viewer/15-01-SUMMARY.md` listing the migration filename, files changed, test results, and any deviations from the action plan.
 </output>
+
+<context_decisions>
+## Truths — CONTEXT.md Decision Coverage
+
+_Citations in `D-NN:` format for the decision-coverage gate (workflow step 13a)._
+
+- D-09: v1 audit detail rendering is After-only JSON tree with banner for missing pre-state
+- D-10: AuditInterceptor refactor for pre-mutation state capture; legacy entries stay After-only
+- D-11: Schema migration follows Migration Hard Rule (real prisma migrate dev, no db push)
+- D-24: Audit before-snapshot NOT PII-redacted (admin-only audience)
+
+</context_decisions>

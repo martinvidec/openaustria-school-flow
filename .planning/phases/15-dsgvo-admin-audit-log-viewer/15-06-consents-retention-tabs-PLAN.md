@@ -849,3 +849,14 @@ From UI-SPEC § Tab labels: `Einwilligungen` is the default tab. From § Filter 
 <output>
 After completion, create `.planning/phases/15-dsgvo-admin-audit-log-viewer/15-06-SUMMARY.md` listing the 5 changed files, the typecheck + build outcomes, and any divergences from the assumed `CreateRetentionPolicyDto` shape.
 </output>
+
+<context_decisions>
+## Truths — CONTEXT.md Decision Coverage
+
+_Citations in `D-NN:` format for the decision-coverage gate (workflow step 13a)._
+
+- D-01: Two separate admin routes /admin/dsgvo + /admin/audit-log with admin-only sidebar entries
+- D-02: /admin/dsgvo is a 4-tab page following PageShell + Tabs pattern
+- D-21: Table rows carry data-* attributes for E2E selectors
+
+</context_decisions>

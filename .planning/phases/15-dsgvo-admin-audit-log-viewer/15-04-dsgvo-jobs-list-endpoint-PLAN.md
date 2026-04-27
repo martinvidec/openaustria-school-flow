@@ -630,3 +630,13 @@ After completion, create `.planning/phases/15-dsgvo-admin-audit-log-viewer/15-04
 - Any deviations from the action plan (if PrismaService injection path differs, or if `@CheckPermissions` subject string had to be adjusted)
 - Which Phase 15 frontend plan picks this up next (15-08 — JobsTab + polling hooks)
 </output>
+
+<context_decisions>
+## Truths — CONTEXT.md Decision Coverage
+
+_Citations in `D-NN:` format for the decision-coverage gate (workflow step 13a)._
+
+- D-23: GET /dsgvo/jobs school-wide list endpoint added (5th backend gap)
+- D-07: BullMQ Job-Status-Read-Endpoints (GET /dsgvo/export/:id, /dsgvo/deletion/:id) already exist — no gap-fix needed
+
+</context_decisions>

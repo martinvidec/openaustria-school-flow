@@ -518,3 +518,15 @@ After completion, create `.planning/phases/15-dsgvo-admin-audit-log-viewer/15-07
 - The decision on whether `DsfaVvzTab.tsx` was created (recommended: skipped)
 - Typecheck + build outcomes
 </output>
+
+<context_decisions>
+## Truths — CONTEXT.md Decision Coverage
+
+_Citations in `D-NN:` format for the decision-coverage gate (workflow step 13a)._
+
+- D-02: /admin/dsgvo is a 4-tab page following PageShell + Tabs pattern
+- D-06: DSFA + VVZ CRUD endpoints already complete
+- D-21: Table rows carry data-* attributes for E2E selectors
+- D-27: D-06 precision — VVZ CRUD lives in dsfa.controller.ts (no separate vvz.controller.ts)
+
+</context_decisions>

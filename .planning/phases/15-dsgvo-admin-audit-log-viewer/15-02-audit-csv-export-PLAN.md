@@ -491,3 +491,16 @@ The CASL subject `audit` and action `read` are already seeded for `admin` role (
 <output>
 Create `.planning/phases/15-dsgvo-admin-audit-log-viewer/15-02-SUMMARY.md` listing files changed, test outputs, and any deviations (e.g., if shared filter-DTO refactor was deferred).
 </output>
+
+<context_decisions>
+## Truths — CONTEXT.md Decision Coverage
+
+_Citations in `D-NN:` format for the decision-coverage gate (workflow step 13a)._
+
+- D-05: Backend gap — AuditService.exportCsv + GET /audit/export.csv route
+- D-16: CSV server-side via dedicated GET /audit/export.csv endpoint
+- D-17: Client-side CSV from paginated frontend results explicitly REJECTED
+- D-18: No new dependency for CSV escaping (use papaparse already in repo)
+- D-25: CSV-Export uses semicolon delimiter (DACH/Excel default) via Papa.unparse
+
+</context_decisions>

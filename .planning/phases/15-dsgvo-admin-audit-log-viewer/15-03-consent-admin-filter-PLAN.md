@@ -714,3 +714,13 @@ After completion, create `.planning/phases/15-dsgvo-admin-audit-log-viewer/15-03
 - Any deviations from the action plan (e.g. if `@Roles('admin')` was preferred over service-level check, justify with reference to existing patterns)
 - Followup hand-off note for plans 15-05 (hook) and 15-06 (UI): expected `data`/`meta` envelope shape + filter param names matching the DTO field names so URL search params can be passed through 1:1
 </output>
+
+<context_decisions>
+## Truths — CONTEXT.md Decision Coverage
+
+_Citations in `D-NN:` format for the decision-coverage gate (workflow step 13a)._
+
+- D-08: Consent module needs admin-filter findAll extension
+- D-24: Audit before-snapshot NOT PII-redacted (admin-only audience)
+
+</context_decisions>

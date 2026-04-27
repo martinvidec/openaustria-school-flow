@@ -800,3 +800,21 @@ After completion, create `.planning/phases/15-dsgvo-admin-audit-log-viewer/15-08
 - Typecheck + build outcomes
 - Manual smoke test pass/fail summary
 </output>
+
+<context_decisions>
+## Truths — CONTEXT.md Decision Coverage
+
+_Citations in `D-NN:` format for the decision-coverage gate (workflow step 13a)._
+
+- D-02: /admin/dsgvo is a 4-tab page following PageShell + Tabs pattern
+- D-07: BullMQ Job-Status-Read-Endpoints (GET /dsgvo/export/:id, /dsgvo/deletion/:id) already exist — no gap-fix needed
+- D-10: AuditInterceptor refactor for pre-mutation state capture; legacy entries stay After-only
+- D-13: DSGVO export/deletion job-tracking via TanStack Query polling (refetchInterval: 2000)
+- D-14: Polling stops on terminal status
+- D-15: Socket.IO-Sidecar for DSGVO-Jobs is OUT-OF-SCOPE — polling sufficient for v1
+- D-19: 2-step Art. 17 confirmation — warning dialog then email-token confirmation
+- D-20: Mutation hooks have onError -> toast.error (silent-4xx invariant)
+- D-21: Table rows carry data-* attributes for E2E selectors
+- D-23: GET /dsgvo/jobs school-wide list endpoint added (5th backend gap)
+
+</context_decisions>

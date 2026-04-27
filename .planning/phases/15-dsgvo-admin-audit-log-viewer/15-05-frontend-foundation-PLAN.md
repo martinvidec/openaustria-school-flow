@@ -1047,3 +1047,22 @@ After completion, create `.planning/phases/15-dsgvo-admin-audit-log-viewer/15-05
 - Confirmation that admin / non-admin smoke tests on both routes succeed
 - Which Phase 15 plans pick up from here (15-06 ConsentsTab + RetentionTab, 15-07 DSFA/VVZ tabs, 15-08 JobsTab + Art-17 dialogs, 15-09 audit-log viewer)
 </output>
+
+<context_decisions>
+## Truths — CONTEXT.md Decision Coverage
+
+_Citations in `D-NN:` format for the decision-coverage gate (workflow step 13a)._
+
+- D-01: Two separate admin routes /admin/dsgvo + /admin/audit-log with admin-only sidebar entries
+- D-02: /admin/dsgvo is a 4-tab page following PageShell + Tabs pattern
+- D-03: /admin/audit-log is single-page list with filter toolbar + detail drawer
+- D-04: Tab deep-linking via URL search-param
+- D-06: DSFA + VVZ CRUD endpoints already complete
+- D-08: Consent module needs admin-filter findAll extension
+- D-20: Mutation hooks have onError -> toast.error (silent-4xx invariant)
+- D-21: Table rows carry data-* attributes for E2E selectors
+- D-22: Sidebar entries are admin-only (roles: ['admin'])
+- D-26: D-04 precision — Phase 14 uses useState + Route.useSearch (no useTab hook)
+- D-27: D-06 precision — VVZ CRUD lives in dsfa.controller.ts (no separate vvz.controller.ts)
+
+</context_decisions>
