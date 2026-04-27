@@ -553,21 +553,22 @@ From `apps/web/src/routes/_authenticated/admin/audit-log.tsx` (plan 15-05 Task 4
     - On any field change → `navigate({ to: '/admin/audit-log', search: (prev) => ({ ...prev, [field]: value, page: 1 }) })` — page resets to 1
     - "CSV exportieren" primary button (UI-SPEC § Primary CTAs Audit-Log toolbar) → calls `useAuditCsvExport().download(filters)`
     - "Filter zurücksetzen" outline button → clears all 7 fields
-    - Date inputs accept either `YYYY-MM-DD` (native input format) or `ISO datetime`; convert as needed before passing to the URL — for simplicity store as `YYYY-MM-DD` string and let the backend parse; this matches the route's Zod schema which accepts `z.string().datetime().optional()` — but since native date input emits `YYYY-MM-DD` (not ISO datetime), the route schema must be RELAXED in this task
+    - Date inputs use `YYYY-MM-DD` (native `<Input type="date">` format). Plan 15-05 Task 4 already ships the route's Zod schema with `regex(/^\d{4}-\d{2}-\d{2}$/)` — no schema-relaxation step needed in this plan (corrected by plan-checker 2026-04-27).
   </behavior>
   <action>
-    Step 1: EDIT `apps/web/src/routes/_authenticated/admin/audit-log.tsx` — relax the date schema to accept `YYYY-MM-DD`:
+    Step 1: VERIFY `apps/web/src/routes/_authenticated/admin/audit-log.tsx` — the route's `AuditLogSearchSchema` shipped by plan 15-05 Task 4 already accepts `YYYY-MM-DD`. No edit needed in this plan if the file already matches:
     ```typescript
     const AuditLogSearchSchema = z.object({
       startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
       endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
       action: z.enum(['create', 'update', 'delete', 'read']).optional(),
       resource: z.string().max(64).optional(),
-      userId: z.string().max(64).optional(),  // accept any string up to 64 chars; backend validates
+      userId: z.string().max(64).optional(),
       category: z.enum(['MUTATION', 'SENSITIVE_READ']).optional(),
       page: z.coerce.number().int().min(1).optional(),
     });
     ```
+    If the live file diverges (e.g. still uses `.datetime()` because plan 15-05 was executed before the plan-checker correction landed), apply the schema above as a one-line edit.
 
     Step 2: Create `apps/web/src/components/admin/audit-log/AuditFilterToolbar.tsx`:
     ```typescript

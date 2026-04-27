@@ -322,7 +322,7 @@ import { apiFetch } from '@/lib/api';
           if (next === sub) return;
           navigate({
             to: '/admin/dsgvo',
-            search: (prev) => ({ ...prev, tab: 'dsgvo-vvz' as any, sub: next, ...(true ? { tab: 'dsfa-vvz' } : {}) }),
+            search: (prev) => ({ ...prev, tab: 'dsfa-vvz', sub: next }),
           });
         },
         [sub, navigate],
@@ -410,16 +410,12 @@ import { apiFetch } from '@/lib/api';
     }
     ```
 
-    Step 3: NOTE — the `setSub` body above intentionally writes both `tab: 'dsfa-vvz'` (to keep the user on the DSFA/VVZ panel when they switch sub) AND `sub: next`. The repeated `tab` key in the object is the latter; if the executor finds the duplicate-key syntax brittle, simplify to:
-    ```typescript
-    navigate({
-      to: '/admin/dsgvo',
-      search: (prev) => ({ ...prev, tab: 'dsfa-vvz', sub: next }),
-    });
+    Step 3: Run typecheck:
+    ```bash
+    pnpm --filter @schoolflow/web typecheck
     ```
-    (this is the canonical form; the wider Step 2 example included the spread to demonstrate prev preservation.)
 
-    DO NOT: Use `useState` to mirror the URL — the URL is the single source of truth (D-04 + D-26 precision). DO NOT: Forget the mobile fallback ToggleGroup. DO NOT: Render real tab bodies — placeholders only.
+    DO NOT: Use `useState` to mirror the URL — the URL is the single source of truth (D-04 + D-26 precision). DO NOT: Forget the mobile fallback ToggleGroup. DO NOT: Render real tab bodies — placeholders only. DO NOT: Use duplicate object keys or `as any` casts in the setSub body — the canonical form `({ ...prev, tab: 'dsfa-vvz', sub: next })` is what ships.
   </action>
   <verify>
     <automated>test -f apps/web/src/components/admin/dsgvo/DsgvoTabs.tsx &amp;&amp; grep -q "DsgvoTabValue" apps/web/src/components/admin/dsgvo/DsgvoTabs.tsx &amp;&amp; grep -q "navigate" apps/web/src/components/admin/dsgvo/DsgvoTabs.tsx &amp;&amp; grep -q "Einwilligungen" apps/web/src/components/admin/dsgvo/DsgvoTabs.tsx &amp;&amp; grep -q "Aufbewahrung" apps/web/src/components/admin/dsgvo/DsgvoTabs.tsx &amp;&amp; grep -q "DSFA &amp; VVZ" apps/web/src/components/admin/dsgvo/DsgvoTabs.tsx &amp;&amp; grep -q "ToggleGroup" apps/web/src/components/admin/dsgvo/DsgvoTabs.tsx &amp;&amp; pnpm --filter @schoolflow/web typecheck 2>&amp;1 | tail -3 | grep -qv "error TS"</automated>
@@ -560,8 +556,10 @@ import { apiFetch } from '@/lib/api';
      */
 
     const AuditLogSearchSchema = z.object({
-      startDate: z.string().datetime().optional(),
-      endDate: z.string().datetime().optional(),
+      // YYYY-MM-DD format — native <Input type="date"> emits this and plan 15-09 toolbar consumes it directly.
+      // ISO datetime would require a transform before binding to the date input. Verified 2026-04-27.
+      startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
       action: z.enum(['create', 'update', 'delete', 'read']).optional(),
       resource: z.string().max(64).optional(),
       userId: z.string().uuid().optional(),
@@ -665,13 +663,23 @@ import { apiFetch } from '@/lib/api';
     import { apiFetch } from '@/lib/api';
 
     export type ConsentStatus = 'granted' | 'withdrawn' | 'expired';
+    /**
+     * Mirrors backend Prisma `ProcessingPurpose` enum
+     * (apps/api/prisma/schema.prisma:291-299) and
+     * `PROCESSING_PURPOSES` const in
+     * apps/api/src/modules/dsgvo/consent/dto/create-consent.dto.ts:4-12.
+     * Verified by plan-checker 2026-04-27 — DO NOT add NEWSLETTER/KLASSENFOTO/etc.
+     * (those were a fictional draft set; real values are German-cased and
+     * tied to the school-context use cases STUNDENPLAN/NOTEN/FOTOFREIGABE/etc.)
+     */
     export type ProcessingPurpose =
-      | 'STATISTIK'
-      | 'NEWSLETTER'
-      | 'KLASSENFOTO'
-      | 'NOTENWEITERGABE_DRITTE'
-      | 'EXTERNE_LERNSOFTWARE'
-      | 'BESONDERER_DATENSCHUTZ';
+      | 'STUNDENPLANERSTELLUNG'
+      | 'KOMMUNIKATION'
+      | 'NOTENVERARBEITUNG'
+      | 'FOTOFREIGABE'
+      | 'KONTAKTDATEN_WEITERGABE'
+      | 'LERNPLATTFORM'
+      | 'STATISTIK';
 
     export interface PersonSummaryDto {
       id: string;
@@ -816,7 +824,7 @@ import { apiFetch } from '@/lib/api';
   <name>Task 6: Create useRetention.ts, useDsfa.ts, useVvz.ts hooks (full CRUD)</name>
   <read_first>
     - apps/web/src/hooks/useConsents.ts (Task 5 output — sibling pattern)
-    - apps/api/src/modules/dsgvo/retention/retention.controller.ts (current routes — POST/GET/PATCH/DELETE)
+    - apps/api/src/modules/dsgvo/retention/retention.controller.ts (current routes — POST/GET/PUT/DELETE — PUT not PATCH, plan-checker corrected 2026-04-27)
     - apps/api/src/modules/dsgvo/dsfa/dsfa.controller.ts (current routes — DSFA + VVZ co-located here per D-27)
     - .planning/phases/15-dsgvo-admin-audit-log-viewer/15-CONTEXT.md (D-06 + D-27 + D-20)
     - .planning/phases/15-dsgvo-admin-audit-log-viewer/15-UI-SPEC.md (§ Empty states + § Error states + § Destructive confirmations — toast copy)
@@ -914,10 +922,13 @@ import { apiFetch } from '@/lib/api';
       const qc = useQueryClient();
       return useMutation({
         mutationFn: async ({ id, ...patch }: UpdateRetentionPolicyInput): Promise<RetentionPolicyDto> => {
+          // Backend uses PUT (verified at apps/api/src/modules/dsgvo/retention/retention.controller.ts line 30).
+          // PATCH would return 405 Method Not Allowed.
+          // Body shape per backend: only `{ retentionDays }` is read via @Body('retentionDays').
           const res = await apiFetch(`/api/v1/dsgvo/retention/${id}`, {
-            method: 'PATCH',
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(patch),
+            body: JSON.stringify({ retentionDays: patch.retentionDays }),
           });
           if (!res.ok) {
             const err = await res.json().catch(() => null);
@@ -952,14 +963,16 @@ import { apiFetch } from '@/lib/api';
     }
     ```
 
-    Step 3: Create `apps/web/src/hooks/useDsfa.ts` mirroring the same shape (entity name: `DSFA-Eintrag` for toast copy; routes under `/api/v1/dsgvo/dsfa`):
+    Step 3: Create `apps/web/src/hooks/useDsfa.ts` mirroring the same shape (entity name: `DSFA-Eintrag` for toast copy; routes at `POST /api/v1/dsgvo/dsfa/dsfa`, `GET /api/v1/dsgvo/dsfa/dsfa/school/:schoolId`, `PUT /api/v1/dsgvo/dsfa/dsfa/:id`, `DELETE /api/v1/dsgvo/dsfa/dsfa/:id` — verified at `apps/api/src/modules/dsgvo/dsfa/dsfa.controller.ts`):
     - `DsfaEntryDto`, `CreateDsfaInput`, `UpdateDsfaInput`
     - `dsfaKeys`, `useDsfaEntries(schoolId)`, `useCreateDsfa`, `useUpdateDsfa`, `useDeleteDsfa`
+    - Update mutation uses **PUT** not PATCH (mirror useUpdateRetentionPolicy correction above; backend uses `@Put('dsfa/:id')`)
     - Toast copy: `DSFA angelegt`, `DSFA aktualisiert`, `DSFA gelöscht`
 
-    Step 4: Create `apps/web/src/hooks/useVvz.ts` mirroring the same shape (entity name: `VVZ-Eintrag` for toast copy; routes under `/api/v1/dsgvo/vvz` OR co-located under `/dsfa/vvz` per the controller — verify and use the live path):
+    Step 4: Create `apps/web/src/hooks/useVvz.ts` mirroring the same shape (entity name: `VVZ-Eintrag` for toast copy; VVZ is co-located under DsfaController per D-27 — actual routes: `POST /api/v1/dsgvo/dsfa/vvz`, `GET /api/v1/dsgvo/dsfa/vvz/school/:schoolId`, `PUT /api/v1/dsgvo/dsfa/vvz/:id`, `DELETE /api/v1/dsgvo/dsfa/vvz/:id`):
     - `VvzEntryDto`, `CreateVvzInput`, `UpdateVvzInput`
     - `vvzKeys`, `useVvzEntries(schoolId)`, `useCreateVvz`, `useUpdateVvz`, `useDeleteVvz`
+    - Update mutation uses **PUT** not PATCH (backend `@Put('vvz/:id')`)
     - Toast copy: `VVZ-Eintrag angelegt`, `VVZ-Eintrag aktualisiert`, `VVZ-Eintrag gelöscht`
 
     Step 5: If a controller route is at a different path than assumed, adjust the hook URLs accordingly — the URL must match the live API at execution time, not the plan's assumption.

@@ -82,7 +82,7 @@ Output: 4 new component files + 1 edit to `DsgvoTabs.tsx`. The `consents` and `r
 From plan 15-05 (`apps/web/src/hooks/useConsents.ts`):
 ```typescript
 ConsentRecordDto { id, personId, purpose, granted, grantedAt?, withdrawnAt?, person? }
-ProcessingPurpose = 'STATISTIK' | 'NEWSLETTER' | 'KLASSENFOTO' | 'NOTENWEITERGABE_DRITTE' | 'EXTERNE_LERNSOFTWARE' | 'BESONDERER_DATENSCHUTZ'
+ProcessingPurpose = 'STUNDENPLANERSTELLUNG' | 'KOMMUNIKATION' | 'NOTENVERARBEITUNG' | 'FOTOFREIGABE' | 'KONTAKTDATEN_WEITERGABE' | 'LERNPLATTFORM' | 'STATISTIK'  // backend-verified — DO NOT use NEWSLETTER/KLASSENFOTO/etc. (those were a fictional draft set)
 ConsentStatus = 'granted' | 'withdrawn' | 'expired'
 useConsentsAdmin(filters: ConsentAdminQuery): UseQueryResult<PaginatedConsents>
 useWithdrawConsent(): UseMutationResult<ConsentRecordDto, Error, WithdrawConsentInput>
@@ -132,9 +132,16 @@ From UI-SPEC § Tab labels: `Einwilligungen` is the default tab. From § Filter 
       tab: z.enum(['consents', 'retention', 'dsfa-vvz', 'jobs']).optional(),
       sub: z.enum(['dsfa', 'vvz']).optional(),
       // ConsentsTab filters (added in plan 15-06):
+      // ProcessingPurpose values mirror backend Prisma enum (apps/api/prisma/schema.prisma:291-299).
+      // VERIFIED 2026-04-27 — DO NOT add NEWSLETTER/KLASSENFOTO/etc. (those were a fictional draft set).
       purpose: z.enum([
-        'STATISTIK', 'NEWSLETTER', 'KLASSENFOTO',
-        'NOTENWEITERGABE_DRITTE', 'EXTERNE_LERNSOFTWARE', 'BESONDERER_DATENSCHUTZ',
+        'STUNDENPLANERSTELLUNG',
+        'KOMMUNIKATION',
+        'NOTENVERARBEITUNG',
+        'FOTOFREIGABE',
+        'KONTAKTDATEN_WEITERGABE',
+        'LERNPLATTFORM',
+        'STATISTIK',
       ]).optional(),
       status: z.enum(['granted', 'withdrawn', 'expired']).optional(),
       q: z.string().max(200).optional(),
@@ -156,12 +163,15 @@ From UI-SPEC § Tab labels: `Einwilligungen` is the default tab. From § Filter 
     import type { ProcessingPurpose, ConsentStatus } from '@/hooks/useConsents';
 
     const PURPOSE_OPTIONS: { value: ProcessingPurpose; label: string }[] = [
+      // Real backend Prisma `ProcessingPurpose` values (verified 2026-04-27).
+      // German labels chosen for the admin audience.
+      { value: 'STUNDENPLANERSTELLUNG', label: 'Stundenplanerstellung' },
+      { value: 'KOMMUNIKATION', label: 'Kommunikation' },
+      { value: 'NOTENVERARBEITUNG', label: 'Notenverarbeitung' },
+      { value: 'FOTOFREIGABE', label: 'Fotofreigabe' },
+      { value: 'KONTAKTDATEN_WEITERGABE', label: 'Kontaktdaten-Weitergabe' },
+      { value: 'LERNPLATTFORM', label: 'Lernplattform' },
       { value: 'STATISTIK', label: 'Statistik' },
-      { value: 'NEWSLETTER', label: 'Newsletter' },
-      { value: 'KLASSENFOTO', label: 'Klassenfoto' },
-      { value: 'NOTENWEITERGABE_DRITTE', label: 'Notenweitergabe (Dritte)' },
-      { value: 'EXTERNE_LERNSOFTWARE', label: 'Externe Lernsoftware' },
-      { value: 'BESONDERER_DATENSCHUTZ', label: 'Besonderer Datenschutz' },
     ];
     const STATUS_OPTIONS: { value: ConsentStatus; label: string }[] = [
       { value: 'granted', label: 'Erteilt' },
@@ -823,7 +833,7 @@ From UI-SPEC § Tab labels: `Einwilligungen` is the default tab. From § Filter 
 <verification>
 - `pnpm --filter @schoolflow/web typecheck` + `pnpm --filter @schoolflow/web build` both exit `0`
 - Manual smoke: navigate to `/admin/dsgvo?tab=consents`, observe filter+table; widerruf one consent, observe toast; navigate to `?tab=retention`, observe table; create a new policy, observe row appearing; edit a policy's retentionDays, observe the row updating; delete a policy, observe row removed
-- Filter URL deep-link test: navigate to `/admin/dsgvo?tab=consents&purpose=NEWSLETTER&status=granted&q=mueller`, observe filter chips + filtered rows; back button restores previous state
+- Filter URL deep-link test: navigate to `/admin/dsgvo?tab=consents&purpose=KOMMUNIKATION&status=granted&q=mueller`, observe filter chips + filtered rows; back button restores previous state
 - `git diff --stat` shows 5 changed files: 4 new components + 1 edit to DsgvoTabs.tsx (+ implicit edit to dsgvo.tsx route schema)
 </verification>
 
