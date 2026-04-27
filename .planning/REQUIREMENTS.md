@@ -77,8 +77,8 @@
 - [ ] **DSGVO-ADM-02**: Admin kann Aufbewahrungsrichtlinien pro Datenkategorie editieren
 - [ ] **DSGVO-ADM-03**: Admin kann DSFA-Einträge (Datenschutz-Folgenabschätzung) anlegen und editieren
 - [ ] **DSGVO-ADM-04**: Admin kann VVZ-Einträge (Verarbeitungsverzeichnis) anlegen und editieren
-- [ ] **DSGVO-ADM-05**: Admin kann Art. 15 Datenexport für einen User aus der UI anstoßen und den BullMQ-Job-Status verfolgen
-- [ ] **DSGVO-ADM-06**: Admin kann Art. 17 Anonymisierung/Löschung für einen User aus der UI anstoßen und bestätigen
+- [x] **DSGVO-ADM-05**: Admin kann Art. 15 Datenexport für einen User aus der UI anstoßen und den BullMQ-Job-Status verfolgen
+- [x] **DSGVO-ADM-06**: Admin kann Art. 17 Anonymisierung/Löschung für einen User aus der UI anstoßen und bestätigen
 
 ### Audit Log Viewer
 
@@ -195,8 +195,8 @@ Empty initially — populated during roadmap creation by `gsd-roadmapper`.
 | DSGVO-ADM-02 | Phase 15 | Pending |
 | DSGVO-ADM-03 | Phase 15 | Pending |
 | DSGVO-ADM-04 | Phase 15 | Pending |
-| DSGVO-ADM-05 | Phase 15 | Pending |
-| DSGVO-ADM-06 | Phase 15 | Pending |
+| DSGVO-ADM-05 | Phase 15 | Complete |
+| DSGVO-ADM-06 | Phase 15 | Complete |
 | AUDIT-VIEW-01 | Phase 15 | Pending |
 | AUDIT-VIEW-02 | Phase 15 | Pending |
 | AUDIT-VIEW-03 | Phase 15 | Pending |
