@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
-stopped_at: Completed 15-02 audit-csv-export — Wave 1 Round 2
-last_updated: "2026-04-27T19:16:35.062Z"
+stopped_at: Completed 15-05 frontend-foundation — Wave 2
+last_updated: "2026-04-27T19:56:18.489Z"
 last_activity: 2026-04-27
 progress:
   total_phases: 12
   completed_phases: 10
   total_plans: 48
-  completed_plans: 41
-  percent: 85
+  completed_plans: 42
+  percent: 88
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 ## Current Position
 
 Phase: 15 (dsgvo-admin-audit-log-viewer) — EXECUTING
-Plan: 2 of 11
+Plan: 3 of 11
 Status: Ready to execute
 Last activity: 2026-04-27
 
-Progress: [█████████░] 85%
+Progress: [█████████░] 88%
 
 ## Performance Metrics
 
@@ -148,6 +148,7 @@ Progress: [█████████░] 85%
 | Phase 15 P03 | 11min | 3 tasks | 4 files |
 | Phase 15 P04 | 21min | 3 tasks | 5 files |
 | Phase 15 P02 | 12 | 2 tasks | 6 files |
+| Phase 15 P05 | 19m | 6 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -460,6 +461,11 @@ Recent decisions affecting current work:
 - [Phase 15]: Plan 15-02: Empty-result fallback via columns.join(';') — Papa.unparse([]) returns '' not the header row
 - [Phase 15]: Plan 15-02: BOM stored as JS-escape literal in source — survives grep/PR-review; raw character is invisible
 - [Phase 15]: Plan 15-02: vitest.config.ts include extended with src/**/*.e2e-spec.ts — must-have artifact path was silently skipped by prior glob set
+- [Phase ?]: URL writeback for tab state — Phase 15 ADDS navigate({ search }) on tab change for deep-link round-trip
+- [Phase ?]: Phase 15-05: Backend route paths verified at execution time — retention list is /school/:schoolId path-param not query-string; hooks match live API
+- [Phase ?]: Phase 15-05: PageShell prop is 'subtitle' not 'description' — verbatim UI-SPEC copy mapped to subtitle in /admin/dsgvo + /admin/audit-log
+- [Phase ?]: Phase 15-05: Body-less DELETE in 3 CRUD hook files — no body, no Content-Type (memory apifetch_bodyless_delete_resolved)
+- [Phase ?]: Phase 15-05: Defense-in-depth admin gate — sidebar roles ['admin'] + route-component admin check on direct URL access (T-15-05-02)
 
 ### Pending Todos
 
@@ -501,6 +507,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-27T19:16:35.056Z
-Stopped at: Completed 15-02 audit-csv-export — Wave 1 Round 2
-Resume file: None
+Last session: 2026-04-27T19:56:18.483Z
+Stopped at: Completed 15-05 frontend-foundation — Wave 2
+Resume file: 

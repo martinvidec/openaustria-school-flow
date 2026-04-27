@@ -27,6 +27,8 @@ import { Route as AuthenticatedAdminSolverTuningRouteImport } from './routes/_au
 import { Route as AuthenticatedAdminSolverRouteImport } from './routes/_authenticated/admin/solver'
 import { Route as AuthenticatedAdminResourcesRouteImport } from './routes/_authenticated/admin/resources'
 import { Route as AuthenticatedAdminImportRouteImport } from './routes/_authenticated/admin/import'
+import { Route as AuthenticatedAdminDsgvoRouteImport } from './routes/_authenticated/admin/dsgvo'
+import { Route as AuthenticatedAdminAuditLogRouteImport } from './routes/_authenticated/admin/audit-log'
 import { Route as AuthenticatedAdminUsersIndexRouteImport } from './routes/_authenticated/admin/users.index'
 import { Route as AuthenticatedAdminTeachersIndexRouteImport } from './routes/_authenticated/admin/teachers.index'
 import { Route as AuthenticatedAdminSubjectsIndexRouteImport } from './routes/_authenticated/admin/subjects.index'
@@ -141,6 +143,17 @@ const AuthenticatedAdminImportRoute =
     path: '/admin/import',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminDsgvoRoute = AuthenticatedAdminDsgvoRouteImport.update({
+  id: '/admin/dsgvo',
+  path: '/admin/dsgvo',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedAdminAuditLogRoute =
+  AuthenticatedAdminAuditLogRouteImport.update({
+    id: '/admin/audit-log',
+    path: '/admin/audit-log',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminUsersIndexRoute =
   AuthenticatedAdminUsersIndexRouteImport.update({
     id: '/admin/users/',
@@ -205,6 +218,8 @@ const AuthenticatedAdminClassesClassIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/admin/audit-log': typeof AuthenticatedAdminAuditLogRoute
+  '/admin/dsgvo': typeof AuthenticatedAdminDsgvoRoute
   '/admin/import': typeof AuthenticatedAdminImportRoute
   '/admin/resources': typeof AuthenticatedAdminResourcesRoute
   '/admin/solver': typeof AuthenticatedAdminSolverRoute
@@ -234,6 +249,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/admin/audit-log': typeof AuthenticatedAdminAuditLogRoute
+  '/admin/dsgvo': typeof AuthenticatedAdminDsgvoRoute
   '/admin/import': typeof AuthenticatedAdminImportRoute
   '/admin/resources': typeof AuthenticatedAdminResourcesRoute
   '/admin/solver': typeof AuthenticatedAdminSolverRoute
@@ -265,6 +282,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/admin/audit-log': typeof AuthenticatedAdminAuditLogRoute
+  '/_authenticated/admin/dsgvo': typeof AuthenticatedAdminDsgvoRoute
   '/_authenticated/admin/import': typeof AuthenticatedAdminImportRoute
   '/_authenticated/admin/resources': typeof AuthenticatedAdminResourcesRoute
   '/_authenticated/admin/solver': typeof AuthenticatedAdminSolverRoute
@@ -296,6 +315,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/settings'
+    | '/admin/audit-log'
+    | '/admin/dsgvo'
     | '/admin/import'
     | '/admin/resources'
     | '/admin/solver'
@@ -325,6 +346,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/settings'
+    | '/admin/audit-log'
+    | '/admin/dsgvo'
     | '/admin/import'
     | '/admin/resources'
     | '/admin/solver'
@@ -355,6 +378,8 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/_authenticated/settings'
+    | '/_authenticated/admin/audit-log'
+    | '/_authenticated/admin/dsgvo'
     | '/_authenticated/admin/import'
     | '/_authenticated/admin/resources'
     | '/_authenticated/admin/solver'
@@ -515,6 +540,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminImportRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/dsgvo': {
+      id: '/_authenticated/admin/dsgvo'
+      path: '/admin/dsgvo'
+      fullPath: '/admin/dsgvo'
+      preLoaderRoute: typeof AuthenticatedAdminDsgvoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin/audit-log': {
+      id: '/_authenticated/admin/audit-log'
+      path: '/admin/audit-log'
+      fullPath: '/admin/audit-log'
+      preLoaderRoute: typeof AuthenticatedAdminAuditLogRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin/users/': {
       id: '/_authenticated/admin/users/'
       path: '/admin/users'
@@ -590,6 +629,8 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedAdminAuditLogRoute: typeof AuthenticatedAdminAuditLogRoute
+  AuthenticatedAdminDsgvoRoute: typeof AuthenticatedAdminDsgvoRoute
   AuthenticatedAdminImportRoute: typeof AuthenticatedAdminImportRoute
   AuthenticatedAdminResourcesRoute: typeof AuthenticatedAdminResourcesRoute
   AuthenticatedAdminSolverRoute: typeof AuthenticatedAdminSolverRoute
@@ -619,6 +660,8 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedAdminAuditLogRoute: AuthenticatedAdminAuditLogRoute,
+  AuthenticatedAdminDsgvoRoute: AuthenticatedAdminDsgvoRoute,
   AuthenticatedAdminImportRoute: AuthenticatedAdminImportRoute,
   AuthenticatedAdminResourcesRoute: AuthenticatedAdminResourcesRoute,
   AuthenticatedAdminSolverRoute: AuthenticatedAdminSolverRoute,

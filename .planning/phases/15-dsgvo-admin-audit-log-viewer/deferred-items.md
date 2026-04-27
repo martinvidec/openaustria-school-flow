@@ -24,3 +24,29 @@ expect(active).toBe(total);   // active=1, total=2
 - All other 62 test files / 643 tests pass.
 
 **Action:** Hand off to a follow-up "Phase 15 backend test-DB hygiene" task or a Phase 16 (Schulstammdaten/Zeitraster) test cleanup chunk — Phase 16 owns the `school_years` surface.
+
+## 2026-04-27 — Plan 15-05 execution
+
+### DEFERRED-15-05-01: Pre-existing rolldown build error in useStudents.ts:352
+
+**Source:** Running `pnpm --filter @schoolflow/web build` (`vite build` → rolldown) during 15-05 Task 3 build verification.
+
+**Symptom:**
+```
+[ILLEGAL_REASSIGNMENT] Error: Unexpected re-assignment of const variable `failed`
+  at apps/web/src/hooks/useStudents.ts:352
+```
+
+**Root cause:** `const failed = null as unknown as {...}` (line 352) followed by `(failed as any) = {...}` (line 364) inside `useReassignStudents` mutationFn. TypeScript permits this via the `as any` cast, but Rolldown (Vite 8's new bundler) rejects const reassignment statically.
+
+**Owning phase:** Phase 12-01 (introduced 2026-04-24 in commit `2577860`).
+
+**Why deferred:** Plan 15-05 surface is `apps/web/src/components/admin/dsgvo/`, `apps/web/src/routes/_authenticated/admin/{dsgvo,audit-log}.tsx`, `apps/web/src/components/layout/AppSidebar.tsx`, `apps/web/src/hooks/use{Consents,Retention,Dsfa,Vvz}.ts` — zero overlap with `apps/web/src/hooks/useStudents.ts`. Pre-existing on the branch and per scope-boundary rule, executor only auto-fixes issues directly caused by the current task's changes.
+
+**Mitigation during 15-05:** TanStackRouterVite plugin runs BEFORE rolldown bundling, so `routeTree.gen.ts` is regenerated successfully and the new `/admin/dsgvo` + `/admin/audit-log` routes are picked up. Verified via:
+- Route tree contains `AuthenticatedAdminDsgvoRouteImport` after attempted build.
+- `tsc -b 2>&1 | grep "error TS" | wc -l` returns 13 (baseline, unchanged from before plan execution).
+- `diff baseline_ts_errors.txt new_ts_errors.txt` is empty.
+- Dev mode (`vite dev`) is unaffected (different transform pipeline).
+
+**Recommended fix:** Convert `const failed` to `let failed: ... | null` at line 352. Trivial single-file fix. Hand off to a Phase 16 (or backlog) frontend bundler-hygiene chunk.
