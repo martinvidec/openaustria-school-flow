@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
-stopped_at: Wave 1 Round 1 complete — 15-01, 15-03, 15-04
+stopped_at: Wave 1 Round 1 complete — 15-01, 15-03, 15-04 merged
 last_updated: "2026-04-27T18:46:08.157Z"
-last_activity: 2026-04-27 -- Phase 15 Wave 1 Round 1 complete (15-01 + 15-03)
+last_activity: 2026-04-27 -- Phase 15 Wave 1 Round 1 complete (15-01 + 15-03 + 15-04)
 progress:
   total_phases: 12
   completed_phases: 10
@@ -146,6 +146,7 @@ Progress: [████████░░] 79%
 | Phase 14 P03 | 25min | 3 tasks | 12 files |
 | Phase 15 P01 | 15min | 3 tasks | 8 files |
 | Phase 15 P03 | 11min | 3 tasks | 4 files |
+| Phase 15 P04 | 21min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -453,6 +454,7 @@ Recent decisions affecting current work:
 - [Phase 15]: Plan 15-03: Dual-layer tenant guard — DTO @IsUUID() (422) + service if-check (BadRequestException 400) — belt-and-braces against MEMORY useTeachers/subject/useClasses regression family
 - [Phase 15]: Plan 15-03: Single composed personFilter object — Prisma key-overwrite-safe; personSearch OR clause merged INTO the same filter that carries schoolId
 - [Phase 15]: Plan 15-03: @Get('admin') route declared above @Get('school/:schoolId') for Fastify static-before-parametric ordering
+- [Phase 15]: Plan 15-04: Two-query Person hydration in DsgvoJobsService instead of Prisma include — preserves response contract without schema migration when DsgvoJob has scalar personId without Prisma navigation relation. Plan frontmatter forbade schema changes; must_haves required joined Person per row. Two queries (paginate jobs, then IN-list fetch tenant-scoped persons) give identical response shape with extra cross-tenant defense.
 
 ### Pending Todos
 
