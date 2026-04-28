@@ -4,7 +4,73 @@
 
 const fs = require('fs');
 const path = require('path');
-const { escapeRegex, normalizePhaseName, planningPaths, output, error, findPhaseInternal, stripShippedMilestones, extractCurrentMilestone, replaceInCurrentMilestone } = require('./core.cjs');
+const { escapeRegex, normalizePhaseName, planningPaths, withPlanningLock, output, error, findPhaseInternal, stripShippedMilestones, extractCurrentMilestone, replaceInCurrentMilestone, phaseTokenMatches, atomicWriteFileSync } = require('./core.cjs');
+
+/**
+ * Search for a phase header (and its section) within the given content string.
+ * Returns a result object if found (either a full match or a malformed_roadmap
+ * checklist-only match), or null if the phase is not present at all.
+ */
+function searchPhaseInContent(content, escapedPhase, phaseNum) {
+  // Match "## Phase X:", "### Phase X:", or "#### Phase X:" with optional name
+  const phasePattern = new RegExp(
+    `#{2,4}\\s*Phase\\s+${escapedPhase}:\\s*([^\\n]+)`,
+    'i'
+  );
+  const headerMatch = content.match(phasePattern);
+
+  if (!headerMatch) {
+    // Fallback: check if phase exists in summary list but missing detail section
+    const checklistPattern = new RegExp(
+      `-\\s*\\[[ x]\\]\\s*\\*\\*Phase\\s+${escapedPhase}:\\s*([^*]+)\\*\\*`,
+      'i'
+    );
+    const checklistMatch = content.match(checklistPattern);
+
+    if (checklistMatch) {
+      return {
+        found: false,
+        phase_number: phaseNum,
+        phase_name: checklistMatch[1].trim(),
+        error: 'malformed_roadmap',
+        message: `Phase ${phaseNum} exists in summary list but missing "### Phase ${phaseNum}:" detail section. ROADMAP.md needs both formats.`
+      };
+    }
+
+    return null;
+  }
+
+  const phaseName = headerMatch[1].trim();
+  const headerIndex = headerMatch.index;
+
+  // Find the end of this section (next ## or ### phase header, or end of file)
+  const restOfContent = content.slice(headerIndex);
+  const nextHeaderMatch = restOfContent.match(/\n#{2,4}\s+Phase\s+\d/i);
+  const sectionEnd = nextHeaderMatch
+    ? headerIndex + nextHeaderMatch.index
+    : content.length;
+
+  const section = content.slice(headerIndex, sectionEnd).trim();
+
+  // Extract goal if present (supports both **Goal:** and **Goal**: formats)
+  const goalMatch = section.match(/\*\*Goal(?::\*\*|\*\*:)\s*([^\n]+)/i);
+  const goal = goalMatch ? goalMatch[1].trim() : null;
+
+  // Extract success criteria as structured array
+  const criteriaMatch = section.match(/\*\*Success Criteria\*\*[^\n]*:\s*\n((?:\s*\d+\.\s*[^\n]+\n?)+)/i);
+  const success_criteria = criteriaMatch
+    ? criteriaMatch[1].trim().split('\n').map(line => line.replace(/^\s*\d+\.\s*/, '').trim()).filter(Boolean)
+    : [];
+
+  return {
+    found: true,
+    phase_number: phaseNum,
+    phase_name: phaseName,
+    goal,
+    success_criteria,
+    section,
+  };
+}
 
 function cmdRoadmapGetPhase(cwd, phaseNum, raw) {
   const roadmapPath = planningPaths(cwd).roadmap;
@@ -15,76 +81,32 @@ function cmdRoadmapGetPhase(cwd, phaseNum, raw) {
   }
 
   try {
-    const content = extractCurrentMilestone(fs.readFileSync(roadmapPath, 'utf-8'), cwd);
+    const rawContent = fs.readFileSync(roadmapPath, 'utf-8');
+    const milestoneContent = extractCurrentMilestone(rawContent, cwd);
 
     // Escape special regex chars in phase number, handle decimal
     const escapedPhase = escapeRegex(phaseNum);
 
-    // Match "## Phase X:", "### Phase X:", or "#### Phase X:" with optional name
-    const phasePattern = new RegExp(
-      `#{2,4}\\s*Phase\\s+${escapedPhase}:\\s*([^\\n]+)`,
-      'i'
-    );
-    const headerMatch = content.match(phasePattern);
+    // Search the current milestone slice first, then fall back to full roadmap.
+    // A malformed_roadmap result (checklist-only) from the milestone should not
+    // block finding a full header match in the wider roadmap content.
+    const fullContent = stripShippedMilestones(rawContent);
+    const milestoneResult = searchPhaseInContent(milestoneContent, escapedPhase, phaseNum);
+    const result = (milestoneResult && !milestoneResult.error)
+      ? milestoneResult
+      : searchPhaseInContent(fullContent, escapedPhase, phaseNum) || milestoneResult;
 
-    if (!headerMatch) {
-      // Fallback: check if phase exists in summary list but missing detail section
-      const checklistPattern = new RegExp(
-        `-\\s*\\[[ x]\\]\\s*\\*\\*Phase\\s+${escapedPhase}:\\s*([^*]+)\\*\\*`,
-        'i'
-      );
-      const checklistMatch = content.match(checklistPattern);
-
-      if (checklistMatch) {
-        // Phase exists in summary but missing detail section - malformed ROADMAP
-        output({
-          found: false,
-          phase_number: phaseNum,
-          phase_name: checklistMatch[1].trim(),
-          error: 'malformed_roadmap',
-          message: `Phase ${phaseNum} exists in summary list but missing "### Phase ${phaseNum}:" detail section. ROADMAP.md needs both formats.`
-        }, raw, '');
-        return;
-      }
-
+    if (!result) {
       output({ found: false, phase_number: phaseNum }, raw, '');
       return;
     }
 
-    const phaseName = headerMatch[1].trim();
-    const headerIndex = headerMatch.index;
+    if (result.error) {
+      output(result, raw, '');
+      return;
+    }
 
-    // Find the end of this section (next ## or ### phase header, or end of file)
-    const restOfContent = content.slice(headerIndex);
-    const nextHeaderMatch = restOfContent.match(/\n#{2,4}\s+Phase\s+\d/i);
-    const sectionEnd = nextHeaderMatch
-      ? headerIndex + nextHeaderMatch.index
-      : content.length;
-
-    const section = content.slice(headerIndex, sectionEnd).trim();
-
-    // Extract goal if present (supports both **Goal:** and **Goal**: formats)
-    const goalMatch = section.match(/\*\*Goal(?::\*\*|\*\*:)\s*([^\n]+)/i);
-    const goal = goalMatch ? goalMatch[1].trim() : null;
-
-    // Extract success criteria as structured array
-    const criteriaMatch = section.match(/\*\*Success Criteria\*\*[^\n]*:\s*\n((?:\s*\d+\.\s*[^\n]+\n?)+)/i);
-    const success_criteria = criteriaMatch
-      ? criteriaMatch[1].trim().split('\n').map(line => line.replace(/^\s*\d+\.\s*/, '').trim()).filter(Boolean)
-      : [];
-
-    output(
-      {
-        found: true,
-        phase_number: phaseNum,
-        phase_name: phaseName,
-        goal,
-        success_criteria,
-        section,
-      },
-      raw,
-      section
-    );
+    output(result, raw, result.section);
   } catch (e) {
     error('Failed to read ROADMAP.md: ' + e.message);
   }
@@ -106,6 +128,15 @@ function cmdRoadmapAnalyze(cwd, raw) {
   const phasePattern = /#{2,4}\s*Phase\s+(\d+[A-Z]?(?:\.\d+)*)\s*:\s*([^\n]+)/gi;
   const phases = [];
   let match;
+
+  // Build phase directory lookup once (O(1) readdir instead of O(N) per phase)
+  const _phaseDirNames = (() => {
+    try {
+      return fs.readdirSync(phasesDir, { withFileTypes: true })
+        .filter(e => e.isDirectory())
+        .map(e => e.name);
+    } catch { return []; }
+  })();
 
   while ((match = phasePattern.exec(content)) !== null) {
     const phaseNum = match[1];
@@ -133,9 +164,7 @@ function cmdRoadmapAnalyze(cwd, raw) {
     let hasResearch = false;
 
     try {
-      const entries = fs.readdirSync(phasesDir, { withFileTypes: true });
-      const dirs = entries.filter(e => e.isDirectory()).map(e => e.name);
-      const dirMatch = dirs.find(d => d.startsWith(normalized + '-') || d === normalized);
+      const dirMatch = _phaseDirNames.find(d => phaseTokenMatches(d, normalized));
 
       if (dirMatch) {
         const phaseFiles = fs.readdirSync(path.join(phasesDir, dirMatch));
@@ -254,64 +283,66 @@ function cmdRoadmapUpdatePlanProgress(cwd, phaseNum, raw) {
     return;
   }
 
-  let roadmapContent = fs.readFileSync(roadmapPath, 'utf-8');
-  const phaseEscaped = escapeRegex(phaseNum);
+  // Wrap entire read-modify-write in lock to prevent concurrent corruption
+  withPlanningLock(cwd, () => {
+    let roadmapContent = fs.readFileSync(roadmapPath, 'utf-8');
+    const phaseEscaped = escapeRegex(phaseNum);
 
-  // Progress table row: update Plans/Status/Date columns (handles 4 or 5 column tables)
-  const tableRowPattern = new RegExp(
-    `^(\\|\\s*${phaseEscaped}\\.?\\s[^|]*(?:\\|[^\\n]*))$`,
-    'im'
-  );
-  const dateField = isComplete ? ` ${today} ` : '  ';
-  roadmapContent = roadmapContent.replace(tableRowPattern, (fullRow) => {
-    const cells = fullRow.split('|').slice(1, -1); // drop leading/trailing empty from split
-    if (cells.length === 5) {
-      // 5-col: Phase | Milestone | Plans | Status | Completed
-      cells[2] = ` ${summaryCount}/${planCount} `;
-      cells[3] = ` ${status.padEnd(11)}`;
-      cells[4] = dateField;
-    } else if (cells.length === 4) {
-      // 4-col: Phase | Plans | Status | Completed
-      cells[1] = ` ${summaryCount}/${planCount} `;
-      cells[2] = ` ${status.padEnd(11)}`;
-      cells[3] = dateField;
+    // Progress table row: update Plans/Status/Date columns (handles 4 or 5 column tables)
+    const tableRowPattern = new RegExp(
+      `^(\\|\\s*${phaseEscaped}\\.?\\s[^|]*(?:\\|[^\\n]*))$`,
+      'im'
+    );
+    const dateField = isComplete ? ` ${today} ` : '  ';
+    roadmapContent = roadmapContent.replace(tableRowPattern, (fullRow) => {
+      const cells = fullRow.split('|').slice(1, -1); // drop leading/trailing empty from split
+      if (cells.length === 5) {
+        // 5-col: Phase | Milestone | Plans | Status | Completed
+        cells[2] = ` ${summaryCount}/${planCount} `;
+        cells[3] = ` ${status.padEnd(11)}`;
+        cells[4] = dateField;
+      } else if (cells.length === 4) {
+        // 4-col: Phase | Plans | Status | Completed
+        cells[1] = ` ${summaryCount}/${planCount} `;
+        cells[2] = ` ${status.padEnd(11)}`;
+        cells[3] = dateField;
+      }
+      return '|' + cells.join('|') + '|';
+    });
+
+    // Update plan count in phase detail section
+    const planCountPattern = new RegExp(
+      `(#{2,4}\\s*Phase\\s+${phaseEscaped}[\\s\\S]*?\\*\\*Plans:\\*\\*\\s*)[^\\n]+`,
+      'i'
+    );
+    const planCountText = isComplete
+      ? `${summaryCount}/${planCount} plans complete`
+      : `${summaryCount}/${planCount} plans executed`;
+    roadmapContent = replaceInCurrentMilestone(roadmapContent, planCountPattern, `$1${planCountText}`);
+
+    // If complete: check checkbox
+    if (isComplete) {
+      const checkboxPattern = new RegExp(
+        `(-\\s*\\[)[ ](\\]\\s*.*Phase\\s+${phaseEscaped}[:\\s][^\\n]*)`,
+        'i'
+      );
+      roadmapContent = replaceInCurrentMilestone(roadmapContent, checkboxPattern, `$1x$2 (completed ${today})`);
     }
-    return '|' + cells.join('|') + '|';
+
+    // Mark completed plan checkboxes (e.g. "- [ ] 50-01-PLAN.md", "- [ ] 50-01:", or "- [ ] **50-01**")
+    for (const summaryFile of phaseInfo.summaries) {
+      const planId = summaryFile.replace('-SUMMARY.md', '').replace('SUMMARY.md', '');
+      if (!planId) continue;
+      const planEscaped = escapeRegex(planId);
+      const planCheckboxPattern = new RegExp(
+        `(-\\s*\\[) (\\]\\s*(?:\\*\\*)?${planEscaped}(?:\\*\\*)?)`,
+        'i'
+      );
+      roadmapContent = roadmapContent.replace(planCheckboxPattern, '$1x$2');
+    }
+
+    atomicWriteFileSync(roadmapPath, roadmapContent, 'utf-8');
   });
-
-  // Update plan count in phase detail section
-  const planCountPattern = new RegExp(
-    `(#{2,4}\\s*Phase\\s+${phaseEscaped}[\\s\\S]*?\\*\\*Plans:\\*\\*\\s*)[^\\n]+`,
-    'i'
-  );
-  const planCountText = isComplete
-    ? `${summaryCount}/${planCount} plans complete`
-    : `${summaryCount}/${planCount} plans executed`;
-  roadmapContent = replaceInCurrentMilestone(roadmapContent, planCountPattern, `$1${planCountText}`);
-
-  // If complete: check checkbox
-  if (isComplete) {
-    const checkboxPattern = new RegExp(
-      `(-\\s*\\[)[ ](\\]\\s*.*Phase\\s+${phaseEscaped}[:\\s][^\\n]*)`,
-      'i'
-    );
-    roadmapContent = replaceInCurrentMilestone(roadmapContent, checkboxPattern, `$1x$2 (completed ${today})`);
-  }
-
-  // Mark completed plan checkboxes (e.g. "- [ ] 50-01-PLAN.md" or "- [ ] 50-01:")
-  for (const summaryFile of phaseInfo.summaries) {
-    const planId = summaryFile.replace('-SUMMARY.md', '').replace('SUMMARY.md', '');
-    if (!planId) continue;
-    const planEscaped = escapeRegex(planId);
-    const planCheckboxPattern = new RegExp(
-      `(-\\s*\\[) (\\]\\s*${planEscaped})`,
-      'i'
-    );
-    roadmapContent = roadmapContent.replace(planCheckboxPattern, '$1x$2');
-  }
-
-  fs.writeFileSync(roadmapPath, roadmapContent, 'utf-8');
-
   output({
     updated: true,
     phase: phaseNum,
@@ -322,8 +353,171 @@ function cmdRoadmapUpdatePlanProgress(cwd, phaseNum, raw) {
   }, raw, `${summaryCount}/${planCount} ${status}`);
 }
 
+/**
+ * Annotate the ROADMAP.md plan list for a phase with wave dependency notes
+ * and a cross-cutting constraints subsection derived from PLAN frontmatter.
+ *
+ * Wave dependency notes: "Wave 2 — blocked on Wave 1 completion" inserted as
+ * bold headers before each wave group in the plan checklist.
+ *
+ * Cross-cutting constraints: must_haves.truths strings that appear in 2+ plans
+ * are surfaced in a "Cross-cutting constraints" subsection below the plan list.
+ *
+ * The operation is idempotent: if wave headers already exist in the section
+ * the function returns without modifying the file.
+ */
+function cmdRoadmapAnnotateDependencies(cwd, phaseNum, raw) {
+  if (!phaseNum) {
+    error('phase number required for roadmap annotate-dependencies');
+  }
+
+  const roadmapPath = planningPaths(cwd).roadmap;
+  if (!fs.existsSync(roadmapPath)) {
+    output({ updated: false, reason: 'ROADMAP.md not found' }, raw, 'no roadmap');
+    return;
+  }
+
+  const phaseInfo = findPhaseInternal(cwd, phaseNum);
+  if (!phaseInfo || phaseInfo.plans.length === 0) {
+    output({ updated: false, reason: 'no plans found for phase', phase: phaseNum }, raw, 'no plans');
+    return;
+  }
+
+  const { extractFrontmatter, parseMustHavesBlock } = require('./frontmatter.cjs');
+
+  // Read each PLAN.md and extract wave + must_haves.truths
+  const planData = [];
+  for (const planFile of phaseInfo.plans) {
+    const planPath = path.join(path.resolve(cwd, phaseInfo.directory), planFile);
+    try {
+      const content = fs.readFileSync(planPath, 'utf-8');
+      const fm = extractFrontmatter(content);
+      const wave = parseInt(fm.wave, 10) || 1;
+      const planId = planFile.replace(/-PLAN\.md$/i, '').replace(/PLAN\.md$/i, '');
+      const truths = parseMustHavesBlock(content, 'truths') || [];
+      planData.push({ planFile, planId, wave, truths });
+    } catch { /* skip unreadable plans */ }
+  }
+
+  if (planData.length === 0) {
+    output({ updated: false, reason: 'could not read plan frontmatter' }, raw, 'no frontmatter');
+    return;
+  }
+
+  // Group plans by wave (sorted)
+  const waveGroups = new Map();
+  for (const p of planData) {
+    if (!waveGroups.has(p.wave)) waveGroups.set(p.wave, []);
+    waveGroups.get(p.wave).push(p);
+  }
+  const waves = [...waveGroups.keys()].sort((a, b) => a - b);
+
+  // Find cross-cutting truths: appear in 2+ plans (de-duplicated, case-insensitive)
+  const truthCounts = new Map();
+  for (const { truths } of planData) {
+    const seen = new Set();
+    for (const t of truths) {
+      const key = t.trim().toLowerCase();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      truthCounts.set(key, (truthCounts.get(key) || { count: 0, text: t.trim() }));
+      truthCounts.get(key).count++;
+    }
+  }
+  const crossCuttingTruths = [...truthCounts.values()]
+    .filter(v => v.count >= 2)
+    .map(v => v.text);
+
+  // Patch ROADMAP.md
+  let updated = false;
+  withPlanningLock(cwd, () => {
+    let content = fs.readFileSync(roadmapPath, 'utf-8');
+
+    // Find the phase section
+    const phaseEscaped = escapeRegex(phaseNum);
+    const phaseHeaderPattern = new RegExp(`(#{2,4}\\s*Phase\\s+${phaseEscaped}:[^\\n]*)`, 'i');
+    const phaseMatch = content.match(phaseHeaderPattern);
+    if (!phaseMatch) return;
+
+    const phaseStart = phaseMatch.index;
+    const restAfterHeader = content.slice(phaseStart);
+    const nextPhaseOffset = restAfterHeader.slice(1).search(/\n#{2,4}\s+Phase\s+\d/i);
+    const phaseEnd = nextPhaseOffset >= 0 ? phaseStart + 1 + nextPhaseOffset : content.length;
+    const phaseSection = content.slice(phaseStart, phaseEnd);
+
+    // Idempotency: skip if annotation markers already present
+    if (
+      /\*\*Wave\s+\d+/i.test(phaseSection) ||
+      /\*\*Cross-cutting constraints:\*\*/i.test(phaseSection)
+    ) return;
+
+    // Find the Plans: section within the phase section
+    const plansBlockMatch = phaseSection.match(/(Plans:\s*\n)((?:\s*-\s*\[[ x]\][^\n]*\n?)*)/i);
+    if (!plansBlockMatch) return;
+
+    const plansHeader = plansBlockMatch[1];
+    const existingList = plansBlockMatch[2];
+    const listLines = existingList.split('\n').filter(l => /^\s*-\s*\[/.test(l));
+
+    if (listLines.length === 0) return;
+
+    // Build wave-annotated plan list
+    const linesByWave = new Map();
+    for (const line of listLines) {
+      // Match plan ID from line: "- [ ] 01-01-PLAN.md — ..." or "- [ ] 01-01: ..."
+      const idMatch = line.match(/\[\s*[x ]\s*\]\s*([\w-]+?)(?:-PLAN\.md|\.md|:|\s—)/i);
+      const planId = idMatch ? idMatch[1] : null;
+      const planEntry = planId ? planData.find(p => p.planId === planId) : null;
+      const wave = planEntry ? planEntry.wave : 1;
+      if (!linesByWave.has(wave)) linesByWave.set(wave, []);
+      linesByWave.get(wave).push(line);
+    }
+
+    const annotatedLines = [];
+    const sortedWaves = [...linesByWave.keys()].sort((a, b) => a - b);
+    for (let i = 0; i < sortedWaves.length; i++) {
+      const w = sortedWaves[i];
+      const waveLines = linesByWave.get(w);
+      if (sortedWaves.length > 1) {
+        const dep = i > 0 ? ` *(blocked on Wave ${sortedWaves[i - 1]} completion)*` : '';
+        annotatedLines.push(`**Wave ${w}**${dep}`);
+      }
+      annotatedLines.push(...waveLines);
+      if (i < sortedWaves.length - 1) annotatedLines.push('');
+    }
+
+    // Append cross-cutting constraints subsection if any found
+    if (crossCuttingTruths.length > 0) {
+      annotatedLines.push('');
+      annotatedLines.push('**Cross-cutting constraints:**');
+      for (const t of crossCuttingTruths) {
+        annotatedLines.push(`- ${t}`);
+      }
+    }
+
+    const newListBlock = annotatedLines.join('\n') + '\n';
+    const newPhaseSection = phaseSection.replace(
+      plansBlockMatch[0],
+      plansHeader + newListBlock
+    );
+
+    const nextContent = content.slice(0, phaseStart) + newPhaseSection + content.slice(phaseEnd);
+    if (nextContent === content) return;
+    atomicWriteFileSync(roadmapPath, nextContent);
+    updated = true;
+  });
+
+  output({
+    updated,
+    phase: phaseNum,
+    waves: waves.length,
+    cross_cutting_constraints: crossCuttingTruths.length,
+  }, raw, updated ? `annotated ${waves.length} wave(s), ${crossCuttingTruths.length} constraint(s)` : 'skipped (already annotated or no plan list)');
+}
+
 module.exports = {
   cmdRoadmapGetPhase,
   cmdRoadmapAnalyze,
   cmdRoadmapUpdatePlanProgress,
+  cmdRoadmapAnnotateDependencies,
 };
