@@ -50,7 +50,7 @@ Zwei Liefergegenstände unter einem Dach:
 - **D-08:** Sekundär: `refetchInterval: 30_000` (30s) als Backup für Multi-Device/Multi-Admin-Szenarien (selten in v1.0 Single-Tenant, aber kein Aufwand).
 - **D-09:** `staleTime: 10_000` für die Dashboard-Query — verhindert Storm bei rapid-fire-Mutations.
 - **D-10:** Backend liefert genau einen aggregierten Endpoint `GET /admin/dashboard/status`, der das Status-Objekt für alle 10 Kategorien in einem Round-Trip zurückgibt. Verhindert N+1-Frontend-Queries.
-- **D-11:** Socket.IO-Broadcast explizit OUT-OF-SCOPE für Phase 16 (carry-forward Phase 15 D-15 Pattern: kein Socket-Sidecar in v1.0).
+- **D-11 [informational]:** Socket.IO-Broadcast explizit OUT-OF-SCOPE für Phase 16 (carry-forward Phase 15 D-15 Pattern: kein Socket-Sidecar in v1.0). Nicht trackbar — constraint zur Vermeidung von Implementierung.
 
 ### Mobile-Tabellen-Strategie (MOBILE-ADM-01)
 - **D-12:** Geteiltes `<DataList>`-Component mit `columns`-Schema und `mobileCard`-Render-Prop. Auf Desktop rendert es als `<Table>`, auf Mobile als Stack-of-Cards via `mobileCard(row)`. Einmal sauber gebaut, alle bestehenden Admin-Tabellen migrieren.
@@ -68,8 +68,8 @@ Zwei Liefergegenstände unter einem Dach:
 ### Frontend Patterns (carry-forward aus Phasen 10-15)
 - **D-19:** TanStack Query Mutation-onError → `toast.error` (Phase 10.2-04 invariant; Phase 14 D-12; Phase 15 D-20).
 - **D-20:** Sidebar-Eintrag admin-only via `roles: ['admin']` (Phase 14 D-03; Phase 15 D-22).
-- **D-21:** Tab-Routing falls benötigt (z.B. Dashboard-Sub-Bereiche): `useState` + `Route.useSearch()`-Pattern (Phase 15 D-26 — kein `useTab`-Hook).
-- **D-22:** Migrations-Hard-Rule: keine `prisma db push` (CLAUDE.md). Falls neue Backend-Models nötig (z.B. cached dashboard-status) → echte `prisma migrate dev`.
+- **D-21 [informational]:** Tab-Routing falls benötigt (z.B. Dashboard-Sub-Bereiche): `useState` + `Route.useSearch()`-Pattern (Phase 15 D-26 — kein `useTab`-Hook). Nicht trackbar — Dashboard ist Single-Page ohne Tabs (siehe Specifics), Pattern zur Anwendung nur falls künftige Sub-Bereiche eingeführt werden.
+- **D-22 [informational]:** Migrations-Hard-Rule: keine `prisma db push` (CLAUDE.md). Falls neue Backend-Models nötig (z.B. cached dashboard-status) → echte `prisma migrate dev`. Nicht trackbar — Constraint enforced by absence: Phase 16 fügt KEINE neuen Models hinzu (Dashboard nur Read-only Aggregator), daher kein migration-File-Output erwartet.
 
 ### Solver/Wochentage Status-Semantik (resolved during planning 2026-04-28)
 - **D-23:** Solver "Config existiert" Semantik (klärt D-05/D-06 row 8): `(ConstraintWeightOverride.count + ConstraintTemplate.count) > 0` per school. Union-Variante — jede aktive Customization (Template oder Override) zählt als `unvollständig`. `erledigt` weiterhin nur wenn zusätzlich ≥1 erfolgreich generierter Run vorliegt. User-bestätigt während /gsd-plan-phase.
