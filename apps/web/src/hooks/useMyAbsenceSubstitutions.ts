@@ -6,7 +6,7 @@ export type MyAbsenceSubstitution = SubstitutionDto & {
   hasHandoverNote?: boolean;
 };
 
-export function useMyAbsenceSubstitutions(schoolId: string | undefined) {
+export function useMyAbsenceSubstitutions(schoolId: string | null | undefined) {
   return useQuery({
     queryKey: ['substitutions', schoolId, 'my-absences'],
     queryFn: async (): Promise<MyAbsenceSubstitution[]> => {
