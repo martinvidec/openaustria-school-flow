@@ -1,7 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import type { z } from 'zod';
 import { SchoolYearSchema, type SchoolYearInput } from '@schoolflow/shared';
+
+// SchoolYearSchema uses z.coerce.date() — input fields hold unknown (raw form value
+// before coercion), output is Date (after Zod parse). RHF needs both generics
+// explicit; otherwise Resolver<input, ctx, output> doesn't unify with useForm<output>.
+type SchoolYearFormInput = z.input<typeof SchoolYearSchema>;
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -29,9 +35,9 @@ export function CreateSchoolYearDialog({ open, isSubmitting, onClose, onSubmit }
     watch,
     setValue,
     reset,
-  } = useForm<SchoolYearInput>({
+  } = useForm<SchoolYearFormInput, unknown, SchoolYearInput>({
     resolver: zodResolver(SchoolYearSchema),
-    defaultValues: { name: '', isActive: false } as Partial<SchoolYearInput>,
+    defaultValues: { name: '', isActive: false } as Partial<SchoolYearFormInput>,
   });
 
   // Reset on close so the next open starts clean.
