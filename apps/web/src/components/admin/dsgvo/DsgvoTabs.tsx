@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { ConsentsTab } from './ConsentsTab';
 import { DsfaTable } from './DsfaTable';
+import { RetentionTab } from './RetentionTab';
 import { VvzTable } from './VvzTable';
 
 /**
@@ -103,7 +104,7 @@ export function DsgvoTabs({ schoolId, initialTab, initialSub }: Props) {
           <ConsentsTab schoolId={schoolId} />
         </TabsContent>
         <TabsContent value="retention" className="pt-6">
-          <PlaceholderPanel plan="15-06" title="Aufbewahrung" schoolId={schoolId} />
+          <RetentionTab schoolId={schoolId} />
         </TabsContent>
         <TabsContent value="dsfa-vvz" className="pt-6">
           <Tabs
