@@ -5,6 +5,7 @@ status: draft
 shadcn_initialized: true
 preset: "default / neutral / cssVariables (apps/web/components.json)"
 created: 2026-04-28
+revised: 2026-04-28
 ---
 
 # Phase 16 — UI Design Contract
@@ -50,7 +51,7 @@ In-scope primitives (all already present):
 |-------|-------|----------|---------------|
 | xs | 4px | `gap-1`, `p-1` | Icon ↔ label gap inside checklist row; badge inner padding |
 | sm | 8px | `gap-2`, `p-2` | Internal gap inside checklist row (icon → text block); mobile-card field-internal padding |
-| md | 16px | `gap-4`, `p-4` | Default card padding; mobile-card horizontal padding; vertical gap between checklist rows |
+| md | 16px | `gap-4`, `p-4`, `py-4` | Default card padding; mobile-card horizontal padding; vertical gap between checklist rows; checklist row internal gap + vertical padding |
 | lg | 24px | `gap-6`, `p-6` | `PageShell` content padding; gap between `PageShell` header and checklist; gap between filter-toolbar and `<DataList>` |
 | xl | 32px | `gap-8`, `mb-8` | Gap between major page sections (e.g. Dashboard intro paragraph → checklist) |
 | 2xl | 48px | `gap-12`, `py-12` | Empty-state vertical padding inside `<DataList>` empty slot (`Keine Einträge`) |
@@ -70,6 +71,8 @@ This is the headline Mobile-Härtung change. All interactive primitives MUST sat
 | Checklist row (Dashboard) | n/a (new) | `min-h-14` (56px) — comfortable on touch + room for icon + 2-line copy | `min-h-14` |
 | Mobile-card row (`<DataList>`) | n/a (new) | `min-h-20` (80px) per CONTEXT specifics line 172 | `min-h-20` |
 
+**Note on touch-target floor sub-scale:** `min-h-11` (44px), `min-h-14` (56px), `min-h-20` (80px) are sizing constraints expressing accessibility floors, NOT entries in the spacing scale above. Each value is multiple-of-4 compliant. They are declared here in their own sub-table so that the spacing scale stays clean (4/8/16/24/32/48/64 only). Any class outside this sub-table or the spacing scale above is a drift and a checker fail.
+
 **Rationale for the responsive lift:** desktop pointer accuracy makes 40px targets perfectly usable; tightening desktop to 44px makes UI feel oversized in dense admin tables. The lift is `<sm` only (≤639px). This matches the `useIsMobile()` 640px breakpoint exactly so logic and layout agree.
 
 **Edit strategy** — globally lift `Button` and `Input` defaults inside `apps/web/src/components/ui/button.tsx` + `input.tsx` using the responsive Tailwind classes above. Do NOT introduce a new `mobile`-named variant — keep the existing `size` enum and apply the floor unconditionally. This makes the lift transparent for all 100+ existing call-sites.
@@ -80,7 +83,7 @@ A `<DataList>` mobile card target is **≤80px tall** with default content. This
 
 ### Spacing exceptions
 
-- **Dashboard checklist row** internal layout: `flex items-center gap-3 px-4 py-3` (12px vertical to land `min-h-14`). Visual: leading icon (24×24) → title block (title + status text stacked) → trailing status badge → chevron. This is a single horizontal flex row at all viewports — the layout does NOT collapse to two lines on mobile. Status badge MAY shrink to icon-only at `<sm` (see Component Inventory § ChecklistItem).
+- **Dashboard checklist row** internal layout: `flex items-center gap-4 px-4 py-4` (16px on every axis — fully on-scale `md` token). Visual: leading icon (24×24) → title block (title + status text stacked) → trailing status badge → chevron. The `min-h-14` (56px) touch-target floor is reached naturally: `py-4` (32px total vertical padding) + 24px icon = 56px content height = floor exactly. This is a single horizontal flex row at all viewports — the layout does NOT collapse to two lines on mobile. Status badge MAY shrink to icon-only at `<sm` (see Component Inventory § ChecklistItem).
 
 ---
 
@@ -90,12 +93,24 @@ Carry-forward from Phase 15 — same 4 sizes, same 2 weights, no italic, no bold
 
 | Role | Size | Weight | Line height | Tailwind | Phase 16 usage |
 |------|------|--------|-------------|----------|---------------|
-| Body | 14px | 400 | 1.5 (`leading-6`) | `text-sm font-normal leading-6` | Checklist item description; mobile-card field values; intro paragraph copy; empty-state body |
-| Label | 14px | 400 | 1.4 (`leading-5`) | `text-sm font-normal leading-5 text-muted-foreground` | Checklist secondary text ("Erledigt am 24.04.2026", "12 Lehrer"); mobile-card field labels; status-badge text. **Differentiation via `text-muted-foreground` — NOT weight.** |
-| Heading | 20px | 600 | 1.3 (`leading-7`) | `text-xl font-semibold leading-7` | Checklist row title (e.g. "Schule", "Zeitraster"); section titles |
+| Body | 14px | 400 | 1.5 (`leading-6`) | `text-sm font-normal leading-6` | Checklist item description; mobile-card field values; intro paragraph copy; empty-state body; mobile-card row-meta line |
+| Label | 14px | 400 | 1.4 (`leading-5`) | `text-sm font-normal leading-5 text-muted-foreground` | Checklist secondary text ("Erledigt am 24.04.2026", "12 Lehrer"); mobile-card field labels; mobile-card subtitle. **Differentiation via `text-muted-foreground` — NOT weight.** |
+| Heading | 20px | 600 | 1.3 (`leading-7`) | `text-xl font-semibold leading-7` | Checklist row title (e.g. "Schule", "Zeitraster"); mobile-card title; section titles |
 | Display | 28px | 600 | 1.2 (`leading-8`) | `text-2xl font-semibold leading-8` | `PageShell` page title ("Dashboard", "Setup-Übersicht") — already rendered via `PageShell` `text-2xl md:text-3xl` |
 
-**Two weights only**: `font-normal` (400) for body and label, `font-semibold` (600) for heading and display. Status-badge text uses `font-medium` (500) inherits from the existing `Badge` primitive (`text-xs font-semibold` per `badge.tsx:7`); we keep that primitive untouched — the per-phase 2-weight rule applies to all NEW content. Existing primitives keep their internal weights.
+**Two weights only**: `font-normal` (400) for body and label, `font-semibold` (600) for heading and display.
+
+### Scoped existing-primitive exceptions (NOT new typography roles)
+
+The following `text-xs` (12px) usages are **carry-forward styling internal to existing primitives** — they are NOT new typography roles for Phase 16 content. Phase 16 surfaces MUST NOT introduce additional `text-xs` outside this list.
+
+| Where | Class | Source / rationale |
+|-------|-------|--------------------|
+| `<Badge>` primitive internal text | `text-xs font-semibold` per `badge.tsx:7` | Existing shadcn primitive, untouched. Used by status badges (`Erledigt`, `Unvollständig`, `Fehlt`). |
+| `<DataList>` desktop table header | `text-xs uppercase tracking-wide text-muted-foreground` | Phase 15 carry-forward table-header style (also at Phase 15 `<JsonTree>` row index). Header semantics differ from body copy — small caps convention. |
+| `PageShell` title responsive uplift | `text-2xl md:text-3xl` (existing component) | Existing `PageShell` already uses `text-3xl` (30px) at `md+`. Phase 16 does not touch `PageShell` — this lives outside Phase 16's typography contract. The Display row in the table above is the LOWER bound (`text-2xl` / 28px) which is what Phase 16 mobile sees first. |
+
+These three are the ONLY exceptions. Any new `text-base`, `text-lg`, `text-3xl`, `text-xs` (outside the list above), or any custom font-size declared in Phase 16 code is a drift and a checker fail.
 
 **Mono**: not used by Phase 16 surfaces. Reserved by Phase 15 for `<JsonTree>` only.
 
@@ -266,8 +281,8 @@ Single vertical list, no card grid, no hero header. Wrapped in a single outer `<
 ```
 
 Outer card: `rounded-lg border bg-card shadow-sm` (existing `<Card>` styling).
-Row anatomy: `flex items-center gap-3 px-4 py-3 min-h-14 hover:bg-accent transition-colors`.
-Title block: `flex flex-col` with title (`text-base font-semibold leading-6 text-foreground`) and secondary line (`text-sm text-muted-foreground leading-5`).
+Row anatomy: `flex items-center gap-4 px-4 py-4 min-h-14 hover:bg-accent transition-colors`.
+Title block: `flex flex-col` with title (`text-xl font-semibold leading-7 text-foreground` — Heading role) and secondary line (`text-sm text-muted-foreground leading-5` — Label role).
 Trailing block on `<sm`: badge collapses to icon-only via the icon-adjunct rule. Chevron stays at all sizes.
 
 Each row is wrapped in `<Link to={deepLink}>` from `@tanstack/react-router` so the entire row is the click/tap target — not just the title or chevron. This satisfies the 56px touch-target unconditionally.
@@ -324,7 +339,7 @@ interface DataListProps<T> {
 }
 ```
 
-Desktop rendering: native `<table class="w-full text-sm">` with `<thead>` + `<tbody>`. Header row uses `bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground` (carry-forward Phase 15 table style). Body rows: `border-t border-border hover:bg-accent`. Each `<tr>` carries `data-testid` from `getRowTestId(row)`.
+Desktop rendering: native `<table class="w-full text-sm">` with `<thead>` + `<tbody>`. Header row uses the carry-forward Phase 15 table-header style (`text-xs uppercase tracking-wide text-muted-foreground` — see § Typography "Scoped existing-primitive exceptions"). Body rows: `border-t border-border hover:bg-accent`. Each `<tr>` carries `data-testid` from `getRowTestId(row)`.
 
 Mobile rendering: `<div class="flex flex-col gap-2">` with one `<Card>`-styled wrapper per row from `mobileCard(row)`. Each wrapper is `rounded-lg border bg-card p-4 min-h-20`. The `mobileCard` slot is fully owned by the migrating surface — `<DataList>` does NOT prescribe its layout beyond the wrapper.
 
@@ -338,14 +353,20 @@ For visual consistency across migrated surfaces, `mobileCard(row)` SHOULD render
 
 ```
 ┌────────────────────────────────────────┐
-│ [Title — text-base font-semibold]      │
-│ [Subtitle — text-sm text-muted-fg]     │
-│ [Optional row-meta line — text-xs]     │
+│ [Title — Heading role]                 │
+│ [Subtitle — Label role]                │
+│ [Optional row-meta line — Body role]   │
 │ [Optional status badge — top-right]    │
 └────────────────────────────────────────┘
 ```
 
-with `flex flex-col gap-1` inside the wrapper. Touch-action targets (the row itself + any in-card icon buttons) MUST satisfy the 44px floor.
+Concrete classes:
+- Title: `text-xl font-semibold leading-7 text-foreground` (Heading role)
+- Subtitle: `text-sm font-normal leading-5 text-muted-foreground` (Label role)
+- Row-meta line: `text-sm font-normal leading-6 text-foreground` (Body role)
+- Status badge: existing `<Badge>` primitive with the status-badge color map
+
+Layout: `flex flex-col gap-1` inside the wrapper. Touch-action targets (the row itself + any in-card icon buttons) MUST satisfy the 44px floor.
 
 ### Login-redirect role-aware (CONTEXT D-02)
 
@@ -433,7 +454,7 @@ The `<DataList>` component is a Phase-16 internal helper at `apps/web/src/compon
 | Color tokens (60/30/10) | `apps/web/src/app.css` `@theme` block | No new tokens; full carry-forward Phase 15 |
 | Status badge colors | CONTEXT specifics line 171 + Phase 15 success/warning/destructive precedent | green/amber/red mapped to `--color-success`/`--color-warning`/`--color-destructive` |
 | Status labels | CONTEXT specifics line 171 (`Erledigt` / `Unvollständig` / `Fehlt`) | German UI carry-forward |
-| Spacing scale | Tailwind v4 default + Phase 15 carry-forward | No new spacing values |
+| Spacing scale | Tailwind v4 default + Phase 15 carry-forward | No new spacing values; checklist row uses `gap-4 py-4` (md token) — fully on-scale |
 | Touch-target floor | CONTEXT D-17 (`min-h-11` global) + specifics line 173 (current `h-9`/`h-10` insufficient) | Applied at primitive layer (`button.tsx`, `input.tsx`) responsively `<sm` only |
 | Mobile breakpoint | CONTEXT D-13 (existing 640px) | Hook moved to `hooks/useIsMobile.ts`; behaviour preserved |
 | Mobile-card density | CONTEXT specifics line 172 (~80px) | `min-h-20` on `<DataList>` mobile cards |
@@ -448,7 +469,7 @@ The `<DataList>` component is a Phase-16 internal helper at `apps/web/src/compon
 | German copy | CONTEXT specifics line 171 + Phase 15 carry-forward | All labels and microcopy prescribed verbatim |
 | `data-*` E2E selectors | CONTEXT D-14 + Phase 14/15 D-21 carry-forward | `data-checklist-item={key}`, `data-checklist-status={status}` |
 | Toast invariant | CONTEXT D-19 (carry-forward Phase 10.2-04 + Phase 14 D-12 + Phase 15 D-20) | `onError → toast.error` enforced; Phase 16 surfaces are read-only so not exercised here, but the Mobile-Härtung sweep MUST NOT regress this in migrated surfaces |
-| Typography 2-weight rule | Phase 15 carry-forward | 4 sizes × 2 weights only |
+| Typography 2-weight rule | Phase 15 carry-forward | 4 sizes × 2 weights only; checklist row title and mobile-card title use Heading role (20px) — NOT `text-base` |
 | Mobile parity scope | CONTEXT D-15/D-16/D-18 | All Phase 10–15 admin surfaces audited at 375px |
 | No new shadcn blocks | Inventory check vs `apps/web/src/components/ui/` (24 files present) | Every primitive needed already in repo |
 | Empty-state copy slot | CONTEXT discretion (per-surface kept) + Phase 16 standardised wrapper | `<DataList>` exposes `emptyState` prop |
@@ -458,13 +479,25 @@ The `<DataList>` component is a Phase-16 internal helper at `apps/web/src/compon
 
 ---
 
+## Revision Log
+
+### 2026-04-28 — checker fixes
+
+- **Dimension 4 (Typography) BLOCK fix:** Removed undeclared `text-base` (16px) from the `<DashboardChecklist>` row title and the `<DataList>` mobile-card title-anatomy guidance. Both now use the declared Heading role (`text-xl font-semibold leading-7`, 20px). Added explicit "Scoped existing-primitive exceptions" sub-table to Typography section to document the three pre-existing `text-xs` / `text-3xl` carry-forwards (Badge primitive, table header, PageShell title responsive uplift) so the checker has a single source of truth instead of inferring from prose.
+- **Dimension 5 (Spacing) FLAG fix:** Replaced `gap-3 px-4 py-3` (12px — multiple of 4 but off declared scale) with `gap-4 px-4 py-4` (16px — fully on-scale `md` token) in both spacing-exception note and `<DashboardChecklist>` row anatomy. The `min-h-14` (56px) target is reached naturally: `py-4` × 2 (32px) + 24px icon = 56px, exact match.
+- Mobile-card guidance anatomy diagram updated to use role names (Heading/Label/Body) and accompanying explicit Tailwind classes — replaces ambiguous shorthand (`text-base font-semibold`, `text-xs`).
+- Added "Touch-target floor sub-scale" note clarifying `min-h-11` / `min-h-14` / `min-h-20` are sizing constraints, not spacing-scale entries.
+- Audited entire spec for additional drift: zero remaining `text-base` occurrences; zero remaining `gap-3`/`p-3`/`py-3`/`px-3` occurrences; all spacing utilities (`gap-1`/`gap-2`/`gap-4`/`gap-6`/`gap-8`/`gap-12`/`p-1`/`p-2`/`p-4`/`p-6`/`py-12`/`py-16`/`mb-8`) on declared scale; all sizing utilities (`h-9`/`h-10`/`h-11`/`h-12`/`h-14`/`min-h-11`/`min-h-14`/`min-h-20`) explicitly declared in touch-target floor sub-scale.
+
+---
+
 ## Checker Sign-Off
 
 - [ ] Dimension 1 Copywriting: PASS — all sidebar/title/subtitle/checklist/status/empty/error copy in German prescribed verbatim; zero CTA buttons, dialogs, or destructive actions in Phase 16's own surface; `<DataList>` empty-state slot delegates per-surface copy without breaking Phase 16's contract.
 - [ ] Dimension 2 Visuals: PASS — component inventory enumerated; `<DashboardChecklist>`, `<ChecklistItem>`, `<DataList>`, `useIsMobile` defined; no new shadcn primitives added; new internal helpers owned by project.
 - [ ] Dimension 3 Color: PASS — 60/30/10 mapped to existing `--color-*` tokens; accent reserved-for list explicit (3 surfaces only); status-badge color map locked; mobile-icon-adjunct rule preserves color semantics.
-- [ ] Dimension 4 Typography: PASS — 4 sizes (14/14/20/28) declared with display reserved; 2 weights (400/600); label vs body separation via `text-muted-foreground` color (not weight); existing `<Badge>` primitive's internal `font-semibold` retained as scoped exception.
-- [ ] Dimension 5 Spacing: PASS — Tailwind 8-point scale carry-forward; touch-target floor `min-h-11` applied at primitive layer responsively; `<DataList>` mobile-card density `min-h-20`; checklist row `min-h-14`.
+- [ ] Dimension 4 Typography: PASS — 4 sizes (14/14/20/28) declared with display reserved; 2 weights (400/600); label vs body separation via `text-muted-foreground` color (not weight); existing `<Badge>` primitive's internal `font-semibold`, `<DataList>` table header `text-xs uppercase`, and `PageShell` `text-3xl` responsive uplift documented as scoped existing-primitive exceptions; zero `text-base` occurrences after revision.
+- [ ] Dimension 5 Spacing: PASS — Tailwind 8-point scale carry-forward; checklist row uses on-scale `gap-4 px-4 py-4` (md token); touch-target floor sub-scale (`min-h-11` / `min-h-14` / `min-h-20`) declared separately from spacing scale; `<DataList>` mobile-card density `min-h-20`; no off-scale spacing utilities remain.
 - [ ] Dimension 6 Registry Safety: PASS — no third-party registries; no new shadcn blocks; safety gate not applicable.
 
-**Approval:** pending (awaiting `gsd-ui-checker` validation)
+**Approval:** pending (awaiting `gsd-ui-checker` re-validation after revision)
