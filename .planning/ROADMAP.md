@@ -348,3 +348,48 @@ Plans:
 
 Plans:
 - [ ] TBD (run /gsd-plan-phase 16 to break down)
+
+---
+
+## Backlog
+
+### Phase 999.1: CI Stabilization — fix accumulated E2E test failures (BACKLOG)
+
+**Goal:** Captured 2026-04-28 nach Phase-15-Merge — alle 3 PRs (#1 phase-15, #2 chore, #3 fix) wurden via `--admin` gemerged trotz roter E2E-CI. Build / Install / Solver-Sidecar / API+Web-Build sind grün; nur der `Run Playwright tests` Step hat ~30-50 Failures verteilt über Phase 11-15. Dieses Backlog-Item triagiert sie systematisch in real bugs vs CI-environment-flakes und macht den `--admin`-Override für zukünftige PRs (Phase 16+) überflüssig.
+
+**Requirements:** TBD (siehe Triage-Result)
+**Plans:** 0 plans
+
+**Failure clusters (von PR #1 Run [25065085891](https://github.com/martinvidec/openaustria-school-flow/actions/runs/25065085891)):**
+
+- **Phase 13 (User-Verwaltung)** — admin-user-overrides (5), admin-user-roles (4), admin-user-permissions (2), admin-user-person-link (3), admin-user-silent-4xx (2), admin-users-list (3+)
+- **Phase 14 (Solver-Tuning)** — admin-solver-tuning-audit, -preferences (2), -restrictions (2), -integration (skipped — auf solver-run angewiesen)
+- **Phase 15 (DSGVO/Audit)** — admin-audit-log-csv, admin-audit-log-detail, admin-audit-log-filter, admin-dsgvo-* Suite
+- **Phase 10.5 (Operations)** — admin-import (3 tests, einer mit 1m-timeout), admin-timetable-edit-dnd
+- **Mobile-375 cascade** — ~15+ Tests mit 1-380ms Failures (deutet auf globalen Setup-Cascade-Fehler hin, möglicherweise gemeinsame fixture/page-context)
+
+**Triage-Strategie (vorgeschlagen für die Discuss-Phase):**
+
+1. **Sofort-Fixes**: gemeinsame Cascade-Fehler im mobile-Setup → 1 Fix repariert ~15 Tests
+2. **Per-cluster-Audit**: pro Phase eine Stichprobe lokal vs. CI ausführen — Diff identifizieren
+3. **Differentiation**: real bug (gleicher Fail in beiden) vs flake (CI-only) vs CI-env (timing/race) vs missing-fixture (Solver-Run-Tests etc.)
+4. **Fix-Plans pro Cluster**: 1 Plan pro Cluster oder 1 Plan für mehrere wenn Root-Cause geteilt
+
+**Known risks / Probable causes:**
+
+- Solver-Sidecar-Timing: Maven-Build dauert in CI 2-3min, Solver braucht 30s start_period — Tests die direkt nach setup laufen könnten Cold-Solver treffen
+- Mobile-375 cascade-Pattern (1-380ms): vermutlich `globalSetup` failure für mobile-Worker spezifisch oder shared admin-login fixture timed out
+- Phase-13-Tests: könnten Reihenfolge-abhängig sein (User-State von vorigem Test nötig) oder seed-data-Voraussetzung haben die in CI fehlt
+- Phase-14-integration: explizit `-` (skipped), nicht failed — solver-run zu langsam in CI?
+
+**Success criteria (TBD):**
+- [ ] CI-`Run Playwright tests`-Step grün auf einer leeren PR off main
+- [ ] Phase-16 PR kann ohne `--admin`-Override gemerged werden
+- [ ] Triage-Dokument im Phase-Verzeichnis kategorisiert jede Failure als real-bug/flake/env
+
+**Reference:**
+- PR #1 run: https://github.com/martinvidec/openaustria-school-flow/actions/runs/25065085891
+- Memory-Eintrag: `feedback_phase_branch_discipline.md` (warum --admin nötig war)
+
+Plans:
+- [ ] TBD (promote with /gsd-review-backlog when ready)
