@@ -159,4 +159,120 @@ describe('AuditInterceptor', () => {
     );
     expect(prisma.retentionPolicy.findUnique).not.toHaveBeenCalled();
   });
+
+  describe('extractResource URL parsing — DSGVO sub-resource walk (15-12)', () => {
+    beforeEach(() => {
+      // Extend the per-test prisma mock with DSGVO sub-resource delegates that
+      // the existing top-level beforeEach does not cover.
+      prisma.dsfaEntry = { findUnique: vi.fn().mockResolvedValue(null) };
+      prisma.vvzEntry = { findUnique: vi.fn().mockResolvedValue(null) };
+    });
+
+    it('walks past dsgvo for /api/v1/dsgvo/consent/grant → resource=consent', async () => {
+      prisma.consentRecord.findUnique.mockResolvedValue({ id: 'grant', granted: false });
+      await firstValueFrom(
+        interceptor.intercept(
+          ctx('PUT', '/api/v1/dsgvo/consent/grant', { id: 'grant' }, { granted: true }),
+          { handle: () => of({ id: 'grant' }) },
+        ),
+      );
+      expect(auditService.log).toHaveBeenCalledWith(
+        expect.objectContaining({ resource: 'consent' }),
+      );
+    });
+
+    it('walks past dsgvo for /api/v1/dsgvo/retention/:id → resource=retention + prisma.retentionPolicy.findUnique fired', async () => {
+      prisma.retentionPolicy.findUnique.mockResolvedValue({ id: 'uuid-123', dataCategory: 'X', retentionDays: 365 });
+      await firstValueFrom(
+        interceptor.intercept(
+          ctx('PUT', '/api/v1/dsgvo/retention/uuid-123', { id: 'uuid-123' }, { retentionDays: 730 }),
+          { handle: () => of({ id: 'uuid-123' }) },
+        ),
+      );
+      expect(prisma.retentionPolicy.findUnique).toHaveBeenCalledWith({ where: { id: 'uuid-123' } });
+      expect(auditService.log).toHaveBeenCalledWith(
+        expect.objectContaining({ resource: 'retention', resourceId: 'uuid-123' }),
+      );
+    });
+
+    it('walks past dsgvo for /api/v1/dsgvo/dsfa/:id → resource=dsfa', async () => {
+      await firstValueFrom(
+        interceptor.intercept(
+          ctx('PUT', '/api/v1/dsgvo/dsfa/uuid-123', { id: 'uuid-123' }, { name: 'X' }),
+          { handle: () => of({ id: 'uuid-123' }) },
+        ),
+      );
+      expect(auditService.log).toHaveBeenCalledWith(
+        expect.objectContaining({ resource: 'dsfa' }),
+      );
+    });
+
+    it('walks past dsgvo for /api/v1/dsgvo/vvz/:id → resource=vvz', async () => {
+      await firstValueFrom(
+        interceptor.intercept(
+          ctx('PUT', '/api/v1/dsgvo/vvz/uuid-123', { id: 'uuid-123' }, { name: 'X' }),
+          { handle: () => of({ id: 'uuid-123' }) },
+        ),
+      );
+      expect(auditService.log).toHaveBeenCalledWith(
+        expect.objectContaining({ resource: 'vvz' }),
+      );
+    });
+
+    it('walks past dsgvo for POST /api/v1/dsgvo/export → resource=export', async () => {
+      await firstValueFrom(
+        interceptor.intercept(
+          ctx('POST', '/api/v1/dsgvo/export', undefined, { personId: 'p1', schoolId: 's1' }),
+          { handle: () => of({ id: 'job-1' }) },
+        ),
+      );
+      expect(auditService.log).toHaveBeenCalledWith(
+        expect.objectContaining({ resource: 'export', action: 'create' }),
+      );
+    });
+
+    it('walks past dsgvo for POST /api/v1/dsgvo/export/:id → resource=export', async () => {
+      await firstValueFrom(
+        interceptor.intercept(
+          ctx('POST', '/api/v1/dsgvo/export/uuid-123', undefined, { foo: 1 }),
+          { handle: () => of({ id: 'job-2' }) },
+        ),
+      );
+      expect(auditService.log).toHaveBeenCalledWith(
+        expect.objectContaining({ resource: 'export' }),
+      );
+    });
+
+    it('walks past dsgvo for POST /api/v1/dsgvo/deletion/:id → resource=deletion', async () => {
+      await firstValueFrom(
+        interceptor.intercept(
+          ctx('POST', '/api/v1/dsgvo/deletion/uuid-123', undefined, { confirmation: 'X' }),
+          { handle: () => of({ id: 'job-3' }) },
+        ),
+      );
+      expect(auditService.log).toHaveBeenCalledWith(
+        expect.objectContaining({ resource: 'deletion' }),
+      );
+    });
+
+    it('extractResource(/api/v1/dsgvo/jobs) === "jobs"', () => {
+      expect((interceptor as any).extractResource('/api/v1/dsgvo/jobs')).toBe('jobs');
+    });
+
+    it('non-DSGVO regression: extractResource(/api/v1/schools/uuid-123) === "schools"', () => {
+      expect((interceptor as any).extractResource('/api/v1/schools/uuid-123')).toBe('schools');
+    });
+
+    it('non-DSGVO regression: extractResource(/api/v1/audit) === "audit"', () => {
+      expect((interceptor as any).extractResource('/api/v1/audit')).toBe('audit');
+    });
+
+    it('bare /api/v1/dsgvo (no sub-segment) → resource=dsgvo (defensive fallback)', () => {
+      expect((interceptor as any).extractResource('/api/v1/dsgvo')).toBe('dsgvo');
+    });
+
+    it('unknown DSGVO sub-resource → resource=dsgvo (NOT auto-promoted)', () => {
+      expect((interceptor as any).extractResource('/api/v1/dsgvo/foo/x')).toBe('dsgvo');
+    });
+  });
 });
