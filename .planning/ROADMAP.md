@@ -309,7 +309,7 @@ Plans:
 **Goal:** Admin kann Einwilligungen, Aufbewahrungsrichtlinien, DSFA/VVZ und DSGVO-Jobs aus der UI verwalten und das Audit-Log durchsuchen und exportieren.
 **Requirements:** DSGVO-ADM-01, DSGVO-ADM-02, DSGVO-ADM-03, DSGVO-ADM-04, DSGVO-ADM-05, DSGVO-ADM-06, AUDIT-VIEW-01, AUDIT-VIEW-02, AUDIT-VIEW-03
 **Depends on:** Phase 13 (DSGVO-Jobs laufen pro User; Audit-Log filtert nach Actor)
-**Plans:** 8/11 plans executed
+**Plans:** 9/11 plans executed
 
 **Success criteria:**
 - [ ] Admin kann Einwilligungs-Records nach Zweck, Status und User filtern und durchsuchen

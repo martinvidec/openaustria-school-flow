@@ -4,27 +4,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { ConsentsTab } from './ConsentsTab';
 import { DsfaTable } from './DsfaTable';
+import { JobsTab } from './JobsTab';
 import { RetentionTab } from './RetentionTab';
 import { VvzTable } from './VvzTable';
 
 /**
- * Phase 15-05 foundation: 4-tab shell for /admin/dsgvo.
+ * Phase 15-05 foundation: 4-tab shell for /admin/dsgvo. All four tabs are
+ * now LIVE — the previous PlaceholderPanel + `data-dsgvo-tab-placeholder`
+ * marker has been removed.
  *
  * Owns:
  *  - Tab state (URL-synced via Route search-params per D-04 + D-26)
  *  - Sub-tab state for DSFA/VVZ
  *  - Mobile fallback (ToggleGroup below md)
  *
- * Each tab body is a placeholder. Wiring lands in:
- *  - Tab "Einwilligungen" / "Aufbewahrung" → plan 15-06
- *  - Tab "DSFA & VVZ" → plan 15-07 (DSFA + VVZ sub-tabs LIVE — see below)
- *  - Tab "Jobs" → plan 15-08
- *
- * Plan 15-07 update: DSFA + VVZ sub-tab placeholders replaced with the real
- * <DsfaTable /> + <VvzTable /> components. The intermediate "DsfaVvzTab"
- * wrapper file mentioned in plan 15-07 metadata was intentionally OMITTED —
- * the sub-tab logic already lives in this file, an extra wrapper would be
- * a thin pass-through with no value.
+ * Wiring history:
+ *  - Tab "Einwilligungen" / "Aufbewahrung" → plan 15-06 (ConsentsTab + RetentionTab)
+ *  - Tab "DSFA & VVZ" → plan 15-07 (DsfaTable + VvzTable inline sub-tabs)
+ *  - Tab "Jobs" → plan 15-08 (JobsTab)
  */
 
 export type DsgvoTabValue = 'consents' | 'retention' | 'dsfa-vvz' | 'jobs';
@@ -124,31 +121,9 @@ export function DsgvoTabs({ schoolId, initialTab, initialSub }: Props) {
           </Tabs>
         </TabsContent>
         <TabsContent value="jobs" className="pt-6">
-          <PlaceholderPanel plan="15-08" title="Jobs" schoolId={schoolId} />
+          <JobsTab schoolId={schoolId} />
         </TabsContent>
       </Tabs>
-    </div>
-  );
-}
-
-function PlaceholderPanel({
-  plan,
-  title,
-  schoolId,
-}: {
-  plan: string;
-  title: string;
-  schoolId: string;
-}) {
-  return (
-    <div
-      data-dsgvo-tab-placeholder={plan}
-      className="rounded-md border border-dashed p-8 text-sm text-muted-foreground"
-    >
-      <p className="font-semibold text-foreground">{title}</p>
-      <p>
-        Wird in Plan {plan} ausgeliefert (schoolId: {schoolId.slice(0, 8)}…).
-      </p>
     </div>
   );
 }
