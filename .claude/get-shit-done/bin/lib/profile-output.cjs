@@ -12,7 +12,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
-const { output, error, safeReadFile } = require('./core.cjs');
+const { output, error, safeReadFile, loadConfig } = require('./core.cjs');
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -173,19 +173,23 @@ const CLAUDE_INSTRUCTIONS = {
 };
 
 const CLAUDE_MD_FALLBACKS = {
-  project: 'Project not yet initialized. Run /gsd:new-project to set up.',
+  project: 'Project not yet initialized. Run /gsd-new-project to set up.',
   stack: 'Technology stack not yet documented. Will populate after codebase mapping or first phase.',
   conventions: 'Conventions not yet established. Will populate as patterns emerge during development.',
   architecture: 'Architecture not yet mapped. Follow existing patterns found in the codebase.',
+  skills: 'No project skills found. Add skills to any of: `.claude/skills/`, `.agents/skills/`, `.cursor/skills/`, `.github/skills/`, or `.codex/skills/` with a `SKILL.md` index file.',
 };
+
+// Directories where project skills may live (checked in order)
+const SKILL_SEARCH_DIRS = ['.claude/skills', '.agents/skills', '.cursor/skills', '.github/skills', '.codex/skills'];
 
 const CLAUDE_MD_WORKFLOW_ENFORCEMENT = [
   'Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.',
   '',
   'Use these entry points:',
-  '- `/gsd:quick` for small fixes, doc updates, and ad-hoc tasks',
-  '- `/gsd:debug` for investigation and bug fixing',
-  '- `/gsd:execute-phase` for planned phase work',
+  '- `/gsd-quick` for small fixes, doc updates, and ad-hoc tasks',
+  '- `/gsd-debug` for investigation and bug fixing',
+  '- `/gsd-execute-phase` for planned phase work',
   '',
   'Do not make direct repo edits outside a GSD workflow unless the user explicitly asks to bypass it.',
 ].join('\n');
@@ -194,7 +198,7 @@ const CLAUDE_MD_PROFILE_PLACEHOLDER = [
   '<!-- GSD:profile-start -->',
   '## Developer Profile',
   '',
-  '> Profile not yet configured. Run `/gsd:profile-user` to generate your developer profile.',
+  '> Profile not yet configured. Run `/gsd-profile-user` to generate your developer profile.',
   '> This section is managed by `generate-claude-profile` -- do not edit manually.',
   '<!-- GSD:profile-end -->',
 ].join('\n');
@@ -281,7 +285,7 @@ function generateProjectSection(cwd) {
   const projectPath = path.join(cwd, '.planning', 'PROJECT.md');
   const content = safeReadFile(projectPath);
   if (!content) {
-    return { content: CLAUDE_MD_FALLBACKS.project, source: 'PROJECT.md', hasFallback: true };
+    return { content: CLAUDE_MD_FALLBACKS.project, source: 'PROJECT.md', linkPath: null, hasFallback: true };
   }
   const parts = [];
   const h1Match = content.match(/^# (.+)$/m);
@@ -302,9 +306,9 @@ function generateProjectSection(cwd) {
     if (body) parts.push(`### Constraints\n\n${body}`);
   }
   if (parts.length === 0) {
-    return { content: CLAUDE_MD_FALLBACKS.project, source: 'PROJECT.md', hasFallback: true };
+    return { content: CLAUDE_MD_FALLBACKS.project, source: 'PROJECT.md', linkPath: null, hasFallback: true };
   }
-  return { content: parts.join('\n\n'), source: 'PROJECT.md', hasFallback: false };
+  return { content: parts.join('\n\n'), source: 'PROJECT.md', linkPath: '.planning/PROJECT.md', hasFallback: false };
 }
 
 function generateStackSection(cwd) {
@@ -312,12 +316,14 @@ function generateStackSection(cwd) {
   const researchPath = path.join(cwd, '.planning', 'research', 'STACK.md');
   let content = safeReadFile(codebasePath);
   let source = 'codebase/STACK.md';
+  let linkPath = '.planning/codebase/STACK.md';
   if (!content) {
     content = safeReadFile(researchPath);
     source = 'research/STACK.md';
+    linkPath = '.planning/research/STACK.md';
   }
   if (!content) {
-    return { content: CLAUDE_MD_FALLBACKS.stack, source: 'STACK.md', hasFallback: true };
+    return { content: CLAUDE_MD_FALLBACKS.stack, source: 'STACK.md', linkPath: null, hasFallback: true };
   }
   const lines = content.split('\n');
   const summaryLines = [];
@@ -332,14 +338,14 @@ function generateStackSection(cwd) {
     if (line.startsWith('- ') || line.startsWith('* ')) summaryLines.push(line);
   }
   const summary = summaryLines.length > 0 ? summaryLines.join('\n') : content.trim();
-  return { content: summary, source, hasFallback: false };
+  return { content: summary, source, linkPath, hasFallback: false };
 }
 
 function generateConventionsSection(cwd) {
   const conventionsPath = path.join(cwd, '.planning', 'codebase', 'CONVENTIONS.md');
   const content = safeReadFile(conventionsPath);
   if (!content) {
-    return { content: CLAUDE_MD_FALLBACKS.conventions, source: 'CONVENTIONS.md', hasFallback: true };
+    return { content: CLAUDE_MD_FALLBACKS.conventions, source: 'CONVENTIONS.md', linkPath: null, hasFallback: true };
   }
   const lines = content.split('\n');
   const summaryLines = [];
@@ -348,14 +354,14 @@ function generateConventionsSection(cwd) {
     if (line.startsWith('- ') || line.startsWith('* ') || line.startsWith('|')) summaryLines.push(line);
   }
   const summary = summaryLines.length > 0 ? summaryLines.join('\n') : content.trim();
-  return { content: summary, source: 'CONVENTIONS.md', hasFallback: false };
+  return { content: summary, source: 'CONVENTIONS.md', linkPath: '.planning/codebase/CONVENTIONS.md', hasFallback: false };
 }
 
 function generateArchitectureSection(cwd) {
   const architecturePath = path.join(cwd, '.planning', 'codebase', 'ARCHITECTURE.md');
   const content = safeReadFile(architecturePath);
   if (!content) {
-    return { content: CLAUDE_MD_FALLBACKS.architecture, source: 'ARCHITECTURE.md', hasFallback: true };
+    return { content: CLAUDE_MD_FALLBACKS.architecture, source: 'ARCHITECTURE.md', linkPath: null, hasFallback: true };
   }
   const lines = content.split('\n');
   const summaryLines = [];
@@ -364,15 +370,106 @@ function generateArchitectureSection(cwd) {
     if (line.startsWith('- ') || line.startsWith('* ') || line.startsWith('|') || line.startsWith('```')) summaryLines.push(line);
   }
   const summary = summaryLines.length > 0 ? summaryLines.join('\n') : content.trim();
-  return { content: summary, source: 'ARCHITECTURE.md', hasFallback: false };
+  return { content: summary, source: 'ARCHITECTURE.md', linkPath: '.planning/codebase/ARCHITECTURE.md', hasFallback: false };
 }
 
 function generateWorkflowSection() {
   return {
     content: CLAUDE_MD_WORKFLOW_ENFORCEMENT,
     source: 'GSD defaults',
+    linkPath: null,
     hasFallback: false,
   };
+}
+
+/**
+ * Discover project skills from standard directories and extract frontmatter
+ * (name + description) for each. Returns a table summary for CLAUDE.md so
+ * agents know which skills are available at session startup (Layer 1 discovery).
+ */
+function generateSkillsSection(cwd) {
+  const discovered = [];
+
+  for (const dir of SKILL_SEARCH_DIRS) {
+    const absDir = path.join(cwd, dir);
+    if (!fs.existsSync(absDir)) continue;
+
+    let entries;
+    try {
+      entries = fs.readdirSync(absDir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      // Skip GSD's own installed skills — only surface project-specific skills
+      if (entry.name.startsWith('gsd-')) continue;
+
+      const skillMdPath = path.join(absDir, entry.name, 'SKILL.md');
+      if (!fs.existsSync(skillMdPath)) continue;
+
+      const content = safeReadFile(skillMdPath);
+      if (!content) continue;
+
+      const frontmatter = extractSkillFrontmatter(content);
+      const name = frontmatter.name || entry.name;
+      const description = frontmatter.description || '';
+
+      // Avoid duplicates when same skill dir is symlinked from multiple locations
+      if (discovered.some(s => s.name === name)) continue;
+
+      discovered.push({ name, description, path: `${dir}/${entry.name}` });
+    }
+  }
+
+  if (discovered.length === 0) {
+    return { content: CLAUDE_MD_FALLBACKS.skills, source: 'skills/', hasFallback: true };
+  }
+
+  const lines = ['| Skill | Description | Path |', '|-------|-------------|------|'];
+  for (const skill of discovered) {
+    // Sanitize table cell content (escape pipes)
+    const desc = skill.description.replace(/\|/g, '\\|').replace(/\n/g, ' ').trim();
+    const safeName = skill.name.replace(/\|/g, '\\|');
+    lines.push(`| ${safeName} | ${desc} | \`${skill.path}/SKILL.md\` |`);
+  }
+
+  return { content: lines.join('\n'), source: 'skills/', hasFallback: false };
+}
+
+/**
+ * Extract name and description from YAML-like frontmatter in a SKILL.md file.
+ * Handles multi-line description values (continuation lines indented with spaces).
+ */
+function extractSkillFrontmatter(content) {
+  const result = { name: '', description: '' };
+  const fmMatch = content.match(/^---\s*\n([\s\S]*?)\n---/);
+  if (!fmMatch) return result;
+
+  const fmBlock = fmMatch[1];
+  const lines = fmBlock.split('\n');
+
+  let currentKey = '';
+  for (const line of lines) {
+    // Top-level key: value
+    const kvMatch = line.match(/^(\w[\w-]*):\s*(.*)/);
+    if (kvMatch) {
+      currentKey = kvMatch[1];
+      const value = kvMatch[2].trim();
+      if (currentKey === 'name') result.name = value;
+      if (currentKey === 'description') result.description = value;
+      continue;
+    }
+    // Continuation line (indented) for multi-line values
+    if (currentKey === 'description' && /^\s+/.test(line)) {
+      result.description += ' ' + line.trim();
+    } else {
+      currentKey = '';
+    }
+  }
+
+  return result;
 }
 
 // ─── Commands ─────────────────────────────────────────────────────────────────
@@ -671,7 +768,7 @@ function cmdGenerateDevPreferences(cwd, options, raw) {
 
   let stackBlock;
   if (analysis.data_source === 'questionnaire') {
-    stackBlock = 'Stack preferences not available (questionnaire-only profile). Run `/gsd:profile-user --refresh` with session data to populate.';
+    stackBlock = 'Stack preferences not available (questionnaire-only profile). Run `/gsd-profile-user --refresh` with session data to populate.';
   } else if (options.stack) {
     stackBlock = options.stack;
   } else {
@@ -691,7 +788,7 @@ function cmdGenerateDevPreferences(cwd, options, raw) {
 
   const result = {
     command_path: outputPath,
-    command_name: '/gsd:dev-preferences',
+    command_name: '/gsd-dev-preferences',
     dimensions_included: dimensionsIncluded,
     source: analysis.data_source || 'session_analysis',
   };
@@ -757,7 +854,7 @@ function cmdGenerateClaudeProfile(cwd, options, raw) {
     '<!-- GSD:profile-start -->',
     '## Developer Profile',
     '',
-    `> Generated by GSD from ${dataSource}. Run \`/gsd:profile-user --refresh\` to update.`,
+    `> Generated by GSD from ${dataSource}. Run \`/gsd-profile-user --refresh\` to update.`,
     '',
     '| Dimension | Rating | Confidence |',
     '|-----------|--------|------------|',
@@ -776,7 +873,13 @@ function cmdGenerateClaudeProfile(cwd, options, raw) {
   } else if (options.output) {
     targetPath = path.isAbsolute(options.output) ? options.output : path.join(cwd, options.output);
   } else {
-    targetPath = path.join(cwd, 'CLAUDE.md');
+    // Read claude_md_path from config, default to ./CLAUDE.md
+    let configClaudeMdPath = './CLAUDE.md';
+    try {
+      const config = loadConfig(cwd);
+      if (config.claude_md_path) configClaudeMdPath = config.claude_md_path;
+    } catch { /* use default */ }
+    targetPath = path.isAbsolute(configClaudeMdPath) ? configClaudeMdPath : path.join(cwd, configClaudeMdPath);
   }
 
   let action;
@@ -815,12 +918,13 @@ function cmdGenerateClaudeProfile(cwd, options, raw) {
 }
 
 function cmdGenerateClaudeMd(cwd, options, raw) {
-  const MANAGED_SECTIONS = ['project', 'stack', 'conventions', 'architecture', 'workflow'];
+  const MANAGED_SECTIONS = ['project', 'stack', 'conventions', 'architecture', 'skills', 'workflow'];
   const generators = {
     project: generateProjectSection,
     stack: generateStackSection,
     conventions: generateConventionsSection,
     architecture: generateArchitectureSection,
+    skills: generateSkillsSection,
     workflow: generateWorkflowSection,
   };
   const sectionHeadings = {
@@ -828,6 +932,7 @@ function cmdGenerateClaudeMd(cwd, options, raw) {
     stack: '## Technology Stack',
     conventions: '## Conventions',
     architecture: '## Architecture',
+    skills: '## Project Skills',
     workflow: '## GSD Workflow Enforcement',
   };
 
@@ -846,11 +951,33 @@ function cmdGenerateClaudeMd(cwd, options, raw) {
     }
   }
 
+  let assemblyConfig = {};
+  let configClaudeMdPath = './CLAUDE.md';
+  try {
+    const config = loadConfig(cwd);
+    if (config.claude_md_path) configClaudeMdPath = config.claude_md_path;
+    if (config.claude_md_assembly) assemblyConfig = config.claude_md_assembly;
+  } catch { /* use default */ }
+
   let outputPath = options.output;
   if (!outputPath) {
-    outputPath = path.join(cwd, 'CLAUDE.md');
+    outputPath = path.isAbsolute(configClaudeMdPath) ? configClaudeMdPath : path.join(cwd, configClaudeMdPath);
   } else if (!path.isAbsolute(outputPath)) {
     outputPath = path.join(cwd, outputPath);
+  }
+
+  const globalAssemblyMode = assemblyConfig.mode || 'embed';
+  const blockModes = assemblyConfig.blocks || {};
+
+  // Return the assembled content for a section, respecting link vs embed mode.
+  // "link" mode writes `@<linkPath>` when the generator has a real source file.
+  // Falls back to "embed" for sections without a linkable source (workflow, fallbacks).
+  function buildSectionContent(name, gen, heading) {
+    const effectiveMode = blockModes[name] || globalAssemblyMode;
+    if (effectiveMode === 'link' && gen.linkPath && !gen.hasFallback) {
+      return buildSection(name, gen.source, `${heading}\n\n@${gen.linkPath}`);
+    }
+    return buildSection(name, gen.source, `${heading}\n\n${gen.content}`);
   }
 
   let existingContent = safeReadFile(outputPath);
@@ -861,8 +988,7 @@ function cmdGenerateClaudeMd(cwd, options, raw) {
     for (const name of MANAGED_SECTIONS) {
       const gen = generated[name];
       const heading = sectionHeadings[name];
-      const body = `${heading}\n\n${gen.content}`;
-      sections.push(buildSection(name, gen.source, body));
+      sections.push(buildSectionContent(name, gen, heading));
     }
     sections.push('');
     sections.push(CLAUDE_MD_PROFILE_PLACEHOLDER);
@@ -877,13 +1003,15 @@ function cmdGenerateClaudeMd(cwd, options, raw) {
     for (const name of MANAGED_SECTIONS) {
       const gen = generated[name];
       const heading = sectionHeadings[name];
-      const body = `${heading}\n\n${gen.content}`;
-      const fullSection = buildSection(name, gen.source, body);
+      const fullSection = buildSectionContent(name, gen, heading);
       const hasMarkers = fileContent.indexOf(`<!-- GSD:${name}-start`) !== -1;
 
       if (hasMarkers) {
         if (options.auto) {
-          const expectedBody = `${heading}\n\n${gen.content}`;
+          const effectiveMode = blockModes[name] || globalAssemblyMode;
+          const expectedBody = (effectiveMode === 'link' && gen.linkPath && !gen.hasFallback)
+            ? `${heading}\n\n@${gen.linkPath}`
+            : `${heading}\n\n${gen.content}`;
           if (detectManualEdit(fileContent, name, expectedBody)) {
             sectionsSkipped.push(name);
             const genIdx = sectionsGenerated.indexOf(name);
@@ -925,7 +1053,7 @@ function cmdGenerateClaudeMd(cwd, options, raw) {
   let message = `Generated ${genCount}/${totalManaged} sections.`;
   if (sectionsFallback.length > 0) message += ` Fallback: ${sectionsFallback.join(', ')}.`;
   if (sectionsSkipped.length > 0) message += ` Skipped (manually edited): ${sectionsSkipped.join(', ')}.`;
-  if (profileStatus === 'placeholder_added') message += ' Run /gsd:profile-user to unlock Developer Profile.';
+  if (profileStatus === 'placeholder_added') message += ' Run /gsd-profile-user to unlock Developer Profile.';
 
   const result = {
     claude_md_path: outputPath,
