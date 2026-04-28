@@ -1,11 +1,12 @@
 ---
 phase: 16
 slug: admin-dashboard-mobile-h-rtung
-status: draft
+status: approved
 shadcn_initialized: true
 preset: "default / neutral / cssVariables (apps/web/components.json)"
 created: 2026-04-28
 revised: 2026-04-28
+reviewed_at: 2026-04-28
 ---
 
 # Phase 16 — UI Design Contract
