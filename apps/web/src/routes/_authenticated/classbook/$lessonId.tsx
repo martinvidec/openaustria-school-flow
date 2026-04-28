@@ -92,6 +92,8 @@ function ClassBookLessonPage() {
 
   const handleTabChange = (value: string) => {
     navigate({
+      to: Route.fullPath,
+      params: { lessonId },
       search: { tab: value },
       replace: true,
     });
