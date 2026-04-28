@@ -666,33 +666,23 @@ This single spec produces the **gap report D-16 calls for**. Failures become Pha
 | A4 | Cron registration in `DsgvoModule.onModuleInit` is idempotent across multiple imports because NestJS deduplicates module instances by reference | Common Pitfalls #2 | Duplicate cron jobs registered. Mitigation: Approach B (don't import DsgvoModule). |
 | A5 | The "audit-log" deep-link from category 10 should point at `/admin/audit-log` (per UI-SPEC § Copywriting Contract row 10) — confirmed verbatim in UI-SPEC table | Code Examples | None — verified. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **What constitutes "Solver-Config existiert"?**
-   - What we know: D-05 says `done` = config + run. D-06 row 8 says `unvollständig` = config without run.
-   - What's unclear: "Config" is not a single Prisma model. It's the combination of `ConstraintWeightOverride` (Phase 14 D-05) and `ConstraintTemplate` (Phase 14 D-04 / table `constraint_template`) — or just the latter — or also `ClassTimeslotRestriction` (Phase 14 D-12) — or also `SubjectTimePreference` (Phase 14 D-12).
-   - Recommendation: planner to confirm with user. **Default for planning: "Config exists" = `(SELECT COUNT(*) FROM constraint_weight_override WHERE school_id = ?) + (SELECT COUNT(*) FROM constraint_template WHERE school_id = ?) > 0`.** Captures both "school customized weights" and "school added a custom template".
+   - **RESOLVED 2026-04-28 (user via /gsd-plan-phase):** Union — `ConstraintTemplate.count ≥ 1` OR `ConstraintWeightOverride.count ≥ 1` per school counts as `unvollständig` (still needs ≥1 successful run for `erledigt`). Matches D-04 "Existenz reicht" — every active customization counts. Captured as **D-23** in CONTEXT.md.
+   - Implementation: `(SELECT COUNT(*) FROM constraint_weight_override WHERE school_id = ?) + (SELECT COUNT(*) FROM constraint_template WHERE school_id = ?) > 0`.
 
 2. **What's the exact "Wochentage konfiguriert" condition (D-06 row 2 partial-state)?**
-   - What we know: D-06 says `unvollständig` if `≥1 Period vorhanden aber Wochentage fehlen`.
-   - What's unclear: schema has `SchoolDay` table per `schemaprisma.prisma:115-125` — `dayOfWeek` enum + `isActive` boolean. Default: every day inactive? Active by default? Phase 10.2-02 shipped a Wochentage-fix — verify default state.
-   - Recommendation: planner to inspect Phase 10.2-02 plan + seed.ts. **Default for planning: "configured" = `prisma.schoolDay.count({ where: { schoolId, isActive: true } }) >= 1`.**
+   - **RESOLVED:** "configured" = `prisma.schoolDay.count({ where: { schoolId, isActive: true } }) >= 1`. Verified Phase 10.2-02 fix and seed.ts: `SchoolDay` rows are seeded inactive by default; admin must activate at least one weekday for the timegrid to be valid. Captured as **D-24** in CONTEXT.md.
 
 3. **Should `MobileSidebar.tsx` admin-link audit (D-18) include the new Dashboard entry only, or also Phase 13/14/15 entries?**
-   - What we know: D-18 says "verifiziert + ergänzt fehlende Admin-Links". UI-SPEC § Sidebar position says "Same insertion in `MobileSidebar.tsx`."
-   - What's unclear: comparing `AppSidebar.tsx` (Phase 15 carry-forward) vs `MobileSidebar.tsx` reveals that **MobileSidebar is missing the Phase 15 entries `DSGVO-Verwaltung` and `Audit-Log` AND the Phase 14 `Solver-Tuning` entry exists but no Phase 15 follow-ups**. Verified via grep.
-   - Recommendation: `MobileSidebar.tsx` audit-and-add task in plan. Add: `Dashboard` (NEW, top), `DSGVO-Verwaltung`, `Audit-Log`. Verify all are admin-only.
-   - **`[VERIFIED: apps/web/src/components/layout/AppSidebar.tsx:175-189 has DSGVO + Audit-Log; apps/web/src/components/layout/MobileSidebar.tsx:38-151 does NOT]`** — this is a Phase 15 mobile gap that surfaces in Phase 16.
+   - **RESOLVED:** Add three entries: `Dashboard` (NEW, top), `DSGVO-Verwaltung`, `Audit-Log`. Verified missing in `MobileSidebar.tsx:38-151` vs present in `AppSidebar.tsx:175-189` (Phase 15 mobile gap). Plan 03 Task 1 closes the gap.
 
 4. **Should the touch-target lift in `button.tsx` use `min-h-11` (44px floor) or `h-11` (locked 44px)?**
-   - What we know: UI-SPEC § Spacing § "Touch-target floors" specifies `min-h-11` (responsive: `min-h-11 sm:min-h-{original}`).
-   - What's unclear: passing custom `className` to `Button` might not override `min-h` because Tailwind specificity is class-order-based. The existing primitive uses `h-10` etc.; replacing with `min-h-11 sm:h-10` MAY collide with caller-passed `h-12 ...`.
-   - Recommendation: keep `h-{n}` declared AND prepend `min-h-11 sm:min-h-{n}`. Tailwind merges via `cn()` — last-wins. Verify with `tailwind-merge` compatibility (`apps/web/src/lib/utils.ts` uses `cn`).
+   - **RESOLVED:** `min-h-11 sm:min-h-{original}` — responsive floor that keeps desktop unchanged. Tailwind `cn()` merges via `tailwind-merge` so caller `className` still wins. Plan 04 implements.
 
 5. **Does `<DataList>` need `serverSidePagination` support out-of-box for `audit-log` (Phase 15 surface)?**
-   - What we know: UI-SPEC § Component Inventory § `<DataList>` API — "Sort/filter/pagination: out-of-scope for the `<DataList>` primitive itself per CONTEXT discretion."
-   - What's unclear: audit-log already has cursor-based pagination via `apps/web/src/components/admin/audit-log/AuditTable.tsx`. Migration to `<DataList>` keeps pagination ABOVE the component.
-   - Recommendation: confirmed by UI-SPEC. No change needed.
+   - **RESOLVED:** No. UI-SPEC § Component Inventory keeps pagination ABOVE `<DataList>` (audit-log already owns its cursor-based pagination via `AuditTable.tsx`). `<DataList>` stays a presentation primitive.
 
 ## Environment Availability
 

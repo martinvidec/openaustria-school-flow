@@ -71,6 +71,10 @@ Zwei Liefergegenstände unter einem Dach:
 - **D-21:** Tab-Routing falls benötigt (z.B. Dashboard-Sub-Bereiche): `useState` + `Route.useSearch()`-Pattern (Phase 15 D-26 — kein `useTab`-Hook).
 - **D-22:** Migrations-Hard-Rule: keine `prisma db push` (CLAUDE.md). Falls neue Backend-Models nötig (z.B. cached dashboard-status) → echte `prisma migrate dev`.
 
+### Solver/Wochentage Status-Semantik (resolved during planning 2026-04-28)
+- **D-23:** Solver "Config existiert" Semantik (klärt D-05/D-06 row 8): `(ConstraintWeightOverride.count + ConstraintTemplate.count) > 0` per school. Union-Variante — jede aktive Customization (Template oder Override) zählt als `unvollständig`. `erledigt` weiterhin nur wenn zusätzlich ≥1 erfolgreich generierter Run vorliegt. User-bestätigt während /gsd-plan-phase.
+- **D-24:** Wochentage "konfiguriert" Semantik (klärt D-06 row 2): `SchoolDay.count(where: { schoolId, isActive: true }) >= 1`. Seed-default ist inactive — Admin muss explizit aktivieren. Phase 10.2-02 etabliertes Pattern.
+
 ### Claude's Discretion
 - Konkretes Card-Style-Design der Dashboard-Einträge (Linear-style Card vs shadcn-Card vs custom)
 - Status-Badge-Farben (Vorschlag: erledigt=green, unvollständig=amber, fehlt=red — wird im UI-Phase finalisiert)

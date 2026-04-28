@@ -333,7 +333,7 @@ Plans:
 **Goal:** Admin sieht beim Login ein Dashboard mit Setup-Completeness-Checkliste das alle Admin-Surfaces aus Phasen 10–15 zusammenführt und als Einstiegspunkt dient; Mobile-Parity aller Admin-Surfaces ist final verifiziert.
 **Requirements:** ADMIN-01, ADMIN-02, ADMIN-03, MOBILE-ADM-01, MOBILE-ADM-02, MOBILE-ADM-03
 **Depends on:** Phasen 10-15 (Dashboard verlinkt auf alle CRUD-Surfaces; Mobile-Härtung verifiziert alle gelieferten Oberflächen)
-**Plans:** 0 plans
+**Plans:** 7 plans
 
 **Success criteria:**
 - [ ] Admin sieht beim Login ein Dashboard mit Setup-Completeness-Checkliste (Schule, Zeitraster, Schuljahr, Fächer, Lehrer, Klassen, Schüler, Solver, DSGVO, Audit)
@@ -347,7 +347,13 @@ Plans:
 - MOBILE-ADM-Audit: finaler Mobile-Sweep kann UI-Regressions aus Phasen 10-15 aufdecken — Gap-Fix-Tasks innerhalb Phase 16 einplanen.
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 16 to break down)
+- [ ] 16-01-PLAN.md — Backend DashboardModule + DashboardService aggregator + admin-only controller + table-driven service spec + integration spec [Wave 1]
+- [ ] 16-02-PLAN.md — Frontend foundation: extract useIsMobile, build useDashboardStatus, build shared DataList, build ChecklistItem + DashboardChecklist (with unit tests) [Wave 1]
+- [ ] 16-03-PLAN.md — Role-aware login redirect, /admin/index.tsx Dashboard route, AppSidebar + MobileSidebar entries (Phase 15 gap closure: DSGVO + Audit-Log added to MobileSidebar) [Wave 2, depends on 01+02]
+- [ ] 16-04-PLAN.md — Touch-target hardening: lift Button + Input + Select primitives to min-h-11 on <sm (responsive sm:min-h-{n} preserves desktop) [Wave 1]
+- [ ] 16-05-PLAN.md — Mobile sweep audit spec + migrate Phase 14 (4 solver-tuning tables) + Phase 15 (5 DSGVO/audit tables) zero-mode tables to DataList [Wave 3, depends on 02+04]
+- [ ] 16-06-PLAN.md — Mutation-hook invalidation fan-out: 13 hook files × ~57 mutations add `qc.invalidateQueries({ queryKey: dashboardKeys.status })` to onSuccess [Wave 3, depends on 01+02]
+- [ ] 16-07-PLAN.md — E2E coverage closure: login-redirect.spec.ts (5 roles) + admin-dashboard.spec.ts (desktop) + admin-dashboard.mobile.spec.ts (375px + MobileSidebar drawer) [Wave 4, depends on 03+05+06]
 
 ---
 
@@ -358,7 +364,7 @@ Plans:
 **Goal:** Captured 2026-04-28 nach Phase-15-Merge — alle 3 PRs (#1 phase-15, #2 chore, #3 fix) wurden via `--admin` gemerged trotz roter E2E-CI. Build / Install / Solver-Sidecar / API+Web-Build sind grün; nur der `Run Playwright tests` Step hat ~30-50 Failures verteilt über Phase 11-15. Dieses Backlog-Item triagiert sie systematisch in real bugs vs CI-environment-flakes und macht den `--admin`-Override für zukünftige PRs (Phase 16+) überflüssig.
 
 **Requirements:** TBD (siehe Triage-Result)
-**Plans:** 0 plans
+**Plans:** 7 plans
 
 **Failure clusters (von PR #1 Run [25065085891](https://github.com/martinvidec/openaustria-school-flow/actions/runs/25065085891)):**
 
