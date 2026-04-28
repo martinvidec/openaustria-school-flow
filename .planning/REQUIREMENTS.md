@@ -73,18 +73,18 @@
 
 ### DSGVO Admin
 
-- [ ] **DSGVO-ADM-01**: Admin kann Einwilligungs-Records nach Zweck/Status filtern und durchsuchen
-- [ ] **DSGVO-ADM-02**: Admin kann Aufbewahrungsrichtlinien pro Datenkategorie editieren
-- [ ] **DSGVO-ADM-03**: Admin kann DSFA-Einträge (Datenschutz-Folgenabschätzung) anlegen und editieren
-- [ ] **DSGVO-ADM-04**: Admin kann VVZ-Einträge (Verarbeitungsverzeichnis) anlegen und editieren
-- [ ] **DSGVO-ADM-05**: Admin kann Art. 15 Datenexport für einen User aus der UI anstoßen und den BullMQ-Job-Status verfolgen
-- [ ] **DSGVO-ADM-06**: Admin kann Art. 17 Anonymisierung/Löschung für einen User aus der UI anstoßen und bestätigen
+- [x] **DSGVO-ADM-01**: Admin kann Einwilligungs-Records nach Zweck/Status filtern und durchsuchen
+- [x] **DSGVO-ADM-02**: Admin kann Aufbewahrungsrichtlinien pro Datenkategorie editieren
+- [x] **DSGVO-ADM-03**: Admin kann DSFA-Einträge (Datenschutz-Folgenabschätzung) anlegen und editieren
+- [x] **DSGVO-ADM-04**: Admin kann VVZ-Einträge (Verarbeitungsverzeichnis) anlegen und editieren
+- [x] **DSGVO-ADM-05**: Admin kann Art. 15 Datenexport für einen User aus der UI anstoßen und den BullMQ-Job-Status verfolgen
+- [x] **DSGVO-ADM-06**: Admin kann Art. 17 Anonymisierung/Löschung für einen User aus der UI anstoßen und bestätigen
 
 ### Audit Log Viewer
 
-- [ ] **AUDIT-VIEW-01**: Admin kann Audit-Log mit Suche und Filter (Actor, Action, Subject, Zeitraum) durchsuchen
-- [ ] **AUDIT-VIEW-02**: Admin sieht Audit-Eintrag-Detail mit Before/After-Diff
-- [ ] **AUDIT-VIEW-03**: Admin kann gefilterten Audit-Log als CSV für DSGVO-Berichte exportieren
+- [x] **AUDIT-VIEW-01**: Admin kann Audit-Log mit Suche und Filter (Actor, Action, Subject, Zeitraum) durchsuchen
+- [x] **AUDIT-VIEW-02**: Admin sieht Audit-Eintrag-Detail mit Before/After-Diff
+- [x] **AUDIT-VIEW-03**: Admin kann gefilterten Audit-Log als CSV für DSGVO-Berichte exportieren
 
 ### Mobile Parity
 
@@ -191,15 +191,15 @@ Empty initially — populated during roadmap creation by `gsd-roadmapper`.
 | SOLVER-03 | Phase 14 (14-01 + 14-02 + 14-03) | Complete (2026-04-25) — E2E-SOLVER-10 (gated E2E_RUN_SOLVER=1, verified) |
 | SOLVER-04 | Phase 14 (14-01 + 14-02 + 14-03) | Complete (2026-04-25) — E2E-SOLVER-04 + 05 + 06 |
 | SOLVER-05 | Phase 14 (14-01 + 14-02 + 14-03) | Complete (2026-04-25) — E2E-SOLVER-07 + 08 + 09 |
-| DSGVO-ADM-01 | Phase 15 | Pending |
-| DSGVO-ADM-02 | Phase 15 | Pending |
-| DSGVO-ADM-03 | Phase 15 | Pending |
-| DSGVO-ADM-04 | Phase 15 | Pending |
-| DSGVO-ADM-05 | Phase 15 | Pending |
-| DSGVO-ADM-06 | Phase 15 | Pending |
-| AUDIT-VIEW-01 | Phase 15 | Pending |
-| AUDIT-VIEW-02 | Phase 15 | Pending |
-| AUDIT-VIEW-03 | Phase 15 | Pending |
+| DSGVO-ADM-01 | Phase 15 | Complete |
+| DSGVO-ADM-02 | Phase 15 | Complete |
+| DSGVO-ADM-03 | Phase 15 | Complete |
+| DSGVO-ADM-04 | Phase 15 | Complete |
+| DSGVO-ADM-05 | Phase 15 | Complete |
+| DSGVO-ADM-06 | Phase 15 | Complete |
+| AUDIT-VIEW-01 | Phase 15 | Complete |
+| AUDIT-VIEW-02 | Phase 15 | Complete |
+| AUDIT-VIEW-03 | Phase 15 | Complete |
 | MOBILE-ADM-01 | Phase 16 | Pending |
 | MOBILE-ADM-02 | Phase 16 | Pending |
 | MOBILE-ADM-03 | Phase 16 | Pending |

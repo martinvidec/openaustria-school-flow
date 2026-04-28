@@ -15,6 +15,13 @@ enum AuditCategoryFilter {
   SENSITIVE_READ = 'SENSITIVE_READ',
 }
 
+enum AuditActionFilter {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  READ = 'read',
+}
+
 export class QueryAuditDto {
   @ApiPropertyOptional({ description: 'Filter by user ID' })
   @IsOptional()
@@ -33,6 +40,15 @@ export class QueryAuditDto {
   @IsOptional()
   @IsEnum(AuditCategoryFilter)
   category?: string;
+
+  @ApiPropertyOptional({
+    enum: AuditActionFilter,
+    description: 'Filter by audit action',
+    example: 'update',
+  })
+  @IsOptional()
+  @IsEnum(AuditActionFilter)
+  action?: string;
 
   @ApiPropertyOptional({
     description: 'Start date filter (ISO 8601)',

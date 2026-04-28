@@ -1,11 +1,18 @@
 import { Injectable } from '@nestjs/common';
+import Papa from 'papaparse';
 import { PrismaService } from '../../config/database/prisma.service';
 
-// Sensitive resources that trigger read logging (D-05)
-// Phase 2 additions: consent, export, person, retention (DSGVO-sensitive data)
+// Sensitive resources that trigger SENSITIVE_READ logging (D-05).
+// Phase 2 additions:  consent, export, person, retention.
+// Phase 15-12 additions: dsfa, vvz, deletion (matches the DSGVO sub-resources
+// resolved by AuditInterceptor.extractResource via DSGVO_SUB_RESOURCES set).
+//
+// 'jobs' is INTENTIONALLY OMITTED — the Jobs tab GETs are admin-list reads
+// of opaque job metadata and do not warrant a per-fetch SENSITIVE_READ row.
 export const SENSITIVE_RESOURCES = [
   'grades', 'student', 'teacher', 'user',
   'consent', 'export', 'person', 'retention',
+  'dsfa', 'vvz', 'deletion',
 ] as const;
 
 // Pedagogically relevant resources for Schulleitung visibility (D-06)
@@ -24,6 +31,7 @@ export interface AuditLogInput {
   resourceId?: string;
   category: 'MUTATION' | 'SENSITIVE_READ';
   metadata?: Record<string, unknown>;
+  before?: Record<string, unknown> | null; // pre-mutation snapshot, sanitized (D-10, D-24)
   ipAddress?: string;
   userAgent?: string;
 }
@@ -41,6 +49,7 @@ export class AuditService {
         resourceId: input.resourceId,
         category: input.category as any,
         metadata: input.metadata as any,
+        before: input.before as any, // pre-mutation snapshot (D-10)
         ipAddress: input.ipAddress,
         userAgent: input.userAgent,
       },
@@ -57,6 +66,7 @@ export class AuditService {
     userId?: string;
     resource?: string;
     category?: string;
+    action?: string;
     startDate?: Date;
     endDate?: Date;
     page: number;
@@ -80,6 +90,7 @@ export class AuditService {
     if (params.userId) where.userId = params.userId;
     if (params.resource) where.resource = params.resource;
     if (params.category) where.category = params.category;
+    if (params.action) where.action = params.action;
     if (params.startDate || params.endDate) {
       where.createdAt = {};
       if (params.startDate) where.createdAt.gte = params.startDate;
@@ -105,6 +116,105 @@ export class AuditService {
         totalPages: Math.ceil(total / params.limit),
       },
     };
+  }
+
+  /**
+   * Export audit entries as CSV string (D-05, D-16, D-25, AUDIT-VIEW-03).
+   *
+   * Returns UTF-8 BOM (`﻿`) + RFC-4180 CSV with semicolon delimiter and
+   * `\r\n` line endings — German Excel opens umlauts correctly and treats
+   * `;` as the default field separator (DACH locale).
+   *
+   * Column order (10 columns):
+   *   Zeitpunkt;Benutzer;Email;Aktion;Ressource;Ressource-ID;Kategorie;
+   *   IP-Adresse;Vorzustand;Nachzustand
+   *
+   * Hard-capped at 10,000 rows (T-15-02-03 — DoS guard against unbounded
+   * export). Filters mirror `findAll`; role gate identical (admin sees all,
+   * schulleitung sees pedagogical-only, others see own).
+   */
+  async exportCsv(params: {
+    userId?: string;
+    resource?: string;
+    category?: string;
+    action?: string;
+    startDate?: Date;
+    endDate?: Date;
+    requestingUser: { id: string; roles: string[] };
+  }): Promise<string> {
+    const where: any = {};
+
+    // Role-scoped visibility (D-06) — same as findAll
+    if (params.requestingUser.roles.includes('admin')) {
+      // Admin sees everything
+    } else if (params.requestingUser.roles.includes('schulleitung')) {
+      where.resource = { in: [...PEDAGOGICAL_RESOURCES] };
+    } else {
+      where.userId = params.requestingUser.id;
+    }
+
+    // Additional filters mirror findAll
+    if (params.userId) where.userId = params.userId;
+    if (params.resource) where.resource = params.resource;
+    if (params.category) where.category = params.category;
+    if (params.action) where.action = params.action;
+    if (params.startDate || params.endDate) {
+      where.createdAt = {};
+      if (params.startDate) where.createdAt.gte = params.startDate;
+      if (params.endDate) where.createdAt.lte = params.endDate;
+    }
+
+    const rows = await this.prisma.auditEntry.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: 10_000,
+    });
+
+    // Benutzer/Email reserved for future Person-join enrichment; the
+    // frontend already resolves user names via a separate query (D-05 v1).
+    const csvRows = rows.map((r: any) => ({
+      Zeitpunkt: r.createdAt.toISOString(),
+      Benutzer: '',
+      Email: '',
+      Aktion: r.action,
+      Ressource: r.resource,
+      'Ressource-ID': r.resourceId ?? '',
+      Kategorie: r.category,
+      'IP-Adresse': r.ipAddress ?? '',
+      Vorzustand: r.before ? JSON.stringify(r.before) : '',
+      Nachzustand: r.metadata ? JSON.stringify(r.metadata) : '',
+    }));
+
+    const columns = [
+      'Zeitpunkt',
+      'Benutzer',
+      'Email',
+      'Aktion',
+      'Ressource',
+      'Ressource-ID',
+      'Kategorie',
+      'IP-Adresse',
+      'Vorzustand',
+      'Nachzustand',
+    ];
+
+    // Default `quotes: false` lets Papa only quote fields that contain the
+    // delimiter, the quote character, or a newline — RFC-4180 minimal
+    // quoting. `quotes: true` wraps every cell (incl. empty ones), which
+    // breaks Excel's empty-trailing-column heuristics and bloats the file.
+    let csv = Papa.unparse(csvRows, {
+      delimiter: ';', // D-25 — DACH/Excel default
+      newline: '\r\n',
+      columns,
+    });
+
+    // Papa.unparse([]) returns '' — emit the header row manually so an
+    // empty-result export still opens with column names visible.
+    if (csvRows.length === 0) {
+      csv = columns.join(';');
+    }
+
+    return '\uFEFF' + csv; // BOM for Excel UTF-8 detection
   }
 
   /**

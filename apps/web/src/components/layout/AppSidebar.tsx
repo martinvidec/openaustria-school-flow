@@ -14,12 +14,14 @@ import {
   History,
   PanelLeftClose,
   PanelLeft,
+  School,
+  ScrollText,
+  ShieldCheck,
   SlidersHorizontal,
   UserCheck,
   UserCircle,
   UsersRound,
   MessageSquare,
-  School,
   Upload,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -167,6 +169,21 @@ const navItems: NavItem[] = [
     label: 'User',
     href: '/admin/users',
     icon: UserCircle,
+    roles: ['admin'],
+    group: 'Zugriff & Berechtigungen',
+  },
+  // Phase 15 — DSGVO admin surfaces (D-22).
+  {
+    label: 'DSGVO-Verwaltung',
+    href: '/admin/dsgvo',
+    icon: ShieldCheck,
+    roles: ['admin'],
+    group: 'Zugriff & Berechtigungen',
+  },
+  {
+    label: 'Audit-Log',
+    href: '/admin/audit-log',
+    icon: ScrollText,
     roles: ['admin'],
     group: 'Zugriff & Berechtigungen',
   },
