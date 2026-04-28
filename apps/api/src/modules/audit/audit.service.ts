@@ -2,11 +2,17 @@ import { Injectable } from '@nestjs/common';
 import Papa from 'papaparse';
 import { PrismaService } from '../../config/database/prisma.service';
 
-// Sensitive resources that trigger read logging (D-05)
-// Phase 2 additions: consent, export, person, retention (DSGVO-sensitive data)
+// Sensitive resources that trigger SENSITIVE_READ logging (D-05).
+// Phase 2 additions:  consent, export, person, retention.
+// Phase 15-12 additions: dsfa, vvz, deletion (matches the DSGVO sub-resources
+// resolved by AuditInterceptor.extractResource via DSGVO_SUB_RESOURCES set).
+//
+// 'jobs' is INTENTIONALLY OMITTED — the Jobs tab GETs are admin-list reads
+// of opaque job metadata and do not warrant a per-fetch SENSITIVE_READ row.
 export const SENSITIVE_RESOURCES = [
   'grades', 'student', 'teacher', 'user',
   'consent', 'export', 'person', 'retention',
+  'dsfa', 'vvz', 'deletion',
 ] as const;
 
 // Pedagogically relevant resources for Schulleitung visibility (D-06)
