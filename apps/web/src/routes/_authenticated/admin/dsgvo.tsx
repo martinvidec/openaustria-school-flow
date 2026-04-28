@@ -19,6 +19,25 @@ import { useAuth } from '@/hooks/useAuth';
 const DsgvoSearchSchema = z.object({
   tab: z.enum(['consents', 'retention', 'dsfa-vvz', 'jobs']).optional(),
   sub: z.enum(['dsfa', 'vvz']).optional(),
+  // ConsentsTab filters (added in plan 15-06):
+  // ProcessingPurpose values mirror backend Prisma enum
+  // (apps/api/prisma/schema.prisma).
+  // VERIFIED 2026-04-27 — DO NOT add NEWSLETTER/KLASSENFOTO/etc.
+  // (those were a fictional draft set).
+  purpose: z
+    .enum([
+      'STUNDENPLANERSTELLUNG',
+      'KOMMUNIKATION',
+      'NOTENVERARBEITUNG',
+      'FOTOFREIGABE',
+      'KONTAKTDATEN_WEITERGABE',
+      'LERNPLATTFORM',
+      'STATISTIK',
+    ])
+    .optional(),
+  status: z.enum(['granted', 'withdrawn', 'expired']).optional(),
+  q: z.string().max(200).optional(),
+  page: z.coerce.number().int().min(1).optional(),
 });
 
 export const Route = createFileRoute('/_authenticated/admin/dsgvo')({
