@@ -72,18 +72,17 @@ test.describe('AUDIT-VIEW-02 — Audit detail drawer (Vorzustand + Nachzustand)'
     page,
     request,
   }) => {
-    // PUT the seed school's name so the interceptor's RESOURCE_MODEL_MAP
-    // captures pre-state into audit_entries.before. The helper restores
-    // the original name automatically. (Why not retention? See
-    // helpers/audit.ts → seedAuditEntryWithBefore comment — the
-    // interceptor's first-segment URL extractor doesn't fire for
-    // /api/v1/dsgvo/retention.)
+    // PUT a retention policy's retentionDays so the interceptor's
+    // RESOURCE_MODEL_MAP (`retention` → `retentionPolicy`) captures
+    // pre-state into audit_entries.before. The helper restores the
+    // original value automatically (15-12 round-trip — was rerouted to
+    // /schools/:id pre-15-12 due to the extractResource bug).
     const { id } = await seedAuditEntryWithBefore(request, {
       schoolId: SCHOOL_ID,
     });
 
     await loginAsAdmin(page);
-    await page.goto('/admin/audit-log?action=update&resource=schools');
+    await page.goto('/admin/audit-log?action=update&resource=retention');
 
     const row = page.locator(`[data-audit-id="${id}"]`);
     await expect(row).toBeVisible({ timeout: 10_000 });
@@ -96,10 +95,9 @@ test.describe('AUDIT-VIEW-02 — Audit detail drawer (Vorzustand + Nachzustand)'
     ).toBeVisible();
     await expect(page.getByText(LEGACY_BANNER_COPY)).not.toBeVisible();
 
-    // The JsonTree primitive renders nodes with `font-mono text-xs`. We
-    // scope to the dialog so we don't accidentally match other font-mono
-    // text on the page (e.g. resource-id column in the table behind the
-    // drawer overlay).
+    // The JsonTree primitive renders nodes with `font-mono text-xs`. Scope to
+    // the dialog so we don't accidentally match other font-mono text on the
+    // page (e.g. resource-id column in the table behind the drawer overlay).
     const drawer = page.getByRole('dialog');
     await expect(drawer.locator('.font-mono').first()).toBeVisible();
   });
