@@ -349,10 +349,7 @@ export function useBulkMoveStudents(schoolId: string) {
     }) => {
       const total = studentIds.length;
       let done = 0;
-      const failed: { studentId: string; error: StudentApiError | Error } = null as unknown as {
-        studentId: string;
-        error: StudentApiError | Error;
-      };
+      let failed: { studentId: string; error: StudentApiError | Error } | null = null;
       for (const studentId of studentIds) {
         onProgress?.(done, total, studentId);
         const res = await apiFetch(`/api/v1/students/${studentId}`, {
@@ -361,7 +358,7 @@ export function useBulkMoveStudents(schoolId: string) {
         });
         if (!res.ok) {
           const err = new StudentApiError(res.status, await readProblemDetail(res));
-          (failed as any) = { studentId, error: err };
+          failed = { studentId, error: err };
           throw err;
         }
         done += 1;
