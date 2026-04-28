@@ -68,7 +68,7 @@ export function StudentDetailTabs({
   };
 
   const handleStammdatenSave = async (values: StudentStammdatenFormValues) => {
-    await updateMutation.mutateAsync(values);
+    await updateMutation.mutateAsync(values as unknown as Parameters<typeof updateMutation.mutateAsync>[0]);
     setStammdatenDirty(false);
   };
 
