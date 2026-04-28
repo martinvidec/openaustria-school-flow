@@ -9,6 +9,7 @@ import {
 } from '@/hooks/useConsents';
 import { ConsentsFilterToolbar } from './ConsentsFilterToolbar';
 import { RequestExportDialog } from './RequestExportDialog';
+import { RequestDeletionDialog } from './RequestDeletionDialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -90,6 +91,13 @@ export function ConsentsTab({ schoolId }: Props) {
   // Plan 15-08: Datenexport-anstoßen toolbar button + RequestExportDialog mount
   const [exportDialog, setExportDialog] =
     useState<{ personId?: string } | null>(null);
+  // Plan 15-08: Löschen-anstoßen row action → 2-step Art. 17 dialog
+  const [deletionDialog, setDeletionDialog] = useState<{
+    id: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+  } | null>(null);
 
   const goPage = (next: number) =>
     navigate({
@@ -192,8 +200,16 @@ export function ConsentsTab({ schoolId }: Props) {
                         <Button
                           variant="outline"
                           size="sm"
-                          disabled
-                          title="Wird in Plan 15-08 ausgeliefert"
+                          disabled={!c.person}
+                          onClick={() => {
+                            if (!c.person) return;
+                            setDeletionDialog({
+                              id: c.person.id,
+                              email: c.person.email ?? '',
+                              firstName: c.person.firstName,
+                              lastName: c.person.lastName,
+                            });
+                          }}
                         >
                           Löschen anstoßen
                         </Button>
@@ -276,6 +292,15 @@ export function ConsentsTab({ schoolId }: Props) {
           schoolId={schoolId}
           personId={exportDialog.personId}
           onClose={() => setExportDialog(null)}
+        />
+      )}
+
+      {deletionDialog && (
+        <RequestDeletionDialog
+          open
+          schoolId={schoolId}
+          person={deletionDialog}
+          onClose={() => setDeletionDialog(null)}
         />
       )}
     </div>
