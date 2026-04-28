@@ -16,10 +16,35 @@
  * `test.describe.configure({ mode: 'serial' })` keeps the three tests in
  * this file from racing each other when the runner picks workers > 1.
  */
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { loginAsAdmin } from './helpers/login';
 
 test.describe.configure({ mode: 'serial' });
+
+/**
+ * Selector helpers — the AuditFilterToolbar renders shadcn `<Label>`
+ * sibling-paired with `<Input>` / `<Select>` (no `htmlFor` association,
+ * see plan 15-09 SUMMARY § Decisions). Playwright's `getByLabel` only
+ * matches `htmlFor`/`aria-labelledby`/wrapping patterns, so we anchor on
+ * the label text and walk to the nearest input or combobox.
+ */
+/**
+ * The toolbar wraps each field in `<div class="grid w-40 gap-1">` containing
+ * `<label>` + `<input>`. Anchor on the label and walk to the next sibling
+ * input/combobox via XPath — this is precise even when multiple labels
+ * share an outer container ("Von" + "Bis" both live under the toolbar div).
+ */
+const dateInputUnder = (page: Page, labelText: string) =>
+  page
+    .locator(`xpath=//label[normalize-space()="${labelText}"]/following-sibling::input[@type="date"]`)
+    .first();
+
+const selectTriggerUnder = (page: Page, labelText: string) =>
+  // Radix `<Select>` renders its trigger as a sibling of the Label inside
+  // the wrapping `<div class="grid">`. The trigger has `role="combobox"`.
+  page
+    .locator(`xpath=//label[normalize-space()="${labelText}"]/following-sibling::button[@role="combobox"]`)
+    .first();
 
 test.describe('AUDIT-VIEW-01 — Audit-Log filter toolbar URL deep-link', () => {
   test('filter by Aktion=update updates URL and visible rows', async ({
@@ -33,8 +58,8 @@ test.describe('AUDIT-VIEW-01 — Audit-Log filter toolbar URL deep-link', () => 
       page.getByRole('button', { name: 'Filter zurücksetzen' }),
     ).toBeVisible({ timeout: 10_000 });
 
-    // Open the Aktion Select (Radix pattern — labelled trigger).
-    await page.getByLabel('Aktion').click();
+    // Open the Aktion Select (Radix combobox under the "Aktion" label).
+    await selectTriggerUnder(page, 'Aktion').click();
     await page.getByRole('option', { name: 'Aktualisieren' }).click();
 
     // URL is the source of truth (D-26 carry-forward).
@@ -64,12 +89,14 @@ test.describe('AUDIT-VIEW-01 — Audit-Log filter toolbar URL deep-link', () => 
     await loginAsAdmin(page);
     await page.goto('/admin/audit-log');
 
-    await expect(page.getByLabel('Von')).toBeVisible({ timeout: 10_000 });
+    const von = dateInputUnder(page, 'Von');
+    const bis = dateInputUnder(page, 'Bis');
+    await expect(von).toBeVisible({ timeout: 10_000 });
 
-    await page.getByLabel('Von').fill('2026-01-01');
+    await von.fill('2026-01-01');
     await expect(page).toHaveURL(/[?&]startDate=2026-01-01/);
 
-    await page.getByLabel('Bis').fill('2026-12-31');
+    await bis.fill('2026-12-31');
     await expect(page).toHaveURL(/[?&]endDate=2026-12-31/);
     await expect(page).toHaveURL(/[?&]startDate=2026-01-01/);
   });

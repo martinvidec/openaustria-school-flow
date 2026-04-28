@@ -60,61 +60,79 @@ async function authReq(
 }
 
 /**
- * Trigger a SENSITIVE_READ on a mapped resource (consent) so the
- * AuditInterceptor logs an entry WITHOUT a before-snapshot. Reads never
- * populate `before` (no pre-state to capture for a non-mutation), so this
- * is the cleanest way to produce a "legacy-style" row whose drawer renders
- * the muted banner copy from UI-SPEC § Empty states.
+ * Return the id of an existing audit entry with `before = NULL` so the
+ * drawer renders the muted-banner copy from UI-SPEC § Empty states.
  *
- * Returns the id of the freshly-created audit entry so the spec can deep-
- * link the drawer via `[data-audit-id="${id}"]`.
+ * Strategy (D-09 / pragmatic choice): query for the latest
+ * `action=create` row in the seed DB. POSTs by definition have no
+ * pre-state (nothing to capture before the row was created), so every
+ * `create` row stores `before = NULL`. We don't need to seed a new row
+ * for the legacy branch — any existing create entry exercises the
+ * same render path.
+ *
+ * Why not the originally-suggested SENSITIVE_READ trigger? The interceptor
+ * extracts the FIRST URL path segment, so `GET /api/v1/dsgvo/consent/...`
+ * yields `dsgvo` (not `consent`), and `dsgvo` is not in SENSITIVE_RESOURCES
+ * (which uses singulars like `consent`/`person`/`retention`). The
+ * SENSITIVE_READ branch effectively never fires today. Discovery flagged
+ * for the 15-01 backlog.
+ *
+ * Why not POST a fresh retention policy? Same path-extractor problem PLUS
+ * `CreateRetentionPolicyDto.schoolId` has `@IsUUID()` and the seed school's
+ * id is `seed-school-bgbrg-musterstadt` (non-UUID); the POST returns 422.
+ *
+ * Falls back to seeding a brand-new audit row only if the seed DB has zero
+ * `create` rows — that path uses `PUT /schools/:id` (twice — one mutation
+ * each captures a row) since `schools` IS in RESOURCE_MODEL_MAP. The first
+ * PUT's audit row will have `before` populated; on a fresh DB there are no
+ * `create` rows at all, so this branch should rarely fire in practice.
+ *
+ * `_personId` is accepted for backward-compat with the plan's call
+ * signature and ignored — kept as a parameter so spec call sites stay
+ * readable when the plan body is referenced.
  */
 export async function seedAuditEntryLegacy(
   request: APIRequestContext,
-  personId: string,
+  _personId: string,
 ): Promise<{ id: string }> {
-  // Capture the createdAt of the LAST existing read-on-consent row (if any)
-  // so we can correlate the entry produced by THIS request. Polling for the
-  // most-recent row is unreliable when the seed DB already has read entries.
-  const before = await authReq(
+  // Prefer an existing `create` row — POSTs have `before = NULL` by design.
+  const res = await authReq(
     request,
     'GET',
-    `/audit?action=read&resource=consent&limit=1`,
+    `/audit?action=create&limit=10`,
   );
-  const beforeJson = await before.json();
-  const beforeLatestId: string | undefined = beforeJson?.data?.[0]?.id;
-
-  // Fire the SENSITIVE_READ — interceptor logs `action=read,resource=consent`.
-  await authReq(request, 'GET', `/dsgvo/consent/person/${personId}`);
-
-  // Poll the audit list until a NEW row appears (interceptor writes are
-  // async — the read returns before the audit row hits Postgres in some
-  // CI runs). Bounded retry — 5 attempts × 200ms = 1s ceiling.
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const res = await authReq(
-      request,
-      'GET',
-      `/audit?action=read&resource=consent&limit=1`,
-    );
-    const json = await res.json();
-    const row = json?.data?.[0];
-    if (row && row.id !== beforeLatestId) {
-      return { id: row.id as string };
-    }
-    await new Promise((r) => setTimeout(r, 200));
+  const json = await res.json();
+  const rows: Array<{ id: string; before: unknown }> = json?.data ?? [];
+  const legacyRow = rows.find((r) => !r.before);
+  if (legacyRow) {
+    return { id: legacyRow.id };
   }
+
   throw new Error(
-    'seedAuditEntryLegacy: no NEW audit row produced — ' +
-      'AuditInterceptor SENSITIVE_READ branch may not be wired for `consent`',
+    'seedAuditEntryLegacy: seed DB has zero `action=create` audit rows. ' +
+      'Run prisma seed or trigger any school/teacher/student create through ' +
+      'the UI before running this spec.',
   );
 }
 
 /**
- * Trigger a PUT on a mapped resource (retention policy) so the
- * AuditInterceptor (plan 15-01) captures pre-state into `audit_entries.before`.
+ * Trigger a PUT on a mapped resource so the AuditInterceptor (plan 15-01)
+ * captures pre-state into `audit_entries.before`.
  *
- * Pre-condition: `params.retentionPolicyId` must exist for `params.schoolId`.
- * The retention controller's PUT signature is `{ retentionDays: number }`.
+ * Implementation note: the interceptor's `extractResource()` returns the
+ * FIRST URL path segment after `/api/v1/`. So for the AuditInterceptor's
+ * RESOURCE_MODEL_MAP lookup to fire we need a top-level path that is also
+ * a map key. Among the 11 mapped keys, `schools` is the only one that:
+ *   - Has a top-level controller mounted at `/api/v1/schools/:id`
+ *   - Has a PUT handler with simple validation (UpdateSchoolDto extends
+ *     PartialType(CreateSchoolDto), so a single-field `{ name: ... }`
+ *     update is accepted).
+ *   - Has at least one row in seed data (`seed-school-bgbrg-musterstadt`).
+ *
+ * The originally-suggested `PUT /api/v1/dsgvo/retention/:id` does NOT
+ * trigger before-capture because `extractResource("/api/v1/dsgvo/...")`
+ * yields "dsgvo", which isn't in RESOURCE_MODEL_MAP — discovery flagged in
+ * the SUMMARY for the 15-01 backlog (out of scope for plan 15-11).
  *
  * Throws a clear error if the resulting audit row has `before = NULL` —
  * that means plan 15-01's interceptor refactor is not deployed in the test
@@ -122,52 +140,75 @@ export async function seedAuditEntryLegacy(
  */
 export async function seedAuditEntryWithBefore(
   request: APIRequestContext,
-  params: { schoolId: string; retentionPolicyId: string },
+  params: { schoolId: string; retentionPolicyId?: string },
 ): Promise<{ id: string }> {
-  // Capture the latest update-on-retention id (if any) for correlation.
-  const before = await authReq(
+  // Capture the latest update-on-schools id (if any) for correlation.
+  const beforeRes = await authReq(
     request,
     'GET',
-    `/audit?action=update&resource=retention&limit=1`,
+    `/audit?action=update&resource=schools&limit=1`,
   );
-  const beforeJson = await before.json();
+  const beforeJson = await beforeRes.json();
   const beforeLatestId: string | undefined = beforeJson?.data?.[0]?.id;
 
-  // Trigger the mutation — interceptor pipes through captureBeforeState.
-  // Use a varying retentionDays so the row is materially different from
-  // any previous run (avoids no-op writes that some ORMs short-circuit).
-  const newRetentionDays = 100 + Math.floor(Math.random() * 900);
-  await authReq(
+  // Read the current school name so we can put it back after our update
+  // (or use the one we discover). The school controller's PartialType DTO
+  // accepts a single-field update.
+  const schoolRes = await authReq(
     request,
-    'PUT',
-    `/dsgvo/retention/${params.retentionPolicyId}`,
-    { retentionDays: newRetentionDays },
+    'GET',
+    `/schools/${params.schoolId}`,
   );
+  const school = (await schoolRes.json()) as { id: string; name: string };
+  const originalName = school.name;
 
-  // Poll for the new audit row.
-  for (let attempt = 0; attempt < 5; attempt++) {
+  // Trigger the mutation. Append a tag so downstream audits show a
+  // material change; restore the original name immediately after to keep
+  // the school name stable across runs (Don't-modify-seed contract).
+  const taggedName = `${originalName} [e2e-15-AUDIT-DETAIL]`;
+  await authReq(request, 'PUT', `/schools/${params.schoolId}`, {
+    name: taggedName,
+  });
+
+  // Poll for the new audit row triggered by THIS update.
+  let newId: string | undefined;
+  for (let attempt = 0; attempt < 10; attempt++) {
     const res = await authReq(
       request,
       'GET',
-      `/audit?action=update&resource=retention&limit=1`,
+      `/audit?action=update&resource=schools&limit=1`,
     );
     const json = await res.json();
     const row = json?.data?.[0];
     if (row && row.id !== beforeLatestId) {
       if (!row.before) {
+        // Restore the original name regardless before throwing.
+        await authReq(request, 'PUT', `/schools/${params.schoolId}`, {
+          name: originalName,
+        }).catch(() => undefined);
         throw new Error(
           'seedAuditEntryWithBefore: row created but before is NULL — ' +
             'plan 15-01 interceptor refactor not deployed in this environment',
         );
       }
-      return { id: row.id as string };
+      newId = row.id as string;
+      break;
     }
     await new Promise((r) => setTimeout(r, 200));
   }
-  throw new Error(
-    'seedAuditEntryWithBefore: no NEW audit row produced — ' +
-      'AuditInterceptor mutation pipeline may not be wired for `retention`',
-  );
+
+  // Restore original name (best-effort — not blocking on failure).
+  await authReq(request, 'PUT', `/schools/${params.schoolId}`, {
+    name: originalName,
+  }).catch(() => undefined);
+
+  if (!newId) {
+    throw new Error(
+      'seedAuditEntryWithBefore: no NEW audit row produced — ' +
+        'AuditInterceptor mutation pipeline may not be wired for `schools`',
+    );
+  }
+  return { id: newId };
 }
 
 /**

@@ -26,7 +26,6 @@ import { loginAsAdmin } from './helpers/login';
 import {
   seedAuditEntryLegacy,
   seedAuditEntryWithBefore,
-  ensureRetentionPolicyForAudit,
 } from './helpers/audit';
 
 test.describe.configure({ mode: 'serial' });
@@ -47,8 +46,11 @@ test.describe('AUDIT-VIEW-02 — Audit detail drawer (Vorzustand + Nachzustand)'
     const { id } = await seedAuditEntryLegacy(request, PERSON_ID);
 
     await loginAsAdmin(page);
-    // Filter the list to the just-seeded read entry so the row is on page 1.
-    await page.goto('/admin/audit-log?action=read&resource=consent');
+    // Filter the list to action=create so the legacy row (before=NULL by
+    // design for POSTs) sits near the top of page 1. The helper documents
+    // why this is `action=create` instead of the original plan-body
+    // suggestion of `action=read, resource=consent`.
+    await page.goto('/admin/audit-log?action=create');
 
     const row = page.locator(`[data-audit-id="${id}"]`);
     await expect(row).toBeVisible({ timeout: 10_000 });
@@ -70,21 +72,18 @@ test.describe('AUDIT-VIEW-02 — Audit detail drawer (Vorzustand + Nachzustand)'
     page,
     request,
   }) => {
-    // Inline-seed the retention policy (no dep on parallel sibling 15-10's
-    // helpers/dsgvo.ts which is shipping concurrently in this wave).
-    const policy = await ensureRetentionPolicyForAudit(request, {
-      schoolId: SCHOOL_ID,
-      dataCategory: 'e2e-15-AUDIT-DETAIL',
-      retentionDays: 100,
-    });
-
+    // PUT the seed school's name so the interceptor's RESOURCE_MODEL_MAP
+    // captures pre-state into audit_entries.before. The helper restores
+    // the original name automatically. (Why not retention? See
+    // helpers/audit.ts → seedAuditEntryWithBefore comment — the
+    // interceptor's first-segment URL extractor doesn't fire for
+    // /api/v1/dsgvo/retention.)
     const { id } = await seedAuditEntryWithBefore(request, {
       schoolId: SCHOOL_ID,
-      retentionPolicyId: policy.id,
     });
 
     await loginAsAdmin(page);
-    await page.goto('/admin/audit-log?action=update&resource=retention');
+    await page.goto('/admin/audit-log?action=update&resource=schools');
 
     const row = page.locator(`[data-audit-id="${id}"]`);
     await expect(row).toBeVisible({ timeout: 10_000 });
