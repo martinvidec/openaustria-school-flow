@@ -6,32 +6,13 @@ import { AppHeader } from '@/components/layout/AppHeader';
 import { MobileSidebar } from '@/components/layout/MobileSidebar';
 import { OfflineBanner } from '@/components/pwa/OfflineBanner';
 import { PwaInstallBanner } from '@/components/pwa/PwaInstallBanner';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useServiceWorker } from '@/hooks/useServiceWorker';
 
 export const Route = createRootRoute({
   component: RootLayout,
 });
-
-/**
- * Hook to detect mobile viewport for responsive toast positioning.
- * Per 09-UI-SPEC: bottom-center on mobile, top-right on desktop.
- */
-function useIsMobile(breakpoint = 640): boolean {
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' ? window.innerWidth < breakpoint : false,
-  );
-
-  useEffect(() => {
-    const mq = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    setIsMobile(mq.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, [breakpoint]);
-
-  return isMobile;
-}
 
 function RootLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
