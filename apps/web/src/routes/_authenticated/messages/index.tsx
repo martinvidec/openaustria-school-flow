@@ -7,8 +7,8 @@ import { ConversationView } from '@/components/messaging/ConversationView';
 
 export const Route = createFileRoute('/_authenticated/messages/')({
   component: MessagesPage,
-  validateSearch: (search: Record<string, unknown>) => ({
-    id: (search.id as string) ?? undefined,
+  validateSearch: (search: Record<string, unknown>): { id: string | undefined } => ({
+    id: typeof search.id === 'string' && search.id.length > 0 ? search.id : undefined,
   }),
 });
 
