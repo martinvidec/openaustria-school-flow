@@ -50,7 +50,7 @@ See [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full 
 | 12 | Schüler-, Klassen- & Gruppenverwaltung | 9 | Complete    | 2026-04-24 |
 | 13 | User- und Rechteverwaltung | 3/3 | Complete    | 2026-04-25 |
 | 14 | Solver-Tuning | 5 | Complete    | 2026-04-25 |
-| 15 | DSGVO-Admin & Audit-Log-Viewer | 11/11 | Complete   | 2026-04-28 |
+| 15 | DSGVO-Admin & Audit-Log-Viewer | 12/12 | Complete   | 2026-04-28 |
 | 16 | Admin-Dashboard & Mobile-Härtung | 6 | Phases 10-15 | — |
 
 **Total:** 7 feature phases + 5 gap/E2E phases (10.1-10.5), 50 requirements, 100% coverage. UAT resumes after Phase 10.5 per `feedback_e2e_first_no_uat.md`.
@@ -309,7 +309,7 @@ Plans:
 **Goal:** Admin kann Einwilligungen, Aufbewahrungsrichtlinien, DSFA/VVZ und DSGVO-Jobs aus der UI verwalten und das Audit-Log durchsuchen und exportieren.
 **Requirements:** DSGVO-ADM-01, DSGVO-ADM-02, DSGVO-ADM-03, DSGVO-ADM-04, DSGVO-ADM-05, DSGVO-ADM-06, AUDIT-VIEW-01, AUDIT-VIEW-02, AUDIT-VIEW-03
 **Depends on:** Phase 13 (DSGVO-Jobs laufen pro User; Audit-Log filtert nach Actor)
-**Plans:** 11/11 plans complete
+**Plans:** 12/12 plans complete
 
 **Success criteria:**
 - [ ] Admin kann Einwilligungs-Records nach Zweck, Status und User filtern und durchsuchen

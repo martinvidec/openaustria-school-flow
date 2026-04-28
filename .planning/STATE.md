@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
-stopped_at: Completed 15-08 jobs-tab-and-art17-dialogs
-last_updated: "2026-04-28T07:36:39.600Z"
+stopped_at: Completed 15-12 audit-extractresource-fix
+last_updated: "2026-04-28T08:55:53.902Z"
 last_activity: 2026-04-28
 progress:
   total_phases: 12
   completed_phases: 11
-  total_plans: 48
-  completed_plans: 48
+  total_plans: 49
+  completed_plans: 49
   percent: 100
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 ## Current Position
 
 Phase: 15 (dsgvo-admin-audit-log-viewer) — EXECUTING
-Plan: 3 of 11
+Plan: 4 of 11
 Status: Ready to execute
 Last activity: 2026-04-28
 
@@ -155,6 +155,7 @@ Progress: [██████████] 100%
 | Phase 15 P08 | 17m 48s | 5 tasks | 8 files |
 | Phase 15 P11 | 22 | 4 tasks | 4 files |
 | Phase 15 P10 | 30min | 7 tasks | 8 files |
+| Phase 15 P12 | 5 | 4 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -488,6 +489,8 @@ Recent decisions affecting current work:
 - [Phase 15]: Plan 15-08: PlaceholderPanel function removed from DsgvoTabs.tsx after last 15-08 mount — all 4 tabs are LIVE; dead helper would create refactor-trap for future plans.
 - [Phase ?]: Plan 15-11: AuditInterceptor.extractResource takes first URL segment, breaking SENSITIVE_RESOURCES + RESOURCE_MODEL_MAP for /api/v1/dsgvo/* paths — E2E specs work around by using /schools and existing create rows; backlog item for 15-01
 - [Phase ?]: Phase 15 DSGVO admin DTOs require UUID schoolId/personId but seed data uses static stable IDs — soft-skip pattern in E2E specs (Plan 15-10); fix deferred
+- [Phase 15]: Use DSGVO_SUB_RESOURCES allowlist Set in AuditInterceptor.extractResource — Auto-walking any /api/v1/dsgvo/<sub> second segment would silently misclassify a future unmapped DSGVO route into the wrong RESOURCE_MODEL_MAP entry. Allowlist Set forces intentional opt-in (developer adds the new sub to DSGVO_SUB_RESOURCES + RESOURCE_MODEL_MAP + SENSITIVE_RESOURCES at the same time, surfaced at code-review time). Unknown subs fall back to resource='dsgvo'.
+- [Phase 15]: Omit 'jobs' from SENSITIVE_RESOURCES while keeping it in DSGVO_SUB_RESOURCES — Admin Jobs-tab GETs are opaque job-metadata list reads that do not warrant per-fetch SENSITIVE_READ audit rows. Splitting the two lists lets admin Subject-filter still bucket DSGVO-jobs reads under resource='jobs' while suppressing the per-row read-log. Other DSGVO sub-resources (consent, retention, dsfa, vvz, export, deletion) ARE in SENSITIVE_RESOURCES.
 
 ### Pending Todos
 
@@ -529,7 +532,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-28T07:00:58.791Z
-Stopped at: Completed 15-08 jobs-tab-and-art17-dialogs
+Last session: 2026-04-28T08:55:53.896Z
+Stopped at: Completed 15-12 audit-extractresource-fix
 Resume file: 
 None
