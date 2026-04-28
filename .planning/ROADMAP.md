@@ -50,7 +50,7 @@ See [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full 
 | 12 | Schüler-, Klassen- & Gruppenverwaltung | 9 | Complete    | 2026-04-24 |
 | 13 | User- und Rechteverwaltung | 3/3 | Complete    | 2026-04-25 |
 | 14 | Solver-Tuning | 5 | Complete    | 2026-04-25 |
-| 15 | DSGVO-Admin & Audit-Log-Viewer | 12/12 | Complete   | 2026-04-28 |
+| 15 | DSGVO-Admin & Audit-Log-Viewer | 12/12 | Complete    | 2026-04-28 |
 | 16 | Admin-Dashboard & Mobile-Härtung | 6 | Phases 10-15 | — |
 
 **Total:** 7 feature phases + 5 gap/E2E phases (10.1-10.5), 50 requirements, 100% coverage. UAT resumes after Phase 10.5 per `feedback_e2e_first_no_uat.md`.
