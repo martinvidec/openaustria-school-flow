@@ -31,7 +31,7 @@ function ConversationDetailPage() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate({ to: '/messages' })}
+          onClick={() => navigate({ to: '/messages', search: { id: undefined } })}
           className="h-10 w-10 p-0"
         >
           <ArrowLeft className="h-5 w-5" />
