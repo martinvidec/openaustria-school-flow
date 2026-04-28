@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
-stopped_at: Completed 15-07 dsfa-vvz-tab + 15-09 audit-log-frontend (Stage B parallel)
-last_updated: "2026-04-27T20:23:08.600Z"
-last_activity: 2026-04-27
+stopped_at: Completed 15-06 consents-retention-tabs (Stage C)
+last_updated: "2026-04-28T05:31:57.562Z"
+last_activity: 2026-04-28
 progress:
   total_phases: 12
   completed_phases: 10
   total_plans: 48
-  completed_plans: 43
-  percent: 90
+  completed_plans: 45
+  percent: 94
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 ## Current Position
 
 Phase: 15 (dsgvo-admin-audit-log-viewer) — EXECUTING
-Plan: 4 of 11
+Plan: 5 of 11
 Status: Ready to execute
-Last activity: 2026-04-27
+Last activity: 2026-04-28
 
-Progress: [█████████░] 90%
+Progress: [█████████░] 94%
 
 ## Performance Metrics
 
@@ -151,6 +151,7 @@ Progress: [█████████░] 90%
 | Phase 15 P05 | 19m | 6 tasks | 9 files |
 | Phase 15 P07 | 7m | 4 tasks | 5 files |
 | Phase 15 P09 | 11m | 6 tasks | 7 files |
+| Phase 15 P06 | 7m 31s | 4 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -474,6 +475,9 @@ Recent decisions affecting current work:
 - [Phase 15]: Plan 15-07: comma-separated string-array inputs (no chip primitive — registry-safe)
 - [Phase 15]: Plan 15-07: DsfaVvzTab.tsx wrapper omitted (sub-tab logic lives in DsgvoTabs.tsx)
 - [Phase 15]: Plan 15-07: Corrected DTO field names at execution — DSFA description+title, VVZ activityName+affectedPersons
+- [Phase ?]: 15-06: Removed legalBasis from RetentionEditDialog + RetentionTab — verified absent from Prisma model + DTO
+- [Phase ?]: 15-06: Löschen-anstoßen row-action shipped as disabled placeholder for plan 15-08 to activate
+- [Phase ?]: 15-06: __all__ sentinel in shadcn Select keeps placeholder visible while supporting 'no filter' option
 
 ### Pending Todos
 
@@ -515,7 +519,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-27T20:23:08.593Z
+Last session: 2026-04-28T05:31:41.672Z
 Stopped at: Completed 15-07 dsfa-vvz-tab + 15-09 audit-log-frontend (Stage B parallel)
 Resume file: 
 None
