@@ -2,6 +2,8 @@ import { useCallback } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { DsfaTable } from './DsfaTable';
+import { VvzTable } from './VvzTable';
 
 /**
  * Phase 15-05 foundation: 4-tab shell for /admin/dsgvo.
@@ -13,8 +15,14 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
  *
  * Each tab body is a placeholder. Wiring lands in:
  *  - Tab "Einwilligungen" / "Aufbewahrung" → plan 15-06
- *  - Tab "DSFA & VVZ" → plan 15-07
+ *  - Tab "DSFA & VVZ" → plan 15-07 (DSFA + VVZ sub-tabs LIVE — see below)
  *  - Tab "Jobs" → plan 15-08
+ *
+ * Plan 15-07 update: DSFA + VVZ sub-tab placeholders replaced with the real
+ * <DsfaTable /> + <VvzTable /> components. The intermediate "DsfaVvzTab"
+ * wrapper file mentioned in plan 15-07 metadata was intentionally OMITTED —
+ * the sub-tab logic already lives in this file, an extra wrapper would be
+ * a thin pass-through with no value.
  */
 
 export type DsgvoTabValue = 'consents' | 'retention' | 'dsfa-vvz' | 'jobs';
@@ -106,10 +114,10 @@ export function DsgvoTabs({ schoolId, initialTab, initialSub }: Props) {
               <TabsTrigger value="vvz">VVZ</TabsTrigger>
             </TabsList>
             <TabsContent value="dsfa" className="pt-4">
-              <PlaceholderPanel plan="15-07" title="DSFA" schoolId={schoolId} />
+              <DsfaTable schoolId={schoolId} />
             </TabsContent>
             <TabsContent value="vvz" className="pt-4">
-              <PlaceholderPanel plan="15-07" title="VVZ" schoolId={schoolId} />
+              <VvzTable schoolId={schoolId} />
             </TabsContent>
           </Tabs>
         </TabsContent>

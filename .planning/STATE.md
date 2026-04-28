@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
-stopped_at: Completed 15-09 audit-log-frontend
+stopped_at: Completed 15-07 dsfa-vvz-tab + 15-09 audit-log-frontend (Stage B parallel)
 last_updated: "2026-04-27T20:23:08.600Z"
 last_activity: 2026-04-27
 progress:
@@ -149,8 +149,8 @@ Progress: [█████████░] 90%
 | Phase 15 P04 | 21min | 3 tasks | 5 files |
 | Phase 15 P02 | 12 | 2 tasks | 6 files |
 | Phase 15 P05 | 19m | 6 tasks | 9 files |
-| Phase 15 P09 | 11 | - tasks | - files |
-| Phase 15 P09 | 11 | 6 tasks | 7 files |
+| Phase 15 P07 | 7m | 4 tasks | 5 files |
+| Phase 15 P09 | 11m | 6 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -468,9 +468,12 @@ Recent decisions affecting current work:
 - [Phase ?]: Phase 15-05: PageShell prop is 'subtitle' not 'description' — verbatim UI-SPEC copy mapped to subtitle in /admin/dsgvo + /admin/audit-log
 - [Phase ?]: Phase 15-05: Body-less DELETE in 3 CRUD hook files — no body, no Content-Type (memory apifetch_bodyless_delete_resolved)
 - [Phase ?]: Phase 15-05: Defense-in-depth admin gate — sidebar roles ['admin'] + route-component admin check on direct URL access (T-15-05-02)
-- [Phase ?]: Action filter is single-select for v1; multi-select via Popover+Command deferred
-- [Phase ?]: Audit-log Drawer state is local React useState — not URL-synced (ephemeral, would clutter deep-link contract)
-- [Phase ?]: Backend GET /audit response does NOT include actor join; AuditEntryDto.actor is optional, frontend falls back to userId
+- [Phase 15]: Plan 15-09: Action filter is single-select for v1; multi-select via Popover+Command deferred
+- [Phase 15]: Plan 15-09: Audit-log Drawer state is local React useState — not URL-synced (ephemeral, would clutter deep-link contract)
+- [Phase 15]: Plan 15-09: Backend GET /audit response does NOT include actor join; AuditEntryDto.actor is optional, frontend falls back to userId
+- [Phase 15]: Plan 15-07: comma-separated string-array inputs (no chip primitive — registry-safe)
+- [Phase 15]: Plan 15-07: DsfaVvzTab.tsx wrapper omitted (sub-tab logic lives in DsgvoTabs.tsx)
+- [Phase 15]: Plan 15-07: Corrected DTO field names at execution — DSFA description+title, VVZ activityName+affectedPersons
 
 ### Pending Todos
 
@@ -513,5 +516,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-04-27T20:23:08.593Z
-Stopped at: Completed 15-09 audit-log-frontend
+Stopped at: Completed 15-07 dsfa-vvz-tab + 15-09 audit-log-frontend (Stage B parallel)
 Resume file: 
+None
