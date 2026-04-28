@@ -22,3 +22,6 @@ coverage/
 
 # Prisma generated
 apps/api/src/config/database/generated
+
+# Claude Code subagent worktrees (Agent isolation: "worktree" mode)
+.claude/worktrees/
