@@ -87,8 +87,6 @@ jobs:
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -103,14 +101,31 @@ jobs:
       # reuse the dev compose file. The `keycloak-db` service is its own
       # Postgres container (separate from the GitHub-service Postgres which
       # is the application DB).
-      - name: Start Keycloak (Docker Compose)
-        run: docker compose -f docker/docker-compose.yml up -d keycloak keycloak-db
+      #
+      # The `solver` service is the Timefold sidecar (Quarkus/Java 21).
+      # `apps/web/e2e/helpers/global-setup.ts:41` precheck-pings
+      # http://localhost:8081/health — without this the entire Playwright
+      # run aborts in globalSetup. Maven build is slow on first cache miss
+      # (~3-5 min); subsequent runs hit Docker layer cache for the
+      # dependency-resolution layer (mvnw dependency:go-offline copies
+      # pom.xml first per Dockerfile) and rebuild only the source layer.
+      - name: Start Keycloak + Solver (Docker Compose)
+        run: docker compose -f docker/docker-compose.yml up -d --build keycloak keycloak-db solver
 
       - name: Wait for Keycloak realm discovery
         run: |
           timeout 180 bash -c '
             until curl -sf http://localhost:8080/realms/schoolflow/.well-known/openid-configuration > /dev/null; do
               echo "waiting for Keycloak..."
+              sleep 3
+            done
+          '
+
+      - name: Wait for Solver healthcheck
+        run: |
+          timeout 180 bash -c '
+            until curl -sf http://localhost:8081/health > /dev/null; do
+              echo "waiting for Timefold solver..."
               sleep 3
             done
           '
