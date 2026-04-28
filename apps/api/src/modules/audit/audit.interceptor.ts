@@ -37,6 +37,31 @@ const RESOURCE_MODEL_MAP: Record<string, string> = {
 };
 
 /**
+ * Known DSGVO sub-resources mounted under `/api/v1/dsgvo/<sub>/...`.
+ *
+ * `extractResource()` walks past the `dsgvo` prefix when (and only when) the
+ * second segment matches one of these names. Unknown second segments fall
+ * back to `'dsgvo'` so a brand-new sub-resource route is NEVER silently
+ * misclassified into the wrong RESOURCE_MODEL_MAP entry — when a new sub
+ * lands, add it here AND to RESOURCE_MODEL_MAP/SENSITIVE_RESOURCES as
+ * appropriate (see audit.service.ts).
+ *
+ * Phase 15 gap-closure (15-12) — fixes VERIFICATION.md Truth #5:
+ * before this set existed, every /api/v1/dsgvo/<sub>/... URL resolved to
+ * `'dsgvo'`, which is NOT in RESOURCE_MODEL_MAP, so AuditEntry.before was
+ * never captured for DSGVO mutations.
+ */
+const DSGVO_SUB_RESOURCES = new Set<string>([
+  'consent',
+  'retention',
+  'dsfa',
+  'vvz',
+  'export',
+  'deletion',
+  'jobs',
+]);
+
+/**
  * Global interceptor for automatic audit logging (D-05).
  *
  * Logging strategy:
@@ -160,14 +185,34 @@ export class AuditInterceptor implements NestInterceptor {
 
   /**
    * Extract resource name from URL path.
-   * Expects format: /api/v1/{resource}/... or /{resource}/...
+   *
+   * Recognised shapes:
+   *   /api/v1/dsgvo/<sub>/...   → <sub>   (when <sub> is in DSGVO_SUB_RESOURCES)
+   *   /api/v1/dsgvo             → 'dsgvo' (no sub-segment)
+   *   /api/v1/dsgvo/<unknown>/… → 'dsgvo' (unknown sub — defensive fallback)
+   *   /api/v1/{resource}/...    → {resource}
+   *   /{resource}/...           → {resource}
+   *   (empty)                   → 'unknown'
+   *
+   * The DSGVO branch fires BEFORE the generic /api/v1/<segment> branch so
+   * namespaced sub-resources (consent / retention / dsfa / vvz / export /
+   * deletion / jobs) resolve to their concrete names, not the literal
+   * 'dsgvo' bucket.
    */
   private extractResource(url: string): string {
-    // Try /api/v1/{resource} first
+    // DSGVO sub-resource walk — handles `/api/v1/dsgvo/<sub>/...` BEFORE the
+    // generic first-segment match (15-12 gap-closure).
+    const dsgvoMatch = url.match(/\/api\/v1\/dsgvo\/([^/?]+)/);
+    if (dsgvoMatch && DSGVO_SUB_RESOURCES.has(dsgvoMatch[1])) {
+      return dsgvoMatch[1];
+    }
+
+    // Generic /api/v1/{resource} branch (covers /api/v1/dsgvo as resource='dsgvo'
+    // when no recognised sub-segment is present, plus all non-DSGVO routes).
     const apiMatch = url.match(/\/api\/v1\/([^/?]+)/);
     if (apiMatch) return apiMatch[1];
 
-    // Fallback: first path segment after leading slash
+    // Fallback: first path segment after leading slash.
     const segments = url.split('?')[0].split('/').filter(Boolean);
     return segments[0] || 'unknown';
   }
