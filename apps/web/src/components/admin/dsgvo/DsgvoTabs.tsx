@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { ConsentsTab } from './ConsentsTab';
 import { DsfaTable } from './DsfaTable';
 import { VvzTable } from './VvzTable';
 
@@ -99,7 +100,7 @@ export function DsgvoTabs({ schoolId, initialTab, initialSub }: Props) {
         </TabsList>
 
         <TabsContent value="consents" className="pt-6">
-          <PlaceholderPanel plan="15-06" title="Einwilligungen" schoolId={schoolId} />
+          <ConsentsTab schoolId={schoolId} />
         </TabsContent>
         <TabsContent value="retention" className="pt-6">
           <PlaceholderPanel plan="15-06" title="Aufbewahrung" schoolId={schoolId} />
