@@ -8,6 +8,7 @@ import {
   type ConsentStatus,
 } from '@/hooks/useConsents';
 import { ConsentsFilterToolbar } from './ConsentsFilterToolbar';
+import { RequestExportDialog } from './RequestExportDialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -86,6 +87,9 @@ export function ConsentsTab({ schoolId }: Props) {
   const withdraw = useWithdrawConsent();
   const [pendingWithdraw, setPendingWithdraw] =
     useState<ConsentRecordDto | null>(null);
+  // Plan 15-08: Datenexport-anstoßen toolbar button + RequestExportDialog mount
+  const [exportDialog, setExportDialog] =
+    useState<{ personId?: string } | null>(null);
 
   const goPage = (next: number) =>
     navigate({
@@ -98,6 +102,13 @@ export function ConsentsTab({ schoolId }: Props) {
 
   return (
     <div className="space-y-6">
+      {/* Plan 15-08: Datenexport-anstoßen primary CTA (UI-SPEC § Primary CTAs Tab 1) */}
+      <div className="flex justify-end">
+        <Button onClick={() => setExportDialog({})}>
+          Datenexport anstoßen
+        </Button>
+      </div>
+
       <ConsentsFilterToolbar />
 
       {query.isLoading && <p className="text-muted-foreground">Lädt…</p>}
@@ -258,6 +269,15 @@ export function ConsentsTab({ schoolId }: Props) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {exportDialog && (
+        <RequestExportDialog
+          open
+          schoolId={schoolId}
+          personId={exportDialog.personId}
+          onClose={() => setExportDialog(null)}
+        />
+      )}
     </div>
   );
 }
