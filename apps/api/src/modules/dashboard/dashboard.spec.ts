@@ -37,17 +37,30 @@ describe('Dashboard Module — DTO + skeleton', () => {
       expect(errors[0].property).toBe('schoolId');
     });
 
-    it('rejects non-UUID schoolId', async () => {
-      const dto = plainToInstance(QueryDashboardDto, { schoolId: 'not-a-uuid' });
+    // Phase 16 Plan 16-07 Rule-1 fix: rejects empty string (NOT non-UUID).
+    // The original Plan 16-01 spec asserted `@IsUUID` but seed schoolIds are
+    // literal strings like `seed-school-bgbrg-musterstadt` — see DTO comment
+    // for the full rationale. The DTO now uses `@IsString @MinLength(1)`.
+    it('rejects empty schoolId', async () => {
+      const dto = plainToInstance(QueryDashboardDto, { schoolId: '' });
       const errors = await validate(dto);
       expect(errors.length).toBeGreaterThan(0);
       expect(errors[0].property).toBe('schoolId');
-      expect(errors[0].constraints).toHaveProperty('isUuid');
+      expect(errors[0].constraints).toHaveProperty('minLength');
     });
 
     it('accepts a valid UUID schoolId', async () => {
       const dto = plainToInstance(QueryDashboardDto, {
         schoolId: '11111111-1111-4111-8111-111111111111',
+      });
+      const errors = await validate(dto);
+      expect(errors).toHaveLength(0);
+    });
+
+    // Phase 16 Plan 16-07 Rule-1 fix: literal string seed IDs MUST validate.
+    it('accepts a literal seed schoolId (Phase 11+ seed pattern)', async () => {
+      const dto = plainToInstance(QueryDashboardDto, {
+        schoolId: 'seed-school-bgbrg-musterstadt',
       });
       const errors = await validate(dto);
       expect(errors).toHaveLength(0);

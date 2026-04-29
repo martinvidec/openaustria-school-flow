@@ -158,7 +158,9 @@ describe('DashboardController (e2e)', () => {
     app = moduleRef.createNestApplication<NestFastifyApplication>(
       new FastifyAdapter(),
     );
-    // Mirror main.ts global setup so QueryDashboardDto @IsUUID kicks in.
+    // Mirror main.ts global setup so QueryDashboardDto @IsString @MinLength
+    // kicks in (Plan 16-07 Rule-1 fix from @IsUUID — seed schoolIds are not
+    // UUIDs).
     app.useGlobalPipes(
       new ValidationPipe({
         transform: true,
@@ -281,12 +283,17 @@ describe('DashboardController (e2e)', () => {
   });
 
   // -----------------------------------------------------------------
-  // Test 6 — invalid schoolId (not a UUID)
+  // Test 6 — invalid schoolId (empty string)
+  //
+  // Phase 16 Plan 16-07 Rule-1 fix: the DTO no longer enforces UUID format
+  // (seed fixtures use literal strings like `seed-school-bgbrg-musterstadt`).
+  // A non-empty string is the only DTO-level guard; the cross-tenant 403 in
+  // the controller is the actual security boundary.
   // -----------------------------------------------------------------
-  it('GET with non-UUID schoolId → 422', async () => {
+  it('GET with empty schoolId → 422 (DTO @MinLength rejection)', async () => {
     const result = await app.inject({
       method: 'GET',
-      url: `/api/v1/admin/dashboard/status?schoolId=not-a-uuid`,
+      url: `/api/v1/admin/dashboard/status?schoolId=`,
       headers: { 'x-test-user': 'admin-A' },
     });
     // class-validator + Nest's default ValidationPipe yields 400; some
