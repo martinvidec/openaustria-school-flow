@@ -8,9 +8,12 @@ import {
   FileText,
   BarChart3,
   GraduationCap,
+  LayoutDashboard,
   Package,
   PencilRuler,
   History,
+  ScrollText,
+  ShieldCheck,
   SlidersHorizontal,
   X,
   UserCircle,
@@ -47,6 +50,15 @@ const navItems: NavItem[] = [
     href: '/messages',
     icon: MessageSquare,
     roles: 'all' as const,
+  },
+  // Phase 16 Plan 03 Task 1 — D-01 + D-18 admin-only Dashboard entry,
+  // mirrored from AppSidebar at the FIRST admin-block position. Closes
+  // Phase 15 mobile gap surfaced in 16-RESEARCH Open Question #3.
+  {
+    label: 'Dashboard',
+    href: '/admin',
+    icon: LayoutDashboard,
+    roles: ['admin'],
   },
   {
     label: 'Datenimport',
@@ -145,6 +157,22 @@ const navItems: NavItem[] = [
     label: 'User',
     href: '/admin/users',
     icon: UserCircle,
+    roles: ['admin'],
+    group: 'Zugriff & Berechtigungen',
+  },
+  // Phase 16 Plan 03 Task 1 — D-18 mirror of AppSidebar Phase 15 surfaces
+  // (DSGVO-Verwaltung + Audit-Log) closing the mobile gap from RESEARCH OQ#3.
+  {
+    label: 'DSGVO-Verwaltung',
+    href: '/admin/dsgvo',
+    icon: ShieldCheck,
+    roles: ['admin'],
+    group: 'Zugriff & Berechtigungen',
+  },
+  {
+    label: 'Audit-Log',
+    href: '/admin/audit-log',
+    icon: ScrollText,
     roles: ['admin'],
     group: 'Zugriff & Berechtigungen',
   },

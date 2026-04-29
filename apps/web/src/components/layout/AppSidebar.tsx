@@ -9,6 +9,7 @@ import {
   FileText,
   BarChart3,
   GraduationCap,
+  LayoutDashboard,
   Package,
   PencilRuler,
   History,
@@ -58,6 +59,14 @@ const navItems: NavItem[] = [
     href: '/messages',
     icon: MessageSquare,
     roles: 'all' as const,
+  },
+  // Phase 16 Plan 03 Task 1 — D-01 + D-20 admin-only Dashboard entry,
+  // placed FIRST in the admin block per UI-SPEC § Sidebar position.
+  {
+    label: 'Dashboard',
+    href: '/admin',
+    icon: LayoutDashboard,
+    roles: ['admin'],
   },
   {
     label: 'Datenimport',
