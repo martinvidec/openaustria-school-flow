@@ -19,7 +19,7 @@ const mockPrisma = {
   schoolYear: { findFirst: vi.fn() },
   subject: { count: vi.fn() },
   teacher: { count: vi.fn() },
-  class: { count: vi.fn() },
+  schoolClass: { count: vi.fn() },
   student: { count: vi.fn() },
   timetableRun: { count: vi.fn() },
   constraintWeightOverride: { count: vi.fn() },
@@ -239,7 +239,7 @@ describe('DashboardService', () => {
     });
 
     it('classes done when count >= 1', async () => {
-      mockPrisma.class.count.mockResolvedValue(8);
+      mockPrisma.schoolClass.count.mockResolvedValue(8);
       const result = await service.getStatus(SCHOOL_ID);
       const cat = result.categories.find((c) => c.key === 'classes');
       expect(cat?.status).toBe('done');
@@ -247,7 +247,7 @@ describe('DashboardService', () => {
     });
 
     it('classes missing when 0', async () => {
-      mockPrisma.class.count.mockResolvedValue(0);
+      mockPrisma.schoolClass.count.mockResolvedValue(0);
       const result = await service.getStatus(SCHOOL_ID);
       const cat = result.categories.find((c) => c.key === 'classes');
       expect(cat?.status).toBe('missing');
