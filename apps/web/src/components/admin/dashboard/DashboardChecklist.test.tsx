@@ -7,9 +7,8 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { CategoryStatusDto } from '@/types/dashboard';
 import type { UseQueryResult } from '@tanstack/react-query';
-import type { DashboardStatusDto } from '@/types/dashboard';
+import type { CategoryStatusDto, DashboardStatusDto } from '@/types/dashboard';
 
 const { useDashboardStatusMock } = vi.hoisted(() => ({
   useDashboardStatusMock: vi.fn(),
