@@ -38,12 +38,18 @@ interface CategoryConfig {
 }
 
 /**
- * D-06 + UI-SPEC category-to-icon-and-deeplink map (verbatim).
+ * D-06 + UI-SPEC category-to-icon-and-deeplink map.
  *
- * The deeplink strings include German query values (`?tab=zeitraster`,
- * `?tab=schuljahre`) per the plan. Plan 03 / Plan 05 own translating those
- * to the actual route-tree tab values when wiring; ChecklistItem renders the
- * string verbatim into `href`.
+ * Phase 16 Plan 03 Task 2 — deeplink alignment fix (option (c) of Plan 02
+ * SUMMARY § Issues #2): the `school.settings.tsx` route validates `tab` as
+ * `z.enum(['details', 'timegrid', 'years', 'options'])`. Plan 02 had locked
+ * the German values (`?tab=zeitraster`, `?tab=schuljahre`) verbatim from the
+ * plan text; they would have failed `validateSearch` at runtime and bounced
+ * the user back to `?tab=details`. We translate to the actual route-tree
+ * values here so the deeplinks navigate the user to the intended tab in one
+ * hop. The corresponding Test 4 in DashboardChecklist.test.tsx is updated in
+ * the same commit. The user-visible D-06 ordering and the German labels
+ * (`Zeitraster`, `Schuljahr`) are unaffected.
  */
 const CATEGORY_CONFIG: Record<CategoryKey, CategoryConfig> = {
   school: {
@@ -54,12 +60,12 @@ const CATEGORY_CONFIG: Record<CategoryKey, CategoryConfig> = {
   timegrid: {
     title: 'Zeitraster',
     icon: Clock,
-    to: '/admin/school/settings?tab=zeitraster',
+    to: '/admin/school/settings?tab=timegrid',
   },
   schoolyear: {
     title: 'Schuljahr',
     icon: Calendar,
-    to: '/admin/school/settings?tab=schuljahre',
+    to: '/admin/school/settings?tab=years',
   },
   subjects: {
     title: 'Fächer',

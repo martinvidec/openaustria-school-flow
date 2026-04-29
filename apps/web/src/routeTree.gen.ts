@@ -16,6 +16,7 @@ import { Route as AuthenticatedTimetableIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedRoomsIndexRouteImport } from './routes/_authenticated/rooms/index'
 import { Route as AuthenticatedMessagesIndexRouteImport } from './routes/_authenticated/messages/index'
 import { Route as AuthenticatedExcusesIndexRouteImport } from './routes/_authenticated/excuses/index'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedTeacherSubstitutionsRouteImport } from './routes/_authenticated/teacher/substitutions'
 import { Route as AuthenticatedStatisticsAbsenceRouteImport } from './routes/_authenticated/statistics/absence'
 import { Route as AuthenticatedMessagesConversationIdRouteImport } from './routes/_authenticated/messages/$conversationId'
@@ -77,6 +78,11 @@ const AuthenticatedExcusesIndexRoute =
     path: '/excuses/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedTeacherSubstitutionsRoute =
   AuthenticatedTeacherSubstitutionsRouteImport.update({
     id: '/teacher/substitutions',
@@ -231,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/statistics/absence': typeof AuthenticatedStatisticsAbsenceRoute
   '/teacher/substitutions': typeof AuthenticatedTeacherSubstitutionsRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/excuses/': typeof AuthenticatedExcusesIndexRoute
   '/messages/': typeof AuthenticatedMessagesIndexRoute
   '/rooms/': typeof AuthenticatedRoomsIndexRoute
@@ -262,6 +269,7 @@ export interface FileRoutesByTo {
   '/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/statistics/absence': typeof AuthenticatedStatisticsAbsenceRoute
   '/teacher/substitutions': typeof AuthenticatedTeacherSubstitutionsRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/excuses': typeof AuthenticatedExcusesIndexRoute
   '/messages': typeof AuthenticatedMessagesIndexRoute
   '/rooms': typeof AuthenticatedRoomsIndexRoute
@@ -295,6 +303,7 @@ export interface FileRoutesById {
   '/_authenticated/messages/$conversationId': typeof AuthenticatedMessagesConversationIdRoute
   '/_authenticated/statistics/absence': typeof AuthenticatedStatisticsAbsenceRoute
   '/_authenticated/teacher/substitutions': typeof AuthenticatedTeacherSubstitutionsRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/excuses/': typeof AuthenticatedExcusesIndexRoute
   '/_authenticated/messages/': typeof AuthenticatedMessagesIndexRoute
   '/_authenticated/rooms/': typeof AuthenticatedRoomsIndexRoute
@@ -328,6 +337,7 @@ export interface FileRouteTypes {
     | '/messages/$conversationId'
     | '/statistics/absence'
     | '/teacher/substitutions'
+    | '/admin/'
     | '/excuses/'
     | '/messages/'
     | '/rooms/'
@@ -359,6 +369,7 @@ export interface FileRouteTypes {
     | '/messages/$conversationId'
     | '/statistics/absence'
     | '/teacher/substitutions'
+    | '/admin'
     | '/excuses'
     | '/messages'
     | '/rooms'
@@ -391,6 +402,7 @@ export interface FileRouteTypes {
     | '/_authenticated/messages/$conversationId'
     | '/_authenticated/statistics/absence'
     | '/_authenticated/teacher/substitutions'
+    | '/_authenticated/admin/'
     | '/_authenticated/excuses/'
     | '/_authenticated/messages/'
     | '/_authenticated/rooms/'
@@ -461,6 +473,13 @@ declare module '@tanstack/react-router' {
       path: '/excuses'
       fullPath: '/excuses/'
       preLoaderRoute: typeof AuthenticatedExcusesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/teacher/substitutions': {
@@ -642,6 +661,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedMessagesConversationIdRoute: typeof AuthenticatedMessagesConversationIdRoute
   AuthenticatedStatisticsAbsenceRoute: typeof AuthenticatedStatisticsAbsenceRoute
   AuthenticatedTeacherSubstitutionsRoute: typeof AuthenticatedTeacherSubstitutionsRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedExcusesIndexRoute: typeof AuthenticatedExcusesIndexRoute
   AuthenticatedMessagesIndexRoute: typeof AuthenticatedMessagesIndexRoute
   AuthenticatedRoomsIndexRoute: typeof AuthenticatedRoomsIndexRoute
@@ -676,6 +696,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedStatisticsAbsenceRoute: AuthenticatedStatisticsAbsenceRoute,
   AuthenticatedTeacherSubstitutionsRoute:
     AuthenticatedTeacherSubstitutionsRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedExcusesIndexRoute: AuthenticatedExcusesIndexRoute,
   AuthenticatedMessagesIndexRoute: AuthenticatedMessagesIndexRoute,
   AuthenticatedRoomsIndexRoute: AuthenticatedRoomsIndexRoute,

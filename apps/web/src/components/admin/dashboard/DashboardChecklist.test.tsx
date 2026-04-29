@@ -5,7 +5,7 @@
 // table per UI-SPEC § DashboardChecklist.
 
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { UseQueryResult } from '@tanstack/react-query';
 import type { CategoryStatusDto, DashboardStatusDto } from '@/types/dashboard';
@@ -71,6 +71,14 @@ const TITLES_IN_ORDER = [
 ];
 
 describe('DashboardChecklist (Phase 16 Plan 02 Task 3)', () => {
+  // Phase 16 Plan 03 Task 2 fix: the hoisted mock is shared across cases.
+  // Tests 6/7/8 assert `toHaveBeenCalledTimes(1)` so each case must start
+  // with a clean call log; without this, the mock accumulates and the count
+  // assertion grows monotonically with test order.
+  beforeEach(() => {
+    useDashboardStatusMock.mockReset();
+  });
+
   it('Test 1: when isLoading, renders 10 skeleton rows', () => {
     useDashboardStatusMock.mockReturnValueOnce(
       makeQueryResult({
@@ -137,10 +145,16 @@ describe('DashboardChecklist (Phase 16 Plan 02 Task 3)', () => {
       }),
     );
     render(<DashboardChecklist schoolId="s-1" />);
+    // Phase 16 Plan 03 Task 2 deeplink alignment: the German values
+    // (`?tab=zeitraster`, `?tab=schuljahre`) failed school.settings.tsx's
+    // `z.enum(['details', 'timegrid', 'years', 'options'])` validateSearch
+    // and would have bounced the user back to `?tab=details`. Updated to
+    // the route-tree tab values so the deeplinks reach the intended tab
+    // in one hop.
     const expected: Record<string, string> = {
       school: '/admin/school/settings',
-      timegrid: '/admin/school/settings?tab=zeitraster',
-      schoolyear: '/admin/school/settings?tab=schuljahre',
+      timegrid: '/admin/school/settings?tab=timegrid',
+      schoolyear: '/admin/school/settings?tab=years',
       subjects: '/admin/subjects',
       teachers: '/admin/teachers',
       classes: '/admin/classes',
