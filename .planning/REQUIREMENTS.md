@@ -16,7 +16,7 @@
 
 - [ ] **ADMIN-01**: Admin sieht ein Dashboard mit Setup-Completeness-Checkliste für Schulstammdaten, Zeitraster, Schuljahr, Fächer, Lehrer, Klassen, Schüler und Solver-Konfiguration
 - [ ] **ADMIN-02**: Admin navigiert vom Dashboard aus direkt zu jeder offenen Setup-Aufgabe (Deep-Link)
-- [ ] **ADMIN-03**: Dashboard zeigt Live-Zustand (erledigt/fehlt/unvollständig) pro Checklisten-Eintrag, aktualisiert sich ohne Reload nach jeder Admin-Aktion
+- [x] **ADMIN-03**: Dashboard zeigt Live-Zustand (erledigt/fehlt/unvollständig) pro Checklisten-Eintrag, aktualisiert sich ohne Reload nach jeder Admin-Aktion
 
 ### School Profile & Year
 
@@ -155,7 +155,7 @@ Empty initially — populated during roadmap creation by `gsd-roadmapper`.
 |-------------|-------|--------|
 | ADMIN-01 | Phase 16 | Pending |
 | ADMIN-02 | Phase 16 | Pending |
-| ADMIN-03 | Phase 16 | Pending |
+| ADMIN-03 | Phase 16 | Complete |
 | SCHOOL-01 | Phase 10 | Complete |
 | SCHOOL-02 | Phase 10 | Complete |
 | SCHOOL-03 | Phase 10 | Complete |

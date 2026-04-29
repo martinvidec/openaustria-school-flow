@@ -51,7 +51,7 @@ See [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full 
 | 13 | User- und Rechteverwaltung | 3/3 | Complete    | 2026-04-25 |
 | 14 | Solver-Tuning | 5 | Complete    | 2026-04-25 |
 | 15 | DSGVO-Admin & Audit-Log-Viewer | 12/12 | Complete    | 2026-04-28 |
-| 16 | Admin-Dashboard & Mobile-Härtung | 5/7 | In Progress|  |
+| 16 | Admin-Dashboard & Mobile-Härtung | 6/7 | In Progress|  |
 
 **Total:** 7 feature phases + 5 gap/E2E phases (10.1-10.5), 50 requirements, 100% coverage. UAT resumes after Phase 10.5 per `feedback_e2e_first_no_uat.md`.
 
@@ -333,7 +333,7 @@ Plans:
 **Goal:** Admin sieht beim Login ein Dashboard mit Setup-Completeness-Checkliste das alle Admin-Surfaces aus Phasen 10–15 zusammenführt und als Einstiegspunkt dient; Mobile-Parity aller Admin-Surfaces ist final verifiziert.
 **Requirements:** ADMIN-01, ADMIN-02, ADMIN-03, MOBILE-ADM-01, MOBILE-ADM-02, MOBILE-ADM-03
 **Depends on:** Phasen 10-15 (Dashboard verlinkt auf alle CRUD-Surfaces; Mobile-Härtung verifiziert alle gelieferten Oberflächen)
-**Plans:** 5/7 plans executed
+**Plans:** 6/7 plans executed
 
 **Success criteria:**
 - [ ] Admin sieht beim Login ein Dashboard mit Setup-Completeness-Checkliste (Schule, Zeitraster, Schuljahr, Fächer, Lehrer, Klassen, Schüler, Solver, DSGVO, Audit)
@@ -352,7 +352,7 @@ Plans:
 - [x] 16-03-PLAN.md — Role-aware login redirect, /admin/index.tsx Dashboard route, AppSidebar + MobileSidebar entries (Phase 15 gap closure: DSGVO + Audit-Log added to MobileSidebar) [Wave 2, depends on 01+02]
 - [x] 16-04-PLAN.md — Touch-target hardening: lift Button + Input + Select primitives to min-h-11 on <sm (responsive sm:min-h-{n} preserves desktop) [Wave 1]
 - [x] 16-05-PLAN.md — Mobile sweep audit spec + migrate Phase 14 (4 solver-tuning tables) + Phase 15 (5 DSGVO/audit tables) zero-mode tables to DataList [Wave 3, depends on 02+04]
-- [ ] 16-06-PLAN.md — Mutation-hook invalidation fan-out: 13 hook files × ~57 mutations add `qc.invalidateQueries({ queryKey: dashboardKeys.status })` to onSuccess [Wave 3, depends on 01+02]
+- [x] 16-06-PLAN.md — Mutation-hook invalidation fan-out: 13 hook files × ~57 mutations add `qc.invalidateQueries({ queryKey: dashboardKeys.status })` to onSuccess [Wave 3, depends on 01+02]
 - [ ] 16-07-PLAN.md — E2E coverage closure: login-redirect.spec.ts (5 roles) + admin-dashboard.spec.ts (desktop) + admin-dashboard.mobile.spec.ts (375px + MobileSidebar drawer) [Wave 4, depends on 03+05+06]
 
 ---
