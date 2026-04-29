@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { DataList, type DataListColumn } from '@/components/shared/DataList';
 import {
   useDsgvoJobs,
   type DsgvoJobStatus,
@@ -10,11 +11,17 @@ import {
 /**
  * Phase 15-08 Task 5: school-wide DSGVO jobs table tab body.
  *
+ * Phase 16 Plan 05 (D-15) — migrated to <DataList> for mobile-card support
+ * at <sm. The native `<table>` formerly inline in this Tab file has been
+ * replaced with a DataList; the toolbar (manual `Aktualisieren` outline
+ * button) and the pagination row stay above/below. Each row preserves
+ * `data-dsgvo-job-id={id}` + `data-dsgvo-job-status={status}` on BOTH
+ * desktop <tr> and mobile-card wrapper so the existing E2E suite
+ * (`admin-dsgvo-export-job.spec.ts` etc.) continues to match.
+ *
  * Renders a manual-refetch toolbar (`Aktualisieren` outline button per
- * UI-SPEC § Primary CTAs Tab 4) above a native <table> of all DSGVO jobs
- * for the current school. Each row carries `data-dsgvo-job-id={id}` and
- * `data-dsgvo-job-status={status}` selectors locked for the plan 15-10
- * E2E suite.
+ * UI-SPEC § Primary CTAs Tab 4) above the DataList of all DSGVO jobs for
+ * the current school.
  *
  * Status Badge variant map (UI-SPEC § Color):
  *   QUEUED      → secondary
@@ -30,12 +37,6 @@ import {
  * Inline error banner copy (UI-SPEC § Error states): "Status-Aktualisierung
  * fehlgeschlagen — neuer Versuch in Kürze." — NO toast on transient list
  * load failures.
- *
- * DEFERRED for v1 (documented in 15-08 SUMMARY):
- *  - Job-Detail-Drawer / "Detail öffnen" row action
- *  - Filter toolbar with status / jobType selects (Aktualisieren button is
- *    sufficient for v1)
- *  - URL deep-link state for filter
  */
 
 interface Props {
@@ -88,11 +89,45 @@ function jobTypeLabel(t: DsgvoJobType): string {
       : 'Aufbewahrungs-Cleanup';
 }
 
+type JobRow = NonNullable<ReturnType<typeof useDsgvoJobs>['data']>['data'][number];
+
 export function JobsTab({ schoolId }: Props) {
   const [page, setPage] = useState(1);
   const query = useDsgvoJobs({ schoolId, page, limit: 20 });
 
   const totalPages = query.data?.meta.totalPages ?? 1;
+
+  const columns: DataListColumn<JobRow>[] = [
+    { key: 'type', header: 'Typ', cell: (j) => jobTypeLabel(j.jobType) },
+    {
+      key: 'status',
+      header: 'Status',
+      cell: (j) => (
+        <Badge
+          variant={statusVariant(j.status)}
+          className={statusClass(j.status)}
+        >
+          {statusLabel(j.status)}
+        </Badge>
+      ),
+    },
+    {
+      key: 'person',
+      header: 'Person',
+      cell: (j) =>
+        j.person ? `${j.person.firstName} ${j.person.lastName}` : '—',
+    },
+    {
+      key: 'createdAt',
+      header: 'Erstellt am',
+      cell: (j) => new Date(j.createdAt).toLocaleString('de-AT'),
+    },
+    {
+      key: 'updatedAt',
+      header: 'Zuletzt aktualisiert',
+      cell: (j) => new Date(j.updatedAt).toLocaleString('de-AT'),
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -109,14 +144,13 @@ export function JobsTab({ schoolId }: Props) {
         </Button>
       </div>
 
-      {query.isLoading && <p className="text-muted-foreground">Lädt…</p>}
       {query.isError && (
         <div className="rounded-md border border-warning/40 bg-warning/10 p-3 text-sm text-warning">
           Status-Aktualisierung fehlgeschlagen — neuer Versuch in Kürze.
         </div>
       )}
 
-      {query.data && query.data.data.length === 0 && (
+      {query.data && query.data.data.length === 0 && !query.isLoading && (
         <div className="rounded-md border p-8 text-center">
           <p className="font-semibold">Keine DSGVO-Jobs vorhanden</p>
           <p className="text-sm text-muted-foreground mt-1">
@@ -126,75 +160,71 @@ export function JobsTab({ schoolId }: Props) {
         </div>
       )}
 
-      {query.data && query.data.data.length > 0 && (
+      {(query.isLoading || (query.data && query.data.data.length > 0)) && (
         <>
-          <div className="overflow-x-auto rounded-md border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="p-2 text-left">Typ</th>
-                  <th className="p-2 text-left">Status</th>
-                  <th className="p-2 text-left">Person</th>
-                  <th className="p-2 text-left">Erstellt am</th>
-                  <th className="p-2 text-left">Zuletzt aktualisiert</th>
-                </tr>
-              </thead>
-              <tbody>
-                {query.data.data.map((j) => {
-                  const fullName = j.person
-                    ? `${j.person.firstName} ${j.person.lastName}`
-                    : '—';
-                  return (
-                    <tr
-                      key={j.id}
-                      data-dsgvo-job-id={j.id}
-                      data-dsgvo-job-status={j.status}
-                      className="border-t"
+          <DataList<JobRow>
+            rows={query.data?.data ?? []}
+            columns={columns}
+            getRowId={(j) => j.id}
+            getRowAttrs={(j) => ({
+              'data-dsgvo-job-id': j.id,
+              'data-dsgvo-job-status': j.status,
+            })}
+            loading={query.isLoading}
+            mobileCard={(j) => {
+              const fullName = j.person
+                ? `${j.person.firstName} ${j.person.lastName}`
+                : '—';
+              return (
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="text-base font-semibold leading-6">
+                      {jobTypeLabel(j.jobType)}
+                    </div>
+                    <Badge
+                      variant={statusVariant(j.status)}
+                      className={statusClass(j.status)}
                     >
-                      <td className="p-2">{jobTypeLabel(j.jobType)}</td>
-                      <td className="p-2">
-                        <Badge
-                          variant={statusVariant(j.status)}
-                          className={statusClass(j.status)}
-                        >
-                          {statusLabel(j.status)}
-                        </Badge>
-                      </td>
-                      <td className="p-2">{fullName}</td>
-                      <td className="p-2">
-                        {new Date(j.createdAt).toLocaleString('de-AT')}
-                      </td>
-                      <td className="p-2">
-                        {new Date(j.updatedAt).toLocaleString('de-AT')}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      {statusLabel(j.status)}
+                    </Badge>
+                  </div>
+                  <div className="text-sm text-muted-foreground leading-5">
+                    {fullName}
+                  </div>
+                  <div className="text-xs text-muted-foreground leading-5">
+                    Erstellt: {new Date(j.createdAt).toLocaleString('de-AT')}
+                  </div>
+                  <div className="text-xs text-muted-foreground leading-5">
+                    Aktualisiert: {new Date(j.updatedAt).toLocaleString('de-AT')}
+                  </div>
+                </div>
+              );
+            }}
+          />
 
-          <div className="flex items-center justify-end gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              Zurück
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Seite {page} / {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              Weiter
-            </Button>
-          </div>
+          {query.data && query.data.data.length > 0 && (
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                Zurück
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Seite {page} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Weiter
+              </Button>
+            </div>
+          )}
         </>
       )}
     </div>

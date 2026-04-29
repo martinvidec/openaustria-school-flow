@@ -158,4 +158,44 @@ describe('DataList (Phase 16 Plan 02 Task 2)', () => {
     expect(onRowClick).toHaveBeenCalledTimes(1);
     expect(onRowClick).toHaveBeenCalledWith(ROWS[0]);
   });
+
+  // Phase 16 Plan 05 — getRowAttrs supports preserving existing E2E
+  // selectors (`data-audit-id`, `data-template-type`, ...) on both render
+  // paths during the migration of Phase 14/15 admin tables.
+  it('Test 9: getRowAttrs spreads arbitrary data-* attrs on desktop <tr>', () => {
+    render(
+      <DataList
+        mode="desktop"
+        rows={ROWS}
+        columns={COLUMNS}
+        getRowId={(r) => r.id}
+        getRowTestId={(r) => `row-${r.id}`}
+        getRowAttrs={(r) => ({
+          'data-audit-id': r.id,
+          'data-audit-action': 'create',
+        })}
+        mobileCard={(r) => <MobileCard row={r} />}
+      />,
+    );
+    const tr = screen.getByTestId('row-r1');
+    expect(tr.getAttribute('data-audit-id')).toBe('r1');
+    expect(tr.getAttribute('data-audit-action')).toBe('create');
+  });
+
+  it('Test 10: getRowAttrs also lands on the mobile-card wrapper', () => {
+    const { container } = render(
+      <DataList
+        mode="mobile"
+        rows={ROWS}
+        columns={COLUMNS}
+        getRowId={(r) => r.id}
+        getRowTestId={(r) => `mob-${r.id}`}
+        getRowAttrs={(r) => ({ 'data-audit-id': r.id })}
+        mobileCard={(r) => <MobileCard row={r} />}
+      />,
+    );
+    const wrapper = container.querySelector('[data-testid="mob-r1"]');
+    expect(wrapper).not.toBeNull();
+    expect(wrapper?.getAttribute('data-audit-id')).toBe('r1');
+  });
 });

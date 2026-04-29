@@ -42,6 +42,18 @@ export interface DataListProps<T> {
   getRowId: (row: T) => string;
   /** Optional `data-testid` factory applied on both render paths. */
   getRowTestId?: (row: T) => string;
+  /**
+   * Optional factory for arbitrary row-level HTML attributes (Phase 16 Plan 05
+   * — required when migrating tables whose existing E2E specs use custom
+   * `data-*` selectors like `data-audit-id`, `data-template-type`,
+   * `data-dsgvo-job-id` etc.).
+   *
+   * The returned object is spread onto BOTH the desktop `<tr>` AND the mobile
+   * card wrapper so layout-agnostic E2E selectors keep working after migration.
+   * Keys MUST be valid HTML attributes (`data-*`, `aria-*`, `id`, ...) — React
+   * will warn on invalid props.
+   */
+  getRowAttrs?: (row: T) => Record<string, string | number | boolean | undefined>;
   /** Mobile card renderer. The wrapper that DataList provides re-applies `data-testid` on the outermost element as a backstop for E2E selectors. */
   mobileCard: (row: T) => ReactNode;
   /** `auto` (default) renders both containers and lets Tailwind decide. `desktop`/`mobile` short-circuit to one branch. */
@@ -63,10 +75,11 @@ function DesktopTable<T>({
   columns,
   getRowId,
   getRowTestId,
+  getRowAttrs,
   onRowClick,
 }: Pick<
   DataListProps<T>,
-  'rows' | 'columns' | 'getRowId' | 'getRowTestId' | 'onRowClick'
+  'rows' | 'columns' | 'getRowId' | 'getRowTestId' | 'getRowAttrs' | 'onRowClick'
 >) {
   return (
     <table className="w-full text-sm">
@@ -90,6 +103,7 @@ function DesktopTable<T>({
           <tr
             key={getRowId(row)}
             data-testid={getRowTestId?.(row)}
+            {...(getRowAttrs?.(row) ?? {})}
             onClick={onRowClick ? () => onRowClick(row) : undefined}
             className={cn(
               'border-t border-border hover:bg-accent',
@@ -119,11 +133,12 @@ function MobileStack<T>({
   rows,
   getRowId,
   getRowTestId,
+  getRowAttrs,
   mobileCard,
   onRowClick,
 }: Pick<
   DataListProps<T>,
-  'rows' | 'getRowId' | 'getRowTestId' | 'mobileCard' | 'onRowClick'
+  'rows' | 'getRowId' | 'getRowTestId' | 'getRowAttrs' | 'mobileCard' | 'onRowClick'
 >) {
   return (
     <div className="flex flex-col gap-2">
@@ -131,6 +146,7 @@ function MobileStack<T>({
         <div
           key={getRowId(row)}
           data-testid={getRowTestId?.(row)}
+          {...(getRowAttrs?.(row) ?? {})}
           className={cn(
             'rounded-lg border bg-card p-4 min-h-20',
             onRowClick && 'cursor-pointer',
@@ -175,6 +191,7 @@ export function DataList<T>({
   columns,
   getRowId,
   getRowTestId,
+  getRowAttrs,
   mobileCard,
   mode = 'auto',
   emptyState,
@@ -220,6 +237,7 @@ export function DataList<T>({
           columns={columns}
           getRowId={getRowId}
           getRowTestId={getRowTestId}
+          getRowAttrs={getRowAttrs}
           onRowClick={onRowClick}
         />
       </div>
@@ -232,6 +250,7 @@ export function DataList<T>({
         rows={rows}
         getRowId={getRowId}
         getRowTestId={getRowTestId}
+        getRowAttrs={getRowAttrs}
         mobileCard={mobileCard}
         onRowClick={onRowClick}
       />
@@ -246,6 +265,7 @@ export function DataList<T>({
           columns={columns}
           getRowId={getRowId}
           getRowTestId={getRowTestId}
+          getRowAttrs={getRowAttrs}
           onRowClick={onRowClick}
         />
       </div>
@@ -254,6 +274,7 @@ export function DataList<T>({
           rows={rows}
           getRowId={getRowId}
           getRowTestId={getRowTestId}
+          getRowAttrs={getRowAttrs}
           mobileCard={mobileCard}
           onRowClick={onRowClick}
         />
