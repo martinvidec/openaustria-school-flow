@@ -6,10 +6,10 @@ import { cn } from '@/lib/utils';
  *
  * The component renders both a desktop `<table>` and a mobile-card stack and
  * lets Tailwind toggle visibility via `hidden sm:block` / `sm:hidden`. We do
- * NOT switch on `useIsMobile` here — that hook is fine for one-shot decisions
- * (toast position) but would re-mount the entire list on every breakpoint
- * crossing, which is bad for focus and scroll position. Tailwind classes own
- * the layout switch.
+ * NOT switch on a JS-side mobile-detection hook here — that pattern is fine
+ * for one-shot decisions (toast position) but would re-mount the entire list
+ * on every breakpoint crossing, which is bad for focus and scroll position.
+ * Tailwind classes own the layout switch.
  *
  * Breakpoint: 640px (Tailwind `sm`) per RESEARCH § Pattern 4. Existing
  * surfaces use `md:` (768px) — DataList moves the mobile-card threshold up to
