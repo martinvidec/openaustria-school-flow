@@ -4,14 +4,14 @@ milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
 stopped_at: Phase 16 UI-SPEC approved
-last_updated: "2026-04-29T07:32:06.820Z"
+last_updated: "2026-04-29T09:31:33.273Z"
 last_activity: 2026-04-28 -- Phase 16 planning complete
 progress:
   total_phases: 13
   completed_phases: 11
   total_plans: 56
-  completed_plans: 53
-  percent: 95
+  completed_plans: 54
+  percent: 96
 ---
 
 # Project State
@@ -30,7 +30,7 @@ Plan: Not started
 Status: Ready to execute
 Last activity: 2026-04-28 -- Phase 16 planning complete
 
-Progress: [██████████] 100%
+Progress: [██████████] 96%
 
 ## Performance Metrics
 
@@ -156,6 +156,7 @@ Progress: [██████████] 100%
 | Phase 15 P11 | 22 | 4 tasks | 4 files |
 | Phase 15 P10 | 30min | 7 tasks | 8 files |
 | Phase 15 P12 | 5 | 4 tasks | 5 files |
+| Phase 16 P05 | 32min | 3 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -491,6 +492,8 @@ Recent decisions affecting current work:
 - [Phase ?]: Phase 15 DSGVO admin DTOs require UUID schoolId/personId but seed data uses static stable IDs — soft-skip pattern in E2E specs (Plan 15-10); fix deferred
 - [Phase 15]: Use DSGVO_SUB_RESOURCES allowlist Set in AuditInterceptor.extractResource — Auto-walking any /api/v1/dsgvo/<sub> second segment would silently misclassify a future unmapped DSGVO route into the wrong RESOURCE_MODEL_MAP entry. Allowlist Set forces intentional opt-in (developer adds the new sub to DSGVO_SUB_RESOURCES + RESOURCE_MODEL_MAP + SENSITIVE_RESOURCES at the same time, surfaced at code-review time). Unknown subs fall back to resource='dsgvo'.
 - [Phase 15]: Omit 'jobs' from SENSITIVE_RESOURCES while keeping it in DSGVO_SUB_RESOURCES — Admin Jobs-tab GETs are opaque job-metadata list reads that do not warrant per-fetch SENSITIVE_READ audit rows. Splitting the two lists lets admin Subject-filter still bucket DSGVO-jobs reads under resource='jobs' while suppressing the per-row read-log. Other DSGVO sub-resources (consent, retention, dsfa, vvz, export, deletion) ARE in SENSITIVE_RESOURCES.
+- [Phase ?]: Plan 16-05: extend DataList with getRowAttrs to preserve Phase 14/15 E2E selectors (data-audit-id / data-template-type / data-dsgvo-job-id) on both desktop tr and mobile-card wrapper
+- [Phase ?]: Plan 16-05: skip ConstraintCatalogTab + ConstraintWeightsTab DataList migration — both use grid-based row components with zero <table> JSX; would regress slider density (Pitfall #7)
 
 ### Pending Todos
 
@@ -532,7 +535,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-28T19:22:18.856Z
+Last session: 2026-04-29T09:31:13.828Z
 Stopped at: Phase 16 UI-SPEC approved
 Resume file: 
-.planning/phases/16-admin-dashboard-mobile-h-rtung/16-UI-SPEC.md
+None

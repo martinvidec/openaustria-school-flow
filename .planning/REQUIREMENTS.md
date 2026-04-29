@@ -88,8 +88,8 @@
 
 ### Mobile Parity
 
-- [ ] **MOBILE-ADM-01**: Alle Admin-CRUD-Tabellen haben eine mobile-taugliche Karten-/Listen-Alternative bei 375px
-- [ ] **MOBILE-ADM-02**: Alle Admin-Formulare funktionieren bei 375px mit 44px-Touch-Targets
+- [x] **MOBILE-ADM-01**: Alle Admin-CRUD-Tabellen haben eine mobile-taugliche Karten-/Listen-Alternative bei 375px
+- [x] **MOBILE-ADM-02**: Alle Admin-Formulare funktionieren bei 375px mit 44px-Touch-Targets
 - [ ] **MOBILE-ADM-03**: Admin-Dashboard und Navigation funktionieren bei 375px
 
 ---
@@ -200,8 +200,8 @@ Empty initially — populated during roadmap creation by `gsd-roadmapper`.
 | AUDIT-VIEW-01 | Phase 15 | Complete |
 | AUDIT-VIEW-02 | Phase 15 | Complete |
 | AUDIT-VIEW-03 | Phase 15 | Complete |
-| MOBILE-ADM-01 | Phase 16 | Pending |
-| MOBILE-ADM-02 | Phase 16 | Pending |
+| MOBILE-ADM-01 | Phase 16 | Complete |
+| MOBILE-ADM-02 | Phase 16 | Complete |
 | MOBILE-ADM-03 | Phase 16 | Pending |
 
 **Coverage:**
