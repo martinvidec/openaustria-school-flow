@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { SchoolDetailsInput, SchoolDto } from '@schoolflow/shared';
 import { apiFetch } from '@/lib/api';
+import { dashboardKeys } from '@/hooks/useDashboardStatus';
 
 export const schoolKeys = {
   one: (schoolId: string) => ['school', schoolId] as const,
@@ -51,6 +52,7 @@ export function useCreateSchool() {
     onSuccess: (server) => {
       qc.invalidateQueries({ queryKey: schoolKeys.list() });
       qc.setQueryData(schoolKeys.one(server.id), server);
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Schule angelegt. Sie koennen jetzt Zeitraster und Schuljahr pflegen.');
     },
     onError: (e: Error) => toast.error(e.message),
@@ -72,6 +74,7 @@ export function useUpdateSchool(schoolId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: schoolKeys.one(schoolId) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Aenderungen gespeichert.');
     },
     onError: (e: Error) => toast.error(e.message),

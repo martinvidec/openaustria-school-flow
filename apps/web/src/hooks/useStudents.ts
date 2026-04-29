@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
+import { dashboardKeys } from '@/hooks/useDashboardStatus';
 
 /**
  * Student hooks — Phase 12-01 admin surface (STUDENT-01..04).
@@ -200,6 +201,7 @@ export function useCreateStudent(schoolId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: studentKeys.all(schoolId) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Schüler:in angelegt.');
     },
     onError: (err: StudentApiError | Error) => {
@@ -224,6 +226,7 @@ export function useUpdateStudent(schoolId: string, id: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: studentKeys.all(schoolId) });
       qc.invalidateQueries({ queryKey: studentKeys.detail(id) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Änderungen gespeichert.');
     },
     onError: (err: StudentApiError | Error) => {
@@ -245,6 +248,7 @@ export function useArchiveStudent(schoolId: string, id: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: studentKeys.all(schoolId) });
       qc.invalidateQueries({ queryKey: studentKeys.detail(id) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Schüler:in archiviert.');
     },
     onError: (err: StudentApiError | Error) => {
@@ -266,6 +270,7 @@ export function useRestoreStudent(schoolId: string, id: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: studentKeys.all(schoolId) });
       qc.invalidateQueries({ queryKey: studentKeys.detail(id) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Schüler:in reaktiviert.');
     },
     onError: (err: StudentApiError | Error) => {
@@ -285,6 +290,7 @@ export function useDeleteStudent(schoolId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: studentKeys.all(schoolId) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Schüler:in gelöscht.');
     },
     onError: (err: StudentApiError | Error) => {
@@ -320,6 +326,7 @@ export function useMoveStudent(schoolId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: studentKeys.all(schoolId) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Schüler:in verschoben.');
     },
     onError: (err: StudentApiError | Error) => {
@@ -367,6 +374,7 @@ export function useBulkMoveStudents(schoolId: string) {
     },
     onSuccess: (result) => {
       qc.invalidateQueries({ queryKey: studentKeys.all(schoolId) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success(`${result.done}/${result.total} Schüler:innen verschoben.`);
     },
     onError: (err: StudentApiError | Error) => {

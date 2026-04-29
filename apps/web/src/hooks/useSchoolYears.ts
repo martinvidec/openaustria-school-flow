@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { SchoolYearDto, SchoolYearInput } from '@schoolflow/shared';
 import { apiFetch } from '@/lib/api';
+import { dashboardKeys } from '@/hooks/useDashboardStatus';
 
 export const schoolYearKeys = {
   all: (schoolId: string) => ['school-years', schoolId] as const,
@@ -34,6 +35,7 @@ export function useCreateSchoolYear(schoolId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: schoolYearKeys.all(schoolId) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Schuljahr angelegt.');
     },
     onError: (e: Error) => toast.error(e.message),
@@ -57,7 +59,10 @@ export function useUpdateSchoolYear(schoolId: string) {
       if (!res.ok) throw new Error('Schuljahr konnte nicht aktualisiert werden');
       return res.json();
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: schoolYearKeys.all(schoolId) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: schoolYearKeys.all(schoolId) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 }
@@ -77,6 +82,7 @@ export function useActivateSchoolYear(schoolId: string) {
       qc.invalidateQueries({ queryKey: schoolYearKeys.all(schoolId) });
       qc.invalidateQueries({ queryKey: ['school', schoolId] });
       qc.invalidateQueries({ queryKey: ['timetable-run:active', schoolId] });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Aktives Schuljahr gewechselt.');
     },
     onError: (e: Error) => toast.error(e.message),
@@ -110,6 +116,7 @@ export function useDeleteSchoolYear(schoolId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: schoolYearKeys.all(schoolId) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Schuljahr geloescht.');
     },
     onError: (e: Error) => {
@@ -146,7 +153,10 @@ export function useCreateHoliday(schoolId: string) {
       if (!res.ok) throw new Error('Ferieneintrag konnte nicht angelegt werden');
       return res.json();
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: schoolYearKeys.all(schoolId) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: schoolYearKeys.all(schoolId) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 }
@@ -161,7 +171,10 @@ export function useDeleteHoliday(schoolId: string) {
       );
       if (!res.ok) throw new Error('Ferieneintrag konnte nicht geloescht werden');
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: schoolYearKeys.all(schoolId) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: schoolYearKeys.all(schoolId) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 }
@@ -183,7 +196,10 @@ export function useCreateAutonomousDay(schoolId: string) {
       if (!res.ok) throw new Error('Schulautonomer Tag konnte nicht angelegt werden');
       return res.json();
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: schoolYearKeys.all(schoolId) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: schoolYearKeys.all(schoolId) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 }
@@ -198,7 +214,10 @@ export function useDeleteAutonomousDay(schoolId: string) {
       );
       if (!res.ok) throw new Error('Schulautonomer Tag konnte nicht geloescht werden');
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: schoolYearKeys.all(schoolId) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: schoolYearKeys.all(schoolId) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 }

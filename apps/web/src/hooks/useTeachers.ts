@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
+import { dashboardKeys } from '@/hooks/useDashboardStatus';
 
 /**
  * Teacher hooks — mixed legacy + Phase 11 admin surface.
@@ -222,6 +223,7 @@ export function useCreateTeacher(schoolId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: teacherKeys.all(schoolId) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Lehrperson angelegt.');
     },
     onError: (err: TeacherApiError | Error) => {
@@ -248,6 +250,7 @@ export function useUpdateTeacher(schoolId: string, id: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: teacherKeys.all(schoolId) });
       qc.invalidateQueries({ queryKey: teacherKeys.detail(id) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Änderungen gespeichert.');
     },
     onError: (err: TeacherApiError | Error) => {
@@ -269,6 +272,7 @@ export function useDeleteTeacher(schoolId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: teacherKeys.all(schoolId) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Lehrperson gelöscht.');
     },
     onError: (err: TeacherApiError | Error) => {
@@ -298,6 +302,7 @@ export function useLinkKeycloak(teacherId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: teacherKeys.detail(teacherId) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Keycloak-Account verknüpft.');
     },
     onError: (err: TeacherApiError | Error) => {
@@ -321,6 +326,7 @@ export function useUnlinkKeycloak(teacherId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: teacherKeys.detail(teacherId) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Verknüpfung gelöst.');
     },
     onError: (err: TeacherApiError | Error) => {

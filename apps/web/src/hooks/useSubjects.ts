@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
+import { dashboardKeys } from '@/hooks/useDashboardStatus';
 
 /**
  * Subject hooks — Phase 11 Plan 11-02 admin surface for Fächer CRUD
@@ -155,6 +156,7 @@ export function useCreateSubject(schoolId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: subjectKeys.all(schoolId) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Fach angelegt.');
     },
     onError: (err: SubjectApiError | Error) => {
@@ -194,6 +196,7 @@ export function useUpdateSubject(schoolId: string, id: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: subjectKeys.all(schoolId) });
       qc.invalidateQueries({ queryKey: subjectKeys.detail(id) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Fach aktualisiert.');
     },
     onError: (err: SubjectApiError | Error) => {
@@ -222,6 +225,7 @@ export function useDeleteSubject(schoolId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: subjectKeys.all(schoolId) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Fach gelöscht.');
     },
     onError: (err: SubjectApiError | Error) => {
