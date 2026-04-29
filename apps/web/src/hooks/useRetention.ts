@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
+import { dashboardKeys } from '@/hooks/useDashboardStatus';
 
 /**
  * Phase 15-05 hook: retention policy CRUD for /admin/dsgvo retention tab.
@@ -109,6 +110,7 @@ export function useCreateRetentionPolicy() {
     onSuccess: () => {
       toast.success('Aufbewahrungsrichtlinie angelegt');
       qc.invalidateQueries({ queryKey: retentionKeys.all });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
     },
     onError: (e: Error) =>
       toast.error(e.message ?? 'Aktion fehlgeschlagen. Bitte erneut versuchen.'),
@@ -141,6 +143,7 @@ export function useUpdateRetentionPolicy() {
     onSuccess: () => {
       toast.success('Aufbewahrungsrichtlinie aktualisiert');
       qc.invalidateQueries({ queryKey: retentionKeys.all });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
     },
     onError: (e: Error) =>
       toast.error(e.message ?? 'Aktion fehlgeschlagen. Bitte erneut versuchen.'),
@@ -167,6 +170,7 @@ export function useDeleteRetentionPolicy() {
     onSuccess: () => {
       toast.success('Aufbewahrungsrichtlinie gelöscht');
       qc.invalidateQueries({ queryKey: retentionKeys.all });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
     },
     onError: (e: Error) =>
       toast.error(e.message ?? 'Aktion fehlgeschlagen. Bitte erneut versuchen.'),

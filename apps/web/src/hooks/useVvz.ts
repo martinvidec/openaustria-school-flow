@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
+import { dashboardKeys } from '@/hooks/useDashboardStatus';
 
 /**
  * Phase 15-05 hook: VVZ entry CRUD for /admin/dsgvo dsfa-vvz tab (VVZ sub-tab).
@@ -121,6 +122,7 @@ export function useCreateVvz() {
     onSuccess: () => {
       toast.success('VVZ-Eintrag angelegt');
       qc.invalidateQueries({ queryKey: vvzKeys.all });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
     },
     onError: (e: Error) =>
       toast.error(e.message ?? 'Aktion fehlgeschlagen. Bitte erneut versuchen.'),
@@ -149,6 +151,7 @@ export function useUpdateVvz() {
     onSuccess: () => {
       toast.success('VVZ-Eintrag aktualisiert');
       qc.invalidateQueries({ queryKey: vvzKeys.all });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
     },
     onError: (e: Error) =>
       toast.error(e.message ?? 'Aktion fehlgeschlagen. Bitte erneut versuchen.'),
@@ -172,6 +175,7 @@ export function useDeleteVvz() {
     onSuccess: () => {
       toast.success('VVZ-Eintrag gelöscht');
       qc.invalidateQueries({ queryKey: vvzKeys.all });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
     },
     onError: (e: Error) =>
       toast.error(e.message ?? 'Aktion fehlgeschlagen. Bitte erneut versuchen.'),

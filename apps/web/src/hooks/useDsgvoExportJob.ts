@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
+import { dashboardKeys } from '@/hooks/useDashboardStatus';
 import {
   isTerminal,
   dsgvoJobsKeys,
@@ -127,6 +128,7 @@ export function useRequestExport() {
       toast.success('Datenexport angestoßen');
       qc.invalidateQueries({ queryKey: dsgvoJobsKeys.all });
       qc.invalidateQueries({ queryKey: exportJobKeys.job(data.id) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
     },
     onError: (e: Error) =>
       toast.error(e.message ?? 'Aktion fehlgeschlagen. Bitte erneut versuchen.'),

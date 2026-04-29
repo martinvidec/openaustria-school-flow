@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
+import { dashboardKeys } from '@/hooks/useDashboardStatus';
 
 /**
  * Phase 15-05 hook: admin-filter list + grant/withdraw mutations for consents.
@@ -161,6 +162,7 @@ export function useGrantConsent() {
     onSuccess: () => {
       toast.success('Einwilligung erteilt');
       qc.invalidateQueries({ queryKey: consentKeys.all });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
     },
     onError: (e: Error) => {
       toast.error(e.message ?? 'Aktion fehlgeschlagen. Bitte erneut versuchen.');
@@ -189,6 +191,7 @@ export function useWithdrawConsent() {
     onSuccess: () => {
       toast.success('Einwilligung widerrufen');
       qc.invalidateQueries({ queryKey: consentKeys.all });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
     },
     onError: (e: Error) => {
       toast.error(e.message ?? 'Aktion fehlgeschlagen. Bitte erneut versuchen.');
