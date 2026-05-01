@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 Phase: 999.1
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-05-01
+Last activity: 2026-05-01 - Completed quick task 260501-scd: secret-scan audit (1 TRUE_POSITIVE — VAPID dev keypair committed, rotation REQUIRED)
 
 Progress: [██████████] 100%
 
@@ -518,6 +518,7 @@ None yet.
 | 260426-eyf | Harden useRooms pagination params + unit tests + E2E Räume assertion | 2026-04-26 | 6ebad74 | [260426-eyf-harden-userooms-pagination-params-unit-t](./quick/260426-eyf-harden-userooms-pagination-params-unit-t/) |
 | 260426-fwb | Lock down rooms-filter with component test + E2E regression spec | 2026-04-26 | 4d1b09c | [260426-fwb-lock-down-rooms-filter-behavior-with-com](./quick/260426-fwb-lock-down-rooms-filter-behavior-with-com/) |
 | 260426-gtr | apiFetch Content-Type header regression guards (3-test Vitest spec) | 2026-04-26 | 65d03df | [260426-gtr-apifetch-content-type-header-regression-](./quick/260426-gtr-apifetch-content-type-header-regression-/) |
+| 260501-scd | check nach versehentlich comitteten secrets (z.B. vapid key) | 2026-05-01 | c8232a4 | [260501-scd-check-nach-versehentlich-comitteten-secr](./quick/260501-scd-check-nach-versehentlich-comitteten-secr/) |
 
 ### Roadmap Evolution
 
