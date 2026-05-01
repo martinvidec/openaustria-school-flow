@@ -156,11 +156,11 @@ Empty initially — populated during roadmap creation by `gsd-roadmapper`.
 | ADMIN-01 | Phase 16 | Complete |
 | ADMIN-02 | Phase 16 | Complete |
 | ADMIN-03 | Phase 16 | Complete |
-| SCHOOL-01 | Phase 10 | Complete |
-| SCHOOL-02 | Phase 10 | Complete |
-| SCHOOL-03 | Phase 10 | Complete |
-| SCHOOL-04 | Phase 10 | Complete |
-| SCHOOL-05 | Phase 10 | Complete |
+| SCHOOL-01 | Phase 10 + 18 (doc-gap closure) | Complete-by-evidence; matrix-strict pending Phase 18 frontmatter backfill |
+| SCHOOL-02 | Phase 10 + 18 (doc-gap closure) | Complete-by-evidence; matrix-strict pending Phase 18 frontmatter backfill |
+| SCHOOL-03 | Phase 10 + 18 (doc-gap closure) | Complete-by-evidence; matrix-strict pending Phase 18 frontmatter backfill |
+| SCHOOL-04 | Phase 10 + 18 (doc-gap closure) | Complete-by-evidence; matrix-strict pending Phase 18 frontmatter backfill |
+| SCHOOL-05 | Phase 10 + 18 (doc-gap closure) | Complete-by-evidence; matrix-strict pending Phase 18 frontmatter backfill |
 | TEACHER-01 | Phase 11-01 | Complete |
 | TEACHER-02 | Phase 11-01 | Complete |
 | TEACHER-03 | Phase 11-01 | Complete |
