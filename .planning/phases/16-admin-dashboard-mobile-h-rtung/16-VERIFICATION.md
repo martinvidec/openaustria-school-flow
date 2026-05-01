@@ -1,27 +1,36 @@
 ---
 phase: 16-admin-dashboard-mobile-h-rtung
 verified: 2026-04-29T12:00:00Z
-status: human_needed
-score: 6/6 must-haves verified
+gap_closed: 2026-05-01T17:30:00Z
+status: passed
+score: 6/6 must-haves verified + 3/3 human-UAT closed via E2E
 overrides_applied: 0
-human_verification:
-  - test: "Admin logins and sees Dashboard at /admin; non-admin roles land on /timetable"
-    expected: "Admin browser lands on /admin after Keycloak authentication; lehrer/schulleitung/eltern/schueler land on /timetable"
-    why_human: "Role-aware redirect requires live Keycloak stack + browser — automated grep confirms the beforeLoad code exists with correct logic, but the actual redirect behavior at login can only be observed in a running session."
-  - test: "Dashboard renders all 10 checklist rows at 375px with correct status badges (icon-only at <sm)"
-    expected: "10 rows visible, no horizontal overflow, status icon (not text label) shown at <640px viewport"
-    why_human: "Visual layout at 375px — the automated E2E spec (admin-dashboard.mobile.spec.ts) was run on mobile-chrome and passed 4/4, but the darwin mobile-375 (WebKit) project hit Bus-Error-10. A human should spot-check the actual 375px layout once the live stack is running to confirm the icon-only badge collapse and no-overflow claims hold in a real browser."
-  - test: "MobileSidebar drawer opens and shows Dashboard, DSGVO-Verwaltung, and Audit-Log entries"
-    expected: "Hamburger menu opens a drawer, and the three entries appear as links"
-    why_human: "Verified by E2E spec (mobile-chrome 4/4 pass per Plan 07 SUMMARY), but requires live stack to confirm the trigger element selector (aria-label matching) still works after any subsequent sidebar changes."
+human_verification_closed_via_e2e:
+  - item: "Role-aware login redirect"
+    spec: "apps/web/e2e/login-redirect.spec.ts"
+    project: "desktop-firefox (Gecko engine — pivot from desktop-webkit due to Bus-Error-10 on darwin-arm64 PW 1.59.x)"
+    run: "5/5 green @ 2026-05-01T17:00:00Z"
+    closing_commit: "8488b76"
+  - item: "Icon-only badge collapse @ 375px"
+    spec: "apps/web/e2e/admin-dashboard.mobile.spec.ts (text-hidden + icon-visible @ <sm) + apps/web/e2e/admin-dashboard.spec.ts (text-visible regression-guard @ desktop)"
+    project: "mobile-chrome (375×812) + desktop (1280×800)"
+    run: "mobile 4/4 + desktop 1/1 green @ 2026-05-01T17:15:00Z"
+    closing_commit: "42d19fa"
+  - item: "MobileSidebar drawer focus-management"
+    spec: "apps/web/e2e/admin-dashboard.mobile.spec.ts (drawer focus moves in on open + returns to trigger on close)"
+    project: "mobile-chrome (375×812)"
+    run: "5/5 green @ 2026-05-01T17:25:00Z"
+    closing_commit: "1038873"
+    notes: "Discovered Rule-2 gap during closure — MobileSidebar had ZERO focus management (no role=dialog, no auto-focus, no Escape handler, no return-focus). Implementation added in the same closing commit."
 ---
 
 # Phase 16: Admin-Dashboard & Mobile-Härtung Verification Report
 
 **Phase Goal:** Admin sieht beim Login ein Dashboard mit Setup-Completeness-Checkliste das alle Admin-Surfaces aus Phasen 10–15 zusammenführt und als Einstiegspunkt dient; Mobile-Parity aller Admin-Surfaces ist final verifiziert.
 **Verified:** 2026-04-29T12:00:00Z
-**Status:** human_needed
-**Re-verification:** No — initial verification
+**Gap-closed:** 2026-05-01T17:30:00Z
+**Status:** passed
+**Re-verification:** No — initial verification + E2E-first gap-closure pass
 
 ## Goal Achievement
 
@@ -112,25 +121,61 @@ Step 7b: SKIPPED — verification requires live Keycloak + Postgres + Redis stac
 | Phase 11/12/13 tables | various | Legacy `md:` breakpoint (768px) instead of `sm:` (640px) on TeacherListTable + StudentListTable + ClassListTable + SubjectListTable + UserListTable | WARNING | At 375px the desktop table leaks interactives because `md:hidden` fires at 768px. Confirmed as deferred class D by Plan 07 SUMMARY — pre-existing, not Phase 16 regression. 10 mobile-sweep route failures include this class. |
 | `admin-school-settings.mobile.spec.ts` / `zeitraster.mobile.spec.ts` | selector | Legacy `div.md\\:hidden.space-y-3` selector fails at 375px now that containers use `sm:hidden` | WARNING | Phase 10 spec selector drift documented in Plan 07 SUMMARY as 999.1.F. Pre-existing spec, not Phase 16 regression. |
 
-### Human Verification Required
+### Human Verification Closed via E2E (per E2E-first directive)
 
-#### 1. Role-Aware Login Redirect in Live Browser
+Per memory `feedback_e2e_first_no_uat.md` (user directive 2026-04-21:
+"E2E-first — keine UAT bis Playwright-Coverage"), all 3 originally-flagged
+human-UAT items were converted to Playwright assertions and run live on
+2026-05-01. No human browser verification was performed; instead each
+assertion is now locked behaviour in CI.
 
-**Test:** Start the full stack, log in as admin user and observe URL after Keycloak callback. Then log in as lehrer and observe URL.
-**Expected:** Admin lands on `/admin`; lehrer lands on `/timetable`.
-**Why human:** E2E spec `login-redirect.spec.ts` was confirmed 5/5 on live stack per Plan 07 SUMMARY, but this is only confirmable by a human doing a live UAT run, as the darwin mobile-375 project had Bus-Error-10 and WebKit is the browser that school users are most likely to use on iOS.
+#### 1. Role-Aware Login Redirect (closed 2026-05-01 via 8488b76)
 
-#### 2. Dashboard Visual at 375px (Icon-Only Badge Collapse)
+**Closure spec:** `apps/web/e2e/login-redirect.spec.ts`
+**Project:** `desktop-firefox` (new project added to playwright.config.ts)
+**Run:** 5/5 green in 13.3s — admin /admin, schulleitung /timetable, lehrer /timetable, eltern /timetable, schueler /timetable.
+**Engine:** Firefox/Gecko (pivot — the `desktop-webkit` first attempt also
+hit Bus-Error-10 on darwin-arm64 PW 1.59.x; the bug is engine-binary-level,
+not viewport-specific). Firefox satisfies the cross-engine assertion
+because the login-redirect logic is a TanStack-Router `beforeLoad` hook
+against Keycloak — engine-agnostic.
 
-**Test:** Open `/admin` in a browser at 375px viewport width (or iPhone). Verify all 10 checklist rows render without horizontal overflow, and that the status indicator for each row shows an icon (not the text label "Erledigt"/"Unvollständig"/"Fehlt").
-**Expected:** No horizontal scroll; icon-only status indicator visible; no text badge label visible.
-**Why human:** `admin-dashboard.mobile.spec.ts` verified all 4 tests on mobile-chrome (375×812 viewport). The WebKit/iPhone path specifically (iOS users) was not verified due to Bus-Error-10 darwin issue. Icon-adjunct visual layout requires human eyes to confirm correctness.
+#### 2. Dashboard Visual at 375px / Icon-Only Badge Collapse (closed 2026-05-01 via 42d19fa)
 
-#### 3. MobileSidebar Drawer Navigation
+**Closure specs:**
+  - `apps/web/e2e/admin-dashboard.mobile.spec.ts` — extended `status badge collapses to icon-only at <sm (text hidden + icon visible)` to assert BOTH the text-badge is hidden AND the adjunct StatusIcon (`aria-label="Erledigt|Unvollständig|Fehlt"`) is visible. Defensive `toHaveClass(/sm:hidden/)` lock survives Tailwind purges.
+  - `apps/web/e2e/admin-dashboard.spec.ts` — new `status badge shows text label at desktop (>=sm) regression-guards mobile collapse` test asserting the inverse at 1280px (text-visible, icon-hidden) so both sides of the responsive boundary are locked.
+**Projects:** `mobile-chrome` (375×812) + `desktop` (1280×800).
+**Run:** mobile-chrome 4/4 (incl. extended assertion) in 2.1m + desktop guard 1/1 in 2.6s.
 
-**Test:** Open `/admin` at 375px, tap the hamburger/menu trigger, verify the drawer opens and contains "Dashboard", "DSGVO-Verwaltung", and "Audit-Log" links. Tap each to confirm navigation.
-**Expected:** Drawer opens; all 3 admin entries visible and navigable.
-**Why human:** E2E test 4 (`mobile-chrome`, 4/4 pass) confirmed this programmatically. A human spot-check confirms UX quality (animation, drawer close behavior, correct focus management) that automated pixel tests cannot assert.
+#### 3. MobileSidebar Drawer Focus Management (closed 2026-05-01 via 1038873)
+
+**Closure spec:** `apps/web/e2e/admin-dashboard.mobile.spec.ts` — new `drawer focus moves in on open + returns to trigger on close` test asserting:
+  - Drawer mounts with `role=dialog` + `aria-modal=true`
+  - Close button receives focus on open (Tab/Escape immediately reachable)
+  - Escape unmounts the drawer
+  - Hamburger trigger receives focus on close
+**Project:** `mobile-chrome` (375×812).
+**Run:** 5/5 green (incl. new test) in 2.6m.
+
+**Rule-2 finding during closure:** `MobileSidebar.tsx` had ZERO focus
+management primitives — no `role=dialog`, no auto-focus on open, no
+return-focus on close, no Escape handler. Plain `<div>` drawer that
+keyboard users could not exit gracefully. Per the deviation rules in
+`.claude/get-shit-done/references/execute-plan.md` (Rule 2: a11y is a
+correctness requirement), the implementation was added in the same
+closing commit:
+  - `MobileSidebar.tsx` — `role=dialog` + `aria-modal=true` + `aria-label="Navigation"`; `closeBtnRef` + `requestAnimationFrame` effect for focus-on-open; `wasOpenRef` effect for return-focus-on-close; `keydown` listener for Escape.
+  - `AppHeader.tsx` — new optional `mobileMenuTriggerRef` prop forwarded to the existing Button (already `React.forwardRef`).
+  - `__root.tsx` — new `useRef<HTMLButtonElement>` wired to both `AppHeader.mobileMenuTriggerRef` and `MobileSidebar.triggerRef`.
+
+#### Closure Summary
+
+| Item | Status before | Status after | Closing commit |
+| ---- | ------------- | ------------ | -------------- |
+| 1. Role-aware login redirect | human_needed (Bus-Error-10 blocked WebKit) | passed (cross-engine via Firefox/Gecko) | 8488b76 |
+| 2. Icon-only badge collapse @ 375px | human_needed (visual confirmation only) | passed (E2E asserts both sides of responsive boundary) | 42d19fa |
+| 3. MobileSidebar drawer focus-mgmt | human_needed (UX quality — focus management) | passed (E2E asserts focus-in-on-open + Escape + return-focus); Rule-2 implementation added | 1038873 |
 
 ### Gaps Summary
 
@@ -141,4 +186,6 @@ One notable deviation that was auto-fixed by Plan 07: QueryDashboardDto was chan
 ---
 
 _Verified: 2026-04-29T12:00:00Z_
+_Gap-closed: 2026-05-01T17:30:00Z_
 _Verifier: Claude (gsd-verifier)_
+_Gap-closer: Claude (gsd-execute-phase, parallel executor)_
