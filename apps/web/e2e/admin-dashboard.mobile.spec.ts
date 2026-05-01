@@ -122,4 +122,48 @@ test.describe('Phase 16 — Admin Dashboard (mobile 375)', () => {
       page.getByRole('link', { name: /^Audit-Log$/i }),
     ).toBeVisible();
   });
+
+  // Phase 16 GAP-CLOSURE — focus management on drawer open + close
+  // (16-VERIFICATION human_needed item 3). Asserts that:
+  //   1. Opening the drawer moves focus into it (close button receives focus
+  //      so Tab/Escape are immediately reachable for keyboard users).
+  //   2. The drawer container is `role=dialog` + `aria-modal=true` so screen
+  //      readers know it's a modal surface.
+  //   3. Closing the drawer (via Escape) returns focus to the hamburger
+  //      trigger so keyboard users land where they started.
+  // Implementation lives in MobileSidebar.tsx (focus refs + Escape handler)
+  // and __root.tsx + AppHeader.tsx (triggerRef wiring).
+  test('drawer focus moves in on open + returns to trigger on close', async ({
+    page,
+  }) => {
+    await page.goto('/admin');
+    await expect(page.locator('[data-checklist-item]').first()).toBeVisible();
+
+    const trigger = page.getByRole('button', { name: 'Navigation oeffnen' });
+    await trigger.click();
+
+    // Drawer is mounted with role=dialog + aria-modal=true — wait for it to
+    // be visible (also confirms a11y-correct mounting).
+    const dialog = page.getByRole('dialog', { name: 'Navigation' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toHaveAttribute('aria-modal', 'true');
+
+    // Focus moved INTO the drawer — the close button receives focus on open
+    // (MobileSidebar.tsx:66-72). We assert the active element matches the
+    // close button via Playwright's `toBeFocused()` matcher.
+    const closeBtn = page.getByRole('button', {
+      name: 'Navigation schliessen',
+    });
+    await expect(closeBtn).toBeFocused();
+
+    // Press Escape — the keydown listener in MobileSidebar.tsx:80-90 calls
+    // onOpenChange(false), which unmounts the dialog AND triggers the
+    // open->closed effect that restores focus to triggerRef.
+    await page.keyboard.press('Escape');
+    await expect(dialog).not.toBeVisible();
+
+    // Focus returned to the hamburger trigger — keyboard users continue
+    // their flow without losing position.
+    await expect(trigger).toBeFocused();
+  });
 });

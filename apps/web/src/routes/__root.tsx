@@ -19,6 +19,9 @@ function RootLayout() {
   const isMobile = useIsMobile();
   const isOnline = useOnlineStatus();
   const { updateAvailable, updateServiceWorker } = useServiceWorker();
+  // Phase 16 GAP-CLOSURE — ref to the hamburger trigger so MobileSidebar can
+  // return focus on drawer close (a11y / focus restoration).
+  const mobileMenuTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   // Show the service worker update toast once per detected update.
   const updateToastShownRef = useRef(false);
@@ -50,10 +53,14 @@ function RootLayout() {
       <MobileSidebar
         open={mobileMenuOpen}
         onOpenChange={setMobileMenuOpen}
+        triggerRef={mobileMenuTriggerRef}
       />
 
       <div className="flex flex-col flex-1 min-w-0">
-        <AppHeader onMobileMenuToggle={() => setMobileMenuOpen(true)} />
+        <AppHeader
+          onMobileMenuToggle={() => setMobileMenuOpen(true)}
+          mobileMenuTriggerRef={mobileMenuTriggerRef}
+        />
         <OfflineBanner />
         <main
           className={`flex-1 p-4 md:p-6 ${isOnline ? '' : 'pt-[calc(1rem+40px)] md:pt-[calc(1.5rem+40px)]'}`}

@@ -1,3 +1,4 @@
+import { useEffect, useRef, type RefObject } from 'react';
 import { Link, useRouterState } from '@tanstack/react-router';
 import {
   BookOpen,
@@ -203,9 +204,23 @@ function groupItems(items: NavItem[]): { ungrouped: NavItem[]; groups: Array<{ l
 interface MobileSidebarProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /**
+   * Phase 16 GAP-CLOSURE — focus management (16-VERIFICATION human_needed
+   * item 3). When provided, the drawer:
+   *   - on open: moves focus to the in-drawer close button
+   *   - on close: returns focus to `triggerRef.current` (the AppHeader
+   *     hamburger button) so keyboard users land where they started.
+   * Optional so callers without a trigger ref (e.g. unit-test mounts)
+   * still render correctly.
+   */
+  triggerRef?: RefObject<HTMLButtonElement | null>;
 }
 
-export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
+export function MobileSidebar({
+  open,
+  onOpenChange,
+  triggerRef,
+}: MobileSidebarProps) {
   const { user } = useAuth();
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
@@ -218,6 +233,47 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
     hasAccess(userRoles, item.roles),
   );
   const { ungrouped, groups } = groupItems(visibleItems);
+
+  // Focus management refs. `closeBtnRef` is the focus target on drawer open;
+  // `wasOpenRef` tracks the previous-open value so the close-side restoration
+  // only fires on an open->closed transition (not on initial mount).
+  const closeBtnRef = useRef<HTMLButtonElement | null>(null);
+  const wasOpenRef = useRef(false);
+
+  // On open: focus the close button so Tab/Escape are immediately reachable.
+  // On close: return focus to the trigger (AppHeader hamburger). Both wrapped
+  // in rAF so React commits the new DOM/visibility before we move focus.
+  useEffect(() => {
+    if (open) {
+      const id = requestAnimationFrame(() => {
+        closeBtnRef.current?.focus();
+      });
+      wasOpenRef.current = true;
+      return () => cancelAnimationFrame(id);
+    }
+    if (wasOpenRef.current) {
+      const id = requestAnimationFrame(() => {
+        triggerRef?.current?.focus();
+      });
+      wasOpenRef.current = false;
+      return () => cancelAnimationFrame(id);
+    }
+    return undefined;
+  }, [open, triggerRef]);
+
+  // Escape key closes the drawer (parent handles the focus restoration via
+  // the open->closed effect above).
+  useEffect(() => {
+    if (!open) return undefined;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onOpenChange(false);
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [open, onOpenChange]);
 
   if (!open) return null;
 
@@ -259,13 +315,21 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
         aria-hidden="true"
       />
 
-      {/* Drawer */}
-      <div className="absolute inset-y-0 left-0 w-64 bg-card border-r border-border flex flex-col animate-in slide-in-from-left">
+      {/* Drawer — `role=dialog` + `aria-modal=true` so screen readers and
+          Playwright's `getByRole('dialog')` recognise the drawer. The
+          `aria-label` provides an accessible name. */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation"
+        className="absolute inset-y-0 left-0 w-64 bg-card border-r border-border flex flex-col animate-in slide-in-from-left"
+      >
         <div className="flex items-center justify-between h-14 px-4 border-b border-border">
           <span className="text-lg font-semibold text-foreground">
             SchoolFlow
           </span>
           <Button
+            ref={closeBtnRef}
             variant="ghost"
             size="sm"
             onClick={() => onOpenChange(false)}
