@@ -4,14 +4,14 @@ milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
 stopped_at: Phase 16 UI-SPEC approved
-last_updated: "2026-04-29T09:59:31.982Z"
+last_updated: "2026-05-01T16:18:40.081Z"
 last_activity: 2026-04-28 -- Phase 16 planning complete
 progress:
   total_phases: 13
-  completed_phases: 11
+  completed_phases: 12
   total_plans: 56
-  completed_plans: 55
-  percent: 98
+  completed_plans: 56
+  percent: 100
 ---
 
 # Project State
@@ -30,7 +30,7 @@ Plan: Not started
 Status: Ready to execute
 Last activity: 2026-04-28 -- Phase 16 planning complete
 
-Progress: [██████████] 98%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -158,6 +158,7 @@ Progress: [██████████] 98%
 | Phase 15 P12 | 5 | 4 tasks | 5 files |
 | Phase 16 P05 | 32min | 3 tasks | 11 files |
 | Phase 16 P06 | 22 | 3 tasks | 15 files |
+| Phase 16 P07 | 85min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -496,6 +497,8 @@ Recent decisions affecting current work:
 - [Phase ?]: Plan 16-05: extend DataList with getRowAttrs to preserve Phase 14/15 E2E selectors (data-audit-id / data-template-type / data-dsgvo-job-id) on both desktop tr and mobile-card wrapper
 - [Phase ?]: Plan 16-05: skip ConstraintCatalogTab + ConstraintWeightsTab DataList migration — both use grid-based row components with zero <table> JSX; would regress slider density (Pitfall #7)
 - [Phase ?]: 16-06: Wired D-07 hybrid invalidation across 13 admin hook files (42 mutation sites)
+- [Phase ?]: Phase 16 Plan 07: mobile-chrome (Pixel 5 Chromium emulation) is the darwin verification surface for *.mobile.spec.ts because mobile-375 (WebKit) hits Bus-Error-10 on darwin runners (precedent: 10.4-03 / 10.5-02 / 11-03).
+- [Phase ?]: Phase 16 Plan 07: QueryDashboardDto accepts seed string IDs via @IsString @MinLength(1) instead of @IsUUID; cross-tenant 403 in DashboardController.getStatus already enforces tampering protection (Rule 1 fix, commit 3da440e).
 
 ### Pending Todos
 
@@ -537,7 +540,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-29T09:59:26.711Z
+Last session: 2026-05-01T16:18:23.775Z
 Stopped at: Phase 16 UI-SPEC approved
 Resume file: 
 None

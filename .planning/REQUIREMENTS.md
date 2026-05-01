@@ -14,8 +14,8 @@
 
 ### Admin Dashboard & Onboarding
 
-- [ ] **ADMIN-01**: Admin sieht ein Dashboard mit Setup-Completeness-Checkliste für Schulstammdaten, Zeitraster, Schuljahr, Fächer, Lehrer, Klassen, Schüler und Solver-Konfiguration
-- [ ] **ADMIN-02**: Admin navigiert vom Dashboard aus direkt zu jeder offenen Setup-Aufgabe (Deep-Link)
+- [x] **ADMIN-01**: Admin sieht ein Dashboard mit Setup-Completeness-Checkliste für Schulstammdaten, Zeitraster, Schuljahr, Fächer, Lehrer, Klassen, Schüler und Solver-Konfiguration
+- [x] **ADMIN-02**: Admin navigiert vom Dashboard aus direkt zu jeder offenen Setup-Aufgabe (Deep-Link)
 - [x] **ADMIN-03**: Dashboard zeigt Live-Zustand (erledigt/fehlt/unvollständig) pro Checklisten-Eintrag, aktualisiert sich ohne Reload nach jeder Admin-Aktion
 
 ### School Profile & Year
@@ -90,7 +90,7 @@
 
 - [x] **MOBILE-ADM-01**: Alle Admin-CRUD-Tabellen haben eine mobile-taugliche Karten-/Listen-Alternative bei 375px
 - [x] **MOBILE-ADM-02**: Alle Admin-Formulare funktionieren bei 375px mit 44px-Touch-Targets
-- [ ] **MOBILE-ADM-03**: Admin-Dashboard und Navigation funktionieren bei 375px
+- [x] **MOBILE-ADM-03**: Admin-Dashboard und Navigation funktionieren bei 375px
 
 ---
 
@@ -153,8 +153,8 @@ Empty initially — populated during roadmap creation by `gsd-roadmapper`.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ADMIN-01 | Phase 16 | Pending |
-| ADMIN-02 | Phase 16 | Pending |
+| ADMIN-01 | Phase 16 | Complete |
+| ADMIN-02 | Phase 16 | Complete |
 | ADMIN-03 | Phase 16 | Complete |
 | SCHOOL-01 | Phase 10 | Complete |
 | SCHOOL-02 | Phase 10 | Complete |
@@ -202,7 +202,7 @@ Empty initially — populated during roadmap creation by `gsd-roadmapper`.
 | AUDIT-VIEW-03 | Phase 15 | Complete |
 | MOBILE-ADM-01 | Phase 16 | Complete |
 | MOBILE-ADM-02 | Phase 16 | Complete |
-| MOBILE-ADM-03 | Phase 16 | Pending |
+| MOBILE-ADM-03 | Phase 16 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 50 total
