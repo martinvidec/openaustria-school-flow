@@ -115,6 +115,31 @@ test.describe('Phase 16 — Admin Dashboard (desktop)', () => {
       }
     });
 
+    // UI-SPEC § icon-adjunct rule — desktop regression guard for the
+    // responsive collapse boundary verified at 375px in
+    // admin-dashboard.mobile.spec.ts. Phase 16 GAP-CLOSURE
+    // (16-VERIFICATION human_needed item 2) — at >=sm (1280px desktop) the
+    // labelled <Badge> text MUST be visible and the adjunct icon's
+    // `sm:hidden` class MUST collapse it. This pairs with the mobile spec to
+    // lock both sides of the responsive boundary.
+    test('status badge shows text label at desktop (>=sm) regression-guards mobile collapse', async ({
+      page,
+    }) => {
+      await page.goto('/admin');
+      const firstRow = page.locator('[data-checklist-item]').first();
+      await expect(firstRow).toBeVisible();
+
+      // ChecklistItem.tsx:90-95 — labelled <Badge> has `hidden sm:inline-flex`,
+      // so at 1280px the German status copy is visible inside the row.
+      const textBadge = firstRow.getByText(/^(Erledigt|Unvollständig|Fehlt)$/);
+      await expect(textBadge).toBeVisible();
+
+      // Adjunct icon (`<StatusIcon class="sm:hidden ..." aria-label="...">`)
+      // MUST NOT be visible at desktop — Tailwind `sm:hidden` collapses it.
+      const adjunctIcon = firstRow.getByLabel(/^(Erledigt|Unvollständig|Fehlt)$/);
+      await expect(adjunctIcon).toBeHidden();
+    });
+
     // ADMIN-02 — deep-link teachers
     test('clicking teachers row navigates to /admin/teachers', async ({
       page,

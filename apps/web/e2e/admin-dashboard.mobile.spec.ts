@@ -69,18 +69,32 @@ test.describe('Phase 16 — Admin Dashboard (mobile 375)', () => {
   });
 
   // UI-SPEC § icon-adjunct rule — at <sm the labelled badge collapses to icon
-  test('status badge collapses to icon-only at <sm', async ({ page }) => {
+  test('status badge collapses to icon-only at <sm (text hidden + icon visible)', async ({
+    page,
+  }) => {
     await page.goto('/admin');
     await expect(page.locator('[data-checklist-item]').first()).toBeVisible();
 
-    // ChecklistItem.tsx:90-95 — labelled <Badge> has `hidden sm:inline-flex`,
-    // adjunct icon has `sm:hidden`. At 375px (< sm-breakpoint 640px) the text
-    // badge MUST NOT be visible. Use the labelled-text locator scoped to the
-    // first row to avoid the global "Erledigt"/"Fehlt" copy elsewhere on
-    // future pages.
+    // ChecklistItem.tsx:90-99 — labelled <Badge> has `hidden sm:inline-flex`,
+    // adjunct StatusIcon has `sm:hidden` + aria-label set to the same German
+    // status copy ("Erledigt" / "Unvollständig" / "Fehlt"). At 375px
+    // (< sm-breakpoint 640px) the text badge MUST NOT be visible AND the icon
+    // adjunct MUST be visible. Phase 16 GAP-CLOSURE (16-VERIFICATION
+    // human_needed item 2) extended the assertion to lock both directions of
+    // the responsive collapse, not just the text-hidden side.
     const firstRow = page.locator('[data-checklist-item]').first();
     const textBadge = firstRow.getByText(/^(Erledigt|Unvollständig|Fehlt)$/);
     await expect(textBadge).toBeHidden();
+
+    // Adjunct icon: `<StatusIcon aria-label="Erledigt|Unvollständig|Fehlt" />`
+    // (ChecklistItem.tsx:96-99). Locate via aria-label scoped to the first row
+    // so the assertion survives status changes on subsequent runs.
+    const adjunctIcon = firstRow.getByLabel(/^(Erledigt|Unvollständig|Fehlt)$/);
+    await expect(adjunctIcon).toBeVisible();
+
+    // Defensive lock on the responsive class: the icon SVG MUST carry
+    // `sm:hidden` so the desktop-text/icon split survives Tailwind purges.
+    await expect(adjunctIcon).toHaveClass(/sm:hidden/);
   });
 
   // MOBILE-ADM-03 — MobileSidebar drawer parity (Phase 15 gap closure)
