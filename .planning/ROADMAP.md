@@ -52,8 +52,9 @@ See [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full 
 | 14 | Solver-Tuning | 5 | Complete    | 2026-04-25 |
 | 15 | DSGVO-Admin & Audit-Log-Viewer | 12/12 | Complete    | 2026-04-28 |
 | 16 | Admin-Dashboard & Mobile-Härtung | 7/7 | Complete    | 2026-05-01 |
+| 17 | CI Stabilization (promoted from Backlog) | infra | Active      | 2026-05-01 |
 
-**Total:** 7 feature phases + 5 gap/E2E phases (10.1-10.5), 50 requirements, 100% coverage. UAT resumes after Phase 10.5 per `feedback_e2e_first_no_uat.md`.
+**Total:** 7 feature phases + 5 gap/E2E phases (10.1-10.5) + 1 infra phase (17), 50 requirements, 100% coverage. UAT resumes after Phase 10.5 per `feedback_e2e_first_no_uat.md`.
 
 ### Completed v1.1 phases
 
@@ -357,14 +358,13 @@ Plans:
 
 ---
 
-## Backlog
+### Phase 17: CI Stabilization — fix accumulated E2E test failures
 
-### Phase 999.1: CI Stabilization — fix accumulated E2E test failures (BACKLOG)
+**Goal:** Captured 2026-04-28 nach Phase-15-Merge — alle 3 PRs (#1 phase-15, #2 chore, #3 fix) wurden via `--admin` gemerged trotz roter E2E-CI. Build / Install / Solver-Sidecar / API+Web-Build sind grün; nur der `Run Playwright tests` Step hat ~30-50 Failures verteilt über Phase 11-15. Diese Phase triagiert sie systematisch in real bugs vs CI-environment-flakes und macht den `--admin`-Override für zukünftige PRs überflüssig. Promoted from Backlog 2026-05-01 via `/gsd:review-backlog`.
 
-**Goal:** Captured 2026-04-28 nach Phase-15-Merge — alle 3 PRs (#1 phase-15, #2 chore, #3 fix) wurden via `--admin` gemerged trotz roter E2E-CI. Build / Install / Solver-Sidecar / API+Web-Build sind grün; nur der `Run Playwright tests` Step hat ~30-50 Failures verteilt über Phase 11-15. Dieses Backlog-Item triagiert sie systematisch in real bugs vs CI-environment-flakes und macht den `--admin`-Override für zukünftige PRs (Phase 16+) überflüssig.
-
-**Requirements:** TBD (siehe Triage-Result)
-**Plans:** 7 plans
+**Requirements:** Infrastructure-only (keine REQ-IDs — Tech-Debt-Closure)
+**Depends on:** Phase 16 (Active branch is `gsd/phase-16-admin-dashboard-mobile-h-rtung`; Phase 17 läuft parallel oder nach Phase 16 PR-Merge)
+**Plans:** 7 plans (abgeleitet von 999.1.A-G aus Phase-16-07-SUMMARY)
 
 **Failure clusters (von PR #1 Run [25065085891](https://github.com/martinvidec/openaustria-school-flow/actions/runs/25065085891)):**
 
@@ -388,14 +388,27 @@ Plans:
 - Phase-13-Tests: könnten Reihenfolge-abhängig sein (User-State von vorigem Test nötig) oder seed-data-Voraussetzung haben die in CI fehlt
 - Phase-14-integration: explizit `-` (skipped), nicht failed — solver-run zu langsam in CI?
 
-**Success criteria (TBD):**
+**Success criteria:**
 - [ ] CI-`Run Playwright tests`-Step grün auf einer leeren PR off main
-- [ ] Phase-16 PR kann ohne `--admin`-Override gemerged werden
+- [ ] Folge-PRs können ohne `--admin`-Override gemerged werden
 - [ ] Triage-Dokument im Phase-Verzeichnis kategorisiert jede Failure als real-bug/flake/env
 
 **Reference:**
 - PR #1 run: https://github.com/martinvidec/openaustria-school-flow/actions/runs/25065085891
 - Memory-Eintrag: `feedback_phase_branch_discipline.md` (warum --admin nötig war)
+- Plan-Übersetzungs-Quelle: Phase-16-07-SUMMARY 999.1.A-G items + `.planning/v1.1-OPEN-ITEMS-INVENTORY.md` §9.1
 
-Plans:
-- [ ] TBD (promote with /gsd-review-backlog when ready)
+Plans (7, abgeleitet von 999.1.A-G):
+- [ ] 17-01-PLAN.md — A: Breadcrumb anchor 44px floor (10 routes)
+- [ ] 17-02-PLAN.md — B: Tabs primitive lift (`tabs.tsx:15` TabsList h-10 → min-h-11), affects /admin/subjects + /admin/timetable-edit
+- [ ] 17-03-PLAN.md — C: RadioGroup primitive lift (`radio-group.tsx`), affects /admin/dsgvo
+- [ ] 17-04-PLAN.md — D: Phase 11/12/13 ListTable + MobileCards migration to DataList (Teacher/Student/Class/Subject/User), Severity high
+- [ ] 17-05-PLAN.md — E: 14 pre-existing desktop regressions triage (sample: admin-solver-tuning-restrictions)
+- [ ] 17-06-PLAN.md — F: Phase 10 mobile spec selector drift (`admin-school-settings.mobile.spec.ts` + `zeitraster.mobile.spec.ts` — `md\\:hidden` → `sm:hidden`)
+- [ ] 17-07-PLAN.md — G: Mobile-375 (WebKit) Bus-Error-10 auf darwin — env-classification + monitor on Playwright upgrade
+
+---
+
+## Backlog
+
+*Empty — Phase 999.1 promoted to Phase 17 on 2026-05-01 via `/gsd:review-backlog`. Future backlog items will be appended here.*
