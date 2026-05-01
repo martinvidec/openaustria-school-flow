@@ -12,12 +12,12 @@ tools_used: git grep + git log -p / -S / -G (ripgrep available as Claude shell f
 
 | Severity | Working Tree | Git History (history-only) | Total findings |
 |----------|-------------:|---------------------------:|---------------:|
-| CRITICAL | 0 | TBD (Task 2) | TBD |
-| HIGH | 1 | TBD (Task 2) | TBD |
-| MEDIUM | 3 | TBD (Task 2) | TBD |
-| LOW | 5 | TBD (Task 2) | TBD |
-| INFO | 1 | TBD (Task 2) | TBD |
-| NEEDS_HUMAN_REVIEW | 0 | TBD (Task 2) | TBD |
+| CRITICAL | 0 | 0 | 0 |
+| HIGH | 1 | 0 | 1 |
+| MEDIUM | 3 | 0 | 3 |
+| LOW | 5 | 0 | 5 |
+| INFO | 1 | 0 | 1 |
+| NEEDS_HUMAN_REVIEW | 0 | 0 | 0 |
 
 > "Git History (history-only)" counts findings that exist in old commits but were removed from HEAD. Findings that exist in BOTH HEAD and history are counted only once, in the Working Tree column (the history scan confirmed no additional history-only secrets).
 
@@ -118,7 +118,40 @@ None.
 
 ## Git History
 
-_To be filled by history scan (Task 2)._
+Total commits scanned: 793  
+Total branches: 9 (including remotes)
+
+### Currently in HEAD (already reported in Working Tree above)
+
+11 distinct findings (1 HIGH, 3 MEDIUM, 5 LOW, 2 INFO) — see **Working Tree** section above. All have been continuously present in HEAD on at least one branch since their introducing commit; none was added-then-removed.
+
+### History-only (removed from HEAD, but committed at some point)
+
+#### CRITICAL / HIGH / MEDIUM / LOW / INFO / NEEDS_HUMAN_REVIEW
+
+**None.** The history scan (Patterns A–G + supplementary) found no secret-shaped value that was added in an earlier commit and later removed from HEAD. Every match in the diff stream was either:
+
+1. The **same value still present in HEAD** (and therefore already counted in Working Tree above — confirmed via cross-ref of `git grep` HEAD output vs. `git log -S` history output for each suspect literal), or
+2. A **test stub literal** (the string `Stub` repeated 3x as a fake VAPID private key) in `apps/api/src/modules/push/push.service.spec.ts`, commit `f7bc82a`, 2026-04-09 — clearly not a real key (the literal "Stub" is reused inside the value, zero entropy).
+
+Notable trace: the VAPID dev keypair (`9zvN…rGHE` / `BPeB…DgSE`) was first introduced in commit `5ccb516` (2026-04-21, `ci(10.2-05): GitHub Actions Playwright workflow for PRs to main`) and immediately re-cited in the matching planning doc `ac91df2` and summary `1199f0d` on the same day. It has been continuously in HEAD since then — i.e. the rotation in the checklist is BOTH a HEAD-fix and a history-fix from the same act.
+
+### `.env`-shaped files ever committed (Pattern G)
+
+| Commit | Date | Path | Status |
+|--------|------|------|--------|
+| — | — | — | **None.** `git log --all --diff-filter=A --name-only` over all refs returned zero `.env` (non-example) additions. The only `.env*` files ever tracked are `.env.example` (root) and `docker/.env.example` — both intentionally placeholder templates. |
+
+This is the strongest single result of the audit: in 793 commits, **no developer has ever accidentally committed a real `.env` file**. The `.gitignore:9` rule (`.env`) has been in place since the very first commit and held.
+
+### Database URL history hits (Pattern D)
+
+26 lines of context (12 distinct commits) — all are the same `schoolflow:scho…_dev@…` or `schoolflow:${POSTGRES_PASSWORD}@…` pattern as in HEAD. No history-only DB password leak. Earliest occurrence: commit `305cddf` (2026-03-29, `feat(01-01): scaffold pnpm + Turborepo monorepo`) — the dev default has been in tree since day 1, by design.
+
+### Pattern E history hits (KEY=VALUE)
+
+3,067 raw diff lines (whole-diff content). Filtered to header+match: 19 hits across 7 commits — every one is either (a) a placeholder (`chan…ring`, `your…here`, `plac…lder`), (b) code that reads from `process.env` (not assigns), or (c) the `dev-…cret` solver fallback already reported in Working Tree MEDIUM. No history-only TRUE_POSITIVE.
+
 ## False Positives Confirmed
 
 These patterns fired but were correctly ignored. Documented so future audit re-runs don't re-investigate.
