@@ -430,6 +430,66 @@ Plans (5, bundled per CONTEXT D-01 + D-03 wave structure):
 
 ---
 
+### Phase 17.1: CI Stabilization Follow-Up — fix smoke-PR build blocker + cluster mop-up
+
+**Goal:** Make the smoke-PR `chore/ci-smoke-noop` (off main, no-op diff) pass `Run Playwright tests` WITHOUT the `--admin` override. Phase 17 was meant to deliver this CONTEXT D-15 verifier-gate but could not, because the smoke-PR (PR #9, run [25251866945](https://github.com/martinvidec/openaustria-school-flow/actions/runs/25251866945)) surfaced a pre-existing TS build blocker (`DashboardChecklist.test.tsx` 8× TS2345) that hides the entire E2E layer. Per CONTEXT D-16: a TS-compile-error is NOT a CI-env-flake, so Phase 17.1 spawns automatically.
+
+**Requirements:** Tech-debt-closure follow-up — keine REQ-IDs (Infrastructure-only).
+**Depends on:** Phase 17 (Complete with `gaps_found`; `17-TRIAGE.md`, `deferred-items.md`, `PHASE-17.1-SCOPE.md` are the input artifacts). Worktree branches 17-01..17-05 must merge to main before re-running the smoke-PR.
+**Plans:** 5 plans (TBD)
+
+**Source artifacts:**
+
+- `.planning/phases/17-ci-stabilization/PHASE-17.1-SCOPE.md` — full scope draft (9 items, 5 suggested plans)
+- `.planning/phases/17-ci-stabilization/17-TRIAGE.md` — 27-row classification table (cluster IDs, owning fix-paths, resolution column)
+- `.planning/phases/17-ci-stabilization/deferred-items.md` — cluster-by-cluster deferral inventory
+- `.planning/phases/17-ci-stabilization/VERIFICATION.md` — Phase 17 PASS-WITH-FOLLOWUP report (gaps_found via D-16)
+
+**Required scope (blocks Phase 17.1 done):**
+
+- Fix `apps/web/src/components/admin/dashboard/DashboardChecklist.test.tsx` TS2345 errors (lines 84/100/122/137/175/192/209/224) — TanStack Query v5 discriminated-union type narrowing on partial `UseQueryResult` mocks. Acceptance: `pnpm --filter @schoolflow/web exec tsc -p tsconfig.app.json --noEmit` exits 0.
+- Merge worktree branches 17-01..17-05 to main without conflict (orchestrator step).
+- Re-run smoke-PR `chore/ci-smoke-noop` after build-blocker fix + worktree merges. Expected: GREEN without `--admin`.
+
+**Best-effort scope (deferred from Phase 17, not strictly required for verifier-gate green):**
+
+- **Cluster A — Phase 14 POST `/constraint-templates` 422 regression** (5 tests, 3 specs: admin-solver-tuning-restrictions/-preferences/-audit). Single-root-cause live-stack repro (DTO drift vs. seed-class-1a alignment) likely unblocks all 5 at once.
+- **Cluster B — Phase 13 admin-user search fixture regression** (15 tests, 6 specs: admin-users-list, -overrides, -permissions, -person-link, -roles, -silent-4xx). Single fixture fix likely unblocks the entire cluster.
+- **Cluster C — Phase 15 audit-log specs** (2 tests: admin-audit-log-detail missing-fixture, admin-audit-log-filter selector strict-mode dual-render).
+- **Cluster D — Phase 10.5 admin-import wizard** (3 tests, 1m timeouts: Mantine Stepper render delay or file-upload preview hang).
+- **Cluster E — Phase 04 DnD regression** (1 test: admin-timetable-edit-dnd pointer-event timing).
+- **Cluster F — Phase 10.2 silent-4xx + screenshot** (2 tests: silent-4xx toast-render timing, screenshots SCHOOL-05 capture timing).
+
+**Out-of-scope:**
+
+- WebKit-Linux-CI playbook (Plan G's follow-up) — already deferred to Phase 23-Backlog per CONTEXT D-04.
+- DataList API polish (column-resizing, sticky-headers) — deferred to Phase 999.x "DataList v2".
+- Admin sub-surface DataList migration (`*DetailTabs.tsx`, Verfügbarkeits, Stundentafel-Vorlagen) — deferred to a future "admin sub-surface DataList migration" plan.
+- Larger auth-helper refactor (loginAsRole v2 with cleanup) — deferred to Phase 23-Backlog per CONTEXT D-12 close.
+
+**Success criteria:**
+
+- [ ] `apps/web/src/components/admin/dashboard/DashboardChecklist.test.tsx` compiles cleanly (`tsc -p tsconfig.app.json --noEmit` exit 0)
+- [ ] Phase 17 worktree branches 17-01..17-05 merged to main without conflict
+- [ ] Smoke-PR `chore/ci-smoke-noop` re-run shows green CI without `--admin` override
+- [ ] All previously-deferred specs either fixed OR removed from the test suite with documented rationale (cluster-by-cluster decision, not file-by-file)
+- [ ] `17-TRIAGE.md` `## Smoke-PR result` section updated with the green-PR run URL + commit hash
+- [ ] STATE.md transitions Phase 17 from `done-with-followup` to `complete` after the green re-run
+
+**Reference:**
+- Trigger: GitHub Actions run [25251866945](https://github.com/martinvidec/openaustria-school-flow/actions/runs/25251866945) — PR #9 failed at `Build Web` step before Playwright could start
+- Memory-Eintrag: `feedback_phase_branch_discipline.md`, `feedback_e2e_first_no_uat.md`, `feedback_verifier_human_needed_must_be_challenged.md`
+
+Plans (TBD — to be planned via `/gsd:plan-phase 17.1`):
+
+- [ ] 17.1-01-PLAN.md — Fix `DashboardChecklist.test.tsx` TS2345 errors (single-PR; <1h work; unblocks every CI run going forward)
+- [ ] 17.1-02-PLAN.md — Coordinate orchestrator-merge of 17-01..17-05 worktree branches to main + re-run smoke-PR verifier-gate
+- [ ] 17.1-03-PLAN.md — Cluster A live-stack repro + fix (Phase 14 POST `/constraint-templates` 422 — single root cause unblocks 5 tests)
+- [ ] 17.1-04-PLAN.md — Cluster B live-stack repro + fix (Phase 13 admin-user search — single fixture fix unblocks 15 tests)
+- [ ] 17.1-05-PLAN.md — Cluster C+D+E+F mop-up (selector strict-mode `.first()`, wizard timing, DnD pointer timing, audit-fixture seeding)
+
+---
+
 ### Phase 18: Phase-10/10.2 VERIFICATION + SUMMARY frontmatter backfill
 
 **Goal:** Schließt die zwei P0-BLOCKER-Verification-Gaps aus `v1.1-MILESTONE-AUDIT.md` (Phase 10 + Phase 10.2 ohne `VERIFICATION.md` per Workflow-Step-2-Hard-Rule) und backfillt das `requirements-completed:`-Frontmatter in den Phase-10-Plan-SUMMARYs, damit die strict-3-source-Matrix von "unsatisfied (matrix-strict) / satisfied-by-evidence" auf "satisfied" flippt für SCHOOL-01..05.
