@@ -61,7 +61,9 @@ test.describe('AUDIT-VIEW-02 — Audit detail drawer (Vorzustand + Nachzustand)'
     // suggestion of `action=read, resource=consent`.
     await page.goto('/admin/audit-log?action=create');
 
-    const row = page.locator(`[data-audit-id="${id}"]`);
+    // `:visible` filters to the active layout variant — DataList renders both
+    // desktop `<tr>` and mobile `<div>` with the same data-audit-id (#13).
+    const row = page.locator(`[data-audit-id="${id}"]:visible`);
     await expect(row).toBeVisible({ timeout: 10_000 });
     await row.getByRole('button', { name: 'Detail öffnen' }).click();
 
@@ -93,7 +95,9 @@ test.describe('AUDIT-VIEW-02 — Audit detail drawer (Vorzustand + Nachzustand)'
     await loginAsAdmin(page);
     await page.goto('/admin/audit-log?action=update&resource=retention');
 
-    const row = page.locator(`[data-audit-id="${id}"]`);
+    // `:visible` filters to the active layout variant — DataList renders both
+    // desktop `<tr>` and mobile `<div>` with the same data-audit-id (#13).
+    const row = page.locator(`[data-audit-id="${id}"]:visible`);
     await expect(row).toBeVisible({ timeout: 10_000 });
     await row.getByRole('button', { name: 'Detail öffnen' }).click();
 

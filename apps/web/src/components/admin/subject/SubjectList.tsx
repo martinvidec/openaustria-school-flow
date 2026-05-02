@@ -154,6 +154,7 @@ export function SubjectList({
       columns={columns}
       getRowId={(s) => s.id}
       getRowTestId={(s) => `subject-row-${s.shortName}`}
+      mobileWrapperTestId="subject-mobile-cards"
       onRowClick={(s) => onEdit(s)}
       mobileCard={(s) => {
         const color = getSubjectColor(s.id);
