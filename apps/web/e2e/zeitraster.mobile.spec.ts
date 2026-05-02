@@ -33,7 +33,12 @@ test.describe('Phase 10.2 — Zeitraster save (mobile 375)', () => {
     const mobileSelect = page.locator('[role="combobox"]').first();
     await expect(mobileSelect).toBeVisible();
     await mobileSelect.click();
-    await page.getByRole('option', { name: 'Zeitraster' }).click();
+    // schoolId loads async via useUserContext(/users/me) — until it lands the
+    // tabsDisabled flag keeps the Zeitraster option non-interactive (#15).
+    // Wait for aria-disabled to clear before clicking the option.
+    const zeitrasterOption = page.getByRole('option', { name: 'Zeitraster' });
+    await expect(zeitrasterOption).not.toHaveAttribute('aria-disabled', 'true');
+    await zeitrasterOption.click();
     await expect(page).toHaveURL(/tab=timegrid/);
 
     // Card mode assertion: PeriodsEditor mobile container is the

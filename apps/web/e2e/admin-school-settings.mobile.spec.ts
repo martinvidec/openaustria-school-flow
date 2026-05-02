@@ -27,7 +27,12 @@ test.describe('Phase 10 — Admin School Settings (mobile 375)', () => {
     await expect(mobileSelect).toBeVisible();
 
     await mobileSelect.click();
-    await page.getByRole('option', { name: 'Zeitraster' }).click();
+    // schoolId loads async via useUserContext(/users/me) — until it lands the
+    // tabsDisabled flag keeps the Zeitraster option non-interactive (#15).
+    // Wait for aria-disabled to clear before clicking the option.
+    const zeitrasterOption = page.getByRole('option', { name: 'Zeitraster' });
+    await expect(zeitrasterOption).not.toHaveAttribute('aria-disabled', 'true');
+    await zeitrasterOption.click();
     await expect(page).toHaveURL(/tab=timegrid/);
 
     // Desktop table uses `.hidden.sm:block` on its wrapper → hidden at <sm.
