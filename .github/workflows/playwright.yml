@@ -172,7 +172,11 @@ jobs:
         run: pnpm --filter @schoolflow/web build
 
       - name: Install Playwright browsers
-        run: pnpm --filter @schoolflow/web exec playwright install chromium --with-deps
+        # Install all 3 engines because playwright.config.ts has 4 projects:
+        # desktop=chromium, desktop-firefox=firefox, mobile-chrome=chromium, mobile-375=webkit.
+        # Without firefox+webkit, the desktop-firefox + mobile-375 projects all fail with
+        # "Executable doesn't exist at /home/runner/.cache/ms-playwright/...". See issue #12.
+        run: pnpm --filter @schoolflow/web exec playwright install chromium firefox webkit --with-deps
 
       - name: Start API (background)
         run: |
