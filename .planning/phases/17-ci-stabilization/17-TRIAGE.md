@@ -74,3 +74,27 @@ Sorted by Phase-Cluster: Phase 13 → Phase 14 → Phase 15 → Phase 10.5 → M
 ## Deferred items
 
 (Populated by 17-05 when a Plan-E spec exhausts the 30-min fix budget — links to `.planning/deferred-items.md`.)
+
+The full Phase-17-deferred parking lot lives in `.planning/phases/17-ci-stabilization/deferred-items.md` `## Phase 17 deferred` section. Six clusters: A (Phase 14 POST /constraint-templates 422 — 5 tests), B (Phase 13 admin-user search fixture — 15 tests), C (Phase 15 audit-log — 2 tests), D (Phase 10.5 import wizard — 3 tests), E (Phase 04 DnD — 1 test), F (Phase 10.2 silent-4xx + screenshot — 2 tests). Plus already-gated specs (no action) and the WebKit-darwin Bus-Error-10 cluster (env-classification per Plan G).
+
+## Smoke-PR result (CONTEXT D-15 verifier gate)
+
+**PR:** chore/ci-smoke-noop — https://github.com/martinvidec/openaustria-school-flow/pull/9
+**Branched off:** origin/main HEAD `7249ebc` (pre-Phase-17 — per parallel_execution instruction the smoke-PR branches off origin/main, not the worktree)
+**Status:** RED — D-16 fires (Phase 17.1 spawned)
+**Run:** GitHub Actions run [25251866945](https://github.com/martinvidec/openaustria-school-flow/actions/runs/25251866945) (job 74045055730)
+**Duration:** 2m37s — failed BEFORE Playwright started
+**Failed step:** `Build Web` — `pnpm --filter @schoolflow/web build` (`tsc -b && vite build`)
+
+**Root cause:** Pre-existing TypeScript compile errors in `apps/web/src/components/admin/dashboard/DashboardChecklist.test.tsx` lines 84, 100, 122, 137, 175, 192, 209, 224 — `error TS2345: Argument of type '... status: Q["status"] ...' is not assignable to parameter of type 'Partial<Q>'`. Already documented in `.planning/phases/17-ci-stabilization/deferred-items.md` as discovered during 17-03 verification, recommended owner Phase 17-05 / future test-types harmonization. The errors prevent the web build, so Playwright never executes.
+
+**What this means for Phase 17:**
+1. The `tsc -b` errors are a NEW unclassified blocker (NOT in any TRIAGE table row above) — they prevent the build before Playwright can start. This is a regression-candidate that bypasses the entire E2E layer.
+2. Even if the TS errors were fixed in a follow-up, the smoke-PR off origin/main would still surface the PR-#1 baseline E2E failures, because the Phase 17 fix work for those (Plans 17-01..17-05 — sm:-breakpoint, primitive lifts, DataList migration, deferred-skips) lives on parallel worktree branches NOT yet merged to main at smoke-PR open time.
+3. Per CONTEXT D-16: Phase 17 closes with **gaps_found**; Phase 17.1 spawns to:
+   - **(a)** Fix the DashboardChecklist.test.tsx TS errors that block `tsc -b` (out-of-scope for Plan 17-03 per its files_modified declaration; was deferred there);
+   - **(b)** Ensure 17-01..17-05 worktree branches are merged to main (orchestrator-owned step);
+   - **(c)** Re-run the smoke-PR verifier-gate after (a)+(b) to confirm green CI;
+   - **(d)** Address residual Cluster A-F failures live (with stack running) per the deferred-items.md cluster fix-paths if any survive (a)+(b).
+
+**Phase 17 verifier-gate:** RED — Phase 17.1 spawned per CONTEXT D-16. See `.planning/phases/17-ci-stabilization/PHASE-17.1-SCOPE.md` for the follow-up scope draft.
