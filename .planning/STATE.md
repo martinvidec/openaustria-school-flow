@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 
 ## Current Position
 
-Phase: 999.1
+Phase: 17
 Plan: Not started
-Status: Phase 15.1 executed — ready to ship (PR #5)
-Last activity: 2026-05-02 - Phase 15.1 (seed UUID alignment) execute complete; Phase 16 merged via admin-override (d1b508e); Phase 17 CONTEXT ready
+Status: Phase 17 ready to plan (Phase 15.1 + 16 merged)
+Last activity: 2026-05-02 - Phase 15.1 merged (c5b691b); Phase 16 merged (d1b508e); doc-hygiene closure for 15.1 in flight
 
 Progress: [██████████] 100%
 

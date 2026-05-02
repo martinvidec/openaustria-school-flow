@@ -334,6 +334,24 @@ Plans:
 
 ---
 
+### Phase 15.1: Seed UUID Alignment (gap closure)
+
+**Goal:** Closes the single deferred Phase-15-verifier gap: `apps/api/prisma/seed.ts` used non-UUID stable IDs (`seed-school-bgbrg-musterstadt`, `seed-person-student-1`) which failed the production `@IsUUID()` DTO validators in DSGVO admin endpoints, blocking 12/20 E2E mutation tests. Path (a) chosen: regenerated seed.ts with fixed UUID constants (`SEED_SCHOOL_UUID = 'a0000000-0000-4000-8000-000000000001'` etc.); production DTOs unchanged.
+**Requirements:** Closes Phase-15 deferred-item #1. Unblocks Phase-15 HUMAN-UAT items 1 + 4.
+**Depends on:** Phase 15 (post-merge gap-closure tranche)
+**Plans:** 1/1 plan complete (merged 2026-05-02 in PR #5, commit c5b691b)
+
+**Success criteria:**
+- [x] All 6 verification gates pass (TS clean × 2, grep clean × 2, live curl 200/422 contrast × 2)
+- [x] 12 `SCHOOL_IS_UUID` / `PERSON_IS_UUID` skip-guards removed across 6 admin-dsgvo-* spec files
+- [x] New `apps/web/e2e/helpers/seed-ids.ts` decouples E2E from `apps/api`
+- [x] Production DTOs (`@IsUUID()`) preserved — seed becomes prod-aligned, not the other way around
+
+Plans:
+- [x] 15.1-01-seed-uuid-alignment-PLAN.md — UUID seed regeneration + 6 spec-file scrub (completed 2026-05-02)
+
+---
+
 ### Phase 16: Admin-Dashboard & Mobile-Härtung
 
 **Goal:** Admin sieht beim Login ein Dashboard mit Setup-Completeness-Checkliste das alle Admin-Surfaces aus Phasen 10–15 zusammenführt und als Einstiegspunkt dient; Mobile-Parity aller Admin-Surfaces ist final verifiziert.
