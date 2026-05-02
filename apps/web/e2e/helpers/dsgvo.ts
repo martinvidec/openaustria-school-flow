@@ -89,12 +89,10 @@ async function authGet<T = unknown>(
  * remove).
  *
  * CONTRACT — `personId` MUST be a UUID per `CreateConsentDto.@IsUUID()`.
- * Seed data Persons (e.g. `seed-person-student-1`) are NOT UUIDs, so
- * the spec's `E2E_SEED_PERSON_ID` env var must point to a Keycloak-
- * linked Person whose row was created with a generated UUID
- * (e.g. via the user-create flow, NOT the prisma seed). Returns
- * `null` if the personId is not a UUID — caller can decide to skip
- * the test cleanly rather than fail with a 422.
+ * Since Phase 15.1, seed Persons carry UUIDs (SEED_PERSON_*_UUID), so the
+ * spec's `E2E_SEED_PERSON_ID` env var defaults to a valid seed UUID. The
+ * non-UUID guard below remains for safety: returns `null` if a custom
+ * non-UUID is passed in, so callers can soft-skip rather than 422.
  */
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -161,13 +159,11 @@ export async function seedConsent(
 /**
  * Phase 15 backend DTOs (`CreateRetentionPolicyDto`, `CreateDsfaEntryDto`,
  * `CreateVvzEntryDto`, `QueryConsentAdminDto`) declare `@IsUUID()` on
- * `schoolId`. Seed data (`apps/api/prisma/seed.ts`) uses non-UUID stable
- * IDs (e.g. `seed-school-bgbrg-musterstadt`), so any POST that goes
- * through these DTOs returns 422 with the seed school. This is a
- * systemic validation/seed mismatch outside the scope of Plan 15-10
- * (deferred — see 15-10-SUMMARY.md "Deferred Issues"). The seed
- * helpers below soft-skip when the supplied schoolId is non-UUID so
- * specs run cleanly without the helper crashing.
+ * `schoolId`. Phase 15.1 aligned `apps/api/prisma/seed.ts` to emit UUID
+ * school + person IDs (SEED_SCHOOL_UUID etc.), so the historical seed-vs-DTO
+ * mismatch is gone. This `isUuid` guard is retained as a defensive belt:
+ * if a caller passes a custom non-UUID schoolId (e.g. ad-hoc debug runs),
+ * the helper returns null instead of crashing on a 422.
  */
 function isUuid(s: string): boolean {
   return UUID_RE.test(s);

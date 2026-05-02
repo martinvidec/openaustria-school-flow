@@ -1,5 +1,6 @@
 /**
  * Phase 15-10 Plan 15-10 Task 2 — DSGVO-ADM-01 E2E coverage.
+ * Phase 15.1 — UUID-aligned seed defaults; mutation tests no longer soft-skip.
  *
  * Surface: /admin/dsgvo?tab=consents
  * Requirement DSGVO-ADM-01: Admin can filter consent records (purpose /
@@ -11,17 +12,14 @@
  *  2. Person search updates the URL `q` param (URL contract).
  *  3. Widerrufen flow — open the confirm dialog ("Einwilligung
  *     widerrufen?") and assert the success toast ("Einwilligung
- *     widerrufen") fires after confirm. Auto-skips when no granted
- *     consent renders in the UI (i.e. the admin endpoint returns 0
- *     rows OR errors out — see Deferred Issue: schoolId UUID
- *     mismatch in 15-10-SUMMARY.md).
+ *     widerrufen") fires after confirm. Auto-skips only if no granted
+ *     consent renders in the UI (defensive — should always have one
+ *     after seeding on a fresh stack).
  *
  * Pre-seed strategy:
- *   `seedConsent` requires a UUID `personId`. Seed Persons in
- *   apps/api/prisma/seed.ts use static non-UUID IDs
- *   (project_seed_gap.md), so the seed only fires when
- *   `E2E_SEED_PERSON_ID` is a real UUID. When unset, the seed is
- *   skipped softly.
+ *   `seedConsent` requires a UUID `personId`. Phase 15.1 aligned
+ *   apps/api/prisma/seed.ts to UUID Person IDs, so the env-var default
+ *   (SEED_PERSON_STUDENT_1_UUID = Lisa Huber) works out of the box.
  *
  * No `cleanupAll` afterAll — consents are state-managed (granted →
  * withdrawn), not deleted.
@@ -29,22 +27,21 @@
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/login';
 import { seedConsent } from './helpers/dsgvo';
+import { SEED_PERSON_STUDENT_1_UUID } from './helpers/seed-ids';
 
 test.describe.configure({ mode: 'serial' });
 
 test.describe('DSGVO-ADM-01 — Einwilligungen filter + withdraw', () => {
-  // E2E_SEED_PERSON_ID must be a UUID; seed.ts persons use static IDs.
-  const PERSON_ID = process.env.E2E_SEED_PERSON_ID ?? '';
+  // E2E_SEED_PERSON_ID defaults to Lisa Huber (UUID-aligned post Phase 15.1).
+  const PERSON_ID = process.env.E2E_SEED_PERSON_ID ?? SEED_PERSON_STUDENT_1_UUID;
   const PRESEED_PURPOSE = 'KOMMUNIKATION';
 
   test.beforeAll(async ({ request }) => {
-    if (PERSON_ID) {
-      // seedConsent returns null if PERSON_ID is not a UUID — non-blocking.
-      await seedConsent(request, {
-        personId: PERSON_ID,
-        purpose: PRESEED_PURPOSE,
-      });
-    }
+    // seedConsent returns null if PERSON_ID is not a UUID — non-blocking.
+    await seedConsent(request, {
+      personId: PERSON_ID,
+      purpose: PRESEED_PURPOSE,
+    });
   });
 
   test('DSGVO-ADM-01: status=granted filter persists in URL', async ({
@@ -90,16 +87,9 @@ test.describe('DSGVO-ADM-01 — Einwilligungen filter + withdraw', () => {
     await page.goto('/admin/dsgvo?tab=consents&status=granted');
 
     const rows = page.locator('[data-consent-id]');
-    // Wait briefly for the consent admin query to settle. If the
-    // endpoint errored or returned 0, no rows materialize and we skip.
-    await page.waitForTimeout(1_500);
-    const rowCount = await rows.count();
-    if (rowCount === 0) {
-      test.skip(
-        true,
-        'No granted consent visible — set E2E_SEED_PERSON_ID to a UUID-keyed Person and ensure QueryConsentAdminDto schoolId UUID validation matches the seed school.',
-      );
-    }
+    // Phase 15.1: seed Persons are UUIDs and beforeAll seeds a granted
+    // consent for SEED_PERSON_STUDENT_1_UUID, so a row MUST be present.
+    await expect(rows.first()).toBeVisible({ timeout: 10_000 });
 
     const firstRow = rows.first();
     // Click row "Widerrufen" button (destructive variant).

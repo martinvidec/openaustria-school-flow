@@ -20,11 +20,12 @@
  */
 import { expect, type APIRequestContext } from '@playwright/test';
 import { getAdminToken } from './login';
+import { SEED_SCHOOL_UUID } from './seed-ids';
 
 export const CONSTRAINT_API =
   process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
 export const CONSTRAINT_SCHOOL_ID =
-  process.env.E2E_SCHOOL_ID ?? 'seed-school-bgbrg-musterstadt';
+  process.env.E2E_SCHOOL_ID ?? SEED_SCHOOL_UUID;
 /** Spec ID prefix locked at plan-level for matrix traceability. */
 export const CONSTRAINT_PREFIX = 'E2E-SOLVER-';
 

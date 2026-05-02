@@ -18,11 +18,12 @@
  */
 import { expect, type APIRequestContext } from '@playwright/test';
 import { getAdminToken } from './login';
+import { SEED_SCHOOL_UUID } from './seed-ids';
 
 export const STUDENT_API =
   process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
 export const STUDENT_SCHOOL_ID =
-  process.env.E2E_SCHOOL_ID ?? 'seed-school-bgbrg-musterstadt';
+  process.env.E2E_SCHOOL_ID ?? SEED_SCHOOL_UUID;
 
 export const STUDENT_PREFIX = 'E2E-STD-';
 export const CLASS_PREFIX = 'E2E-CLS-';
