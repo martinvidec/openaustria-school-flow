@@ -52,7 +52,7 @@ See [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full 
 | 14 | Solver-Tuning | 5 | Complete    | 2026-04-25 |
 | 15 | DSGVO-Admin & Audit-Log-Viewer | 12/12 | Complete    | 2026-04-28 |
 | 16 | Admin-Dashboard & Mobile-Härtung | 7/7 | Complete    | 2026-05-01 |
-| 17 | CI Stabilization (promoted from Backlog) | 4/5 | In Progress|  |
+| 17 | CI Stabilization (promoted from Backlog) | 5/5 | Complete   | 2026-05-02 |
 | 18 | Phase-10/10.2 VERIFICATION + frontmatter backfill | doc | Active      | 2026-05-01 |
 | 19 | Cross-phase E2E + Phase 12 spec deferrals | E2E-coverage | Active      | 2026-05-01 |
 | 20 | ADMIN-03 cross-tab live-flip (Decision-on-Execution) | architectural | Active      | 2026-05-01 |
@@ -387,7 +387,7 @@ Plans:
 
 **Requirements:** Infrastructure-only (keine REQ-IDs — Tech-Debt-Closure)
 **Depends on:** Phase 16 (Active branch is `gsd/phase-16-admin-dashboard-mobile-h-rtung`; Phase 17 läuft parallel oder nach Phase 16 PR-Merge)
-**Plans:** 4/5 plans executed
+**Plans:** 5/5 plans complete
 
 **Failure clusters (von PR #1 Run [25065085891](https://github.com/martinvidec/openaustria-school-flow/actions/runs/25065085891)):**
 
@@ -426,7 +426,7 @@ Plans (5, bundled per CONTEXT D-01 + D-03 wave structure):
 - [x] 17-02-PLAN.md — Wave 1, Plan G: Mobile-375 (WebKit) Bus-Error-10 darwin env-classification (docs-only — no code). Phase 23 Backlog placeholder for WebKit-Linux-CI playbook.
 - [x] 17-03-PLAN.md — Wave 2, Plans A+B+C bundled: Primitive-lift tranche (PageShell breadcrumb 44px, tabs.tsx h-10 → min-h-11, radio-group.tsx 44px tap-target) — single commit stream per D-03.
 - [x] 17-04-PLAN.md — Wave 3, Plan D: Full DataList migration of all 5 ListTable + MobileCards pairs (Teacher/Student/Class/Subject/User) per D-09. Locks in sm: breakpoint convention.
-- [ ] 17-05-PLAN.md — Wave 4, Plan E: 14 pre-existing regressions triage with 30-min-fix-or-skip protocol per D-12. Includes smoke-PR `chore/ci-smoke-noop` as verifier-gate per D-15. Spawns Phase 17.1 if unresolved failures remain per D-16.
+- [x] 17-05-PLAN.md — Wave 4, Plan E: 14 pre-existing regressions triage with 30-min-fix-or-skip protocol per D-12. Includes smoke-PR `chore/ci-smoke-noop` as verifier-gate per D-15. Spawns Phase 17.1 if unresolved failures remain per D-16.
 
 ---
 
