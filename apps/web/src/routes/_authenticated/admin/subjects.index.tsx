@@ -7,8 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { PageShell } from '@/components/admin/shared/PageShell';
 import { useSchoolContext } from '@/stores/school-context-store';
 import { useSubjects, type SubjectDto } from '@/hooks/useSubjects';
-import { SubjectTable } from '@/components/admin/subject/SubjectTable';
-import { SubjectMobileCards } from '@/components/admin/subject/SubjectMobileCards';
+import { SubjectList } from '@/components/admin/subject/SubjectList';
 import { SubjectFormDialog } from '@/components/admin/subject/SubjectFormDialog';
 import { DeleteSubjectDialog } from '@/components/admin/subject/DeleteSubjectDialog';
 import { SubjectAffectedEntitiesDialog } from '@/components/admin/subject/SubjectAffectedEntitiesDialog';
@@ -105,19 +104,12 @@ function SubjectsListPage() {
       )}
 
       {!isEmpty && !isFilteredEmpty && (
-        <>
-          <SubjectTable
-            subjects={filtered}
-            onEdit={(s) => setFormMode({ mode: 'edit', subject: s })}
-            onDelete={(s) => setToDelete(s)}
-            onShowAffected={(s) => setShowAffected(s)}
-          />
-          <SubjectMobileCards
-            subjects={filtered}
-            onEdit={(s) => setFormMode({ mode: 'edit', subject: s })}
-            onDelete={(s) => setToDelete(s)}
-          />
-        </>
+        <SubjectList
+          subjects={filtered}
+          onEdit={(s) => setFormMode({ mode: 'edit', subject: s })}
+          onDelete={(s) => setToDelete(s)}
+          onShowAffected={(s) => setShowAffected(s)}
+        />
       )}
 
       <Separator className="my-8" />
