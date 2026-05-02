@@ -43,6 +43,14 @@ test.describe('AUDIT-VIEW-02 — Audit detail drawer (Vorzustand + Nachzustand)'
     page,
     request,
   }) => {
+    // Phase 17 deferred: missing-fixture per CONTEXT D-08 — `seedAuditEntryLegacy:
+    // seed DB has zero action=create audit rows` (PR #1 line 2). Fixture-state
+    // mismatch in CI. Park, do not fix in Phase 17. See 17-TRIAGE.md row
+    // #cluster-15-audit-detail. Owner: Phase 17.1.
+    test.skip(
+      true,
+      'Phase 17 deferred: missing-fixture (audit seed rows) per D-08 — see 17-TRIAGE.md row #cluster-15-audit-detail.',
+    );
     const { id } = await seedAuditEntryLegacy(request, PERSON_ID);
 
     await loginAsAdmin(page);
