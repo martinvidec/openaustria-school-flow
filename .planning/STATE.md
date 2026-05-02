@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 Phase: 999.1
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-05-02 - Completed quick task 260501-sus: VAPID rotation scrub + CI preflight committed; user must mint new keypair locally and set gh secrets
+Last activity: 2026-05-02 - Completed quick task 260502-9iu: KEYCLOAK_ADMIN_CLIENT_SECRET history audit clean — no rotation needed (closes 260501-scd MEDIUM flag)
 
 Progress: [██████████] 100%
 
@@ -520,6 +520,7 @@ None yet.
 | 260426-gtr | apiFetch Content-Type header regression guards (3-test Vitest spec) | 2026-04-26 | 65d03df | [260426-gtr-apifetch-content-type-header-regression-](./quick/260426-gtr-apifetch-content-type-header-regression-/) |
 | 260501-scd | check nach versehentlich comitteten secrets (z.B. vapid key) | 2026-05-01 | c8232a4 | [260501-scd-check-nach-versehentlich-comitteten-secr](./quick/260501-scd-check-nach-versehentlich-comitteten-secr/) |
 | 260501-sus | VAPID dev keypair rotieren — scrub + CI preflight (user mintet Keypair lokal, setzt gh secrets) | 2026-05-02 | cbb7d04 | [260501-sus-vapid-dev-keypair-rotieren-neuen-keypair](./quick/260501-sus-vapid-dev-keypair-rotieren-neuen-keypair/) |
+| 260502-9iu | KEYCLOAK_ADMIN_CLIENT_SECRET history audit — no rotation needed (0 TRUE_POSITIVE / 6 ENV-VAR-REF / 1 PLACEHOLDER, live value never committed) | 2026-05-02 | 41d8412 | [260502-9iu-audit-ob-keycloak-admin-client-secret-je](./quick/260502-9iu-audit-ob-keycloak-admin-client-secret-je/) |
 
 ### Roadmap Evolution
 
