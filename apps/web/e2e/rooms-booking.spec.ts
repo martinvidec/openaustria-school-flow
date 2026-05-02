@@ -33,13 +33,13 @@
  *   which cascades its bookings (Prisma FK). See 10.5-01-DISCOVERY.md §3.
  */
 import {
-import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
   expect,
   test,
   type APIRequestContext,
   type Page,
 } from '@playwright/test';
 import { getAdminToken, loginAsAdmin } from './helpers/login';
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 
 const API = process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
 const SCHOOL = SEED_SCHOOL_UUID;

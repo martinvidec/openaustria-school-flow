@@ -19,13 +19,13 @@
  * Prerequisites match the desktop spec (docker, API, Vite, prisma seed).
  */
 import {
-import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
   expect,
   test,
   type APIRequestContext,
   type Page,
 } from '@playwright/test';
 import { getAdminToken, loginAsAdmin } from './helpers/login';
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 
 const API = process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
 const SCHOOL = SEED_SCHOOL_UUID;
