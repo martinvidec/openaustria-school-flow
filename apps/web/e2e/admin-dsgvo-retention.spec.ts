@@ -25,33 +25,27 @@
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/login';
 import { seedRetentionPolicy, cleanupAll } from './helpers/dsgvo';
+import { SEED_SCHOOL_UUID } from './helpers/seed-ids';
 
 test.describe.configure({ mode: 'serial' });
 
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 test.describe('DSGVO-ADM-02 — Aufbewahrungsrichtlinien CRUD', () => {
-  const SCHOOL_ID =
-    process.env.E2E_SCHOOL_ID ?? 'seed-school-bgbrg-musterstadt';
-  const SCHOOL_IS_UUID = UUID_RE.test(SCHOOL_ID);
+  // Phase 15.1: SEED_SCHOOL_UUID is a valid UUID, so CreateRetentionPolicyDto
+  // accepts the seed school. UUID skip-guards removed.
+  const SCHOOL_ID = process.env.E2E_SCHOOL_ID ?? SEED_SCHOOL_UUID;
   const PRESEED_CATEGORY = 'e2e-15-PRESEED';
   const CREATE_CATEGORY = 'e2e-15-CREATE';
 
   test.beforeAll(async ({ request }) => {
-    if (SCHOOL_IS_UUID) {
-      // seedRetentionPolicy returns null on non-UUID schoolId, so this
-      // only runs when the operator supplied a real UUID school.
-      await seedRetentionPolicy(request, {
-        schoolId: SCHOOL_ID,
-        dataCategory: PRESEED_CATEGORY,
-        retentionDays: 365,
-      });
-    }
+    await seedRetentionPolicy(request, {
+      schoolId: SCHOOL_ID,
+      dataCategory: PRESEED_CATEGORY,
+      retentionDays: 365,
+    });
   });
 
   test.afterAll(async ({ request }) => {
-    if (SCHOOL_IS_UUID) await cleanupAll(request, SCHOOL_ID);
+    await cleanupAll(request, SCHOOL_ID);
   });
 
   test('DSGVO-ADM-02: retention tab URL deep-link + page shell visible', async ({
@@ -72,12 +66,6 @@ test.describe('DSGVO-ADM-02 — Aufbewahrungsrichtlinien CRUD', () => {
   });
 
   test('DSGVO-ADM-02: create + table refresh', async ({ page }) => {
-    if (!SCHOOL_IS_UUID) {
-      test.skip(
-        true,
-        'E2E_SCHOOL_ID is not a UUID — CreateRetentionPolicyDto rejects POST. See Deferred Issues.',
-      );
-    }
     await loginAsAdmin(page);
     await page.goto('/admin/dsgvo?tab=retention');
 
@@ -95,7 +83,6 @@ test.describe('DSGVO-ADM-02 — Aufbewahrungsrichtlinien CRUD', () => {
   });
 
   test('DSGVO-ADM-02: edit retentionDays', async ({ page }) => {
-    if (!SCHOOL_IS_UUID) test.skip();
     await loginAsAdmin(page);
     await page.goto('/admin/dsgvo?tab=retention');
 
@@ -116,7 +103,6 @@ test.describe('DSGVO-ADM-02 — Aufbewahrungsrichtlinien CRUD', () => {
   test('DSGVO-ADM-02: delete-confirm copy + success toast', async ({
     page,
   }) => {
-    if (!SCHOOL_IS_UUID) test.skip();
     await loginAsAdmin(page);
     await page.goto('/admin/dsgvo?tab=retention');
 

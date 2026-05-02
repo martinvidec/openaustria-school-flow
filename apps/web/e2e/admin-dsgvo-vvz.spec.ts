@@ -10,33 +10,29 @@
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/login';
 import { seedVvzEntry, cleanupAll } from './helpers/dsgvo';
+import { SEED_SCHOOL_UUID } from './helpers/seed-ids';
 
 test.describe.configure({ mode: 'serial' });
 
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 test.describe('DSGVO-ADM-04 — VVZ-Einträge CRUD', () => {
-  const SCHOOL_ID =
-    process.env.E2E_SCHOOL_ID ?? 'seed-school-bgbrg-musterstadt';
-  const SCHOOL_IS_UUID = UUID_RE.test(SCHOOL_ID);
+  // Phase 15.1: SEED_SCHOOL_UUID is a valid UUID, so CreateVvzEntryDto
+  // accepts the seed school. UUID skip-guards removed.
+  const SCHOOL_ID = process.env.E2E_SCHOOL_ID ?? SEED_SCHOOL_UUID;
   const PRESEED_ACTIVITY = 'e2e-15-PRESEED-VVZ';
 
   test.beforeAll(async ({ request }) => {
-    if (SCHOOL_IS_UUID) {
-      await seedVvzEntry(request, {
-        schoolId: SCHOOL_ID,
-        activityName: PRESEED_ACTIVITY,
-        purpose: 'e2e seed purpose',
-        legalBasis: 'Art. 6 Abs. 1 lit. e DSGVO',
-        dataCategories: ['stammdaten'],
-        affectedPersons: ['Schüler'],
-      });
-    }
+    await seedVvzEntry(request, {
+      schoolId: SCHOOL_ID,
+      activityName: PRESEED_ACTIVITY,
+      purpose: 'e2e seed purpose',
+      legalBasis: 'Art. 6 Abs. 1 lit. e DSGVO',
+      dataCategories: ['stammdaten'],
+      affectedPersons: ['Schüler'],
+    });
   });
 
   test.afterAll(async ({ request }) => {
-    if (SCHOOL_IS_UUID) await cleanupAll(request, SCHOOL_ID);
+    await cleanupAll(request, SCHOOL_ID);
   });
 
   test('DSGVO-ADM-04: navigates to VVZ sub-tab via URL deep-link', async ({
@@ -51,12 +47,6 @@ test.describe('DSGVO-ADM-04 — VVZ-Einträge CRUD', () => {
   });
 
   test('DSGVO-ADM-04: create + success toast', async ({ page }) => {
-    if (!SCHOOL_IS_UUID) {
-      test.skip(
-        true,
-        'E2E_SCHOOL_ID is not a UUID — CreateVvzEntryDto rejects POST. See Deferred Issues.',
-      );
-    }
     await loginAsAdmin(page);
     await page.goto('/admin/dsgvo?tab=dsfa-vvz&sub=vvz');
 
@@ -87,7 +77,6 @@ test.describe('DSGVO-ADM-04 — VVZ-Einträge CRUD', () => {
   test('DSGVO-ADM-04: delete-confirm copy + success toast', async ({
     page,
   }) => {
-    if (!SCHOOL_IS_UUID) test.skip();
     await loginAsAdmin(page);
     await page.goto('/admin/dsgvo?tab=dsfa-vvz&sub=vvz');
 

@@ -1,5 +1,6 @@
 /**
  * Phase 15-10 Plan 15-10 Task 6 — DSGVO-ADM-06 E2E coverage.
+ * Phase 15.1 — UUID-aligned seed; consent rows render on a fresh stack.
  *
  * Surface: ConsentsTab → row "Löschen anstoßen" → 2-step
  * RequestDeletionDialog (Sicherheitsabfrage → Bestätigung).
@@ -19,8 +20,9 @@
  *
  * All three tests need an enabled "Löschen anstoßen" row button —
  * which requires a granted consent record to render in the
- * ConsentsTab table. Without one (the default state in CI without
- * a UUID-keyed seed), the spec auto-skips.
+ * ConsentsTab table. The defensive `if (!opened) test.skip()` guard
+ * is retained for environments where ConsentsTab is empty (e.g. a
+ * test ran before this one and withdrew the consent without re-seed).
  *
  * The `E2E_SEED_PERSON_EMAIL` env supplies the real email to type.
  * For the seed default (apps/api/prisma/seed.ts), Lisa Huber has
@@ -69,7 +71,7 @@ test.describe('DSGVO-ADM-06 — Art. 17 2-step + email-token strict-equal', () =
     if (!opened) {
       test.skip(
         true,
-        'No enabled "Löschen anstoßen" row — set E2E_SEED_PERSON_ID to a UUID-keyed Person and ensure QueryConsentAdminDto schoolId UUID validation matches the seed school. See Deferred Issues.',
+        'No enabled "Löschen anstoßen" row — ensure ConsentsTab is populated (a granted consent must exist; admin-dsgvo-consents.spec.ts seeds one for SEED_PERSON_STUDENT_1_UUID).',
       );
     }
 

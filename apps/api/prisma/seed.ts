@@ -4,6 +4,83 @@ import { PrismaClient } from '../src/config/database/generated/client.js';
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
+// =====================================================
+// Seed fixture UUIDs (Phase 15.1 — UUID-aligned with @IsUUID() DTO validators)
+// =====================================================
+// Fixed UUIDs across db:reset cycles, recognizable in Prisma Studio.
+// Format follows UUID v4 structure (4 in 3rd group, 8-b in 4th).
+//   School        → prefix 'a'
+//   Person teach. → prefix 'b'
+//   Person stud.  → prefix 'c'
+//   Person KC     → prefix 'd'
+//   Student rec.  → prefix 'e'
+//   Teacher rec.  → prefix 'f'
+//   Misc (parent, parentStudent, retention, rule, KC stud./parent) → prefix '1'..'2'
+// Keycloak user UUIDs (KC_*_ID) below remain UNCHANGED — they originate from
+// docker/keycloak/realm-export.json and are the cross-system contract.
+const SEED_SCHOOL_UUID                  = 'a0000000-0000-4000-8000-000000000001';
+
+const SEED_PERSON_TEACHER_1_UUID        = 'b0000000-0000-4000-8000-000000000001';
+const SEED_PERSON_TEACHER_2_UUID        = 'b0000000-0000-4000-8000-000000000002';
+const SEED_PERSON_TEACHER_3_UUID        = 'b0000000-0000-4000-8000-000000000003';
+
+const SEED_PERSON_STUDENT_1_UUID        = 'c0000000-0000-4000-8000-000000000001';
+const SEED_PERSON_STUDENT_2_UUID        = 'c0000000-0000-4000-8000-000000000002';
+const SEED_PERSON_STUDENT_3_UUID        = 'c0000000-0000-4000-8000-000000000003';
+const SEED_PERSON_STUDENT_4_UUID        = 'c0000000-0000-4000-8000-000000000004';
+const SEED_PERSON_STUDENT_5_UUID        = 'c0000000-0000-4000-8000-000000000005';
+const SEED_PERSON_STUDENT_6_UUID        = 'c0000000-0000-4000-8000-000000000006';
+const SEED_PERSON_STUDENT_7_UUID        = 'c0000000-0000-4000-8000-000000000007'; // archived fixture
+
+const SEED_PERSON_KC_LEHRER_UUID        = 'd0000000-0000-4000-8000-000000000001';
+const SEED_PERSON_KC_SCHULLEITUNG_UUID  = 'd0000000-0000-4000-8000-000000000002';
+const SEED_PERSON_KC_ADMIN_UUID         = 'd0000000-0000-4000-8000-000000000003';
+const SEED_PERSON_KC_SCHUELER_UUID      = 'd0000000-0000-4000-8000-000000000004';
+const SEED_PERSON_KC_ELTERN_UUID        = 'd0000000-0000-4000-8000-000000000005';
+
+const SEED_STUDENT_1_UUID               = 'e0000000-0000-4000-8000-000000000001';
+const SEED_STUDENT_2_UUID               = 'e0000000-0000-4000-8000-000000000002';
+const SEED_STUDENT_3_UUID               = 'e0000000-0000-4000-8000-000000000003';
+const SEED_STUDENT_4_UUID               = 'e0000000-0000-4000-8000-000000000004';
+const SEED_STUDENT_5_UUID               = 'e0000000-0000-4000-8000-000000000005';
+const SEED_STUDENT_6_UUID               = 'e0000000-0000-4000-8000-000000000006';
+const SEED_STUDENT_7_UUID               = 'e0000000-0000-4000-8000-000000000007';
+
+const SEED_TEACHER_1_UUID               = 'f0000000-0000-4000-8000-000000000001';
+const SEED_TEACHER_2_UUID               = 'f0000000-0000-4000-8000-000000000002';
+const SEED_TEACHER_3_UUID               = 'f0000000-0000-4000-8000-000000000003';
+
+// KC-linked Teacher / Student / Parent record IDs (separate prefix family):
+const SEED_TEACHER_KC_LEHRER_UUID       = '10000000-0000-4000-8000-000000000001';
+const SEED_TEACHER_KC_SCHULLEITUNG_UUID = '10000000-0000-4000-8000-000000000002';
+const SEED_STUDENT_KC_SCHUELER_UUID     = '10000000-0000-4000-8000-000000000003';
+const SEED_PARENT_KC_ELTERN_UUID        = '10000000-0000-4000-8000-000000000004';
+const SEED_PARENTSTUDENT_KC_ELTERN_UUID = '10000000-0000-4000-8000-000000000005';
+
+// TeachingReduction + GroupDerivationRule fixed UUIDs (used in upsert where: { id }):
+const SEED_REDUCTION_T2_KV_UUID         = '20000000-0000-4000-8000-000000000001';
+const SEED_RULE_RELIGION_1A_UUID        = '20000000-0000-4000-8000-000000000002';
+
+// Lookup arrays (1-indexed via [n - 1]) for the studentNames loop:
+const SEED_PERSON_STUDENT_UUIDS = [
+  SEED_PERSON_STUDENT_1_UUID,
+  SEED_PERSON_STUDENT_2_UUID,
+  SEED_PERSON_STUDENT_3_UUID,
+  SEED_PERSON_STUDENT_4_UUID,
+  SEED_PERSON_STUDENT_5_UUID,
+  SEED_PERSON_STUDENT_6_UUID,
+  SEED_PERSON_STUDENT_7_UUID,
+];
+const SEED_STUDENT_UUIDS = [
+  SEED_STUDENT_1_UUID,
+  SEED_STUDENT_2_UUID,
+  SEED_STUDENT_3_UUID,
+  SEED_STUDENT_4_UUID,
+  SEED_STUDENT_5_UUID,
+  SEED_STUDENT_6_UUID,
+  SEED_STUDENT_7_UUID,
+];
+
 async function main() {
   // =====================================================
   // Section 1: Roles (upsert existing 5 roles -- D-01)
@@ -318,14 +395,14 @@ async function main() {
 
   // School: BG/BRG Musterstadt (AHS Unterstufe)
   const school = await prisma.school.upsert({
-    where: { id: 'seed-school-bgbrg-musterstadt' },
+    where: { id: SEED_SCHOOL_UUID },
     update: {
       // Phase 10.1 Bug 2: re-seed repairs the corrupt '[object Object]' row on every
       // `prisma migrate reset` → `prisma db seed` cycle. Idempotent for healthy rows.
       address: { street: 'Schulstrasse 1', zip: '1010', city: 'Wien' },
     },
     create: {
-      id: 'seed-school-bgbrg-musterstadt',
+      id: SEED_SCHOOL_UUID,
       name: 'BG/BRG Musterstadt',
       schoolType: 'AHS_UNTER',
       address: { street: 'Schulstrasse 1', zip: '1010', city: 'Wien' },
@@ -390,10 +467,10 @@ async function main() {
   // --- Teachers (3 teachers with Person records) ---
 
   const teacher1Person = await prisma.person.upsert({
-    where: { id: 'seed-person-teacher-1' },
+    where: { id: SEED_PERSON_TEACHER_1_UUID },
     update: {},
     create: {
-      id: 'seed-person-teacher-1',
+      id: SEED_PERSON_TEACHER_1_UUID,
       schoolId: school.id,
       personType: 'TEACHER',
       firstName: 'Max',
@@ -406,7 +483,7 @@ async function main() {
     where: { personId: teacher1Person.id },
     update: {},
     create: {
-      id: 'seed-teacher-1',
+      id: SEED_TEACHER_1_UUID,
       personId: teacher1Person.id,
       schoolId: school.id,
       employmentPercentage: 100,
@@ -416,10 +493,10 @@ async function main() {
   });
 
   const teacher2Person = await prisma.person.upsert({
-    where: { id: 'seed-person-teacher-2' },
+    where: { id: SEED_PERSON_TEACHER_2_UUID },
     update: {},
     create: {
-      id: 'seed-person-teacher-2',
+      id: SEED_PERSON_TEACHER_2_UUID,
       schoolId: school.id,
       personType: 'TEACHER',
       firstName: 'Anna',
@@ -432,7 +509,7 @@ async function main() {
     where: { personId: teacher2Person.id },
     update: {},
     create: {
-      id: 'seed-teacher-2',
+      id: SEED_TEACHER_2_UUID,
       personId: teacher2Person.id,
       schoolId: school.id,
       employmentPercentage: 75,
@@ -443,10 +520,10 @@ async function main() {
 
   // Reduction for teacher2: Klassenvorstand 1.5 WE
   await prisma.teachingReduction.upsert({
-    where: { id: 'seed-reduction-t2-kv' },
+    where: { id: SEED_REDUCTION_T2_KV_UUID },
     update: {},
     create: {
-      id: 'seed-reduction-t2-kv',
+      id: SEED_REDUCTION_T2_KV_UUID,
       teacherId: teacher2.id,
       reductionType: 'KLASSENVORSTAND',
       werteinheiten: 1.5,
@@ -455,10 +532,10 @@ async function main() {
   });
 
   const teacher3Person = await prisma.person.upsert({
-    where: { id: 'seed-person-teacher-3' },
+    where: { id: SEED_PERSON_TEACHER_3_UUID },
     update: {},
     create: {
-      id: 'seed-person-teacher-3',
+      id: SEED_PERSON_TEACHER_3_UUID,
       schoolId: school.id,
       personType: 'TEACHER',
       firstName: 'Peter',
@@ -471,7 +548,7 @@ async function main() {
     where: { personId: teacher3Person.id },
     update: {},
     create: {
-      id: 'seed-teacher-3',
+      id: SEED_TEACHER_3_UUID,
       personId: teacher3Person.id,
       schoolId: school.id,
       employmentPercentage: 100,
@@ -603,8 +680,8 @@ async function main() {
   ];
 
   for (const s of studentNames) {
-    const personId = `seed-person-student-${s.num}`;
-    const studentId = `seed-student-${s.num}`;
+    const personId = SEED_PERSON_STUDENT_UUIDS[s.num - 1];
+    const studentId = SEED_STUDENT_UUIDS[s.num - 1];
 
     await prisma.person.upsert({
       where: { id: personId },
@@ -676,12 +753,12 @@ async function main() {
   if (!existingRule) {
     await prisma.groupDerivationRule.create({
       data: {
-        id: 'seed-rule-religion-1a',
+        id: SEED_RULE_RELIGION_1A_UUID,
         classId: class1A.id,
         groupType: 'RELIGION',
         groupName: 'Röm.-Kath.',
         level: 'Katholisch',
-        studentIds: ['seed-student-1', 'seed-student-2'],
+        studentIds: [SEED_STUDENT_1_UUID, SEED_STUDENT_2_UUID],
       },
     });
   }
@@ -739,10 +816,10 @@ async function main() {
 
   // Lehrer: Maria Mueller -> new TEACHER person + teacher record
   const lehrerPerson = await prisma.person.upsert({
-    where: { id: 'kc-lehrer-person' },
+    where: { id: SEED_PERSON_KC_LEHRER_UUID },
     update: {},
     create: {
-      id: 'kc-lehrer-person',
+      id: SEED_PERSON_KC_LEHRER_UUID,
       schoolId: school.id,
       personType: 'TEACHER',
       firstName: 'Maria',
@@ -755,7 +832,7 @@ async function main() {
     where: { personId: lehrerPerson.id },
     update: {},
     create: {
-      id: 'kc-lehrer-teacher',
+      id: SEED_TEACHER_KC_LEHRER_UUID,
       personId: lehrerPerson.id,
       schoolId: school.id,
       employmentPercentage: 100,
@@ -766,10 +843,10 @@ async function main() {
 
   // Schulleitung: Elisabeth Fischer -> TEACHER person (schulleitung is role)
   const schulleitungPerson = await prisma.person.upsert({
-    where: { id: 'kc-schulleitung-person' },
+    where: { id: SEED_PERSON_KC_SCHULLEITUNG_UUID },
     update: {},
     create: {
-      id: 'kc-schulleitung-person',
+      id: SEED_PERSON_KC_SCHULLEITUNG_UUID,
       schoolId: school.id,
       personType: 'TEACHER',
       firstName: 'Elisabeth',
@@ -782,7 +859,7 @@ async function main() {
     where: { personId: schulleitungPerson.id },
     update: {},
     create: {
-      id: 'kc-schulleitung-teacher',
+      id: SEED_TEACHER_KC_SCHULLEITUNG_UUID,
       personId: schulleitungPerson.id,
       schoolId: school.id,
       employmentPercentage: 50,
@@ -793,10 +870,10 @@ async function main() {
 
   // Admin: System Admin -> TEACHER person (no PersonType enum value for ADMIN)
   await prisma.person.upsert({
-    where: { id: 'kc-admin-person' },
+    where: { id: SEED_PERSON_KC_ADMIN_UUID },
     update: {},
     create: {
-      id: 'kc-admin-person',
+      id: SEED_PERSON_KC_ADMIN_UUID,
       schoolId: school.id,
       personType: 'TEACHER',
       firstName: 'System',
@@ -806,13 +883,12 @@ async function main() {
     },
   });
 
-  // Schueler: Max Huber -> update existing seed-person-student-1 (Lisa) to be this kc user?
-  // Instead create a dedicated student linked to seed-class-1a
+  // Schueler: Max Huber -> dedicated student linked to class1A.
   const schuelerPerson = await prisma.person.upsert({
-    where: { id: 'kc-schueler-person' },
+    where: { id: SEED_PERSON_KC_SCHUELER_UUID },
     update: {},
     create: {
-      id: 'kc-schueler-person',
+      id: SEED_PERSON_KC_SCHUELER_UUID,
       schoolId: school.id,
       personType: 'STUDENT',
       firstName: 'Max',
@@ -825,7 +901,7 @@ async function main() {
     where: { personId: schuelerPerson.id },
     update: {},
     create: {
-      id: 'kc-schueler-student',
+      id: SEED_STUDENT_KC_SCHUELER_UUID,
       personId: schuelerPerson.id,
       schoolId: school.id,
       classId: class1A.id,
@@ -834,12 +910,12 @@ async function main() {
     },
   });
 
-  // Eltern: Franz Huber -> PARENT person + parent record, linked to Lisa Huber (seed-student-1)
+  // Eltern: Franz Huber -> PARENT person + parent record, linked to Lisa Huber (SEED_STUDENT_1_UUID)
   const elternPerson = await prisma.person.upsert({
-    where: { id: 'kc-eltern-person' },
+    where: { id: SEED_PERSON_KC_ELTERN_UUID },
     update: {},
     create: {
-      id: 'kc-eltern-person',
+      id: SEED_PERSON_KC_ELTERN_UUID,
       schoolId: school.id,
       personType: 'PARENT',
       firstName: 'Franz',
@@ -852,21 +928,21 @@ async function main() {
     where: { personId: elternPerson.id },
     update: {},
     create: {
-      id: 'kc-eltern-parent',
+      id: SEED_PARENT_KC_ELTERN_UUID,
       personId: elternPerson.id,
       schoolId: school.id,
     },
   });
-  // Link parent to Lisa Huber (seed-student-1)
+  // Link parent to Lisa Huber (SEED_STUDENT_1_UUID)
   const existingLink = await prisma.parentStudent.findFirst({
-    where: { parentId: elternParent.id, studentId: 'seed-student-1' },
+    where: { parentId: elternParent.id, studentId: SEED_STUDENT_1_UUID },
   });
   if (!existingLink) {
     await prisma.parentStudent.create({
       data: {
-        id: 'kc-eltern-parentstudent',
+        id: SEED_PARENTSTUDENT_KC_ELTERN_UUID,
         parentId: elternParent.id,
-        studentId: 'seed-student-1',
+        studentId: SEED_STUDENT_1_UUID,
       },
     });
   }

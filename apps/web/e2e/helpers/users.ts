@@ -16,6 +16,7 @@
  */
 import { expect, type APIRequestContext } from '@playwright/test';
 import { getAdminToken } from './login';
+import { SEED_SCHOOL_UUID } from './seed-ids';
 
 export const USER_API = process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
 export const USER_PREFIX = 'E2E-USR-';
@@ -277,7 +278,7 @@ export async function findUnlinkedTeacher(
   request: APIRequestContext,
 ): Promise<{ id: string; firstName: string; lastName: string }> {
   const token = await getAdminToken(request);
-  const schoolId = process.env.E2E_SCHOOL_ID ?? 'seed-school-bgbrg-musterstadt';
+  const schoolId = process.env.E2E_SCHOOL_ID ?? SEED_SCHOOL_UUID;
   const res = await request.get(
     `${USER_API}/teachers?schoolId=${schoolId}&limit=100`,
     { headers: { Authorization: `Bearer ${token}` } },

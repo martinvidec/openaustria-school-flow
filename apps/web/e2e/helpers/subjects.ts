@@ -6,11 +6,12 @@
  */
 import { expect, type APIRequestContext } from '@playwright/test';
 import { getAdminToken } from './login';
+import { SEED_SCHOOL_UUID } from './seed-ids';
 
 export const SUBJECT_API =
   process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
 export const SUBJECT_SCHOOL_ID =
-  process.env.E2E_SCHOOL_ID ?? 'seed-school-bgbrg-musterstadt';
+  process.env.E2E_SCHOOL_ID ?? SEED_SCHOOL_UUID;
 export const SUBJECT_PREFIX = 'E2E-SUB-';
 
 /**
