@@ -116,7 +116,7 @@ export function PeriodsEditor({ periods, onChange, onTemplateReload }: Props) {
           strategy={verticalListSortingStrategy}
         >
           {/* Desktop dense table */}
-          <div className="hidden md:block rounded-md border overflow-hidden">
+          <div className="hidden sm:block rounded-md border overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-muted/30">
                 <tr className="text-xs font-medium text-muted-foreground uppercase tracking-wide border-b">
@@ -146,7 +146,7 @@ export function PeriodsEditor({ periods, onChange, onTemplateReload }: Props) {
           </div>
 
           {/* Mobile cards */}
-          <div className="md:hidden space-y-3">
+          <div className="sm:hidden space-y-3">
             {periods.map((p, i) => (
               <SortablePeriodCard
                 key={p.id}
