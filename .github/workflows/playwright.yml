@@ -71,11 +71,12 @@ jobs:
       KEYCLOAK_URL: http://localhost:8080
       KEYCLOAK_REALM: schoolflow
       KEYCLOAK_CLIENT_ID: schoolflow-api
-      # VAPID secrets fall back to the dev keypair from `.env.example` so the
-      # API boot doesn't crash when the repo has no CI secrets configured.
-      # Production deploys MUST provide real secrets via repo settings.
-      VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY || 'BPeB9cWlM3JmH9qOHVmDaEPUu-ge0KsRf-FV3e_Sw_l8LPw37q8MZ-ywlBp40jrAH_tlZJ8fbpaya27h6w3DgSE' }}
-      VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY || '9zvNGSCLHASLT6X9uCUHuKWzj9IQUuGRiBhMXWArGHE' }}
+      # VAPID keypair MUST be provided via repo secrets — no inline fallback.
+      # The previous dev keypair was rotated on 2026-05-01 (see
+      # .planning/quick/260501-sus-vapid-dev-keypair-rotieren-neuen-keypair/SUMMARY.md);
+      # CI now hard-fails (preflight step below) when either secret is empty.
+      VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+      VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
       VAPID_SUBJECT: mailto:admin@schoolflow.example
       E2E_ADMIN_USER: admin-user
       E2E_ADMIN_PASS: admin123
@@ -96,6 +97,16 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Preflight — VAPID secrets present
+        run: |
+          if [ -z "${VAPID_PUBLIC_KEY:-}" ] || [ -z "${VAPID_PRIVATE_KEY:-}" ]; then
+            echo "::error::VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY repo secrets must be set."
+            echo "::error::Generate via: pnpm --filter @schoolflow/api exec web-push generate-vapid-keys --json"
+            echo "::error::Then: gh secret set VAPID_PUBLIC_KEY  / gh secret set VAPID_PRIVATE_KEY"
+            exit 1
+          fi
+          echo "VAPID secrets present (public key length=${#VAPID_PUBLIC_KEY}, private length=${#VAPID_PRIVATE_KEY})."
 
       # Keycloak needs the realm-export volume mounted — easiest way is to
       # reuse the dev compose file. The `keycloak-db` service is its own
