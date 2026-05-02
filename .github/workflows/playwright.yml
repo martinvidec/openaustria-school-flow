@@ -1,5 +1,10 @@
 name: Playwright E2E
 
+# Phase 17 verifier-gate (CONTEXT D-15): this comment block is the noop
+# diff used by `chore/ci-smoke-noop` to validate that the CI pipeline
+# passes WITHOUT the `--admin` override after the Phase 17 triage sweep.
+# If this PR's `Run Playwright tests` step is green, Phase 17 is done.
+#
 # Runs the full Phase-10 Playwright suite on every PR to main + every push
 # to main. This is the gate that lifts the manual-UAT ban per
 # `feedback_e2e_first_no_uat.md`: admin-console regressions (silent-4xx,
