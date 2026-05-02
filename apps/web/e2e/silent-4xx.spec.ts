@@ -31,9 +31,10 @@
  *   - DATABASE_URL exported in the runner shell
  */
 import { expect, test, type Route } from '@playwright/test';
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 import { loginAsAdmin } from './helpers/login';
 
-const SEED_SCHOOL_ID = 'seed-school-bgbrg-musterstadt';
+const SEED_SCHOOL_ID = SEED_SCHOOL_UUID;
 
 test.describe('Phase 10.2 — Silent-4xx toast guardrail (desktop)', () => {
   test.beforeEach(async ({ page }) => {

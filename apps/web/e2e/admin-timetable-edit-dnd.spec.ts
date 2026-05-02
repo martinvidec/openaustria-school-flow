@@ -18,6 +18,7 @@
  * DnD, see the Phase 11 mobile DnD note at playwright.config.ts:50–56).
  */
 import { test, expect } from '@playwright/test';
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 import { getAdminToken, loginAsAdmin } from './helpers/login';
 import {
   seedTimetableRun,
@@ -26,7 +27,7 @@ import {
 } from './fixtures/timetable-run';
 
 const API_BASE = process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
-const SCHOOL_ID = process.env.E2E_SCHOOL_ID ?? 'seed-school-bgbrg-musterstadt';
+const SCHOOL_ID = process.env.E2E_SCHOOL_ID ?? SEED_SCHOOL_UUID;
 
 // File-naming gate: playwright.config.ts:42 routes `*.spec.ts` to the desktop
 // project and `*-mobile.spec.ts` / `*.mobile.spec.ts` to the mobile projects.

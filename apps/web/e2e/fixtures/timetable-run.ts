@@ -34,6 +34,8 @@ import { createRequire } from 'node:module';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { SEED_TEACHER_KC_LEHRER_UUID } from './seed-uuids';
+
 // Belt-and-braces dotenv. `import 'dotenv/config'` above loads from CWD (fine
 // when the runner is invoked from the repo root). Playwright workers run with
 // CWD=apps/web however, so we ALSO load the repo-root .env via an explicit
@@ -206,19 +208,19 @@ export async function seedTimetableRun(schoolId: string): Promise<TimetableRunFi
     }
 
     // 2. Teacher — TimetableLesson.teacherId references Teacher.id directly
-    //    (NOT User.id). Pin to the KC seed teacher `kc-lehrer-teacher`
-    //    (Maria Mueller, apps/api/prisma/seed.ts:754) so the spec can
+    //    (NOT User.id). Pin to the KC seed teacher (Maria Mueller, the
+    //    kc-lehrer Keycloak user, created by prisma:seed) so the spec can
     //    deterministically select "Mueller Maria" in the perspective
     //    selector. The KC teacher is created by every prisma:seed run
-    //    with a stable id, which avoids the createdAt-asc fragility that
+    //    with a stable UUID, which avoids the createdAt-asc fragility that
     //    breaks if a developer adds new teachers via the Schuladmin UI.
     const teacher = await prisma.teacher.findFirst({
-      where: { schoolId, id: 'kc-lehrer-teacher' },
+      where: { schoolId, id: SEED_TEACHER_KC_LEHRER_UUID },
       include: { person: true },
     });
     if (!teacher) {
       throw new Error(
-        `Teacher kc-lehrer-teacher not found — re-run prisma:seed (created by apps/api/prisma/seed.ts:754)`,
+        `Teacher ${SEED_TEACHER_KC_LEHRER_UUID} (kc-lehrer Maria Mueller) not found — re-run prisma:seed`,
       );
     }
     const teacherDisplayName = teacher.person

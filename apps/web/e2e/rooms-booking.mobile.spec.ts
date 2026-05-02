@@ -19,6 +19,7 @@
  * Prerequisites match the desktop spec (docker, API, Vite, prisma seed).
  */
 import {
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
   expect,
   test,
   type APIRequestContext,
@@ -27,7 +28,7 @@ import {
 import { getAdminToken, loginAsAdmin } from './helpers/login';
 
 const API = process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
-const SCHOOL = 'seed-school-bgbrg-musterstadt';
+const SCHOOL = SEED_SCHOOL_UUID;
 
 const PURPOSE_LABEL = 'Zweck (optional)';
 const SUCCESS_TOAST = 'Raum erfolgreich gebucht';

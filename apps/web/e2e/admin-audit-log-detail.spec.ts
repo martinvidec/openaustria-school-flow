@@ -22,6 +22,7 @@
  * Eye + aria-label per AuditTable.tsx).
  */
 import { test, expect } from '@playwright/test';
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 import { loginAsAdmin } from './helpers/login';
 import {
   seedAuditEntryLegacy,
@@ -30,7 +31,7 @@ import {
 
 test.describe.configure({ mode: 'serial' });
 
-const SCHOOL_ID = process.env.E2E_SCHOOL_ID ?? 'seed-school-bgbrg-musterstadt';
+const SCHOOL_ID = process.env.E2E_SCHOOL_ID ?? SEED_SCHOOL_UUID;
 // Falls back to a known seed person id (apps/api/prisma/seed.ts:393 →
 // `seed-person-teacher-1`). Override per-runtime via E2E_SEED_PERSON_ID.
 const PERSON_ID = process.env.E2E_SEED_PERSON_ID ?? 'seed-person-teacher-1';

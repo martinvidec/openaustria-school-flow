@@ -28,12 +28,15 @@ import {
   unlinkPersonViaAPI,
 } from './helpers/users';
 import { getAdminToken } from './helpers/login';
+import {
+  SEED_PERSON_KC_LEHRER_UUID,
+  SEED_TEACHER_KC_LEHRER_UUID,
+} from './fixtures/seed-uuids';
 
-const SEED_LEHRER_TEACHER_PERSON_ID = 'kc-lehrer-person';
-const SEED_LEHRER_TEACHER_DOMAIN_ID = 'kc-lehrer-teacher';
-// Note: The seed Teacher row id is `kc-lehrer-teacher` (Teacher.id), not
-// the Person.id. The `personId` payload of POST /admin/users/:id/link-person
-// expects the Teacher.id (USER-05 D-13 contract).
+const SEED_LEHRER_TEACHER_PERSON_ID = SEED_PERSON_KC_LEHRER_UUID;
+const SEED_LEHRER_TEACHER_DOMAIN_ID = SEED_TEACHER_KC_LEHRER_UUID;
+// Note: the `personId` payload of POST /admin/users/:id/link-person expects
+// the Teacher.id (USER-05 D-13 contract), not the Person.id.
 
 test.describe('Phase 13 — Admin Person-Link (desktop)', () => {
   // Phase 17 deferred: shared admin-user search-fixture regression

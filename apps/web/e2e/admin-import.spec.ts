@@ -17,12 +17,13 @@
  * pinned in .planning/phases/10.5-e2e-admin-ops-operations/10.5-03-DISCOVERY.md.
  */
 import path from 'node:path';
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 import { fileURLToPath } from 'node:url';
 import { expect, test, type APIRequestContext } from '@playwright/test';
 import { getAdminToken, loginAsAdmin } from './helpers/login';
 
 const API = process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
-const SCHOOL = 'seed-school-bgbrg-musterstadt';
+const SCHOOL = SEED_SCHOOL_UUID;
 // ESM — __dirname is not defined. Derive the spec directory from import.meta.url.
 const SPEC_DIR = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES = path.resolve(SPEC_DIR, 'fixtures/imports');
