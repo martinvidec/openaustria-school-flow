@@ -4,14 +4,14 @@ milestone: v1.1
 milestone_name: Schuladmin Console
 status: executing
 stopped_at: Phase 17 context gathered (auto mode)
-last_updated: "2026-05-02T17:07:01.713Z"
-last_activity: 2026-05-02 -- Phase 17.1 planning complete
+last_updated: "2026-05-02T17:27:13.298Z"
+last_activity: 2026-05-02
 progress:
   total_phases: 20
   completed_phases: 14
   total_plans: 67
-  completed_plans: 62
-  percent: 93
+  completed_plans: 63
+  percent: 94
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-18)
 
 **Core value:** Schulen bekommen eine moderne, erweiterbare Plattform mit automatischer Stundenplanerstellung, die sie selbst hosten koennen -- ohne Vendor Lock-in, mit offenen APIs und DSGVO-Konformitaet von Tag 1.
-**Current focus:** Phase 15 — dsgvo-admin-audit-log-viewer
+**Current focus:** Phase 17.1 — CI Stabilization Follow-Up — fix smoke-PR build blocker + cluster mop-up
 
 ## Current Position
 
-Phase: 17
-Plan: Not started
+Phase: 17.1 (CI Stabilization Follow-Up — fix smoke-PR build blocker + cluster mop-up) — EXECUTING
+Plan: 2 of 5
 Status: Ready to execute
-Last activity: 2026-05-02 -- Phase 17.1 planning complete
+Last activity: 2026-05-02
 
-Progress: [██████████] 100%
+Progress: [█████████░] 94%
 
 ## Performance Metrics
 
@@ -159,6 +159,7 @@ Progress: [██████████] 100%
 | Phase 16 P05 | 32min | 3 tasks | 11 files |
 | Phase 16 P06 | 22 | 3 tasks | 15 files |
 | Phase 16 P07 | 85min | 3 tasks | 6 files |
+| Phase 17.1 P01 | 3min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -499,6 +500,7 @@ Recent decisions affecting current work:
 - [Phase ?]: 16-06: Wired D-07 hybrid invalidation across 13 admin hook files (42 mutation sites)
 - [Phase ?]: Phase 16 Plan 07: mobile-chrome (Pixel 5 Chromium emulation) is the darwin verification surface for *.mobile.spec.ts because mobile-375 (WebKit) hits Bus-Error-10 on darwin runners (precedent: 10.4-03 / 10.5-02 / 11-03).
 - [Phase ?]: Phase 16 Plan 07: QueryDashboardDto accepts seed string IDs via @IsString @MinLength(1) instead of @IsUUID; cross-tenant 403 in DashboardController.getStatus already enforces tampering protection (Rule 1 fix, commit 3da440e).
+- [Phase 17.1]: Plan 01: TanStack Query v5 partial-mock pattern uses 'as const' literal cast (not 'as Q[status]') to preserve discriminated-union variant narrowing — smallest possible diff (9 single-token swaps); preserves type-safety for all other fields; honors CONTEXT D-05/D-07
 
 ### Pending Todos
 
@@ -543,7 +545,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-05-02T05:29:59.414Z
+Last session: 2026-05-02T17:19:18.349Z
 Stopped at: Phase 17 context gathered (auto mode)
 Resume file: 
-.planning/phases/17-ci-stabilization/17-CONTEXT.md
+None

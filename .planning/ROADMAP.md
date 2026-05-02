@@ -436,7 +436,7 @@ Plans (5, bundled per CONTEXT D-01 + D-03 wave structure):
 
 **Requirements:** Tech-debt-closure follow-up — keine REQ-IDs (Infrastructure-only).
 **Depends on:** Phase 17 (Complete with `gaps_found`; `17-TRIAGE.md`, `deferred-items.md`, `PHASE-17.1-SCOPE.md` are the input artifacts). Worktree branches 17-01..17-05 must merge to main before re-running the smoke-PR.
-**Plans:** 5 plans
+**Plans:** 1/5 plans executed
 
 **Source artifacts:**
 
@@ -482,7 +482,7 @@ Plans (5, bundled per CONTEXT D-01 + D-03 wave structure):
 
 Plans:
 
-- [ ] 17.1-01-PLAN.md — Fix `DashboardChecklist.test.tsx` TS2345 errors (single-PR; <1h work; unblocks every CI run going forward)
+- [x] 17.1-01-PLAN.md — Fix `DashboardChecklist.test.tsx` TS2345 errors (single-PR; <1h work; unblocks every CI run going forward)
 - [ ] 17.1-02-PLAN.md — Coordinate orchestrator-merge of 17-01..17-05 worktree branches to main + re-run smoke-PR verifier-gate
 - [ ] 17.1-03-PLAN.md — Cluster A live-stack repro + fix (Phase 14 POST `/constraint-templates` 422 — single root cause unblocks 5 tests)
 - [ ] 17.1-04-PLAN.md — Cluster B live-stack repro + fix (Phase 13 admin-user search — single fixture fix unblocks 15 tests)
