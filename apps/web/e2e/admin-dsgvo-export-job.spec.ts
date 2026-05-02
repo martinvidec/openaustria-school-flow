@@ -22,7 +22,7 @@
  */
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/login';
-import { SEED_PERSON_STUDENT_1_UUID } from './helpers/seed-ids';
+import { SEED_PERSON_STUDENT_1_UUID } from './fixtures/seed-uuids';
 
 test.describe.configure({ mode: 'serial' });
 

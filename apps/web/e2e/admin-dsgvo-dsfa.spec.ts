@@ -18,7 +18,7 @@
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/login';
 import { seedDsfaEntry, cleanupAll } from './helpers/dsgvo';
-import { SEED_SCHOOL_UUID } from './helpers/seed-ids';
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 
 test.describe.configure({ mode: 'serial' });
 
