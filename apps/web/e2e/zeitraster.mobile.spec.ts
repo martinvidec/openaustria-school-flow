@@ -1,8 +1,10 @@
 /**
  * Phase 10.2 — Zeitraster save (mobile 375).
  *
- * Covers the md-breakpoint split for the Zeitraster tab:
- *   - Tab switcher is the Select (not TabsList) at <md.
+ * Covers the sm-breakpoint split for the Zeitraster tab (Phase 16
+ * convention; selector convention realigned in Phase 17 Plan F per
+ * CONTEXT D-11):
+ *   - Tab switcher is the Select (not TabsList) at <sm.
  *   - PeriodsEditor renders the Card layout (not the <table>).
  *   - Save round-trip works the same as desktop; durationMin is included
  *     in the DTO (Plan 10.2-01 Task 1.5 fix).
@@ -35,8 +37,8 @@ test.describe('Phase 10.2 — Zeitraster save (mobile 375)', () => {
     await expect(page).toHaveURL(/tab=timegrid/);
 
     // Card mode assertion: PeriodsEditor mobile container is the
-    // `md:hidden.space-y-3` div. Visible at <md.
-    const mobileCards = page.locator('div.md\\:hidden.space-y-3');
+    // `sm:hidden.space-y-3` div (Phase 16 breakpoint standard). Visible at <sm.
+    const mobileCards = page.locator('div.sm\\:hidden.space-y-3');
     await expect(mobileCards).toBeVisible();
 
     // Ensure Mo is on — same client-side validation gate as desktop.

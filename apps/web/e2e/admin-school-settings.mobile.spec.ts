@@ -1,9 +1,11 @@
 /**
  * Phase 10 Admin Schulverwaltung — Mobile (375x812) E2E.
  *
- * Tests the md-breakpoint split: tab bar becomes a Select, PeriodsEditor
- * renders Cards instead of the table, and every visible interactive element
- * honours the 44px touch-target floor (UI-SPEC §10.5).
+ * Tests the sm-breakpoint split (Phase 16 convention): tab bar becomes a
+ * Select, PeriodsEditor renders Cards instead of the table, and every
+ * visible interactive element honours the 44px touch-target floor
+ * (UI-SPEC §10.5). Selector convention realigned in Phase 17 Plan F
+ * (md: -> sm: per CONTEXT D-11).
  */
 import { expect, test } from '@playwright/test';
 import { loginAsAdmin } from './helpers/login';
@@ -19,7 +21,7 @@ test.describe('Phase 10 — Admin School Settings (mobile 375)', () => {
     await page.goto('/admin/school/settings');
 
     const tabsList = page.locator('[role="tablist"]').first();
-    await expect(tabsList).toHaveClass(/hidden md:flex/);
+    await expect(tabsList).toHaveClass(/hidden sm:flex/);
 
     const mobileSelect = page.locator('[role="combobox"]').first();
     await expect(mobileSelect).toBeVisible();
@@ -28,9 +30,9 @@ test.describe('Phase 10 — Admin School Settings (mobile 375)', () => {
     await page.getByRole('option', { name: 'Zeitraster' }).click();
     await expect(page).toHaveURL(/tab=timegrid/);
 
-    // Desktop table uses `.hidden.md:block` on its wrapper → hidden at <md.
-    // Mobile cards container uses `.md:hidden.space-y-3`.
-    const mobileCards = page.locator('div.md\\:hidden.space-y-3');
+    // Desktop table uses `.hidden.sm:block` on its wrapper → hidden at <sm.
+    // Mobile cards container uses `.sm:hidden.space-y-3` (Phase 16 breakpoint standard).
+    const mobileCards = page.locator('div.sm\\:hidden.space-y-3');
     await expect(mobileCards).toBeVisible();
   });
 
