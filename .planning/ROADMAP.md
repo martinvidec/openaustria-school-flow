@@ -51,9 +51,15 @@ See [.planning/milestones/v1.0-ROADMAP.md](milestones/v1.0-ROADMAP.md) for full 
 | 13 | User- und Rechteverwaltung | 3/3 | Complete    | 2026-04-25 |
 | 14 | Solver-Tuning | 5 | Complete    | 2026-04-25 |
 | 15 | DSGVO-Admin & Audit-Log-Viewer | 12/12 | Complete    | 2026-04-28 |
-| 16 | Admin-Dashboard & Mobile-Härtung | 6 | Phases 10-15 | — |
+| 16 | Admin-Dashboard & Mobile-Härtung | 7/7 | Complete    | 2026-05-01 |
+| 17 | CI Stabilization (promoted from Backlog) | infra | Active      | 2026-05-01 |
+| 18 | Phase-10/10.2 VERIFICATION + frontmatter backfill | doc | Active      | 2026-05-01 |
+| 19 | Cross-phase E2E + Phase 12 spec deferrals | E2E-coverage | Active      | 2026-05-01 |
+| 20 | ADMIN-03 cross-tab live-flip (Decision-on-Execution) | architectural | Active      | 2026-05-01 |
+| 21 | Web build hygiene (tsc -b + Prisma test drift) | tech-debt | Active      | 2026-05-01 |
+| 22 | Phase 10.1 human-UAT → Playwright | E2E-coverage | Active      | 2026-05-01 |
 
-**Total:** 7 feature phases + 5 gap/E2E phases (10.1-10.5), 50 requirements, 100% coverage. UAT resumes after Phase 10.5 per `feedback_e2e_first_no_uat.md`.
+**Total:** 7 feature phases + 5 gap/E2E phases (10.1-10.5) + 6 gap-closure phases (17-22 — promoted/added 2026-05-01 from MILESTONE-AUDIT + OPEN-ITEMS-INVENTORY), 50 requirements, 100% coverage. UAT resumes after Phase 10.5 per `feedback_e2e_first_no_uat.md`.
 
 ### Completed v1.1 phases
 
@@ -333,7 +339,7 @@ Plans:
 **Goal:** Admin sieht beim Login ein Dashboard mit Setup-Completeness-Checkliste das alle Admin-Surfaces aus Phasen 10–15 zusammenführt und als Einstiegspunkt dient; Mobile-Parity aller Admin-Surfaces ist final verifiziert.
 **Requirements:** ADMIN-01, ADMIN-02, ADMIN-03, MOBILE-ADM-01, MOBILE-ADM-02, MOBILE-ADM-03
 **Depends on:** Phasen 10-15 (Dashboard verlinkt auf alle CRUD-Surfaces; Mobile-Härtung verifiziert alle gelieferten Oberflächen)
-**Plans:** 0 plans
+**Plans:** 7/7 plans complete
 
 **Success criteria:**
 - [ ] Admin sieht beim Login ein Dashboard mit Setup-Completeness-Checkliste (Schule, Zeitraster, Schuljahr, Fächer, Lehrer, Klassen, Schüler, Solver, DSGVO, Audit)
@@ -347,18 +353,23 @@ Plans:
 - MOBILE-ADM-Audit: finaler Mobile-Sweep kann UI-Regressions aus Phasen 10-15 aufdecken — Gap-Fix-Tasks innerhalb Phase 16 einplanen.
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 16 to break down)
+- [x] 16-01-PLAN.md — Backend DashboardModule + DashboardService aggregator + admin-only controller + table-driven service spec + integration spec [Wave 1]
+- [x] 16-02-PLAN.md — Frontend foundation: extract useIsMobile, build useDashboardStatus, build shared DataList, build ChecklistItem + DashboardChecklist (with unit tests) [Wave 1]
+- [x] 16-03-PLAN.md — Role-aware login redirect, /admin/index.tsx Dashboard route, AppSidebar + MobileSidebar entries (Phase 15 gap closure: DSGVO + Audit-Log added to MobileSidebar) [Wave 2, depends on 01+02]
+- [x] 16-04-PLAN.md — Touch-target hardening: lift Button + Input + Select primitives to min-h-11 on <sm (responsive sm:min-h-{n} preserves desktop) [Wave 1]
+- [x] 16-05-PLAN.md — Mobile sweep audit spec + migrate Phase 14 (4 solver-tuning tables) + Phase 15 (5 DSGVO/audit tables) zero-mode tables to DataList [Wave 3, depends on 02+04]
+- [x] 16-06-PLAN.md — Mutation-hook invalidation fan-out: 13 hook files × ~57 mutations add `qc.invalidateQueries({ queryKey: dashboardKeys.status })` to onSuccess [Wave 3, depends on 01+02]
+- [x] 16-07-PLAN.md — E2E coverage closure: login-redirect.spec.ts (5 roles) + admin-dashboard.spec.ts (desktop) + admin-dashboard.mobile.spec.ts (375px + MobileSidebar drawer) [Wave 4, depends on 03+05+06]
 
 ---
 
-## Backlog
+### Phase 17: CI Stabilization — fix accumulated E2E test failures
 
-### Phase 999.1: CI Stabilization — fix accumulated E2E test failures (BACKLOG)
+**Goal:** Captured 2026-04-28 nach Phase-15-Merge — alle 3 PRs (#1 phase-15, #2 chore, #3 fix) wurden via `--admin` gemerged trotz roter E2E-CI. Build / Install / Solver-Sidecar / API+Web-Build sind grün; nur der `Run Playwright tests` Step hat ~30-50 Failures verteilt über Phase 11-15. Diese Phase triagiert sie systematisch in real bugs vs CI-environment-flakes und macht den `--admin`-Override für zukünftige PRs überflüssig. Promoted from Backlog 2026-05-01 via `/gsd:review-backlog`.
 
-**Goal:** Captured 2026-04-28 nach Phase-15-Merge — alle 3 PRs (#1 phase-15, #2 chore, #3 fix) wurden via `--admin` gemerged trotz roter E2E-CI. Build / Install / Solver-Sidecar / API+Web-Build sind grün; nur der `Run Playwright tests` Step hat ~30-50 Failures verteilt über Phase 11-15. Dieses Backlog-Item triagiert sie systematisch in real bugs vs CI-environment-flakes und macht den `--admin`-Override für zukünftige PRs (Phase 16+) überflüssig.
-
-**Requirements:** TBD (siehe Triage-Result)
-**Plans:** 0 plans
+**Requirements:** Infrastructure-only (keine REQ-IDs — Tech-Debt-Closure)
+**Depends on:** Phase 16 (Active branch is `gsd/phase-16-admin-dashboard-mobile-h-rtung`; Phase 17 läuft parallel oder nach Phase 16 PR-Merge)
+**Plans:** 7 plans (abgeleitet von 999.1.A-G aus Phase-16-07-SUMMARY)
 
 **Failure clusters (von PR #1 Run [25065085891](https://github.com/martinvidec/openaustria-school-flow/actions/runs/25065085891)):**
 
@@ -382,14 +393,193 @@ Plans:
 - Phase-13-Tests: könnten Reihenfolge-abhängig sein (User-State von vorigem Test nötig) oder seed-data-Voraussetzung haben die in CI fehlt
 - Phase-14-integration: explizit `-` (skipped), nicht failed — solver-run zu langsam in CI?
 
-**Success criteria (TBD):**
+**Success criteria:**
 - [ ] CI-`Run Playwright tests`-Step grün auf einer leeren PR off main
-- [ ] Phase-16 PR kann ohne `--admin`-Override gemerged werden
+- [ ] Folge-PRs können ohne `--admin`-Override gemerged werden
 - [ ] Triage-Dokument im Phase-Verzeichnis kategorisiert jede Failure als real-bug/flake/env
 
 **Reference:**
 - PR #1 run: https://github.com/martinvidec/openaustria-school-flow/actions/runs/25065085891
 - Memory-Eintrag: `feedback_phase_branch_discipline.md` (warum --admin nötig war)
+- Plan-Übersetzungs-Quelle: Phase-16-07-SUMMARY 999.1.A-G items + `.planning/v1.1-OPEN-ITEMS-INVENTORY.md` §9.1
+
+Plans (7, abgeleitet von 999.1.A-G):
+- [ ] 17-01-PLAN.md — A: Breadcrumb anchor 44px floor (10 routes)
+- [ ] 17-02-PLAN.md — B: Tabs primitive lift (`tabs.tsx:15` TabsList h-10 → min-h-11), affects /admin/subjects + /admin/timetable-edit
+- [ ] 17-03-PLAN.md — C: RadioGroup primitive lift (`radio-group.tsx`), affects /admin/dsgvo
+- [ ] 17-04-PLAN.md — D: Phase 11/12/13 ListTable + MobileCards migration to DataList (Teacher/Student/Class/Subject/User), Severity high
+- [ ] 17-05-PLAN.md — E: 14 pre-existing desktop regressions triage (sample: admin-solver-tuning-restrictions)
+- [ ] 17-06-PLAN.md — F: Phase 10 mobile spec selector drift (`admin-school-settings.mobile.spec.ts` + `zeitraster.mobile.spec.ts` — `md\\:hidden` → `sm:hidden`)
+- [ ] 17-07-PLAN.md — G: Mobile-375 (WebKit) Bus-Error-10 auf darwin — env-classification + monitor on Playwright upgrade
+
+---
+
+### Phase 18: Phase-10/10.2 VERIFICATION + SUMMARY frontmatter backfill
+
+**Goal:** Schließt die zwei P0-BLOCKER-Verification-Gaps aus `v1.1-MILESTONE-AUDIT.md` (Phase 10 + Phase 10.2 ohne `VERIFICATION.md` per Workflow-Step-2-Hard-Rule) und backfillt das `requirements-completed:`-Frontmatter in den Phase-10-Plan-SUMMARYs, damit die strict-3-source-Matrix von "unsatisfied (matrix-strict) / satisfied-by-evidence" auf "satisfied" flippt für SCHOOL-01..05.
+**Requirements:** Closes documentation hygiene gaps für SCHOOL-01..05 (Implementation existiert bereits in Phase 10 + 10.4 + admin-school-settings.spec.ts — diese Phase liefert nur die fehlenden Audit-Trail-Artifacts).
+**Depends on:** Phase 10, 10.2, 10.4 (alle Complete) — keine Code-Änderungen, nur Dokumentations-Artifacts.
+**Plans:** 3 plans (doc-only)
+
+**Source-Cross-Reference:**
+- `v1.1-MILESTONE-AUDIT.md` §1.2 Phase-Verification-Gaps (BLOCKER × 2)
+- `v1.1-MILESTONE-AUDIT.md` §1.1 Requirements-Gaps (SCHOOL-01..05)
+- `v1.1-OPEN-ITEMS-INVENTORY.md` Top-Priorität P0 #1 + #2
+
+**Success criteria:**
+- [ ] `.planning/phases/10-schulstammdaten-zeitraster/10-VERIFICATION.md` existiert mit allen 5 SCHOOL-Truths verifiziert
+- [ ] `.planning/phases/10.2-e2e-admin-console-gap-closure/10.2-VERIFICATION.md` existiert mit Tier-1-E2E-Closure dokumentiert
+- [ ] Plan-SUMMARYs (10-03b, 10-04, 10-05) haben `requirements-completed: [SCHOOL-XX, ...]` Frontmatter
+- [ ] REQUIREMENTS.md Coverage-Count zeigt 50/50 satisfied (matrix-strict)
 
 Plans:
-- [ ] TBD (promote with /gsd-review-backlog when ready)
+- [ ] 18-01-PLAN.md — `/gsd:verify-work 10` formalisiert Phase-10-Verifier-Pass via Phase 10.4-VERIFICATION-Truths + admin-school-settings.spec.ts SCHOOL-01..05 evidence
+- [ ] 18-02-PLAN.md — `/gsd:verify-work 10.2` formalisiert Phase-10.2-Tier-1-Closure als per-phase Artifact
+- [ ] 18-03-PLAN.md — Backfill `requirements-completed: [SCHOOL-XX]` Frontmatter in 10-03b-SUMMARY (SCHOOL-01), 10-04-SUMMARY (SCHOOL-02 + SCHOOL-05) und 10-05-SUMMARY (SCHOOL-03 + SCHOOL-04)
+
+---
+
+### Phase 19: Cross-phase E2E coverage + Phase 12 spec deferrals
+
+**Goal:** Schließt 3 PARTIAL-Flow-Verdicts aus dem Audit, indem es Multi-Phase-E2E-Specs hinzufügt, die siloed Surface-Coverage zu echten End-to-End-Traces verbinden. Bonus: schließt Phase 12 deferred-Test-Coverage (E2E-CLS-06 manual-override + Reset-Stundentafel POST).
+**Requirements:** Closes Flow A (Greenfield onboarding 10→14), Flow C (DSGVO export → Audit-Log chain) sowie Phase-12-Tech-Debt-Items aus 12-deferred-items.md.
+**Depends on:** Phase 10-15 (alle Complete; benötigt aktuelle Seed-Fixtures)
+**Plans:** 4 plans
+
+**Source-Cross-Reference:**
+- `v1.1-MILESTONE-AUDIT.md` §1.3 Integration/Flow-Gaps (Flow A + Flow C, beide PARTIAL/WARNING)
+- `v1.1-OPEN-ITEMS-INVENTORY.md` §2 Phase 12 deferred items
+- `v1.1-OPEN-ITEMS-INVENTORY.md` Top-Priorität P1 #4 + #5
+
+**Known risks:**
+- Reset-Stundentafel POST E2E benötigt yearLevel=1-Template, aber Seed-School ist BHS — entweder Test-Seed-Override oder Test-Skip mit klarer reason annotieren.
+- E2E-CLS-06 manual-override benötigt fresh-class-with-fresh-students fixture — ggf. separate `addManualClassOverrideFixture` Builder.
+
+**Success criteria:**
+- [ ] `admin-greenfield-onboarding.spec.ts` walkt Schule → Zeitraster → Schuljahr → Lehrer → Klasse → Constraint → Solver-Trigger End-to-End in einem Test
+- [ ] `admin-dsgvo-audit-chain.spec.ts` triggert Art-15 POST /dsgvo/export, asserted Audit-Log-Eintrag im Viewer mit Detail-Drawer drill-in
+- [ ] E2E-CLS-06 manual-override grün
+- [ ] Reset-Stundentafel POST E2E grün (oder explicitly skipped mit reason)
+
+Plans:
+- [ ] 19-01-PLAN.md — `apps/web/tests/e2e/admin-greenfield-onboarding.spec.ts` (Flow A: 10→14 Multi-Phase-Trace)
+- [ ] 19-02-PLAN.md — `apps/web/tests/e2e/admin-dsgvo-audit-chain.spec.ts` (Flow C: DSGVO-Export → Audit-Log-Eintrag → Detail-Drawer)
+- [ ] 19-03-PLAN.md — E2E-CLS-06 manual-override add-member spec + fresh-class-with-fresh-students fixture
+- [ ] 19-04-PLAN.md — Reset-Stundentafel POST E2E + AHS yearLevel=1 Test-Seed-Override
+
+---
+
+### Phase 20: ADMIN-03 cross-tab live-flip (Decision-on-Execution)
+
+**Goal:** Schließt Flow-D-Verdict PARTIAL aus dem Audit. ADMIN-03 spec passt aktuell nur weil `page.goto` den TanStack-Query-Cache resettet — keine echte cross-tab-live-flip-Mechanism. Audit-Verdict: *"current architecture cannot satisfy the requirement."*
+**Requirements:** Behandelt ADMIN-03 — hängt von Decision ab (siehe unten).
+**Depends on:** Phase 16 (Dashboard wired), Phase 18 (Phase-10-Verification clean baseline)
+**Plans:** TBD bei Durchführung — die Plan-Anzahl variiert mit dem gewählten Pfad (0 plans für Option B/C, 3 plans für Option A).
+
+> **⚠ Decision-on-Execution-Vermerk:**
+> Die Wahl zwischen den drei Optionen wird **nicht jetzt im Roadmap getroffen**, sondern bei der konkreten Phase-Durchführung. Beim Start der Phase (`/gsd:discuss-phase 20` oder `/gsd:plan-phase 20`) schauen wir uns gemeinsam Code-State, CI-Status, verfügbare Zeit-Budget und Trade-Offs nochmal genau an — dann fällt die Entscheidung A/B/C bewusst, nicht spekulativ.
+
+**Optionen (zur Erinnerung beim Durchführungs-Zeitpunkt):**
+
+- **Option A — Architectural Build (3 plans, +backend code):**
+  - 20-01: Backend `DashboardBroadcastEmitter` (Socket.IO admin-room) auf Audit-/School-/Teacher-/etc.-Mutations
+  - 20-02: Frontend Subscriber im `useDashboardStatus` Hook
+  - 20-03: E2E-Spec für echtes cross-tab live-flip (zwei page-Contexts, real-time-assertion)
+  - **Trade-off:** Widerspricht v1.1 "Brownfield UI-only"-Constraint (CLAUDE.md). REQUIREMENTS.md Out-of-Scope-Tabelle würde adjustiert.
+
+- **Option B — Re-scope ADMIN-03 (1 plan, no code):**
+  - 20-01: REQUIREMENTS.md ADMIN-03-Wording ändern auf "Live-Zustand pro Eintrag, refresht ohne manuellen Reload binnen X Sekunden in der gleichen Tab nach jeder Admin-Aktion"
+  - **Trade-off:** Akzeptiert aktuelle Architektur als Final. Cross-Tab-Wunsch geht verloren.
+
+- **Option C — Defer als DASHBOARD-LIVE-01 v1.2 (1 plan, no code):**
+  - 20-01: REQUIREMENTS.md "Future Requirements"-Sektion bekommt DASHBOARD-LIVE-01; v1.1 ADMIN-03 bleibt mit aktueller Mechanik bei `[x]` mit "satisfied (in-tab)"-Annotation; Flow D bleibt PARTIAL für v1.1, wird in v1.2 PASS.
+  - **Trade-off:** Audit-Verdict bleibt PARTIAL für v1.1, Milestone-Tag akzeptiert das.
+
+**Source-Cross-Reference:**
+- `v1.1-MILESTONE-AUDIT.md` §1.3 Integration/Flow-Gaps (Flow D PARTIAL)
+- `v1.1-OPEN-ITEMS-INVENTORY.md` Top-Priorität P1 #6
+- CLAUDE.md "Brownfield UI-only" Constraint (relevant für Option-A-Trade-off)
+
+**Success criteria (Decision-pending):**
+- [ ] Decision A/B/C bei Phase-Start dokumentiert (in `20-DECISION.md` oder im ersten Plan-CONTEXT)
+- [ ] Wenn A: Echtes cross-tab live-flip durch Playwright-Multi-Context-Test bewiesen
+- [ ] Wenn B: REQUIREMENTS.md ADMIN-03-Wording aktualisiert + Audit-Status "Flow D: in-tab live-flip ✓"
+- [ ] Wenn C: REQUIREMENTS.md "Future Requirements" enthält DASHBOARD-LIVE-01 mit Begründung
+
+Plans:
+- [ ] TBD — bei Durchführung entscheiden, dann konkrete Plans erstellen
+
+---
+
+### Phase 21: Web build hygiene (tsc -b + Prisma test drift)
+
+**Goal:** Räumt 8-11 pre-existing `tsc -b` Errors auf, die durch alle v1.1-Phasen carry-forward gewandert sind, plus zwei Build-/Test-Hygiene-Items: `useStudents.ts:352` rolldown ILLEGAL_REASSIGNMENT und das DB-state-aware `school-year-multi-active.spec.ts`.
+**Requirements:** Tech-Debt-Closure — keine REQ-IDs.
+**Depends on:** None (alle 8-11 Errors sind in unrelated v1.0-Files; isolated)
+**Plans:** 3 plans
+
+**Source-Cross-Reference:**
+- `v1.1-OPEN-ITEMS-INVENTORY.md` §2 Phase 10 Tech-Debt + §7 Phase 10.1
+- `v1.1-OPEN-ITEMS-INVENTORY.md` §7 Phase 15 (DEFERRED-15-05-01)
+- `v1.1-OPEN-ITEMS-INVENTORY.md` §7 Phase 14 + 15-03 (DEFERRED-15-03-01)
+
+**Affected files (von Inventory aus):**
+- `apps/web/src/components/admin/school-year/CreateSchoolYearDialog.tsx`
+- `apps/web/src/hooks/useImportSocket.ts`
+- `apps/web/src/hooks/usePushSubscription.ts`
+- `apps/web/src/lib/keycloak.ts`
+- `apps/web/src/lib/socket.ts`
+- `apps/web/src/main.tsx`
+- `apps/web/src/routes/_authenticated/classbook/...`
+- `apps/web/src/routes/_authenticated/messages/...`
+- `apps/web/src/routes/_authenticated/substitutions/...`
+- `apps/web/src/components/admin/student/StudentDetailTabs.tsx:71`
+- `apps/web/src/hooks/useStudents.ts:352` (rolldown ILLEGAL_REASSIGNMENT, `const failed = null`)
+- `apps/api/prisma/__tests__/school-year-multi-active.spec.ts`
+
+**Success criteria:**
+- [ ] `pnpm -w tsc -b` läuft 0-Error
+- [ ] `pnpm --filter web rolldown build` läuft ohne ILLEGAL_REASSIGNMENT
+- [ ] `apps/api/prisma/__tests__/school-year-multi-active.spec.ts` ist entweder grün gegen DB-State oder explicit-skipped mit `it.skip()` und Reason-Annotation
+
+Plans:
+- [ ] 21-01-PLAN.md — Fix 8-9 pre-existing `tsc -b` errors (CreateSchoolYearDialog, useImportSocket, usePushSubscription, keycloak.ts, socket.ts, main.tsx, classbook route, messages route, substitutions route, StudentDetailTabs.tsx:71)
+- [ ] 21-02-PLAN.md — Fix `useStudents.ts:352` rolldown ILLEGAL_REASSIGNMENT (`const failed = null` → `let failed = null` oder Refactor)
+- [ ] 21-03-PLAN.md — Repair `prisma/__tests__/school-year-multi-active.spec.ts` dev-DB-state assertion (deterministisch oder it.skip)
+
+---
+
+### Phase 22: Phase 10.1 human-UAT → Playwright
+
+**Goal:** Konvertiert die 5 verbleibenden Phase-10.1-human-UAT-Items in Playwright-Specs gemäß `feedback_e2e_first_no_uat.md`-Direktive ("ship with tests, no more 'please test in browser' asks") und schließt damit das `human_needed`-Status-Carry-Forward von Phase 10.1.
+**Requirements:** Schließt Phase 10.1 `human_needed` (5 UAT-Items, kein REQ-ID-Impact).
+**Depends on:** Phase 10.1 (Complete; deferred-items.md vorhanden), Phase 18 (frontmatter clean)
+**Plans:** 3 plans
+
+**Source-Cross-Reference:**
+- `v1.1-OPEN-ITEMS-INVENTORY.md` §2 Phase 10.1 (5 human-UAT items)
+- `v1.1-OPEN-ITEMS-INVENTORY.md` §7 Phase 10.1
+- Memory: `feedback_e2e_first_no_uat.md` (User-Direktive 2026-04-21)
+- Memory: `feedback_verifier_human_needed_must_be_challenged.md` (User-Direktive 2026-04-30)
+
+**5 human-UAT items aus 10.1-deferred:**
+1. Silent-4xx Sonner visual rendering — Stammdaten-Tab
+2. Silent-4xx Sonner visual rendering — OptionsTab
+3. Silent-4xx Sonner visual rendering — Schuljahre-Tab
+4. Address round-trip HTTP serialization pipeline (form → API → DB → form)
+5. Stammdaten form pre-fill aus repaired address
+
+**Success criteria:**
+- [ ] 3 Playwright-Specs (silent-4xx visual + address round-trip + form pre-fill) grün
+- [ ] Phase 10.1 status flippt von `human_needed` auf `passed` (per `/gsd:verify-work 10.1` re-run)
+
+Plans:
+- [ ] 22-01-PLAN.md — Silent-4xx Sonner visual spec (Stammdaten + OptionsTab + Schuljahre — 1 spec mit 3 sub-Tests)
+- [ ] 22-02-PLAN.md — Address round-trip HTTP serialization spec (Form-Input → POST → GET → Form-Refill)
+- [ ] 22-03-PLAN.md — Stammdaten form pre-fill aus repaired address spec
+
+---
+
+## Backlog
+
+*Empty — Phase 999.1 promoted to Phase 17 on 2026-05-01 via `/gsd:review-backlog`. Future backlog items will be appended here.*

@@ -1,3 +1,4 @@
+import type { RefObject } from 'react';
 import { Menu, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -5,15 +6,25 @@ import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 interface AppHeaderProps {
   onMobileMenuToggle?: () => void;
+  /**
+   * Phase 16 GAP-CLOSURE — ref forwarded to the hamburger trigger so the
+   * MobileSidebar can return focus to it on drawer close (a11y / focus
+   * restoration). Optional so legacy mounts still render.
+   */
+  mobileMenuTriggerRef?: RefObject<HTMLButtonElement | null>;
 }
 
-export function AppHeader({ onMobileMenuToggle }: AppHeaderProps) {
+export function AppHeader({
+  onMobileMenuToggle,
+  mobileMenuTriggerRef,
+}: AppHeaderProps) {
   const { user, logout } = useAuth();
 
   return (
     <header className="flex items-center justify-between h-14 px-4 border-b border-border bg-background">
       <div className="flex items-center gap-3">
         <Button
+          ref={mobileMenuTriggerRef}
           variant="ghost"
           size="sm"
           className="sm:hidden"

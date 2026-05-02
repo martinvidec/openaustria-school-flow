@@ -32,6 +32,7 @@ import { UserDirectoryModule } from './modules/user-directory/user-directory.mod
 import { RoleManagementModule } from './modules/role-management/role-management.module';
 import { PermissionOverrideModule } from './modules/permission-override/permission-override.module';
 import { EffectivePermissionsModule } from './modules/effective-permissions/effective-permissions.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { EffectivePermissionsModule } from './modules/effective-permissions/effe
     RoleManagementModule,
     PermissionOverrideModule,
     EffectivePermissionsModule,
+    DashboardModule,
   ],
   providers: [
     {

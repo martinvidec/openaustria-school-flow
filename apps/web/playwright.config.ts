@@ -41,6 +41,28 @@ export default defineConfig({
       // the mobile-375 / mobile-chrome projects.
       testIgnore: /(.*\.mobile\.spec\.ts|.*-mobile\.spec\.ts)$/,
     },
+    // Phase 16 GAP-CLOSURE — third-engine project (1280×800) to close the
+    // iOS-Safari engine gap surfaced by 16-VERIFICATION human_needed item 1
+    // (Role-aware login redirect). The Playwright WebKit `mac14_arm64_special`
+    // build (the only WebKit build distributed for darwin-arm64 in PW 1.59.x)
+    // hits Bus-Error-10 on `pw_run.sh` launch — confirmed via gap-closure
+    // attempt 2026-04-29 against `desktop-webkit` (Bus-Error-10, all 5 tests
+    // failed before the SPA loaded). The bus-error is engine-binary-level,
+    // not viewport-specific, so a `desktop-webkit` project does NOT in fact
+    // close the gap on this darwin runner.
+    //
+    // Pivot: use Firefox/Gecko as the third-engine surface. The login-redirect
+    // logic is a TanStack-Router `beforeLoad` hook against Keycloak — the
+    // assertion is "another non-Chromium engine produces the same role-aware
+    // redirect", which Firefox satisfies. This is a strictly better
+    // verification surface than human-UAT against Safari (per E2E-first
+    // policy memory `feedback_e2e_first_no_uat.md`).
+    {
+      name: 'desktop-firefox',
+      use: { ...devices['Desktop Firefox'], viewport: { width: 1280, height: 800 } },
+      testMatch: /.*\.spec\.ts$/,
+      testIgnore: /(.*\.mobile\.spec\.ts|.*-mobile\.spec\.ts)$/,
+    },
     {
       name: 'mobile-375',
       use: { ...devices['iPhone 13'], viewport: { width: 375, height: 812 } },

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
+import { dashboardKeys } from '@/hooks/useDashboardStatus';
 
 /**
  * Class hooks — Phase 12-02 admin surface (CLASS-01..05).
@@ -207,6 +208,7 @@ export function useCreateClass(schoolId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: classKeys.all(schoolId) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Klasse angelegt.');
     },
     onError: (err: ClassApiError | Error) => {
@@ -237,6 +239,7 @@ export function useUpdateClass(schoolId: string, id: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: classKeys.all(schoolId) });
       qc.invalidateQueries({ queryKey: classKeys.detail(id) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Änderungen gespeichert.');
     },
     onError: (err: ClassApiError | Error) => {
@@ -256,6 +259,7 @@ export function useDeleteClass(schoolId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: classKeys.all(schoolId) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Klasse gelöscht.');
     },
     onError: (err: ClassApiError | Error) => {

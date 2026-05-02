@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Schuladmin Console
-status: executing
-stopped_at: Completed 15-12 audit-extractresource-fix
-last_updated: "2026-04-28T12:10:54.687Z"
-last_activity: 2026-04-28
+status: planning
+stopped_at: Phase 17 context gathered (auto mode)
+last_updated: "2026-05-02T05:29:59.421Z"
+last_activity: "2026-05-02 - Completed quick task 260502-9iu: KEYCLOAK_ADMIN_CLIENT_SECRET history audit clean — no rotation needed (closes 260501-scd MEDIUM flag)"
 progress:
-  total_phases: 12
-  completed_phases: 11
-  total_plans: 49
-  completed_plans: 49
+  total_phases: 18
+  completed_phases: 12
+  total_plans: 56
+  completed_plans: 56
   percent: 100
 ---
 
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 
 ## Current Position
 
-Phase: 16
+Phase: 999.1
 Plan: Not started
-Status: Ready to execute
-Last activity: 2026-04-28
+Status: Phase 16 shipped — PR #6 (awaiting CI + merge)
+Last activity: 2026-05-02 - Phase 16 PR #6 opened (https://github.com/martinvidec/openaustria-school-flow/pull/6)
 
 Progress: [██████████] 100%
 
@@ -36,7 +36,7 @@ Progress: [██████████] 100%
 
 **Velocity:**
 
-- Total plans completed: 0
+- Total plans completed: 7
 - Average duration: -
 - Total execution time: 0 hours
 
@@ -44,7 +44,7 @@ Progress: [██████████] 100%
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 16 | 7 | - | - |
 
 **Recent Trend:**
 
@@ -156,6 +156,9 @@ Progress: [██████████] 100%
 | Phase 15 P11 | 22 | 4 tasks | 4 files |
 | Phase 15 P10 | 30min | 7 tasks | 8 files |
 | Phase 15 P12 | 5 | 4 tasks | 5 files |
+| Phase 16 P05 | 32min | 3 tasks | 11 files |
+| Phase 16 P06 | 22 | 3 tasks | 15 files |
+| Phase 16 P07 | 85min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -491,6 +494,11 @@ Recent decisions affecting current work:
 - [Phase ?]: Phase 15 DSGVO admin DTOs require UUID schoolId/personId but seed data uses static stable IDs — soft-skip pattern in E2E specs (Plan 15-10); fix deferred
 - [Phase 15]: Use DSGVO_SUB_RESOURCES allowlist Set in AuditInterceptor.extractResource — Auto-walking any /api/v1/dsgvo/<sub> second segment would silently misclassify a future unmapped DSGVO route into the wrong RESOURCE_MODEL_MAP entry. Allowlist Set forces intentional opt-in (developer adds the new sub to DSGVO_SUB_RESOURCES + RESOURCE_MODEL_MAP + SENSITIVE_RESOURCES at the same time, surfaced at code-review time). Unknown subs fall back to resource='dsgvo'.
 - [Phase 15]: Omit 'jobs' from SENSITIVE_RESOURCES while keeping it in DSGVO_SUB_RESOURCES — Admin Jobs-tab GETs are opaque job-metadata list reads that do not warrant per-fetch SENSITIVE_READ audit rows. Splitting the two lists lets admin Subject-filter still bucket DSGVO-jobs reads under resource='jobs' while suppressing the per-row read-log. Other DSGVO sub-resources (consent, retention, dsfa, vvz, export, deletion) ARE in SENSITIVE_RESOURCES.
+- [Phase ?]: Plan 16-05: extend DataList with getRowAttrs to preserve Phase 14/15 E2E selectors (data-audit-id / data-template-type / data-dsgvo-job-id) on both desktop tr and mobile-card wrapper
+- [Phase ?]: Plan 16-05: skip ConstraintCatalogTab + ConstraintWeightsTab DataList migration — both use grid-based row components with zero <table> JSX; would regress slider density (Pitfall #7)
+- [Phase ?]: 16-06: Wired D-07 hybrid invalidation across 13 admin hook files (42 mutation sites)
+- [Phase ?]: Phase 16 Plan 07: mobile-chrome (Pixel 5 Chromium emulation) is the darwin verification surface for *.mobile.spec.ts because mobile-375 (WebKit) hits Bus-Error-10 on darwin runners (precedent: 10.4-03 / 10.5-02 / 11-03).
+- [Phase ?]: Phase 16 Plan 07: QueryDashboardDto accepts seed string IDs via @IsString @MinLength(1) instead of @IsUUID; cross-tenant 403 in DashboardController.getStatus already enforces tampering protection (Rule 1 fix, commit 3da440e).
 
 ### Pending Todos
 
@@ -510,6 +518,9 @@ None yet.
 | 260426-eyf | Harden useRooms pagination params + unit tests + E2E Räume assertion | 2026-04-26 | 6ebad74 | [260426-eyf-harden-userooms-pagination-params-unit-t](./quick/260426-eyf-harden-userooms-pagination-params-unit-t/) |
 | 260426-fwb | Lock down rooms-filter with component test + E2E regression spec | 2026-04-26 | 4d1b09c | [260426-fwb-lock-down-rooms-filter-behavior-with-com](./quick/260426-fwb-lock-down-rooms-filter-behavior-with-com/) |
 | 260426-gtr | apiFetch Content-Type header regression guards (3-test Vitest spec) | 2026-04-26 | 65d03df | [260426-gtr-apifetch-content-type-header-regression-](./quick/260426-gtr-apifetch-content-type-header-regression-/) |
+| 260501-scd | check nach versehentlich comitteten secrets (z.B. vapid key) | 2026-05-01 | c8232a4 | [260501-scd-check-nach-versehentlich-comitteten-secr](./quick/260501-scd-check-nach-versehentlich-comitteten-secr/) |
+| 260501-sus | VAPID dev keypair rotieren — scrub + CI preflight (user mintet Keypair lokal, setzt gh secrets) | 2026-05-02 | cbb7d04 | [260501-sus-vapid-dev-keypair-rotieren-neuen-keypair](./quick/260501-sus-vapid-dev-keypair-rotieren-neuen-keypair/) |
+| 260502-9iu | KEYCLOAK_ADMIN_CLIENT_SECRET history audit — no rotation needed (0 TRUE_POSITIVE / 6 ENV-VAR-REF / 1 PLACEHOLDER, live value never committed) | 2026-05-02 | 41d8412 | [260502-9iu-audit-ob-keycloak-admin-client-secret-je](./quick/260502-9iu-audit-ob-keycloak-admin-client-secret-je/) |
 
 ### Roadmap Evolution
 
@@ -532,7 +543,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-28T08:55:53.896Z
-Stopped at: Completed 15-12 audit-extractresource-fix
+Last session: 2026-05-02T05:29:59.414Z
+Stopped at: Phase 17 context gathered (auto mode)
 Resume file: 
-None
+.planning/phases/17-ci-stabilization/17-CONTEXT.md

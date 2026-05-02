@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { TimeGridDto, TimeGridInput } from '@schoolflow/shared';
 import { apiFetch } from '@/lib/api';
+import { dashboardKeys } from '@/hooks/useDashboardStatus';
 
 export const timeGridKeys = {
   one: (schoolId: string) => ['time-grid', schoolId] as const,
@@ -52,6 +53,7 @@ export function useUpdateTimeGrid(schoolId: string) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: timeGridKeys.one(schoolId) });
+      qc.invalidateQueries({ queryKey: dashboardKeys.status });
       toast.success('Aenderungen gespeichert.');
     },
     onError: (e: Error) => {

@@ -6,6 +6,7 @@ import { AppHeader } from '@/components/layout/AppHeader';
 import { MobileSidebar } from '@/components/layout/MobileSidebar';
 import { OfflineBanner } from '@/components/pwa/OfflineBanner';
 import { PwaInstallBanner } from '@/components/pwa/PwaInstallBanner';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { useServiceWorker } from '@/hooks/useServiceWorker';
 
@@ -13,31 +14,14 @@ export const Route = createRootRoute({
   component: RootLayout,
 });
 
-/**
- * Hook to detect mobile viewport for responsive toast positioning.
- * Per 09-UI-SPEC: bottom-center on mobile, top-right on desktop.
- */
-function useIsMobile(breakpoint = 640): boolean {
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' ? window.innerWidth < breakpoint : false,
-  );
-
-  useEffect(() => {
-    const mq = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    setIsMobile(mq.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, [breakpoint]);
-
-  return isMobile;
-}
-
 function RootLayout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   const isOnline = useOnlineStatus();
   const { updateAvailable, updateServiceWorker } = useServiceWorker();
+  // Phase 16 GAP-CLOSURE — ref to the hamburger trigger so MobileSidebar can
+  // return focus on drawer close (a11y / focus restoration).
+  const mobileMenuTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   // Show the service worker update toast once per detected update.
   const updateToastShownRef = useRef(false);
@@ -69,10 +53,14 @@ function RootLayout() {
       <MobileSidebar
         open={mobileMenuOpen}
         onOpenChange={setMobileMenuOpen}
+        triggerRef={mobileMenuTriggerRef}
       />
 
       <div className="flex flex-col flex-1 min-w-0">
-        <AppHeader onMobileMenuToggle={() => setMobileMenuOpen(true)} />
+        <AppHeader
+          onMobileMenuToggle={() => setMobileMenuOpen(true)}
+          mobileMenuTriggerRef={mobileMenuTriggerRef}
+        />
         <OfflineBanner />
         <main
           className={`flex-1 p-4 md:p-6 ${isOnline ? '' : 'pt-[calc(1rem+40px)] md:pt-[calc(1.5rem+40px)]'}`}

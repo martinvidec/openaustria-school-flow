@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { DataList, type DataListColumn } from '@/components/shared/DataList';
 import {
   useDsfaEntries,
   useDeleteDsfa,
@@ -18,6 +19,11 @@ import { DsfaEditDialog } from './DsfaEditDialog';
 /**
  * Phase 15-07 Task 2: DSFA-Eintrag list + create/edit/delete UI.
  *
+ * Phase 16 Plan 05 (D-15) — migrated to <DataList> for mobile-card support
+ * at <sm. Each row preserves `data-dsfa-id={id}` on BOTH desktop <tr> and
+ * mobile-card wrapper so the existing E2E suite (`admin-dsgvo-dsfa.spec.ts`)
+ * continues to match.
+ *
  * Renders inside the DSFA sub-tab of /admin/dsgvo. Columns per UI-SPEC § 3a:
  *  - Titel
  *  - Datenkategorien (renders the array as ", "-joined)
@@ -26,7 +32,6 @@ import { DsfaEditDialog } from './DsfaEditDialog';
  *    convention; Phase 16 will tighten the inline type)
  *  - Aktionen
  *
- * Each row carries data-dsfa-id={id} for E2E selectors per UI-SPEC § C-8.
  * Delete uses single-step confirmation per UI-SPEC § Destructive
  * confirmations (DSFA = low blast radius, no email-token).
  */
@@ -53,6 +58,46 @@ export function DsfaTable({ schoolId }: Props) {
     return d.toLocaleString('de-AT');
   };
 
+  const columns: DataListColumn<DsfaEntryDto>[] = [
+    { key: 'title', header: 'Titel', cell: (d) => d.title },
+    {
+      key: 'dataCategories',
+      header: 'Datenkategorien',
+      cell: (d) =>
+        Array.isArray(d.dataCategories) && d.dataCategories.length > 0
+          ? d.dataCategories.join(', ')
+          : '—',
+    },
+    {
+      key: 'updatedAt',
+      header: 'Zuletzt aktualisiert',
+      cell: (d) => formatDate((d as { updatedAt?: unknown }).updatedAt),
+    },
+    {
+      key: 'actions',
+      header: 'Aktionen',
+      className: 'text-right',
+      cell: (d) => (
+        <div className="text-right space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setEditing({ mode: 'edit', entry: d })}
+          >
+            Bearbeiten
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setPendingDelete(d)}
+          >
+            Löschen
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -64,16 +109,13 @@ export function DsfaTable({ schoolId }: Props) {
         </Button>
       </div>
 
-      {query.isLoading && (
-        <p className="text-muted-foreground">Lädt…</p>
-      )}
       {query.isError && (
         <p className="text-destructive">
           DSFA-Einträge konnten nicht geladen werden.
         </p>
       )}
 
-      {query.data && query.data.length === 0 && (
+      {query.data && query.data.length === 0 && !query.isLoading && (
         <div className="rounded-md border p-8 text-center">
           <p className="font-semibold">Keine DSFA-Einträge vorhanden</p>
           <p className="text-sm text-muted-foreground mt-1">
@@ -89,57 +131,45 @@ export function DsfaTable({ schoolId }: Props) {
         </div>
       )}
 
-      {query.data && query.data.length > 0 && (
-        <div className="overflow-x-auto rounded-md border">
-          <table className="w-full text-sm">
-            <thead className="bg-muted">
-              <tr>
-                <th className="p-2 text-left">Titel</th>
-                <th className="p-2 text-left">Datenkategorien</th>
-                <th className="p-2 text-left">Zuletzt aktualisiert</th>
-                <th className="p-2 text-right">Aktionen</th>
-              </tr>
-            </thead>
-            <tbody>
-              {query.data.map((d) => (
-                <tr
-                  key={d.id}
-                  data-dsfa-id={d.id}
-                  className="border-t"
+      {(query.isLoading || (query.data && query.data.length > 0)) && (
+        <DataList<DsfaEntryDto>
+          rows={query.data ?? []}
+          columns={columns}
+          getRowId={(d) => d.id}
+          getRowAttrs={(d) => ({ 'data-dsfa-id': d.id })}
+          loading={query.isLoading}
+          mobileCard={(d) => (
+            <div className="flex flex-col gap-2">
+              <div className="text-base font-semibold leading-6">{d.title}</div>
+              <div className="text-sm text-muted-foreground leading-5">
+                {Array.isArray(d.dataCategories) && d.dataCategories.length > 0
+                  ? d.dataCategories.join(', ')
+                  : 'Keine Kategorien'}
+              </div>
+              <div className="text-xs text-muted-foreground leading-5">
+                {formatDate((d as { updatedAt?: unknown }).updatedAt)}
+              </div>
+              <div className="flex items-center gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 min-h-11"
+                  onClick={() => setEditing({ mode: 'edit', entry: d })}
                 >
-                  <td className="p-2">{d.title}</td>
-                  <td className="p-2">
-                    {Array.isArray(d.dataCategories) &&
-                    d.dataCategories.length > 0
-                      ? d.dataCategories.join(', ')
-                      : '—'}
-                  </td>
-                  <td className="p-2">
-                    {formatDate((d as { updatedAt?: unknown }).updatedAt)}
-                  </td>
-                  <td className="p-2 text-right space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setEditing({ mode: 'edit', entry: d })
-                      }
-                    >
-                      Bearbeiten
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => setPendingDelete(d)}
-                    >
-                      Löschen
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  Bearbeiten
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="flex-1 min-h-11"
+                  onClick={() => setPendingDelete(d)}
+                >
+                  Löschen
+                </Button>
+              </div>
+            </div>
+          )}
+        />
       )}
 
       {editing && (

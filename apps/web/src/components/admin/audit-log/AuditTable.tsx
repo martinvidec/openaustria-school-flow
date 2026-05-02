@@ -3,6 +3,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { DataList, type DataListColumn } from '@/components/shared/DataList';
 import {
   useAuditEntries,
   type AuditEntryDto,
@@ -11,12 +12,13 @@ import {
 import { AuditDetailDrawer } from './AuditDetailDrawer';
 
 /**
- * Phase 15-09 component: native `<table>` rendering of paginated audit
- * entries. Columns: Aktion / Ressource / Resource-ID / Akteur /
- * Zeitstempel / Aktionen (icon-only `Detail öffnen` button).
+ * Phase 15-09 component: paginated audit-entries list.
  *
- * Each row carries `data-audit-id={id}` + `data-audit-action={action}`
- * for the Plan 15-11 E2E suite (UI-SPEC § Mutation invariants).
+ * Phase 16 Plan 05 (D-15) — migrated to <DataList> so the same component
+ * gives a desktop `<table>` AND a mobile-card stack at <sm. The pagination
+ * controls + filter bar + drawer stay above/below the DataList. Each row
+ * carries `data-audit-id={id}` + `data-audit-action={action}` for the
+ * Plan 15-11 E2E suite — preserved on BOTH render paths via getRowAttrs.
  *
  * Pagination: simple Zurück/Weiter buttons that navigate `?page=` —
  * the URL is the source of truth, not local state.
@@ -82,18 +84,63 @@ export function AuditTable({ filters }: Props) {
       search: () => ({ page: 1 }),
     });
 
+  const columns: DataListColumn<AuditEntryDto>[] = [
+    {
+      key: 'action',
+      header: 'Aktion',
+      cell: (e) => (
+        <Badge variant={actionVariant(e.action)}>{e.action}</Badge>
+      ),
+    },
+    { key: 'resource', header: 'Ressource', cell: (e) => e.resource },
+    {
+      key: 'resourceId',
+      header: 'Resource-ID',
+      cell: (e) => (
+        <span className="font-mono text-xs">{e.resourceId ?? '—'}</span>
+      ),
+    },
+    {
+      key: 'actor',
+      header: 'Akteur',
+      cell: (e) => e.actor?.email ?? e.userId,
+    },
+    {
+      key: 'createdAt',
+      header: 'Zeitstempel',
+      cell: (e) => TS_FMT.format(new Date(e.createdAt)),
+    },
+    {
+      key: 'actions',
+      header: 'Aktionen',
+      className: 'text-right',
+      cell: (e) => (
+        <div className="text-right">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(ev) => {
+              ev.stopPropagation();
+              setDrawerEntry(e);
+            }}
+            aria-label="Detail öffnen"
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      {query.isLoading && (
-        <p className="text-muted-foreground">Lädt…</p>
-      )}
       {query.isError && (
         <p className="text-destructive">
           Audit-Log konnte nicht geladen werden.
         </p>
       )}
 
-      {query.data && query.data.data.length === 0 && (
+      {!query.isError && query.data && query.data.data.length === 0 && !query.isLoading && (
         <div className="rounded-md border p-8 text-center">
           {filtersActive ? (
             <>
@@ -122,78 +169,64 @@ export function AuditTable({ filters }: Props) {
         </div>
       )}
 
-      {query.data && query.data.data.length > 0 && (
+      {(query.isLoading || (query.data && query.data.data.length > 0)) && (
         <>
-          <div className="overflow-x-auto rounded-md border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="p-2 text-left">Aktion</th>
-                  <th className="p-2 text-left">Ressource</th>
-                  <th className="p-2 text-left">Resource-ID</th>
-                  <th className="p-2 text-left">Akteur</th>
-                  <th className="p-2 text-left">Zeitstempel</th>
-                  <th className="p-2 text-right">Aktionen</th>
-                </tr>
-              </thead>
-              <tbody>
-                {query.data.data.map((e) => (
-                  <tr
-                    key={e.id}
-                    data-audit-id={e.id}
-                    data-audit-action={e.action}
-                    className="border-t"
-                  >
-                    <td className="p-2">
-                      <Badge variant={actionVariant(e.action)}>
-                        {e.action}
-                      </Badge>
-                    </td>
-                    <td className="p-2">{e.resource}</td>
-                    <td className="p-2 font-mono text-xs">
-                      {e.resourceId ?? '—'}
-                    </td>
-                    <td className="p-2">{e.actor?.email ?? e.userId}</td>
-                    <td className="p-2">
-                      {TS_FMT.format(new Date(e.createdAt))}
-                    </td>
-                    <td className="p-2 text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setDrawerEntry(e)}
-                        aria-label="Detail öffnen"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataList<AuditEntryDto>
+            rows={query.data?.data ?? []}
+            columns={columns}
+            getRowId={(e) => e.id}
+            getRowAttrs={(e) => ({
+              'data-audit-id': e.id,
+              'data-audit-action': e.action,
+            })}
+            loading={query.isLoading}
+            onRowClick={(e) => setDrawerEntry(e)}
+            mobileCard={(e) => (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="text-base font-semibold leading-6">
+                    {e.resource}
+                  </div>
+                  <Badge variant={actionVariant(e.action)}>{e.action}</Badge>
+                </div>
+                {e.resourceId && (
+                  <div className="text-xs font-mono text-muted-foreground leading-5 break-all">
+                    {e.resourceId}
+                  </div>
+                )}
+                <div className="text-sm text-muted-foreground leading-5">
+                  {e.actor?.email ?? e.userId}
+                </div>
+                <div className="text-xs text-muted-foreground leading-5">
+                  {TS_FMT.format(new Date(e.createdAt))}
+                </div>
+              </div>
+            )}
+          />
 
-          <div className="flex items-center justify-end gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => goPage(page - 1)}
-            >
-              Zurück
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Seite {page} / {totalPages}
-            </span>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() => goPage(page + 1)}
-            >
-              Weiter
-            </Button>
-          </div>
+          {query.data && query.data.data.length > 0 && (
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => goPage(page - 1)}
+              >
+                Zurück
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Seite {page} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= totalPages}
+                onClick={() => goPage(page + 1)}
+              >
+                Weiter
+              </Button>
+            </div>
+          )}
         </>
       )}
 
