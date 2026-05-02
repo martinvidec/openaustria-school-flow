@@ -12,8 +12,7 @@ import {
   StudentFilterBar,
   type StudentFilterValues,
 } from '@/components/admin/student/StudentFilterBar';
-import { StudentListTable } from '@/components/admin/student/StudentListTable';
-import { StudentMobileCards } from '@/components/admin/student/StudentMobileCards';
+import { StudentList } from '@/components/admin/student/StudentList';
 import { StudentCreateDialog } from '@/components/admin/student/StudentCreateDialog';
 import { ArchiveStudentDialog } from '@/components/admin/student/ArchiveStudentDialog';
 import { RestoreStudentDialog } from '@/components/admin/student/RestoreStudentDialog';
@@ -186,23 +185,16 @@ function StudentsListPage() {
       )}
 
       {!isEmpty && (
-        <>
-          <StudentListTable
-            students={students}
-            selectedIds={selectedIds}
-            onToggleSelection={toggleSelection}
-            onToggleAll={toggleAll}
-            onArchive={(s) => setToArchive(s)}
-            onRestore={(s) => setToRestore(s)}
-            onMove={(s) => setToMove(s)}
-            onDelete={(s) => setToDelete(s)}
-          />
-          <StudentMobileCards
-            students={students}
-            selectedIds={selectedIds}
-            onToggleSelection={toggleSelection}
-          />
-        </>
+        <StudentList
+          students={students}
+          selectedIds={selectedIds}
+          onToggleSelection={toggleSelection}
+          onToggleAll={toggleAll}
+          onArchive={(s) => setToArchive(s)}
+          onRestore={(s) => setToRestore(s)}
+          onMove={(s) => setToMove(s)}
+          onDelete={(s) => setToDelete(s)}
+        />
       )}
 
       {selectedIds.size > 0 && (

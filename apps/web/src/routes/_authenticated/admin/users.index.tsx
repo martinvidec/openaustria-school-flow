@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { PageShell } from '@/components/admin/shared/PageShell';
 import { useUsers } from '@/features/users/hooks/use-users';
 import { UserFilterBar } from '@/components/admin/user/UserFilterBar';
-import { UserListTable } from '@/components/admin/user/UserListTable';
-import { UserMobileCards } from '@/components/admin/user/UserMobileCards';
+import { UserList } from '@/components/admin/user/UserList';
 import { DisableUserDialog } from '@/components/admin/user/DisableUserDialog';
 import { EnableUserDialog } from '@/components/admin/user/EnableUserDialog';
 import { useAuth } from '@/hooks/useAuth';
@@ -85,21 +84,60 @@ function UsersIndexPage() {
       <UserFilterBar filter={filter} onChange={setFilter} />
 
       <div className="mt-4">
-        <UserListTable
-          users={users}
-          loading={isLoading}
-          meta={meta}
-          onPageChange={(page) => setFilter({ ...filter, page })}
-          onLimitChange={(limit) => setFilter({ ...filter, limit, page: 1 })}
-          onDisable={setToDisable}
-          onEnable={setToEnable}
-        />
-        <UserMobileCards
+        <UserList
           users={users}
           loading={isLoading}
           onDisable={setToDisable}
           onEnable={setToEnable}
         />
+        {/* Phase 17 Plan 17-04 — pagination block lifted out of UserListTable
+            into the route call-site (DataList does not own pagination). */}
+        {meta && meta.total > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-2 mt-3 text-sm">
+            <div className="text-muted-foreground">
+              {meta.totalIsApproximate ? 'ca. ' : ''}
+              {meta.total} User
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-muted-foreground" htmlFor="page-size">
+                Pro Seite:
+              </label>
+              <select
+                id="page-size"
+                className="border rounded-md px-2 py-1 bg-background"
+                value={meta.limit}
+                onChange={(e) =>
+                  setFilter({ ...filter, limit: Number(e.target.value), page: 1 })
+                }
+              >
+                {[10, 25, 50, 100].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={meta.page <= 1}
+                onClick={() => setFilter({ ...filter, page: meta.page - 1 })}
+              >
+                Zurück
+              </Button>
+              <span className="px-2 tabular-nums">
+                {meta.page} / {meta.totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={meta.page >= meta.totalPages}
+                onClick={() => setFilter({ ...filter, page: meta.page + 1 })}
+              >
+                Weiter
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {isEmpty && filtered && (

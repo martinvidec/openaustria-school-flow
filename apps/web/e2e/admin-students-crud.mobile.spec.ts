@@ -113,13 +113,14 @@ test.describe('Phase 12 — Admin Students CRUD (mobile-375, mobile-chrome/Pixel
 
     await page.goto('/admin/students');
 
-    // At 375×812 the desktop table is hidden and the StudentMobileCards
-    // render (md:hidden). Each Card wraps the Checkbox in an h-11 w-11
-    // <label> (StudentMobileCards.tsx:24-27) — the label is the tap target.
-    // Playwright's getByRole('checkbox', { name: ... }) resolves the inner
-    // Radix button, so we target the parent label via locator traversal.
+    // Phase 17 Plan 17-04: StudentMobileCards + StudentListTable were merged
+    // into a shared `<DataList>`-backed `StudentList`. DataList applies the
+    // same `data-testid="student-row-${id}"` to BOTH the desktop `<tr>` AND
+    // the mobile-card wrapper (DataList.tsx:105 + 148), so this spec uses
+    // the unified `student-row-` prefix instead of the legacy `student-card-`
+    // prefix. The mobile-card label remains the 44px hit target.
     const card = page
-      .locator(`[data-testid^="student-card-"]`)
+      .locator(`[data-testid^="student-row-"]`)
       .filter({ hasText: vorname })
       .first();
     await expect(card).toBeVisible();
