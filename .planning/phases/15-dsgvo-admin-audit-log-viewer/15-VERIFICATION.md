@@ -55,7 +55,7 @@ human_verification:
 
 | # | Item | Addressed In | Evidence |
 |---|------|-------------|----------|
-| 1 | DSGVO admin DTOs (@IsUUID) reject seed school + person stable IDs, causing 12/20 E2E mutation tests to soft-skip and the dev-stack /admin/dsgvo to display the 'Einwilligungen konnten nicht geladen werden.' error banner | Phase 16 (or a dedicated 15-13 cleanup) | Production schemas use Prisma `@default(uuid())` (verified `id String @id @default(uuid())` ×20 in schema.prisma); production schools/persons WILL have UUIDs. The seed.ts shortcut to static IDs is a test-fixture-only gap, NOT a production bug. ROADMAP Phase 16 is the next phase that touches the admin surface holistically and is the natural place to either relax the DTOs to `@IsString()` or regenerate seed.ts with UUID IDs. Documented in deferred-items.md. |
+| 1 ✓ CLOSED | DSGVO admin DTOs (@IsUUID) reject seed school + person stable IDs, causing 12/20 E2E mutation tests to soft-skip and the dev-stack /admin/dsgvo to display the 'Einwilligungen konnten nicht geladen werden.' error banner | **Phase 15.1 (seed-uuid-alignment) — merged 2026-05-02 in commit c5b691b (PR #5)** | Resolved via Path (a): regenerated `apps/api/prisma/seed.ts` with fixed UUID constants (`SEED_SCHOOL_UUID = 'a0000000-0000-4000-8000-000000000001'` etc.) instead of relaxing production DTOs. Created `apps/web/e2e/helpers/seed-ids.ts` for E2E decoupling. Removed 12 `SCHOOL_IS_UUID`/`PERSON_IS_UUID` skip-guards across 6 admin-dsgvo-* spec files. See `.planning/phases/15.1-seed-uuid-alignment/15.1-VERIFICATION.md` (6/6 gates passed) and `15.1-01-SUMMARY.md`. |
 
 ### Required Artifacts (post 15-12)
 
