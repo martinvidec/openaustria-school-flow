@@ -387,7 +387,7 @@ Plans:
 
 **Requirements:** Infrastructure-only (keine REQ-IDs — Tech-Debt-Closure)
 **Depends on:** Phase 16 (Active branch is `gsd/phase-16-admin-dashboard-mobile-h-rtung`; Phase 17 läuft parallel oder nach Phase 16 PR-Merge)
-**Plans:** 7 plans (abgeleitet von 999.1.A-G aus Phase-16-07-SUMMARY)
+**Plans:** 5 plans (re-bundled from 999.1.A-G per CONTEXT D-03 — A+B+C bundled, F+G stay separate. See `.planning/phases/17-ci-stabilization/17-CONTEXT.md` for the 16 D-decisions.)
 
 **Failure clusters (von PR #1 Run [25065085891](https://github.com/martinvidec/openaustria-school-flow/actions/runs/25065085891)):**
 
@@ -421,14 +421,12 @@ Plans:
 - Memory-Eintrag: `feedback_phase_branch_discipline.md` (warum --admin nötig war)
 - Plan-Übersetzungs-Quelle: Phase-16-07-SUMMARY 999.1.A-G items + `.planning/v1.1-OPEN-ITEMS-INVENTORY.md` §9.1
 
-Plans (7, abgeleitet von 999.1.A-G):
-- [ ] 17-01-PLAN.md — A: Breadcrumb anchor 44px floor (10 routes)
-- [ ] 17-02-PLAN.md — B: Tabs primitive lift (`tabs.tsx:15` TabsList h-10 → min-h-11), affects /admin/subjects + /admin/timetable-edit
-- [ ] 17-03-PLAN.md — C: RadioGroup primitive lift (`radio-group.tsx`), affects /admin/dsgvo
-- [ ] 17-04-PLAN.md — D: Phase 11/12/13 ListTable + MobileCards migration to DataList (Teacher/Student/Class/Subject/User), Severity high
-- [ ] 17-05-PLAN.md — E: 14 pre-existing desktop regressions triage (sample: admin-solver-tuning-restrictions)
-- [ ] 17-06-PLAN.md — F: Phase 10 mobile spec selector drift (`admin-school-settings.mobile.spec.ts` + `zeitraster.mobile.spec.ts` — `md\\:hidden` → `sm:hidden`)
-- [ ] 17-07-PLAN.md — G: Mobile-375 (WebKit) Bus-Error-10 auf darwin — env-classification + monitor on Playwright upgrade
+Plans (5, bundled per CONTEXT D-01 + D-03 wave structure):
+- [ ] 17-01-PLAN.md — Wave 1, Plan F: Mobile spec selector drift (`md\\:hidden` → `sm:hidden`) in `admin-school-settings.mobile.spec.ts` + `zeitraster.mobile.spec.ts`. Creates `17-TRIAGE.md` master doc.
+- [ ] 17-02-PLAN.md — Wave 1, Plan G: Mobile-375 (WebKit) Bus-Error-10 darwin env-classification (docs-only — no code). Phase 23 Backlog placeholder for WebKit-Linux-CI playbook.
+- [ ] 17-03-PLAN.md — Wave 2, Plans A+B+C bundled: Primitive-lift tranche (PageShell breadcrumb 44px, tabs.tsx h-10 → min-h-11, radio-group.tsx 44px tap-target) — single commit stream per D-03.
+- [ ] 17-04-PLAN.md — Wave 3, Plan D: Full DataList migration of all 5 ListTable + MobileCards pairs (Teacher/Student/Class/Subject/User) per D-09. Locks in sm: breakpoint convention.
+- [ ] 17-05-PLAN.md — Wave 4, Plan E: 14 pre-existing regressions triage with 30-min-fix-or-skip protocol per D-12. Includes smoke-PR `chore/ci-smoke-noop` as verifier-gate per D-15. Spawns Phase 17.1 if unresolved failures remain per D-16.
 
 ---
 
