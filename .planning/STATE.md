@@ -27,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 
 Phase: 999.1
 Plan: Not started
-Status: Ready to plan
-Last activity: 2026-05-02 - Completed quick task 260502-9iu: KEYCLOAK_ADMIN_CLIENT_SECRET history audit clean — no rotation needed (closes 260501-scd MEDIUM flag)
+Status: Phase 16 shipped — PR #6 (awaiting CI + merge)
+Last activity: 2026-05-02 - Phase 16 PR #6 opened (https://github.com/martinvidec/openaustria-school-flow/pull/6)
 
 Progress: [██████████] 100%
 
