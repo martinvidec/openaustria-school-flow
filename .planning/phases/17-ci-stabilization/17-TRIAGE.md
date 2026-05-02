@@ -11,11 +11,12 @@ Sorted by Phase-Cluster: Phase 13 → Phase 14 → Phase 15 → Phase 10.5 → M
 
 | Spec | CI-State | Local-Repro | Classification | Owning Plan | Resolution |
 |------|----------|-------------|----------------|-------------|------------|
-<!-- Plan-F rows appended in Task 3 of this plan. -->
 <!-- Plan-G rows appended by 17-02. -->
 <!-- Plans-A/B/C rows appended by 17-03. -->
 <!-- Plan-D regression-candidate rows appended by 17-04. -->
 <!-- Plan-E rows appended by 17-05. -->
+| `apps/web/e2e/admin-school-settings.mobile.spec.ts:35` (MOBILE-ADM-02 + D-12) | red on PR #1 mobile-chrome (run 25065085891) — `div.md\:hidden.space-y-3` selector resolved to wrong DOM after Phase-16 sm: convention realignment was missed on this surface | n/a — live mobile-chrome run deferred to wave-merge verification (parallel-worktree environment, API on :3000 not running; Playwright list-mode green: 4 tests in 2 files load on mobile-chrome project) | selector-drift | F | `md\:hidden` → `sm:hidden` — fixed in commits `88f6806` (Rule-2 source migration of `PeriodsEditor.tsx` + `school.settings.tsx` + `PeriodsEditor.spec.tsx`) and `d47e93d` (spec selector + narrative swap) |
+| `apps/web/e2e/zeitraster.mobile.spec.ts:41` (ZEIT-03-MOBILE) | red on PR #1 mobile-chrome (run 25065085891) — same `div.md\:hidden.space-y-3` selector | n/a — live mobile-chrome run deferred to wave-merge verification (same reason as row 1) | selector-drift | F | `md\:hidden` → `sm:hidden` — fixed in commits `88f6806` (source migration) and `d47e93d` (spec selector + narrative swap) |
 
 ## Classifications (legend)
 
