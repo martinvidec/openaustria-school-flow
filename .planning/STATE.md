@@ -27,8 +27,8 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 
 Phase: 999.1
 Plan: Not started
-Status: Phase 16 shipped — PR #6 (awaiting CI + merge)
-Last activity: 2026-05-02 - Phase 16 PR #6 opened (https://github.com/martinvidec/openaustria-school-flow/pull/6)
+Status: Phase 15.1 executed — ready to ship (PR #5)
+Last activity: 2026-05-02 - Phase 15.1 (seed UUID alignment) execute complete; Phase 16 merged via admin-override (d1b508e); Phase 17 CONTEXT ready
 
 Progress: [██████████] 100%
 
