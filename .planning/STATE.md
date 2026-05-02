@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-18)
 Phase: 999.1
 Plan: Not started
 Status: Ready to plan
-Last activity: 2026-05-01 - Completed quick task 260501-scd: secret-scan audit (1 TRUE_POSITIVE — VAPID dev keypair committed, rotation REQUIRED)
+Last activity: 2026-05-02 - Completed quick task 260501-sus: VAPID rotation scrub + CI preflight committed; user must mint new keypair locally and set gh secrets
 
 Progress: [██████████] 100%
 
@@ -519,6 +519,7 @@ None yet.
 | 260426-fwb | Lock down rooms-filter with component test + E2E regression spec | 2026-04-26 | 4d1b09c | [260426-fwb-lock-down-rooms-filter-behavior-with-com](./quick/260426-fwb-lock-down-rooms-filter-behavior-with-com/) |
 | 260426-gtr | apiFetch Content-Type header regression guards (3-test Vitest spec) | 2026-04-26 | 65d03df | [260426-gtr-apifetch-content-type-header-regression-](./quick/260426-gtr-apifetch-content-type-header-regression-/) |
 | 260501-scd | check nach versehentlich comitteten secrets (z.B. vapid key) | 2026-05-01 | c8232a4 | [260501-scd-check-nach-versehentlich-comitteten-secr](./quick/260501-scd-check-nach-versehentlich-comitteten-secr/) |
+| 260501-sus | VAPID dev keypair rotieren — scrub + CI preflight (user mintet Keypair lokal, setzt gh secrets) | 2026-05-02 | cbb7d04 | [260501-sus-vapid-dev-keypair-rotieren-neuen-keypair](./quick/260501-sus-vapid-dev-keypair-rotieren-neuen-keypair/) |
 
 ### Roadmap Evolution
 
