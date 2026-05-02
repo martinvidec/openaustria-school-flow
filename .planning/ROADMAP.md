@@ -436,7 +436,7 @@ Plans (5, bundled per CONTEXT D-01 + D-03 wave structure):
 
 **Requirements:** Tech-debt-closure follow-up — keine REQ-IDs (Infrastructure-only).
 **Depends on:** Phase 17 (Complete with `gaps_found`; `17-TRIAGE.md`, `deferred-items.md`, `PHASE-17.1-SCOPE.md` are the input artifacts). Worktree branches 17-01..17-05 must merge to main before re-running the smoke-PR.
-**Plans:** 5 plans (TBD)
+**Plans:** 5 plans
 
 **Source artifacts:**
 
@@ -480,7 +480,7 @@ Plans (5, bundled per CONTEXT D-01 + D-03 wave structure):
 - Trigger: GitHub Actions run [25251866945](https://github.com/martinvidec/openaustria-school-flow/actions/runs/25251866945) — PR #9 failed at `Build Web` step before Playwright could start
 - Memory-Eintrag: `feedback_phase_branch_discipline.md`, `feedback_e2e_first_no_uat.md`, `feedback_verifier_human_needed_must_be_challenged.md`
 
-Plans (TBD — to be planned via `/gsd:plan-phase 17.1`):
+Plans:
 
 - [ ] 17.1-01-PLAN.md — Fix `DashboardChecklist.test.tsx` TS2345 errors (single-PR; <1h work; unblocks every CI run going forward)
 - [ ] 17.1-02-PLAN.md — Coordinate orchestrator-merge of 17-01..17-05 worktree branches to main + re-run smoke-PR verifier-gate
