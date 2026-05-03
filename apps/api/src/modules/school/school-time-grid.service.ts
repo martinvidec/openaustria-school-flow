@@ -10,6 +10,39 @@ interface UpdateOpts {
 export class SchoolTimeGridService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Read the time grid for a school. Returns null when no grid exists yet so
+   * the frontend's `useTimeGrid` query (`if (res.status === 404) return null`)
+   * can short-circuit to the "create new" empty state. Includes ordered
+   * periods + the Mo-Sa school-day mask.
+   */
+  async findOne(schoolId: string) {
+    const grid = await this.prisma.timeGrid.findUnique({
+      where: { schoolId },
+      include: { periods: { orderBy: { periodNumber: 'asc' } } },
+    });
+    if (!grid) {
+      return null;
+    }
+    const schoolDays = await this.prisma.schoolDay.findMany({
+      where: { schoolId },
+      orderBy: { dayOfWeek: 'asc' },
+    });
+    return {
+      id: grid.id,
+      schoolId: grid.schoolId,
+      periods: grid.periods.map((p) => ({
+        id: p.id,
+        periodNumber: p.periodNumber,
+        label: p.label,
+        startTime: p.startTime,
+        endTime: p.endTime,
+        isBreak: p.isBreak,
+      })),
+      schoolDays: schoolDays.map((d) => d.dayOfWeek),
+    };
+  }
+
   async update(schoolId: string, dto: UpdateTimeGridDto, opts: UpdateOpts) {
     const existing = await this.prisma.timeGrid.findUnique({
       where: { schoolId },
