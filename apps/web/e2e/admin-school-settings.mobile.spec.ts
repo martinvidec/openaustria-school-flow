@@ -36,8 +36,12 @@ test.describe('Phase 10 — Admin School Settings (mobile 375)', () => {
     await expect(page).toHaveURL(/tab=timegrid/);
 
     // Desktop table uses `.hidden.sm:block` on its wrapper → hidden at <sm.
-    // Mobile cards container uses `.sm:hidden.space-y-3` (Phase 16 breakpoint standard).
+    // Mobile cards container uses `.sm:hidden.space-y-3` (Phase 16 breakpoint
+    // standard). Container renders empty (height 0 → "hidden") until
+    // useTimeGrid lands; assert via the first card's label input so the test
+    // waits for the actual content, not the empty wrapper.
     const mobileCards = page.locator('div.sm\\:hidden.space-y-3');
+    await expect(mobileCards.getByPlaceholder('1. Stunde').first()).toBeVisible();
     await expect(mobileCards).toBeVisible();
   });
 

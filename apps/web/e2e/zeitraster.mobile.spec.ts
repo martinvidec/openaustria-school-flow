@@ -43,7 +43,11 @@ test.describe('Phase 10.2 — Zeitraster save (mobile 375)', () => {
 
     // Card mode assertion: PeriodsEditor mobile container is the
     // `sm:hidden.space-y-3` div (Phase 16 breakpoint standard). Visible at <sm.
+    // Wait for the first card to render before asserting the wrapper —
+    // useTimeGrid is async and the container renders empty (height 0 →
+    // "hidden") until the response lands.
     const mobileCards = page.locator('div.sm\\:hidden.space-y-3');
+    await expect(mobileCards.getByPlaceholder('1. Stunde').first()).toBeVisible();
     await expect(mobileCards).toBeVisible();
 
     // Ensure Mo is on — same client-side validation gate as desktop.
