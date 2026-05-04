@@ -227,13 +227,19 @@ export async function seedTimetableRun(schoolId: string): Promise<TimetableRunFi
       ? `${teacher.person.lastName} ${teacher.person.firstName}`
       : teacher.id;
 
-    // 3. Room — FIRST room for this school. The standard prisma:seed creates
-    //    ZERO Room rows (rooms are introduced via the Schuladmin Console UI
-    //    in the live workflow), so we self-provision a fixture room when
-    //    none exists. The timestamp suffix keeps the @@unique([schoolId, name])
-    //    constraint clear of any future seed-defined rooms.
+    // 3. Room — find an existing fixture room or self-provision one.
+    //    The standard prisma:seed creates ZERO Room rows (rooms are introduced
+    //    via the Schuladmin Console UI in the live workflow). The timestamp
+    //    suffix keeps the @@unique([schoolId, name]) constraint clear of any
+    //    future seed-defined rooms.
+    //
+    //    CRITICAL: filter on the fixture name prefix so we never co-opt a
+    //    room another spec created (e.g. rooms-booking.spec.ts creates
+    //    `E2E-ROOM-BOOK01-<ts>` then asserts Monday/period-1 is free —
+    //    if this fixture pinned a TimetableLesson onto that room, the
+    //    rooms-booking spec would see the cell as occupied and fail).
     let room = await prisma.room.findFirst({
-      where: { schoolId },
+      where: { schoolId, name: { startsWith: 'e2e-fixture-room-' } },
       orderBy: { createdAt: 'asc' },
     });
     let fixtureRoomId: string | null = null;
