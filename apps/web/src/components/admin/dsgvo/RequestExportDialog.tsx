@@ -79,8 +79,14 @@ export function RequestExportDialog({
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="grid gap-1">
-            <Label className="text-muted-foreground">Person-ID</Label>
+            <Label
+              htmlFor="export-person-id"
+              className="text-muted-foreground"
+            >
+              Person-ID
+            </Label>
             <Input
+              id="export-person-id"
               value={pid}
               onChange={(e) => {
                 setPid(e.target.value);
