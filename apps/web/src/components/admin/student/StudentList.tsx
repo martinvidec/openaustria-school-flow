@@ -232,6 +232,7 @@ export function StudentList({
                 onClick={(e) => e.stopPropagation()}
               >
                 <Checkbox
+                  className="h-11 w-11"
                   checked={isSelected}
                   onCheckedChange={() => onToggleSelection(s.id)}
                   aria-label={`${s.person.lastName}, ${s.person.firstName} auswählen`}
