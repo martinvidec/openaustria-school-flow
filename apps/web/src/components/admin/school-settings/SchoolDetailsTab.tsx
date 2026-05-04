@@ -80,15 +80,19 @@ export function SchoolDetailsTab({ onDirtyChange }: Props) {
   // Dirty-Reset Discipline (RESEARCH §8): when the server response lands,
   // reset the form so isDirty returns to false. Without this, the Save button
   // stays enabled after a successful save.
+  //
+  // Gate on `!isDirty` so a refetch (cache invalidation, polling, focus revisit)
+  // never stomps unsaved user input. The post-save reset() inside onSubmit
+  // already drives isDirty back to false before the query invalidation lands.
   useEffect(() => {
-    if (school) {
+    if (school && !isDirty) {
       reset({
         name: school.name,
         schoolType: school.schoolType,
         address: school.address,
       });
     }
-  }, [school, reset]);
+  }, [school, isDirty, reset]);
 
   const createMut = useCreateSchool();
   const updateMut = useUpdateSchool(schoolId ?? '');

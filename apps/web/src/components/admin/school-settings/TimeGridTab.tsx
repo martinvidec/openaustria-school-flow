@@ -45,8 +45,19 @@ export function TimeGridTab({ schoolId, onDirtyChange }: Props) {
   const [templateOpen, setTemplateOpen] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
+  const isDirty = useMemo(
+    () =>
+      JSON.stringify({ periods, schoolDays }) !==
+      JSON.stringify(serverSnapshot ?? { periods: [], schoolDays: [] }),
+    [periods, schoolDays, serverSnapshot],
+  );
+
+  // Gate on `!isDirty` so a refetch never stomps unsaved user edits. The
+  // post-save handler drives isDirty back to false (via setServerSnapshot)
+  // before the cache invalidation lands, so the next refetch is allowed
+  // through to pick up server-side normalisation.
   useEffect(() => {
-    if (tgQuery.data) {
+    if (tgQuery.data && !isDirty) {
       const ps: PeriodWithId[] = tgQuery.data.periods.map((p) => ({
         id: p.id,
         periodNumber: p.periodNumber,
@@ -60,14 +71,7 @@ export function TimeGridTab({ schoolId, onDirtyChange }: Props) {
       setSchoolDays(ds);
       setServerSnapshot({ periods: ps, schoolDays: ds });
     }
-  }, [tgQuery.data]);
-
-  const isDirty = useMemo(
-    () =>
-      JSON.stringify({ periods, schoolDays }) !==
-      JSON.stringify(serverSnapshot ?? { periods: [], schoolDays: [] }),
-    [periods, schoolDays, serverSnapshot],
-  );
+  }, [tgQuery.data, isDirty]);
   useEffect(() => onDirtyChange?.(isDirty), [isDirty, onDirtyChange]);
 
   const buildDto = () => ({
