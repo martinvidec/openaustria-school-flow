@@ -71,6 +71,16 @@ jobs:
       KEYCLOAK_URL: http://localhost:8080
       KEYCLOAK_REALM: schoolflow
       KEYCLOAK_CLIENT_ID: schoolflow-api
+      # Service-account credentials for the NestJS Keycloak Admin client
+      # (UserDirectoryService, RoleManagementService, link-person flows).
+      # The realm import (`docker/keycloak/realm-export.json`) ships the
+      # `schoolflow-admin-api` confidential client and grants the synthetic
+      # service-account user `realm-management/{view-users,manage-users,
+      # view-realm,view-clients}`. The secret is a clearly-dev-only literal
+      # because the Keycloak instance is bound to localhost on the runner —
+      # NEVER reuse this in production.
+      KEYCLOAK_ADMIN_CLIENT_ID: schoolflow-admin-api
+      KEYCLOAK_ADMIN_CLIENT_SECRET: local-dev-only-secret
       # VAPID keypair MUST be provided via repo secrets — no inline fallback.
       # The previous dev keypair was rotated on 2026-05-01 (see
       # .planning/quick/260501-sus-vapid-dev-keypair-rotieren-neuen-keypair/SUMMARY.md);

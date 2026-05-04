@@ -85,6 +85,19 @@
         "roles"
       ],
       "optionalClientScopes": []
+    },
+    {
+      "clientId": "schoolflow-admin-api",
+      "name": "SchoolFlow Admin API (service account)",
+      "description": "Confidential client used by the NestJS API to call the Keycloak Admin REST API (user listing, role management, link/unlink). Service account is granted realm-management roles via the synthetic service-account-schoolflow-admin-api user below.",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "local-dev-only-secret",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "implicitFlowEnabled": false,
+      "protocol": "openid-connect"
     }
   ],
   "clientScopes": [
@@ -317,6 +330,19 @@
       "realmRoles": [
         "schulleitung"
       ]
+    },
+    {
+      "username": "service-account-schoolflow-admin-api",
+      "enabled": true,
+      "serviceAccountClientId": "schoolflow-admin-api",
+      "clientRoles": {
+        "realm-management": [
+          "view-users",
+          "manage-users",
+          "view-realm",
+          "view-clients"
+        ]
+      }
     }
   ]
 }
