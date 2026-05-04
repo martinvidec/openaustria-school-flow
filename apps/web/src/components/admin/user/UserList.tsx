@@ -173,6 +173,8 @@ export function UserList({ users, loading, onDisable, onEnable }: Props) {
       rows={users}
       columns={columns}
       getRowId={(u) => u.id}
+      desktopWrapperTestId="user-desktop-table"
+      mobileWrapperTestId="user-mobile-cards"
       loading={loading}
       emptyState={<>Keine User gefunden</>}
       mobileCard={(u) => {

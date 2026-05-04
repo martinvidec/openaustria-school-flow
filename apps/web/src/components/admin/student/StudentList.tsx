@@ -213,6 +213,8 @@ export function StudentList({
         columns={columns}
         getRowId={(s) => s.id}
         getRowTestId={(s) => `student-row-${s.id}`}
+        desktopWrapperTestId="student-desktop-table"
+        mobileWrapperTestId="student-mobile-cards"
         onRowClick={(s) =>
           navigate({
             to: '/admin/students/$studentId',

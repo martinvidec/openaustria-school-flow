@@ -116,10 +116,12 @@ test.describe('Phase 12 — Admin Students CRUD (mobile-375, mobile-chrome/Pixel
     // Phase 17 Plan 17-04: StudentMobileCards + StudentListTable were merged
     // into a shared `<DataList>`-backed `StudentList`. DataList applies the
     // same `data-testid="student-row-${id}"` to BOTH the desktop `<tr>` AND
-    // the mobile-card wrapper (DataList.tsx:105 + 148), so this spec uses
-    // the unified `student-row-` prefix instead of the legacy `student-card-`
-    // prefix. The mobile-card label remains the 44px hit target.
-    const card = page
+    // the mobile-card wrapper (DataList.tsx:105 + 148), so an unscoped
+    // `[data-testid^="student-row-"]` matches both and `.first()` resolves
+    // to the (hidden) desktop `<tr>` at 375px. Scope to the mobile wrapper
+    // (data-testid="student-mobile-cards") so the lookup only sees cards.
+    const mobileCards = page.getByTestId('student-mobile-cards');
+    const card = mobileCards
       .locator(`[data-testid^="student-row-"]`)
       .filter({ hasText: vorname })
       .first();
