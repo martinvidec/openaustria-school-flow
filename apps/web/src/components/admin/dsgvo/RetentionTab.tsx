@@ -132,6 +132,8 @@ export function RetentionTab({ schoolId }: Props) {
           columns={columns}
           getRowId={(p) => p.id}
           getRowAttrs={(p) => ({ 'data-retention-category': p.dataCategory })}
+          desktopWrapperTestId="retention-desktop-table"
+          mobileWrapperTestId="retention-mobile-cards"
           loading={query.isLoading}
           mobileCard={(p) => (
             <div className="flex flex-col gap-2">
