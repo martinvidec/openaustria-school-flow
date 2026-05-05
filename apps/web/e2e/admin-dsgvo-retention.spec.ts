@@ -45,7 +45,9 @@ test.describe('DSGVO-ADM-02 — Aufbewahrungsrichtlinien CRUD', () => {
   });
 
   test.afterAll(async ({ request }) => {
-    await cleanupAll(request, SCHOOL_ID);
+    // Scope to retention only — see admin-dsgvo-dsfa.spec.ts for the
+    // cross-spec parallel cleanup race rationale.
+    await cleanupAll(request, SCHOOL_ID, { entities: ['retention'] });
   });
 
   test('DSGVO-ADM-02: retention tab URL deep-link + page shell visible', async ({

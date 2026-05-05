@@ -38,7 +38,11 @@ test.describe('DSGVO-ADM-03 — DSFA-Einträge CRUD', () => {
   });
 
   test.afterAll(async ({ request }) => {
-    await cleanupAll(request, SCHOOL_ID);
+    // Scope cleanup to this spec's own entity type — sweeping vvz/retention
+    // here would race against the parallel admin-dsgvo-vvz / admin-dsgvo-
+    // retention spec on the second worker (manifests as 404 on the other
+    // spec's in-flight DELETE).
+    await cleanupAll(request, SCHOOL_ID, { entities: ['dsfa'] });
   });
 
   test('DSGVO-ADM-03: navigates to DSFA sub-tab via URL deep-link', async ({

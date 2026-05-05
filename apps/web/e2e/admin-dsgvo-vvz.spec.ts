@@ -32,7 +32,11 @@ test.describe('DSGVO-ADM-04 — VVZ-Einträge CRUD', () => {
   });
 
   test.afterAll(async ({ request }) => {
-    await cleanupAll(request, SCHOOL_ID);
+    // Scope to vvz only — sweeping dsfa/retention here would race the
+    // parallel admin-dsgvo-dsfa / admin-dsgvo-retention specs on the
+    // second worker, manifesting as 404 on the other spec's in-flight
+    // DELETE (the firefox-only failure mode in run 25305740126).
+    await cleanupAll(request, SCHOOL_ID, { entities: ['vvz'] });
   });
 
   test('DSGVO-ADM-04: navigates to VVZ sub-tab via URL deep-link', async ({
