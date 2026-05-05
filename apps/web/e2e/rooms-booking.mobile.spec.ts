@@ -37,6 +37,18 @@ async function seedTimeGrid(
   request: APIRequestContext,
   token: string,
 ): Promise<void> {
+  // Conditional seed — see rooms-booking.spec.ts for the zeitraster race
+  // rationale.
+  const existing = await request.get(`${API}/schools/${SCHOOL}/time-grid`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (existing.ok()) {
+    const grid = (await existing.json()) as {
+      periods: Array<{ isBreak?: boolean }>;
+    };
+    const usable = grid.periods.filter((p) => !p.isBreak).length;
+    if (usable >= 2) return;
+  }
   const res = await request.put(`${API}/schools/${SCHOOL}/time-grid`, {
     headers: { Authorization: `Bearer ${token}` },
     data: {
