@@ -77,11 +77,20 @@ export function ConstraintWeightsTab({
   // sees `dirty=false` once the mutation success drives local & persisted
   // back into agreement, so the next refetch is allowed through to pick
   // up server-side normalization.
+  //
+  // First-data-load is exempt from the !dirty gate: useState seeds `local`
+  // from `persisted` while `data` is still undefined (so it's pure defaults).
+  // Once `data` lands, `persisted` flips to server values; `dirty` would be
+  // a false-positive (user touched nothing) and would block the initial
+  // hydration. `initializedRef` lets exactly the first hydration through.
+  const initializedRef = useRef(false);
   useEffect(() => {
-    if (!dirty) {
+    if (!data) return;
+    if (!initializedRef.current || !dirty) {
       setLocal({ ...persisted });
+      initializedRef.current = true;
     }
-  }, [persisted, dirty]);
+  }, [persisted, dirty, data]);
 
   useEffect(() => {
     onDirtyChange?.(dirty);
