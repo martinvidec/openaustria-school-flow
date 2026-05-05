@@ -38,7 +38,12 @@ on:
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # 30min was a tight fit when E2E ran in ~27min (run 25305740126); recent
+    # runs hit the wall when Ubuntu apt mirrors throttle the
+    # `playwright install --with-deps` step (run 25389283473 spent 28min just
+    # installing OS deps, never reached the tests). 60min gives buffer for
+    # slow apt + the full e2e sweep.
+    timeout-minutes: 60
 
     services:
       postgres:
