@@ -21,10 +21,7 @@
  */
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/login';
-import {
-  cleanupConstraintTemplatesViaAPI,
-  cleanupConstraintWeightOverridesViaAPI,
-} from './helpers/constraints';
+import { cleanupConstraintWeightOverridesViaAPI } from './helpers/constraints';
 
 // 375×812 — set explicitly so the spec is robust even when run in a project
 // whose default device is wider (e.g. ad-hoc runs).
@@ -40,14 +37,15 @@ test.skip(
 const CONSTRAINT_NAME = 'No same subject doubling';
 
 test.describe('Phase 14 — Solver-Tuning Mobile (375)', () => {
+  // No template cleanup: this spec doesn't create constraint-templates and
+  // an unscoped wipe would race against parallel template-creating specs
+  // (see admin-solver-tuning-preferences.spec.ts SOLVER-08 desktop failure).
   test.beforeEach(async ({ page, request }) => {
-    await cleanupConstraintTemplatesViaAPI(request);
     await cleanupConstraintWeightOverridesViaAPI(request);
     await loginAsAdmin(page);
   });
 
   test.afterEach(async ({ request }) => {
-    await cleanupConstraintTemplatesViaAPI(request);
     await cleanupConstraintWeightOverridesViaAPI(request);
   });
 

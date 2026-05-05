@@ -25,21 +25,21 @@ import { getAdminToken, loginAsAdmin } from './helpers/login';
 import {
   CONSTRAINT_API,
   CONSTRAINT_SCHOOL_ID,
-  cleanupConstraintTemplatesViaAPI,
   cleanupConstraintWeightOverridesViaAPI,
 } from './helpers/constraints';
 
 const CONSTRAINT_NAME = 'No same subject doubling';
 
 test.describe('Phase 14 — Solver-Tuning Weights (Tab 2)', () => {
+  // No template cleanup: this spec works on weights, not templates. An
+  // unscoped template wipe would race against parallel template-creating
+  // specs (see admin-solver-tuning-preferences.spec.ts SOLVER-08 desktop).
   test.beforeEach(async ({ page, request }) => {
-    await cleanupConstraintTemplatesViaAPI(request);
     await cleanupConstraintWeightOverridesViaAPI(request);
     await loginAsAdmin(page);
   });
 
   test.afterEach(async ({ request }) => {
-    await cleanupConstraintTemplatesViaAPI(request);
     await cleanupConstraintWeightOverridesViaAPI(request);
   });
 

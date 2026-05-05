@@ -27,14 +27,22 @@ const SEED_SUBJECT_M = 'seed-subject-m'; // Mathematik
 const SEED_SUBJECT_BSP = 'seed-subject-bsp'; // Bewegung und Sport
 
 test.describe('Phase 14 — Solver-Tuning Subject Preferences (Tab 4)', () => {
+  // Scope template cleanup to the templateTypes this spec owns. An unscoped
+  // wipe races against parallel specs on the second worker that cleanup all
+  // templates in their afterEach: the parallel wipe deletes the row in
+  // mid-flight, and the user's DELETE click hits a 404 which TanStack treats
+  // as an error so the cache is never invalidated and the row stays in the
+  // DOM. This was the SOLVER-08 desktop failure in run 25382372847.
+  const OWNED_TEMPLATE_TYPES = ['SUBJECT_MORNING', 'SUBJECT_PREFERRED_SLOT'] as const;
+
   test.beforeEach(async ({ page, request }) => {
-    await cleanupConstraintTemplatesViaAPI(request);
+    await cleanupConstraintTemplatesViaAPI(request, [...OWNED_TEMPLATE_TYPES]);
     await cleanupConstraintWeightOverridesViaAPI(request);
     await loginAsAdmin(page);
   });
 
   test.afterEach(async ({ request }) => {
-    await cleanupConstraintTemplatesViaAPI(request);
+    await cleanupConstraintTemplatesViaAPI(request, [...OWNED_TEMPLATE_TYPES]);
     await cleanupConstraintWeightOverridesViaAPI(request);
   });
 

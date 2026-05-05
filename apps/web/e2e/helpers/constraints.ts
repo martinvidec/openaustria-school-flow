@@ -110,22 +110,35 @@ export async function createConstraintTemplateViaAPI(
  * Best-effort cleanup: delete every constraint-template (optionally filtered
  * by templateType) for the seed school. Swallows individual DELETE errors so
  * a partial state from a previous run doesn't block the suite.
+ *
+ * `templateType` accepts a single ConstraintTemplateType OR an array of them.
+ * Specs SHOULD pass the type(s) they create — an unscoped wipe (omitted arg)
+ * races against parallel specs on the second worker that also create
+ * templates: cleanup from one spec deletes the row another spec is mid-flight
+ * on, surfacing as 404 on the in-flight spec's DELETE click. Same family as
+ * the DSGVO cleanupAll race fixed in efe4ce3.
  */
 export async function cleanupConstraintTemplatesViaAPI(
   request: APIRequestContext,
-  templateType?: ConstraintTemplateType,
+  templateType?: ConstraintTemplateType | ConstraintTemplateType[],
 ): Promise<void> {
   const token = await getAdminToken(request);
-  const url = templateType
-    ? `${CONSTRAINT_API}/schools/${CONSTRAINT_SCHOOL_ID}/constraint-templates?templateType=${templateType}`
-    : `${CONSTRAINT_API}/schools/${CONSTRAINT_SCHOOL_ID}/constraint-templates`;
-  const listRes = await request.get(url, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const types = Array.isArray(templateType)
+    ? templateType
+    : templateType
+      ? [templateType]
+      : null;
+
+  // Fetch the full list once. Per-type filtering happens client-side so we
+  // never make an unscoped server fetch when scoping is asked for.
+  const listRes = await request.get(
+    `${CONSTRAINT_API}/schools/${CONSTRAINT_SCHOOL_ID}/constraint-templates`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
   if (!listRes.ok()) return;
   const all = (await listRes.json()) as Array<{ id: string; templateType: string }>;
-  const filtered = templateType
-    ? all.filter((t) => t.templateType === templateType)
+  const filtered = types
+    ? all.filter((t) => types.includes(t.templateType as ConstraintTemplateType))
     : all;
   await Promise.all(
     filtered.map((t) =>
