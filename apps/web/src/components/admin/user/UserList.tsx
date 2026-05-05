@@ -188,7 +188,7 @@ export function UserList({ users, loading, onDisable, onEnable }: Props) {
                   to="/admin/users/$userId"
                   params={{ userId: u.id }}
                   search={{ tab: 'stammdaten' }}
-                  className="text-base font-semibold hover:underline truncate block"
+                  className="text-base font-semibold hover:underline truncate flex items-center min-h-11"
                 >
                   {u.lastName} {u.firstName}
                 </Link>
