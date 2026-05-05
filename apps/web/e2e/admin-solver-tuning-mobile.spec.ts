@@ -21,7 +21,6 @@
  */
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/login';
-import { cleanupConstraintWeightOverridesViaAPI } from './helpers/constraints';
 
 // 375×812 — set explicitly so the spec is robust even when run in a project
 // whose default device is wider (e.g. ad-hoc runs).
@@ -37,16 +36,13 @@ test.skip(
 const CONSTRAINT_NAME = 'No same subject doubling';
 
 test.describe('Phase 14 — Solver-Tuning Mobile (375)', () => {
-  // No template cleanup: this spec doesn't create constraint-templates and
-  // an unscoped wipe would race against parallel template-creating specs
-  // (see admin-solver-tuning-preferences.spec.ts SOLVER-08 desktop failure).
-  test.beforeEach(async ({ page, request }) => {
-    await cleanupConstraintWeightOverridesViaAPI(request);
+  // No template/weight cleanup: this spec only fills a slider value to
+  // assert the StickyMobileSaveBar appearance and discards via Verwerfen
+  // (line 90+) — it never persists weights. The weight cleanup is a bulk
+  // wipe that races against admin-solver-tuning-weights.spec.ts mid-test
+  // (see catalog spec for the same race rationale).
+  test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page);
-  });
-
-  test.afterEach(async ({ request }) => {
-    await cleanupConstraintWeightOverridesViaAPI(request);
   });
 
   test('E2E-SOLVER-MOBILE-01: tab-bar scroll + slider tap-zone + StickyMobileSaveBar + Sub-Tab ToggleGroup', async ({

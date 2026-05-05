@@ -9,20 +9,17 @@
  */
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/login';
-import { cleanupConstraintWeightOverridesViaAPI } from './helpers/constraints';
 
 test.describe('Phase 14 — Solver-Tuning Catalog (Tab 1)', () => {
-  // No template cleanup: this spec doesn't create constraint-templates and
-  // an unscoped wipe would race against parallel template-creating specs
-  // on the second worker (see admin-solver-tuning-preferences.spec.ts for
-  // the SOLVER-08 desktop failure pattern).
-  test.beforeEach(async ({ page, request }) => {
-    await cleanupConstraintWeightOverridesViaAPI(request);
+  // No template/weight cleanup: this spec is read-only on the catalog tab
+  // and doesn't create templates OR modify weights. The weight cleanup is a
+  // bulk-PUT-with-empty-map that wipes ALL overrides for the school —
+  // unscoped because the school is shared. Calling it here would race
+  // against admin-solver-tuning-weights.spec.ts mid-test (E2E-SOLVER-02
+  // saves 50, reloads, asserts 50; if our cleanup fires between the save
+  // and the reload, the 50 gets wiped → reload reads 10 → assertion fails).
+  test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page);
-  });
-
-  test.afterEach(async ({ request }) => {
-    await cleanupConstraintWeightOverridesViaAPI(request);
   });
 
   test('E2E-SOLVER-01: catalog read-only with Hard/Soft sections', async ({

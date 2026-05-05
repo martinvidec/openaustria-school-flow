@@ -18,7 +18,6 @@ import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/login';
 import {
   cleanupConstraintTemplatesViaAPI,
-  cleanupConstraintWeightOverridesViaAPI,
   createConstraintTemplateViaAPI,
 } from './helpers/constraints';
 
@@ -35,15 +34,18 @@ test.describe('Phase 14 — Solver-Tuning Subject Preferences (Tab 4)', () => {
   // DOM. This was the SOLVER-08 desktop failure in run 25382372847.
   const OWNED_TEMPLATE_TYPES = ['SUBJECT_MORNING', 'SUBJECT_PREFERRED_SLOT'] as const;
 
+  // No weight cleanup: this spec only manipulates templates, not weights.
+  // The weight cleanup is a bulk-PUT-with-empty-map that wipes ALL overrides
+  // for the school — calling it here would race against
+  // admin-solver-tuning-weights.spec.ts mid-test (E2E-SOLVER-02 desktop-firefox
+  // hit this in run 25385719924).
   test.beforeEach(async ({ page, request }) => {
     await cleanupConstraintTemplatesViaAPI(request, [...OWNED_TEMPLATE_TYPES]);
-    await cleanupConstraintWeightOverridesViaAPI(request);
     await loginAsAdmin(page);
   });
 
   test.afterEach(async ({ request }) => {
     await cleanupConstraintTemplatesViaAPI(request, [...OWNED_TEMPLATE_TYPES]);
-    await cleanupConstraintWeightOverridesViaAPI(request);
   });
 
   test('E2E-SOLVER-07: SUBJECT_MORNING preference CRUD', async ({ page }) => {
