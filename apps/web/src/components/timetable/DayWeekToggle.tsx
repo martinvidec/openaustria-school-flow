@@ -17,10 +17,10 @@ export function DayWeekToggle({ value, onChange }: DayWeekToggleProps) {
       onValueChange={(v) => onChange(v as 'day' | 'week')}
     >
       <TabsList className="min-h-[44px]">
-        <TabsTrigger value="day" className="min-h-[40px] min-w-[60px]">
+        <TabsTrigger value="day" className="min-w-[60px]">
           Tag
         </TabsTrigger>
-        <TabsTrigger value="week" className="min-h-[40px] min-w-[60px]">
+        <TabsTrigger value="week" className="min-w-[60px]">
           Woche
         </TabsTrigger>
       </TabsList>

@@ -24,10 +24,10 @@ export function ABWeekTabs({ weekType, onChange, isABMode }: ABWeekTabsProps) {
       onValueChange={(v) => onChange(v as 'A' | 'B')}
     >
       <TabsList className="min-h-[44px]">
-        <TabsTrigger value="A" className="min-h-[40px] min-w-[80px]">
+        <TabsTrigger value="A" className="min-w-[80px]">
           A-Woche
         </TabsTrigger>
-        <TabsTrigger value="B" className="min-h-[40px] min-w-[80px]">
+        <TabsTrigger value="B" className="min-w-[80px]">
           B-Woche
         </TabsTrigger>
       </TabsList>
