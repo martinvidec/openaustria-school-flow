@@ -1,8 +1,10 @@
 /**
  * Phase 10.2 — Zeitraster save (mobile 375).
  *
- * Covers the md-breakpoint split for the Zeitraster tab:
- *   - Tab switcher is the Select (not TabsList) at <md.
+ * Covers the sm-breakpoint split for the Zeitraster tab (Phase 16
+ * convention; selector convention realigned in Phase 17 Plan F per
+ * CONTEXT D-11):
+ *   - Tab switcher is the Select (not TabsList) at <sm.
  *   - PeriodsEditor renders the Card layout (not the <table>).
  *   - Save round-trip works the same as desktop; durationMin is included
  *     in the DTO (Plan 10.2-01 Task 1.5 fix).
@@ -31,12 +33,21 @@ test.describe('Phase 10.2 — Zeitraster save (mobile 375)', () => {
     const mobileSelect = page.locator('[role="combobox"]').first();
     await expect(mobileSelect).toBeVisible();
     await mobileSelect.click();
-    await page.getByRole('option', { name: 'Zeitraster' }).click();
+    // schoolId loads async via useUserContext(/users/me) — until it lands the
+    // tabsDisabled flag keeps the Zeitraster option non-interactive (#15).
+    // Wait for aria-disabled to clear before clicking the option.
+    const zeitrasterOption = page.getByRole('option', { name: 'Zeitraster' });
+    await expect(zeitrasterOption).not.toHaveAttribute('aria-disabled', 'true');
+    await zeitrasterOption.click();
     await expect(page).toHaveURL(/tab=timegrid/);
 
     // Card mode assertion: PeriodsEditor mobile container is the
-    // `md:hidden.space-y-3` div. Visible at <md.
-    const mobileCards = page.locator('div.md\\:hidden.space-y-3');
+    // `sm:hidden.space-y-3` div (Phase 16 breakpoint standard). Visible at <sm.
+    // Wait for the first card to render before asserting the wrapper —
+    // useTimeGrid is async and the container renders empty (height 0 →
+    // "hidden") until the response lands.
+    const mobileCards = page.locator('div.sm\\:hidden.space-y-3');
+    await expect(mobileCards.getByPlaceholder('1. Stunde').first()).toBeVisible();
     await expect(mobileCards).toBeVisible();
 
     // Ensure Mo is on — same client-side validation gate as desktop.

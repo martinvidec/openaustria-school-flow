@@ -66,15 +66,31 @@ export function ConstraintWeightsTab({
 
   const [local, setLocal] = useState<Record<string, number>>(() => ({ ...persisted }));
 
-  // Re-sync local when persisted changes (after a successful save).
-  useEffect(() => {
-    setLocal({ ...persisted });
-  }, [persisted]);
-
   // Track dirty + propagate up.
   const dirty = useMemo(() => {
     return SOFT_ENTRIES.some((e) => (local[e.name] ?? 0) !== (persisted[e.name] ?? 0));
   }, [local, persisted]);
+
+  // Re-sync local when persisted changes — gated on `!dirty` so a refetch
+  // (window focus / cache invalidation / refetchInterval) never stomps
+  // unsaved user edits back to the persisted value. The post-save flow
+  // sees `dirty=false` once the mutation success drives local & persisted
+  // back into agreement, so the next refetch is allowed through to pick
+  // up server-side normalization.
+  //
+  // First-data-load is exempt from the !dirty gate: useState seeds `local`
+  // from `persisted` while `data` is still undefined (so it's pure defaults).
+  // Once `data` lands, `persisted` flips to server values; `dirty` would be
+  // a false-positive (user touched nothing) and would block the initial
+  // hydration. `initializedRef` lets exactly the first hydration through.
+  const initializedRef = useRef(false);
+  useEffect(() => {
+    if (!data) return;
+    if (!initializedRef.current || !dirty) {
+      setLocal({ ...persisted });
+      initializedRef.current = true;
+    }
+  }, [persisted, dirty, data]);
 
   useEffect(() => {
     onDirtyChange?.(dirty);

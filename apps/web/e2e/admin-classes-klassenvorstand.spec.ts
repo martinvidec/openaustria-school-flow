@@ -23,6 +23,7 @@ import {
   cleanupE2EClasses,
   createClassViaAPI,
 } from './helpers/students';
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 
 const PREFIX = 'E2E-KV-';
 
@@ -97,7 +98,7 @@ test.describe('Phase 12 — Admin Classes Klassenvorstand (desktop)', () => {
     // via the list endpoint.
     const token = await import('./helpers/login').then((m) => m.getAdminToken(request));
     const teacherRes = await request.get(
-      `http://localhost:3000/api/v1/teachers?schoolId=seed-school-bgbrg-musterstadt&limit=10`,
+      `http://localhost:3000/api/v1/teachers?schoolId=${SEED_SCHOOL_UUID}&limit=10`,
       { headers: { Authorization: `Bearer ${token}` } },
     );
     expect(teacherRes.ok(), `GET /teachers`).toBeTruthy();

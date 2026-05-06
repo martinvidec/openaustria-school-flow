@@ -40,11 +40,12 @@
  * seed school (RESEARCH.md Pitfall 5 + 10.4 precedent).
  */
 import { expect, test } from '@playwright/test';
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 import { getAdminToken, loginAsAdmin } from './helpers/login';
 import { getByCardTitle } from './helpers/card';
 
 const API = process.env.E2E_API_URL_BASE ?? 'http://localhost:3000/api/v1';
-const SCHOOL = 'seed-school-bgbrg-musterstadt';
+const SCHOOL = SEED_SCHOOL_UUID;
 const RUN_SOLVER = process.env.E2E_RUN_SOLVER === '1';
 
 test.describe('Phase 10.5 — Admin Solver Workflow (desktop)', () => {

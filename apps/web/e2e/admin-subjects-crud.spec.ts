@@ -93,7 +93,9 @@ test.describe('Phase 11 — Admin Subjects CRUD (desktop)', () => {
     // Open the edit dialog via the row's Aktionen dropdown → Bearbeiten
     // menuitem. (The tr's row-click handler was removed in Plan 11-03 Rule-1
     // to avoid the edit/dropdown race with the Delete flow.)
-    const row = page.locator(`[data-testid="subject-row-${seed.shortName}"]`);
+    // `:visible` filters to the active layout variant — DataList renders both
+    // desktop `<tr>` and mobile `<div>` with the same testid (#13).
+    const row = page.locator(`[data-testid="subject-row-${seed.shortName}"]:visible`);
     await expect(row).toBeVisible();
     await row.getByRole('button', { name: 'Aktionen' }).click();
     await page.getByRole('menuitem', { name: 'Bearbeiten' }).click();
@@ -132,7 +134,8 @@ test.describe('Phase 11 — Admin Subjects CRUD (desktop)', () => {
     // Row-level dropdown → Löschen menuitem. (Plan 11-03 Rule-1 removed
     // the tr's row-click-to-edit handler so the dropdown path is the only
     // way into destructive actions — no more edit/delete dialog race.)
-    const row = page.locator(`[data-testid="subject-row-${seed.shortName}"]`);
+    // `:visible` filters to the active layout variant (#13).
+    const row = page.locator(`[data-testid="subject-row-${seed.shortName}"]:visible`);
     await expect(row).toBeVisible();
     await row.getByRole('button', { name: 'Aktionen' }).click();
     await page.getByRole('menuitem', { name: 'Löschen' }).click();

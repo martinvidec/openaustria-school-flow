@@ -34,6 +34,8 @@ import { createRequire } from 'node:module';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { SEED_TEACHER_KC_LEHRER_UUID } from './seed-uuids';
+
 // Belt-and-braces dotenv. `import 'dotenv/config'` above loads from CWD (fine
 // when the runner is invoked from the repo root). Playwright workers run with
 // CWD=apps/web however, so we ALSO load the repo-root .env via an explicit
@@ -206,48 +208,55 @@ export async function seedTimetableRun(schoolId: string): Promise<TimetableRunFi
     }
 
     // 2. Teacher — TimetableLesson.teacherId references Teacher.id directly
-    //    (NOT User.id). Pin to the KC seed teacher `kc-lehrer-teacher`
-    //    (Maria Mueller, apps/api/prisma/seed.ts:754) so the spec can
+    //    (NOT User.id). Pin to the KC seed teacher (Maria Mueller, the
+    //    kc-lehrer Keycloak user, created by prisma:seed) so the spec can
     //    deterministically select "Mueller Maria" in the perspective
     //    selector. The KC teacher is created by every prisma:seed run
-    //    with a stable id, which avoids the createdAt-asc fragility that
+    //    with a stable UUID, which avoids the createdAt-asc fragility that
     //    breaks if a developer adds new teachers via the Schuladmin UI.
     const teacher = await prisma.teacher.findFirst({
-      where: { schoolId, id: 'kc-lehrer-teacher' },
+      where: { schoolId, id: SEED_TEACHER_KC_LEHRER_UUID },
       include: { person: true },
     });
     if (!teacher) {
       throw new Error(
-        `Teacher kc-lehrer-teacher not found — re-run prisma:seed (created by apps/api/prisma/seed.ts:754)`,
+        `Teacher ${SEED_TEACHER_KC_LEHRER_UUID} (kc-lehrer Maria Mueller) not found — re-run prisma:seed`,
       );
     }
     const teacherDisplayName = teacher.person
       ? `${teacher.person.lastName} ${teacher.person.firstName}`
       : teacher.id;
 
-    // 3. Room — FIRST room for this school. The standard prisma:seed creates
-    //    ZERO Room rows (rooms are introduced via the Schuladmin Console UI
-    //    in the live workflow), so we self-provision a fixture room when
-    //    none exists. The timestamp suffix keeps the @@unique([schoolId, name])
-    //    constraint clear of any future seed-defined rooms.
-    let room = await prisma.room.findFirst({
-      where: { schoolId },
-      orderBy: { createdAt: 'asc' },
+    // 3. Room — always self-provision a NEW fixture room per invocation.
+    //    The standard prisma:seed creates ZERO Room rows (rooms are introduced
+    //    via the Schuladmin Console UI in the live workflow). The timestamp
+    //    + random suffix keeps the @@unique([schoolId, name]) constraint clear
+    //    of any future seed-defined rooms.
+    //
+    //    CRITICAL #33: filter on the fixture name prefix so we never co-opt a
+    //    room another spec created (rooms-booking.spec.ts creates
+    //    `E2E-ROOM-BOOK01-<ts>` then asserts Monday/period-1 is free).
+    //
+    //    CRITICAL (FK-cleanup race): we used to `findFirst` an existing
+    //    fixture-named room and reuse it across parallel fixture invocations.
+    //    That created a cleanup race — when spec-A finished first and
+    //    cleanupTimetableRun deleted the shared room, spec-B's still-live
+    //    TimetableLesson held an FK reference and Postgres rejected the
+    //    DELETE with timetable_lessons_room_id_fkey. Each fixture now owns
+    //    its own room, so the cascade-delete of the run frees the FK before
+    //    the room delete and no other spec's lesson can hold it.
+    const ts = Date.now();
+    const rand = Math.random().toString(36).slice(2, 8);
+    const room = await prisma.room.create({
+      data: {
+        schoolId,
+        name: `e2e-fixture-room-${ts}-${rand}`,
+        roomType: 'KLASSENZIMMER',
+        capacity: 30,
+        equipment: [],
+      },
     });
-    let fixtureRoomId: string | null = null;
-    if (!room) {
-      const ts = Date.now();
-      room = await prisma.room.create({
-        data: {
-          schoolId,
-          name: `e2e-fixture-room-${ts}`,
-          roomType: 'KLASSENZIMMER',
-          capacity: 30,
-          equipment: [],
-        },
-      });
-      fixtureRoomId = room.id;
-    }
+    const fixtureRoomId: string | null = room.id;
 
     // 4a. SchoolDays — defensively ensure MON–FRI are active. Test DBs in
     //     this repo have been observed with only MONDAY active (other days

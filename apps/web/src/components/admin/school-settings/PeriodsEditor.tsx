@@ -28,6 +28,28 @@ interface Props {
   onTemplateReload: () => void;
 }
 
+/**
+ * Compute startTime+endTime for a NEW period appended after a given anchor
+ * time. Used by `handleAdd` so the default slot does not overlap existing
+ * periods (TimeGridSchema rejects overlaps). The duration parameter sets how
+ * long the new period runs; its start matches the anchor end (no gap).
+ *
+ * Implementation note: stays in HH:MM string land to avoid pulling date-fns
+ * into a function that only does integer minute math. Wraps past 23:59 by
+ * staying within the same day (consumer accepts overflow as a hint to edit).
+ */
+export function addMinutes(
+  startHHmm: string,
+  durationMin: number,
+): { startTime: string; endTime: string } {
+  const [hh, mm] = startHHmm.split(':').map(Number);
+  const startTotal = (hh * 60 + mm) % (24 * 60);
+  const endTotal = (startTotal + durationMin) % (24 * 60);
+  const fmt = (total: number) =>
+    `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+  return { startTime: fmt(startTotal), endTime: fmt(endTotal) };
+}
+
 export function durationFor(p: PeriodInput): number | null {
   try {
     const start = parse(p.startTime, 'HH:mm', new Date());
@@ -60,13 +82,21 @@ export function PeriodsEditor({ periods, onChange, onTemplateReload }: Props) {
   const handleAdd = () => {
     const nextNumber = periods.length + 1;
     const id = `new-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    // Append AFTER the last existing period so we don't trigger TimeGridSchema's
+    // overlap check ("Perioden duerfen sich nicht ueberlappen"). Default 50min
+    // duration with no gap to the previous period; the user can adjust freely.
+    // First period (no previous) defaults to 08:00-08:50.
+    const lastPeriod = periods[periods.length - 1];
+    const { startTime, endTime } = lastPeriod
+      ? addMinutes(lastPeriod.endTime, 50)
+      : { startTime: '08:00', endTime: '08:50' };
     onChange([
       ...periods,
       {
         id,
         periodNumber: nextNumber,
-        startTime: '08:00',
-        endTime: '08:50',
+        startTime,
+        endTime,
         isBreak: false,
         label: '',
       },
@@ -116,7 +146,7 @@ export function PeriodsEditor({ periods, onChange, onTemplateReload }: Props) {
           strategy={verticalListSortingStrategy}
         >
           {/* Desktop dense table */}
-          <div className="hidden md:block rounded-md border overflow-hidden">
+          <div className="hidden sm:block rounded-md border overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-muted/30">
                 <tr className="text-xs font-medium text-muted-foreground uppercase tracking-wide border-b">
@@ -146,7 +176,7 @@ export function PeriodsEditor({ periods, onChange, onTemplateReload }: Props) {
           </div>
 
           {/* Mobile cards */}
-          <div className="md:hidden space-y-3">
+          <div className="sm:hidden space-y-3">
             {periods.map((p, i) => (
               <SortablePeriodCard
                 key={p.id}

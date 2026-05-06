@@ -6,8 +6,7 @@ import { Input } from '@/components/ui/input';
 import { PageShell } from '@/components/admin/shared/PageShell';
 import { useSchoolContext } from '@/stores/school-context-store';
 import { useAdminTeachers, type TeacherDto } from '@/hooks/useTeachers';
-import { TeacherListTable } from '@/components/admin/teacher/TeacherListTable';
-import { TeacherMobileCards } from '@/components/admin/teacher/TeacherMobileCards';
+import { TeacherList } from '@/components/admin/teacher/TeacherList';
 import { TeacherCreateDialog } from '@/components/admin/teacher/TeacherCreateDialog';
 import { DeleteTeacherDialog } from '@/components/admin/teacher/DeleteTeacherDialog';
 import { ArchiveTeacherDialog } from '@/components/admin/teacher/ArchiveTeacherDialog';
@@ -100,14 +99,11 @@ function TeachersListPage() {
       )}
 
       {!isEmpty && !isFilteredEmpty && (
-        <>
-          <TeacherListTable
-            teachers={filtered}
-            onArchive={(t) => setToArchive(t)}
-            onDelete={(t) => setToDelete(t)}
-          />
-          <TeacherMobileCards teachers={filtered} />
-        </>
+        <TeacherList
+          teachers={filtered}
+          onArchive={(t) => setToArchive(t)}
+          onDelete={(t) => setToDelete(t)}
+        />
       )}
 
       <TeacherCreateDialog

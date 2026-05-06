@@ -135,8 +135,14 @@ export function RetentionEditDialog({
 
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="grid gap-1">
-            <Label className="text-muted-foreground">Datenkategorie</Label>
+            <Label
+              htmlFor="retention-data-category"
+              className="text-muted-foreground"
+            >
+              Datenkategorie
+            </Label>
             <Input
+              id="retention-data-category"
               value={dataCategory}
               onChange={(e) => setDataCategory(e.target.value)}
               disabled={mode === 'edit' || isPending}
@@ -150,10 +156,14 @@ export function RetentionEditDialog({
           </div>
 
           <div className="grid gap-1">
-            <Label className="text-muted-foreground">
+            <Label
+              htmlFor="retention-days"
+              className="text-muted-foreground"
+            >
               Aufbewahrung (Tage)
             </Label>
             <Input
+              id="retention-days"
               type="number"
               min={1}
               value={retentionDays}

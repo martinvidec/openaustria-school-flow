@@ -291,70 +291,87 @@ export async function lookupPersonByEmail(
 // ── Bulk cleanup ────────────────────────────────────────────────────────
 
 /**
- * Bulk-cleanup helper. Deletes every retention/dsfa/vvz entity in the
- * supplied school whose identifying string starts with the
- * `e2e-15-` prefix. Run from `afterAll` of every spec.
+ * Entity-scoped cleanup helper. Deletes retention/dsfa/vvz entities in the
+ * supplied school whose identifying string starts with the `e2e-15-`
+ * prefix. Run from `afterAll` of every spec.
  *
- * Order: retention → dsfa → vvz. No cross-FK dependency between these
- * three exists today, but we keep a deterministic order so partial
- * failures are easier to diagnose.
+ * `entities` controls which kinds get swept. When unspecified, defaults
+ * to ALL three for backward compatibility, but specs SHOULD pass the
+ * specific entity type they own to avoid cross-spec cleanup races: with
+ * 2 Playwright workers, two dsgvo specs run concurrently, and a
+ * cleanup-all from one would wipe the other's preseed data mid-flight
+ * (manifesting as a 404 on the in-flight spec's DELETE).
+ *
+ * Order (when multiple): retention → dsfa → vvz. No cross-FK dependency
+ * between these three exists today, but we keep a deterministic order so
+ * partial failures are easier to diagnose.
  *
  * Consents are NOT cleaned up (state-managed by withdraw, not delete).
  */
+export type DsgvoEntityKind = 'retention' | 'dsfa' | 'vvz';
+
 export async function cleanupAll(
   request: APIRequestContext,
   schoolId: string,
+  options: { entities?: DsgvoEntityKind[] } = {},
 ): Promise<void> {
-  // Retention
-  try {
-    const list = await authGet<
-      Array<{ id: string; dataCategory: string }>
-    >(request, `/dsgvo/retention/school/${schoolId}`);
-    for (const p of list) {
-      if (
-        typeof p.dataCategory === 'string' &&
-        p.dataCategory.startsWith(DSGVO_E2E_PREFIX)
-      ) {
-        await authDelete(request, `/dsgvo/retention/${p.id}`);
+  const entities = new Set<DsgvoEntityKind>(
+    options.entities ?? ['retention', 'dsfa', 'vvz'],
+  );
+
+  if (entities.has('retention')) {
+    try {
+      const list = await authGet<
+        Array<{ id: string; dataCategory: string }>
+      >(request, `/dsgvo/retention/school/${schoolId}`);
+      for (const p of list) {
+        if (
+          typeof p.dataCategory === 'string' &&
+          p.dataCategory.startsWith(DSGVO_E2E_PREFIX)
+        ) {
+          await authDelete(request, `/dsgvo/retention/${p.id}`);
+        }
       }
+    } catch {
+      /* non-blocking — best-effort */
     }
-  } catch {
-    /* non-blocking — best-effort */
   }
 
-  // DSFA
-  try {
-    const list = await authGet<Array<{ id: string; title: string }>>(
-      request,
-      `/dsgvo/dsfa/dsfa/school/${schoolId}`,
-    );
-    for (const d of list) {
-      if (
-        typeof d.title === 'string' &&
-        d.title.startsWith(DSGVO_E2E_PREFIX)
-      ) {
-        await authDelete(request, `/dsgvo/dsfa/dsfa/${d.id}`);
+  if (entities.has('dsfa')) {
+    try {
+      const list = await authGet<Array<{ id: string; title: string }>>(
+        request,
+        `/dsgvo/dsfa/dsfa/school/${schoolId}`,
+      );
+      for (const d of list) {
+        if (
+          typeof d.title === 'string' &&
+          d.title.startsWith(DSGVO_E2E_PREFIX)
+        ) {
+          await authDelete(request, `/dsgvo/dsfa/dsfa/${d.id}`);
+        }
       }
+    } catch {
+      /* non-blocking */
     }
-  } catch {
-    /* non-blocking */
   }
 
-  // VVZ
-  try {
-    const list = await authGet<Array<{ id: string; activityName: string }>>(
-      request,
-      `/dsgvo/dsfa/vvz/school/${schoolId}`,
-    );
-    for (const v of list) {
-      if (
-        typeof v.activityName === 'string' &&
-        v.activityName.startsWith(DSGVO_E2E_PREFIX)
-      ) {
-        await authDelete(request, `/dsgvo/dsfa/vvz/${v.id}`);
+  if (entities.has('vvz')) {
+    try {
+      const list = await authGet<Array<{ id: string; activityName: string }>>(
+        request,
+        `/dsgvo/dsfa/vvz/school/${schoolId}`,
+      );
+      for (const v of list) {
+        if (
+          typeof v.activityName === 'string' &&
+          v.activityName.startsWith(DSGVO_E2E_PREFIX)
+        ) {
+          await authDelete(request, `/dsgvo/dsfa/vvz/${v.id}`);
+        }
       }
+    } catch {
+      /* non-blocking */
     }
-  } catch {
-    /* non-blocking */
   }
 }

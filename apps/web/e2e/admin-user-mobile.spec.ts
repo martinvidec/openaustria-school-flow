@@ -49,24 +49,20 @@ test.describe('Phase 13 — Admin User Mgmt @ mobile-375 (USER-01 + USER-05)', (
       page.getByRole('heading', { name: 'User & Berechtigungen' }),
     ).toBeVisible();
 
-    // The desktop UserListTable wraps in `hidden md:block` — at 375px the
-    // <table> still exists in the DOM but is `display: none`. Assert the
-    // wrapper containing the table is NOT visible (the strict semantics of
-    // Playwright's toBeVisible match this).
-    const desktopTable = page.locator('div.hidden.md\\:block').filter({
-      has: page.locator('table'),
-    });
+    // Phase 17 Plan D: UserList moved onto the shared <DataList> primitive,
+    // which wraps desktop in `hidden sm:block` (data-testid="user-desktop-table")
+    // and mobile in `sm:hidden` (data-testid="user-mobile-cards"). At 375px
+    // the desktop wrapper is `display: none` and the mobile wrapper is the
+    // visible card stack.
+    const desktopTable = page.getByTestId('user-desktop-table');
     await expect(desktopTable).not.toBeVisible();
 
-    // UserMobileCards wraps in `md:hidden flex flex-col gap-2` — at 375px
-    // this is the visible list. Locate by the unique class signature.
-    const mobileCardsContainer = page.locator('div.md\\:hidden.flex.flex-col');
-    await expect(mobileCardsContainer.first()).toBeVisible();
+    const mobileCardsContainer = page.getByTestId('user-mobile-cards');
+    await expect(mobileCardsContainer).toBeVisible();
 
     // At least one Card with the seed admin email is visible — scoped to
-    // the mobile cards container (the desktop table also contains this
-    // text inside a `<td>` but its wrapper is `display: none` at 375px;
-    // page.getByText().first() may resolve to the hidden td).
+    // the mobile cards container (the desktop wrapper also contains this
+    // text but is `display: none` at 375px).
     await expect(
       mobileCardsContainer.getByText('admin@schoolflow.dev').first(),
     ).toBeVisible();

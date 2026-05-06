@@ -76,7 +76,7 @@ export function SchoolSettingsPage() {
       subtitle="Stammdaten, Zeitraster, Schuljahre und Optionen dieser Schule pflegen."
     >
       <Tabs value={tab} onValueChange={(v) => setTab(v as TabValueT)}>
-        <TabsList className="hidden md:flex">
+        <TabsList className="hidden sm:flex">
           <TabsTrigger value="details">Stammdaten</TabsTrigger>
           <TabsTrigger value="timegrid" disabled={tabsDisabled} aria-disabled={tabsDisabled}>
             Zeitraster
@@ -89,7 +89,7 @@ export function SchoolSettingsPage() {
           </TabsTrigger>
         </TabsList>
         <Select value={tab} onValueChange={(v) => setTab(v as TabValueT)}>
-          <SelectTrigger className="md:hidden h-11 w-full">
+          <SelectTrigger className="sm:hidden h-11 w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

@@ -18,7 +18,7 @@
  */
 import { expect, type APIRequestContext } from '@playwright/test';
 import { getAdminToken } from './login';
-import { SEED_SCHOOL_UUID } from './seed-ids';
+import { SEED_SCHOOL_UUID } from '../fixtures/seed-uuids';
 
 export const STUDENT_API =
   process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';

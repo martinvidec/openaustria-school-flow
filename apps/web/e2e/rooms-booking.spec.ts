@@ -39,9 +39,10 @@ import {
   type Page,
 } from '@playwright/test';
 import { getAdminToken, loginAsAdmin } from './helpers/login';
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 
 const API = process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
-const SCHOOL = 'seed-school-bgbrg-musterstadt';
+const SCHOOL = SEED_SCHOOL_UUID;
 
 /** Verbatim label text on RoomBookingDialog (10.5-01-DISCOVERY.md §1). */
 const PURPOSE_LABEL = 'Zweck (optional)';
@@ -72,6 +73,23 @@ async function seedTimeGrid(
   request: APIRequestContext,
   token: string,
 ): Promise<void> {
+  // Conditional seed: only PUT if the school has zero usable periods. The
+  // unconditional PUT raced against zeitraster.spec.ts mid-test (ZEIT-01
+  // failure in run 25385719924): zeitraster saved a 3-period grid with a
+  // marker, then rooms-booking's beforeAll PUT a 2-period seed over it on
+  // the second worker, wiping the marker before zeitraster's refetch.
+  // Skipping when ≥1 non-break period already exists keeps the test stack
+  // happy with EITHER zeitraster's 3-period grid OR our 2-period default.
+  const existing = await request.get(`${API}/schools/${SCHOOL}/time-grid`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (existing.ok()) {
+    const grid = (await existing.json()) as {
+      periods: Array<{ isBreak?: boolean }>;
+    };
+    const usable = grid.periods.filter((p) => !p.isBreak).length;
+    if (usable >= 2) return;
+  }
   const res = await request.put(`${API}/schools/${SCHOOL}/time-grid`, {
     headers: { Authorization: `Bearer ${token}` },
     data: {

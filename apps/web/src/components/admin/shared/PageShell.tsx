@@ -23,7 +23,10 @@ export function PageShell({ breadcrumbs, title, subtitle, children }: PageShellP
             <li key={i} className="flex items-center gap-1.5">
               {i > 0 && <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden />}
               {c.href ? (
-                <Link to={c.href} className="text-muted-foreground hover:text-foreground">
+                <Link
+                  to={c.href}
+                  className="text-muted-foreground hover:text-foreground inline-flex items-center min-h-11 px-1"
+                >
                   {c.label}
                 </Link>
               ) : (

@@ -31,7 +31,7 @@ function makeQueryResult(partial: Partial<Q>): Q {
     isLoading: false,
     isPending: false,
     isSuccess: false,
-    status: 'pending' as Q['status'],
+    status: 'pending' as const,
     fetchStatus: 'idle',
     isFetching: false,
     isFetched: false,
@@ -84,7 +84,7 @@ describe('DashboardChecklist (Phase 16 Plan 02 Task 3)', () => {
       makeQueryResult({
         isLoading: true,
         isPending: true,
-        status: 'pending' as Q['status'],
+        status: 'pending' as const,
         fetchStatus: 'fetching',
       }),
     );
@@ -99,7 +99,7 @@ describe('DashboardChecklist (Phase 16 Plan 02 Task 3)', () => {
     useDashboardStatusMock.mockReturnValueOnce(
       makeQueryResult({
         isSuccess: true,
-        status: 'success' as Q['status'],
+        status: 'success' as const,
         data: {
           schoolId: 's-1',
           generatedAt: '2026-04-29T10:00:00Z',
@@ -121,7 +121,7 @@ describe('DashboardChecklist (Phase 16 Plan 02 Task 3)', () => {
     useDashboardStatusMock.mockReturnValueOnce(
       makeQueryResult({
         isError: true,
-        status: 'error' as Q['status'],
+        status: 'error' as const,
         error: new Error('boom'),
       }),
     );
@@ -136,7 +136,7 @@ describe('DashboardChecklist (Phase 16 Plan 02 Task 3)', () => {
     useDashboardStatusMock.mockReturnValueOnce(
       makeQueryResult({
         isSuccess: true,
-        status: 'success' as Q['status'],
+        status: 'success' as const,
         data: {
           schoolId: 's-1',
           generatedAt: '2026-04-29T10:00:00Z',
@@ -174,7 +174,7 @@ describe('DashboardChecklist (Phase 16 Plan 02 Task 3)', () => {
     useDashboardStatusMock.mockReturnValueOnce(
       makeQueryResult({
         isSuccess: true,
-        status: 'success' as Q['status'],
+        status: 'success' as const,
         data: {
           schoolId: 's-1',
           generatedAt: '2026-04-29T10:00:00Z',
@@ -192,7 +192,7 @@ describe('DashboardChecklist (Phase 16 Plan 02 Task 3)', () => {
       makeQueryResult({
         isLoading: false,
         isPending: true,
-        status: 'pending' as Q['status'],
+        status: 'pending' as const,
         fetchStatus: 'idle',
       }),
     );
@@ -209,7 +209,7 @@ describe('DashboardChecklist (Phase 16 Plan 02 Task 3)', () => {
       makeQueryResult({
         isLoading: false,
         isPending: true,
-        status: 'pending' as Q['status'],
+        status: 'pending' as const,
         fetchStatus: 'idle',
       }),
     );
@@ -223,7 +223,7 @@ describe('DashboardChecklist (Phase 16 Plan 02 Task 3)', () => {
     useDashboardStatusMock.mockReturnValueOnce(
       makeQueryResult({
         isSuccess: true,
-        status: 'success' as Q['status'],
+        status: 'success' as const,
         data: {
           schoolId: 'school-uuid',
           generatedAt: '2026-04-29T10:00:00Z',

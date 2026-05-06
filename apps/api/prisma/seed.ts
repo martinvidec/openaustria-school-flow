@@ -400,11 +400,18 @@ async function main() {
       // Phase 10.1 Bug 2: re-seed repairs the corrupt '[object Object]' row on every
       // `prisma migrate reset` → `prisma db seed` cycle. Idempotent for healthy rows.
       address: { street: 'Schulstrasse 1', zip: '1010', city: 'Wien' },
+      // Phase 17.1 fix: legacy `AHS_UNTER` seed value is not in the frontend
+      // `SCHOOL_TYPES` enum (`['VS','NMS','AHS','BHS','BMS','PTS','ASO']`),
+      // so `<Select value="AHS_UNTER">` rendered the placeholder, the form's
+      // current value diverged from defaultValues, isDirty flipped true on
+      // mount, and `useBlocker` opened the unsaved-changes dialog on the
+      // first tab switch. Repair existing rows too.
+      schoolType: 'AHS',
     },
     create: {
       id: SEED_SCHOOL_UUID,
       name: 'BG/BRG Musterstadt',
-      schoolType: 'AHS_UNTER',
+      schoolType: 'AHS',
       address: { street: 'Schulstrasse 1', zip: '1010', city: 'Wien' },
     },
   });

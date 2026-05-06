@@ -131,10 +131,14 @@ export function RequestDeletionDialog({
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-1">
-              <Label className="text-muted-foreground">
+              <Label
+                htmlFor="deletion-confirm-token"
+                className="text-muted-foreground"
+              >
                 Email-Adresse zur Bestätigung
               </Label>
               <Input
+                id="deletion-confirm-token"
                 value={tokenInput}
                 onChange={(e) => setTokenInput(e.target.value)}
                 autoComplete="off"

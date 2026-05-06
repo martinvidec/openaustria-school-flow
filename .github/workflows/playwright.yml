@@ -38,7 +38,16 @@ on:
 jobs:
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # 30min was a tight fit when E2E ran in ~27min (run 25305740126); recent
+    # runs hit the wall when Ubuntu apt mirrors throttle the
+    # `playwright install --with-deps` step:
+    #   - run 25389283473: 28min just installing OS deps, never reached tests.
+    #   - run 25402371007: 40min setup + 17min tests = cancelled at 60min mid-mobile-chrome.
+    # 90min gives buffer for slow apt (~30-40min worst case) + full e2e (~25-30min)
+    # + artifact upload, with ~15min headroom. Browser-binary download is also
+    # cached separately (see "Cache Playwright browsers" step below) so only the
+    # `--with-deps` apt step retains its variability.
+    timeout-minutes: 90
 
     services:
       postgres:
@@ -71,6 +80,16 @@ jobs:
       KEYCLOAK_URL: http://localhost:8080
       KEYCLOAK_REALM: schoolflow
       KEYCLOAK_CLIENT_ID: schoolflow-api
+      # Service-account credentials for the NestJS Keycloak Admin client
+      # (UserDirectoryService, RoleManagementService, link-person flows).
+      # The realm import (`docker/keycloak/realm-export.json`) ships the
+      # `schoolflow-admin-api` confidential client and grants the synthetic
+      # service-account user `realm-management/{view-users,manage-users,
+      # view-realm,view-clients}`. The secret is a clearly-dev-only literal
+      # because the Keycloak instance is bound to localhost on the runner —
+      # NEVER reuse this in production.
+      KEYCLOAK_ADMIN_CLIENT_ID: schoolflow-admin-api
+      KEYCLOAK_ADMIN_CLIENT_SECRET: local-dev-only-secret
       # VAPID keypair MUST be provided via repo secrets — no inline fallback.
       # The previous dev keypair was rotated on 2026-05-01 (see
       # .planning/quick/260501-sus-vapid-dev-keypair-rotieren-neuen-keypair/SUMMARY.md);
@@ -171,8 +190,30 @@ jobs:
       - name: Build Web
         run: pnpm --filter @schoolflow/web build
 
+      # Cache the browser binaries between runs. The cache key is the pnpm
+      # lockfile hash so any @playwright/test version bump invalidates it.
+      # OS deps (`--with-deps`) still install via apt every run because they
+      # land system-wide outside the cache, but skipping the binary download
+      # alone saves 3-8 minutes when apt mirrors are slow (the variability
+      # that bit run 25389283473 / 25402371007).
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
       - name: Install Playwright browsers
-        run: pnpm --filter @schoolflow/web exec playwright install chromium --with-deps
+        # Install all 3 engines because playwright.config.ts has 4 projects:
+        # desktop=chromium, desktop-firefox=firefox, mobile-chrome=chromium, mobile-375=webkit.
+        # Without firefox+webkit, the desktop-firefox + mobile-375 projects all fail with
+        # "Executable doesn't exist at /home/runner/.cache/ms-playwright/...". See issue #12.
+        # On a cache hit we still run --with-deps to refresh apt-installed system
+        # libraries (Playwright's CLI is a no-op on already-present binaries but
+        # always re-runs the apt step).
+        run: pnpm --filter @schoolflow/web exec playwright install chromium firefox webkit --with-deps
 
       - name: Start API (background)
         run: |

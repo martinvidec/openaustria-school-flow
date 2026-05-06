@@ -25,7 +25,7 @@
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/login';
 import { seedRetentionPolicy, cleanupAll } from './helpers/dsgvo';
-import { SEED_SCHOOL_UUID } from './helpers/seed-ids';
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -45,7 +45,9 @@ test.describe('DSGVO-ADM-02 — Aufbewahrungsrichtlinien CRUD', () => {
   });
 
   test.afterAll(async ({ request }) => {
-    await cleanupAll(request, SCHOOL_ID);
+    // Scope to retention only — see admin-dsgvo-dsfa.spec.ts for the
+    // cross-spec parallel cleanup race rationale.
+    await cleanupAll(request, SCHOOL_ID, { entities: ['retention'] });
   });
 
   test('DSGVO-ADM-02: retention tab URL deep-link + page shell visible', async ({
@@ -77,8 +79,12 @@ test.describe('DSGVO-ADM-02 — Aufbewahrungsrichtlinien CRUD', () => {
     await expect(
       page.getByText('Aufbewahrungsrichtlinie angelegt'),
     ).toBeVisible({ timeout: 5_000 });
+    // DataList renders desktop tr + mobile card with the same row attrs;
+    // scope to the desktop wrapper so this assertion is strict-mode safe.
     await expect(
-      page.locator(`[data-retention-category="${CREATE_CATEGORY}"]`),
+      page
+        .getByTestId('retention-desktop-table')
+        .locator(`[data-retention-category="${CREATE_CATEGORY}"]`),
     ).toBeVisible({ timeout: 5_000 });
   });
 
@@ -86,9 +92,9 @@ test.describe('DSGVO-ADM-02 — Aufbewahrungsrichtlinien CRUD', () => {
     await loginAsAdmin(page);
     await page.goto('/admin/dsgvo?tab=retention');
 
-    const row = page.locator(
-      `[data-retention-category="${PRESEED_CATEGORY}"]`,
-    );
+    const row = page
+      .getByTestId('retention-desktop-table')
+      .locator(`[data-retention-category="${PRESEED_CATEGORY}"]`);
     await expect(row).toBeVisible({ timeout: 10_000 });
     await row.getByRole('button', { name: 'Bearbeiten' }).click();
 
@@ -113,11 +119,10 @@ test.describe('DSGVO-ADM-02 — Aufbewahrungsrichtlinien CRUD', () => {
     await page.getByLabel('Datenkategorie').fill(TARGET);
     await page.getByLabel('Aufbewahrung (Tage)').fill('100');
     await page.getByRole('button', { name: 'Anlegen' }).click();
-    await expect(
-      page.locator(`[data-retention-category="${TARGET}"]`),
-    ).toBeVisible({ timeout: 5_000 });
-
-    const row = page.locator(`[data-retention-category="${TARGET}"]`);
+    const row = page
+      .getByTestId('retention-desktop-table')
+      .locator(`[data-retention-category="${TARGET}"]`);
+    await expect(row).toBeVisible({ timeout: 5_000 });
     await row.getByRole('button', { name: 'Löschen' }).click();
 
     // Verbatim copy from RetentionTab.tsx (UI-SPEC § Destructive confirmations).

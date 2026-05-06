@@ -56,6 +56,14 @@ export interface DataListProps<T> {
   getRowAttrs?: (row: T) => Record<string, string | number | boolean | undefined>;
   /** Mobile card renderer. The wrapper that DataList provides re-applies `data-testid` on the outermost element as a backstop for E2E selectors. */
   mobileCard: (row: T) => ReactNode;
+  /**
+   * Optional `data-testid` on the OUTER desktop / mobile wrapper `<div>`.
+   * Useful for E2E specs that scope locators to a single layout variant
+   * before resolving rows (avoids strict-mode dual-match when the same
+   * row id appears on both `<tr>` and `<div>` variants in `mode='auto'`).
+   */
+  desktopWrapperTestId?: string;
+  mobileWrapperTestId?: string;
   /** `auto` (default) renders both containers and lets Tailwind decide. `desktop`/`mobile` short-circuit to one branch. */
   mode?: 'desktop' | 'mobile' | 'auto';
   /** Slot rendered when `rows.length === 0 && !loading`. Falls back to a German empty-state line. */
@@ -193,6 +201,8 @@ export function DataList<T>({
   getRowTestId,
   getRowAttrs,
   mobileCard,
+  desktopWrapperTestId,
+  mobileWrapperTestId,
   mode = 'auto',
   emptyState,
   loading = false,
@@ -259,7 +269,10 @@ export function DataList<T>({
 
   return (
     <>
-      <div className="hidden sm:block overflow-x-auto">
+      <div
+        className="hidden sm:block overflow-x-auto"
+        data-testid={desktopWrapperTestId}
+      >
         <DesktopTable
           rows={rows}
           columns={columns}
@@ -269,7 +282,7 @@ export function DataList<T>({
           onRowClick={onRowClick}
         />
       </div>
-      <div className="sm:hidden">
+      <div className="sm:hidden" data-testid={mobileWrapperTestId}>
         <MobileStack
           rows={rows}
           getRowId={getRowId}

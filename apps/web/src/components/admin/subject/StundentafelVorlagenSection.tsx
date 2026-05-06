@@ -78,7 +78,7 @@ export function StundentafelVorlagenSection() {
       <Tabs defaultValue={schoolTypes[0]} className="w-full">
         <TabsList className="flex-wrap h-auto">
           {schoolTypes.map((st) => (
-            <TabsTrigger key={st} value={st}>
+            <TabsTrigger key={st} value={st} className="min-h-11">
               {getSchoolTypeLabel(st)}
             </TabsTrigger>
           ))}

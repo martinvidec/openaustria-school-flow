@@ -8,8 +8,7 @@ import { useSchoolContext } from '@/stores/school-context-store';
 import { useSchoolYears } from '@/hooks/useSchoolYears';
 import { useClasses, type ClassListItemDto } from '@/hooks/useClasses';
 import { ClassFilterBar, type ClassFilterValues } from '@/components/admin/class/ClassFilterBar';
-import { ClassListTable } from '@/components/admin/class/ClassListTable';
-import { ClassMobileCards } from '@/components/admin/class/ClassMobileCards';
+import { ClassList } from '@/components/admin/class/ClassList';
 import { ClassCreateDialog } from '@/components/admin/class/ClassCreateDialog';
 import { DeleteClassDialog } from '@/components/admin/class/DeleteClassDialog';
 
@@ -114,10 +113,7 @@ function ClassesListPage() {
       )}
 
       {!isEmpty && (
-        <>
-          <ClassListTable classes={classes} onDelete={(c) => setToDelete(c)} />
-          <ClassMobileCards classes={classes} />
-        </>
+        <ClassList classes={classes} onDelete={(c) => setToDelete(c)} />
       )}
 
       <ClassCreateDialog

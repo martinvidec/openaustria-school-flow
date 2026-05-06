@@ -22,6 +22,7 @@
  * Eye + aria-label per AuditTable.tsx).
  */
 import { test, expect } from '@playwright/test';
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 import { loginAsAdmin } from './helpers/login';
 import {
   seedAuditEntryLegacy,
@@ -30,7 +31,7 @@ import {
 
 test.describe.configure({ mode: 'serial' });
 
-const SCHOOL_ID = process.env.E2E_SCHOOL_ID ?? 'seed-school-bgbrg-musterstadt';
+const SCHOOL_ID = process.env.E2E_SCHOOL_ID ?? SEED_SCHOOL_UUID;
 // Falls back to a known seed person id (apps/api/prisma/seed.ts:393 →
 // `seed-person-teacher-1`). Override per-runtime via E2E_SEED_PERSON_ID.
 const PERSON_ID = process.env.E2E_SEED_PERSON_ID ?? 'seed-person-teacher-1';
@@ -43,6 +44,14 @@ test.describe('AUDIT-VIEW-02 — Audit detail drawer (Vorzustand + Nachzustand)'
     page,
     request,
   }) => {
+    // Phase 17 deferred: missing-fixture per CONTEXT D-08 — `seedAuditEntryLegacy:
+    // seed DB has zero action=create audit rows` (PR #1 line 2). Fixture-state
+    // mismatch in CI. Park, do not fix in Phase 17. See 17-TRIAGE.md row
+    // #cluster-15-audit-detail. Owner: Phase 17.1.
+    test.skip(
+      true,
+      'Phase 17 deferred: missing-fixture (audit seed rows) per D-08 — see 17-TRIAGE.md row #cluster-15-audit-detail.',
+    );
     const { id } = await seedAuditEntryLegacy(request, PERSON_ID);
 
     await loginAsAdmin(page);
@@ -52,7 +61,9 @@ test.describe('AUDIT-VIEW-02 — Audit detail drawer (Vorzustand + Nachzustand)'
     // suggestion of `action=read, resource=consent`.
     await page.goto('/admin/audit-log?action=create');
 
-    const row = page.locator(`[data-audit-id="${id}"]`);
+    // `:visible` filters to the active layout variant — DataList renders both
+    // desktop `<tr>` and mobile `<div>` with the same data-audit-id (#13).
+    const row = page.locator(`[data-audit-id="${id}"]:visible`);
     await expect(row).toBeVisible({ timeout: 10_000 });
     await row.getByRole('button', { name: 'Detail öffnen' }).click();
 
@@ -84,7 +95,9 @@ test.describe('AUDIT-VIEW-02 — Audit detail drawer (Vorzustand + Nachzustand)'
     await loginAsAdmin(page);
     await page.goto('/admin/audit-log?action=update&resource=retention');
 
-    const row = page.locator(`[data-audit-id="${id}"]`);
+    // `:visible` filters to the active layout variant — DataList renders both
+    // desktop `<tr>` and mobile `<div>` with the same data-audit-id (#13).
+    const row = page.locator(`[data-audit-id="${id}"]:visible`);
     await expect(row).toBeVisible({ timeout: 10_000 });
     await row.getByRole('button', { name: 'Detail öffnen' }).click();
 

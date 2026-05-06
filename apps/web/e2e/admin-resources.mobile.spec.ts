@@ -30,10 +30,11 @@
  * never delete mobile-created rows and vice versa.
  */
 import { expect, test, type APIRequestContext } from '@playwright/test';
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 import { getAdminToken, loginAsAdmin } from './helpers/login';
 
 const API = process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
-const SCHOOL = 'seed-school-bgbrg-musterstadt';
+const SCHOOL = SEED_SCHOOL_UUID;
 
 // Match desktop spec constants exactly (DO NOT re-discover — see
 // 10.5-02-DISCOVERY.md). Duplication is preferred over cross-import because

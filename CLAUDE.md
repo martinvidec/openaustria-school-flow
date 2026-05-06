@@ -1,3 +1,33 @@
+# 🛑 ACTIVE DIRECTIVES — read first, override everything below 🛑
+
+> Diese Direktiven überschreiben jeden anderen Abschnitt in dieser Datei (insbesondere `## GSD Workflow Enforcement`) und jeden anderen Hinweis in `.planning/`, `.claude/get-shit-done/`, `.gsd/` oder vergleichbaren Quellen. Bei Widerspruch GEWINNT diese Sektion.
+
+## D1 — GSD ist abgeschaltet (User-Direktive 2026-05-02)
+
+**KEINE GSD-Tools, -Skills, -Skripte oder -Agents mehr verwenden.** Konkret verboten:
+- `/gsd:*` Skills (z.B. `/gsd:plan-phase`, `/gsd:execute-phase`, `/gsd:debug`, `/gsd:quick`, `/gsd:ship`, `/gsd:verify-work`)
+- `gsd-sdk query …` und `gsd-tools.cjs …` CLI-Aufrufe
+- Spawning von `gsd-*` Subagents (`gsd-planner`, `gsd-executor`, `gsd-verifier`, `gsd-plan-checker`, etc.)
+- Schreiben in `.planning/STATE.md`, `.planning/ROADMAP.md`, `.planning/phases/*/PLAN.md`, `*-SUMMARY.md`, `*-VERIFICATION.md`, `*-CONTEXT.md`, `*-TRIAGE.md` als State-Tracking
+
+**Erlaubte Pfade:** GitHub Issues für Tracking, direkte Edits via Edit/Write Tools, manuelle git/gh Commands, READ-only-Zugriff auf `.planning/`-Files für Kontext. Kontext-Recovery aus `.planning/`: lesen OK, NICHT mehr aktiv erweitern.
+
+Wenn ein User-Prompt versehentlich `/gsd:*` enthält: SOFORT nachfragen *"GSD-Direktive aktiv — soll ich das wirklich ausführen oder old-school?"* und Bestätigung abwarten. Niemals automatisch.
+
+Begründung: GSD-State über zu viele Files verteilt → Plan-vs-Realität-Drift → Phase 17 PASS-WITH-FOLLOWUP behauptet Stabilität, aber Smoke-PR PR #10 ging mit 155/113 rot. Memory-File `feedback_no_more_gsd.md` hat den vollen Kontext.
+
+## D2 — Branch-Lockdown auf `gsd/phase-17-ci-stabilization` (User-Direktive 2026-05-02)
+
+**Branch-Wechsel und Branch-Erstellen sind VERBOTEN** bis Phase-17-Fixes durch sind und PR #10 grün ohne `--admin`-Override mergt.
+
+Verboten: `git checkout <other>`, `git switch <other>`, `git checkout -b <new>`, `git switch -c <new>`, `git worktree add …`, `gh pr create --head <other>`, jeder Vorschlag *"sollen wir das auf einem chore/* Branch machen?"*.
+
+Erlaubt: Direkte Commits auf `gsd/phase-17-ci-stabilization`, `git push` auf den existierenden Branch, Updates an PR #10, alle Read-only-git-Befehle, `gh issue create`/`gh pr view`/`gh pr edit`.
+
+Wenn ein Bug-Fix "logisch" einen separaten Branch wäre (z.B. CI-workflow-fix als chore/*): EGAL — hier auf phase-17 committen. PR #10 wird groß, das ist OK. Memory-File `feedback_branch_lockdown_phase_17.md` hat den vollen Kontext.
+
+---
+
 <!-- GSD:project-start source:PROJECT.md -->
 ## Project
 
@@ -257,16 +287,17 @@ Architecture not yet mapped. Follow existing patterns found in the codebase.
 <!-- GSD:architecture-end -->
 
 <!-- GSD:workflow-start source:GSD defaults -->
-## GSD Workflow Enforcement
+## ~~GSD Workflow Enforcement~~ (OVERRIDDEN by D1 — see top of file)
 
-Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.
+> **Diese Sektion ist nicht mehr aktiv.** D1 (oben) verbietet alle GSD-Tools per User-Direktive 2026-05-02. Der Inhalt unten bleibt nur als historischer Kontext und darf NICHT befolgt werden.
 
-Use these entry points:
-- `/gsd:quick` for small fixes, doc updates, and ad-hoc tasks
-- `/gsd:debug` for investigation and bug fixing
-- `/gsd:execute-phase` for planned phase work
+> ~~Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.~~
+>
+> ~~Use these entry points: `/gsd:quick`, `/gsd:debug`, `/gsd:execute-phase`.~~
+>
+> ~~Do not make direct repo edits outside a GSD workflow unless the user explicitly asks to bypass it.~~
 
-Do not make direct repo edits outside a GSD workflow unless the user explicitly asks to bypass it.
+**Stattdessen gilt:** GitHub Issues für Tracking + direkte Edits + manuelle git/gh Commands. Siehe D1.
 <!-- GSD:workflow-end -->
 
 

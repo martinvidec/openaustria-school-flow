@@ -25,9 +25,10 @@ import {
   type Page,
 } from '@playwright/test';
 import { getAdminToken, loginAsAdmin } from './helpers/login';
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 
 const API = process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
-const SCHOOL = 'seed-school-bgbrg-musterstadt';
+const SCHOOL = SEED_SCHOOL_UUID;
 
 const PURPOSE_LABEL = 'Zweck (optional)';
 const SUCCESS_TOAST = 'Raum erfolgreich gebucht';
@@ -36,6 +37,18 @@ async function seedTimeGrid(
   request: APIRequestContext,
   token: string,
 ): Promise<void> {
+  // Conditional seed — see rooms-booking.spec.ts for the zeitraster race
+  // rationale.
+  const existing = await request.get(`${API}/schools/${SCHOOL}/time-grid`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (existing.ok()) {
+    const grid = (await existing.json()) as {
+      periods: Array<{ isBreak?: boolean }>;
+    };
+    const usable = grid.periods.filter((p) => !p.isBreak).length;
+    if (usable >= 2) return;
+  }
   const res = await request.put(`${API}/schools/${SCHOOL}/time-grid`, {
     headers: { Authorization: `Bearer ${token}` },
     data: {

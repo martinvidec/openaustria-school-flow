@@ -37,10 +37,11 @@
  *     does not touch the DB directly — API-only cleanup suffices).
  */
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 import { getAdminToken, loginAsAdmin } from './helpers/login';
 
 const API = process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
-const SCHOOL = 'seed-school-bgbrg-musterstadt';
+const SCHOOL = SEED_SCHOOL_UUID;
 
 // Verbatim strings from 10.5-02-DISCOVERY.md (DO NOT drift).
 const ADD_BUTTON = 'Ressource hinzufuegen';   // resources.tsx:147 (ASCII `ue`)
@@ -115,7 +116,11 @@ test.describe('Phase 10.5 — Admin Resources CRUD (desktop)', () => {
 
     // Same green toast as create — useUpdateResource.onSuccess fires the
     // identical string 'Ressource gespeichert' (useResources.ts:73).
-    await expect(page.getByText(TOAST_UPDATE_SUCCESS)).toBeVisible();
+    // Firefox holds the create toast on screen long enough for the update
+    // toast to render alongside, so `getByText` resolves to 2 elements and
+    // strict-mode fails. `.last()` picks the most recent emission; the
+    // row-text assertion below ground-truths the mutation either way.
+    await expect(page.getByText(TOAST_UPDATE_SUCCESS).last()).toBeVisible();
 
     // New quantity renders in the row. Scope the cell match so a stray `5`
     // elsewhere on the page (e.g. another resource's quantity) cannot

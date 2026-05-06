@@ -57,8 +57,9 @@ test.describe('Phase 11 — Admin Subjects CRUD error paths (desktop)', () => {
 
       // Row dropdown → Löschen. (Plan 11-03 Rule-1 removed the tr row-click
       // handler so there is no more edit/delete dialog race on this path.)
+      // `:visible` filters to the active layout variant (#13).
       const fixtureShort = `EWR${Number(fixture.subjectName.split('-').pop()) % 100000}`;
-      const row = page.locator(`[data-testid="subject-row-${fixtureShort}"]`);
+      const row = page.locator(`[data-testid="subject-row-${fixtureShort}"]:visible`);
       await expect(row).toBeVisible();
       await row.getByRole('button', { name: 'Aktionen' }).click();
       await page.getByRole('menuitem', { name: 'Löschen' }).click();

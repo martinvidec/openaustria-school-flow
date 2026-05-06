@@ -23,8 +23,8 @@ describe('PeriodsEditor (Plan 10-04 Task 1)', () => {
     // 6 body rows
     const bodyRows = table!.querySelectorAll('tbody tr');
     expect(bodyRows.length).toBe(6);
-    // Mobile container with md:hidden space-y-3 exists
-    const mobileWrap = container.querySelector('.md\\:hidden.space-y-3');
+    // Mobile container with sm:hidden space-y-3 exists (Phase 16/17 sm: breakpoint standard)
+    const mobileWrap = container.querySelector('.sm\\:hidden.space-y-3');
     expect(mobileWrap).toBeTruthy();
   });
 

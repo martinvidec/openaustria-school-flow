@@ -27,7 +27,7 @@ export function AppHeader({
           ref={mobileMenuTriggerRef}
           variant="ghost"
           size="sm"
-          className="sm:hidden"
+          className="sm:hidden min-w-11"
           onClick={onMobileMenuToggle}
           aria-label="Navigation oeffnen"
         >
@@ -50,7 +50,7 @@ export function AppHeader({
           size="sm"
           onClick={() => logout()}
           aria-label="Abmelden"
-          className="gap-2"
+          className="gap-2 min-w-11 sm:min-w-9"
         >
           <LogOut className="h-4 w-4" />
           <span className="hidden sm:inline">Abmelden</span>

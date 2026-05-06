@@ -1,4 +1,12 @@
-import { Body, Controller, Param, Put, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator';
 import { UpdateTimeGridDto } from './dto/update-time-grid.dto';
@@ -9,6 +17,21 @@ import { SchoolTimeGridService } from './school-time-grid.service';
 @Controller('schools/:schoolId/time-grid')
 export class SchoolTimeGridController {
   constructor(private timeGridService: SchoolTimeGridService) {}
+
+  @Get()
+  @CheckPermissions({ action: 'read', subject: 'school' })
+  @ApiOperation({
+    summary: 'Read the time grid for a school (periods + Mo-Sa Schultage mask).',
+  })
+  @ApiResponse({ status: 200, description: 'Time grid found' })
+  @ApiResponse({ status: 404, description: 'No time grid configured yet' })
+  async findOne(@Param('schoolId') schoolId: string) {
+    const grid = await this.timeGridService.findOne(schoolId);
+    if (!grid) {
+      throw new NotFoundException('Zeitraster nicht gefunden.');
+    }
+    return grid;
+  }
 
   @Put()
   @CheckPermissions({ action: 'update', subject: 'school' })

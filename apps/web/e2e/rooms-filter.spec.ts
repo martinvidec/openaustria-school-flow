@@ -42,6 +42,7 @@
  * routes `*.spec.ts` files to the desktop project automatically.
  */
 import { test, expect } from '@playwright/test';
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 import { loginAsAdmin } from './helpers/login';
 import {
   seedTimetableRun,
@@ -49,7 +50,7 @@ import {
   type TimetableRunFixture,
 } from './fixtures/timetable-run';
 
-const SCHOOL_ID = process.env.E2E_SCHOOL_ID ?? 'seed-school-bgbrg-musterstadt';
+const SCHOOL_ID = process.env.E2E_SCHOOL_ID ?? SEED_SCHOOL_UUID;
 
 test.describe('Rooms-filter regression — German enum + filter-aware empty state (desktop)', () => {
   // Mobile projects run their own viewport-sized specs; this regression

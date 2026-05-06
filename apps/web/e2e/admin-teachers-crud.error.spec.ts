@@ -17,6 +17,7 @@
  * DOM contract + toast copy — see admin-teachers-crud.spec.ts header.
  */
 import 'dotenv/config';
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 import { config as dotenvConfig } from 'dotenv';
 import { createRequire } from 'node:module';
 import * as path from 'node:path';
@@ -61,7 +62,7 @@ const { PrismaPg } = require('../../api/node_modules/@prisma/adapter-pg') as {
   PrismaPg: new (opts: { connectionString: string }) => unknown;
 };
 
-const SCHOOL_ID = process.env.E2E_SCHOOL_ID ?? 'seed-school-bgbrg-musterstadt';
+const SCHOOL_ID = process.env.E2E_SCHOOL_ID ?? SEED_SCHOOL_UUID;
 // Distinct prefix so the error spec doesn't collide with the happy-path
 // admin-teachers-crud.spec afterEach cleanup when both run in parallel
 // workers (Playwright default).
