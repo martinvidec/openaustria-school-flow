@@ -1,4 +1,4 @@
-import type { SchoolType } from '../schemas/school.schema';
+import type { SchoolType } from '../schemas/school.schema.js';
 
 /** School DTO — server representation including runtime flags. */
 export interface SchoolDto {

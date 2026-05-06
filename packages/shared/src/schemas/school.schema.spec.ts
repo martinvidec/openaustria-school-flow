@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SchoolDetailsSchema, SchoolTypeEnum } from './school.schema';
+import { SchoolDetailsSchema, SchoolTypeEnum } from './school.schema.js';
 
 describe('SchoolDetailsSchema', () => {
   const valid = {

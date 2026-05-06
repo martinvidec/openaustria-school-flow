@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { TimeGridSchema, PeriodSchema } from './time-grid.schema';
+import { TimeGridSchema, PeriodSchema } from './time-grid.schema.js';
 
 describe('PeriodSchema', () => {
   const basePeriod = {
