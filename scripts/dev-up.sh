@@ -69,6 +69,10 @@ if lsof -ti:3000 >/dev/null 2>&1; then
 fi
 
 step "Start API (background)"
+# API_INTERNAL_URL is the address the Solver container uses to call back into
+# the API. The solver runs in docker, the API runs on the host — host.docker.internal
+# resolves to the host gateway via the extra_hosts entry in docker-compose.yml.
+export API_INTERNAL_URL="${API_INTERNAL_URL:-http://host.docker.internal:3000}"
 (cd apps/api && nohup node dist/main.js > "$API_LOG" 2>&1 < /dev/null &) >/dev/null 2>&1
 for i in {1..20}; do
   if curl -sf http://localhost:3000/api/v1/health >/dev/null 2>&1; then

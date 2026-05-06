@@ -41,7 +41,11 @@ export class SolveProcessor extends WorkerHost {
       );
 
       // 3. Determine callback URL (from env or config)
-      const callbackBaseUrl = process.env.API_INTERNAL_URL || 'http://localhost:3000';
+      // The sidecar appends `/progress/<runId>` and `/complete/<runId>` to this
+      // base, so it must already include the SolverCallbackController prefix
+      // (`api/v1/api/internal/solver`). See issue #50 Bug 4.
+      const apiBase = process.env.API_INTERNAL_URL || 'http://localhost:3000';
+      const callbackBaseUrl = `${apiBase}/api/v1/api/internal/solver`;
 
       // 4. Submit to sidecar (non-blocking, sidecar calls back)
       await this.solverClient.submitSolve(runId, solverPayload, callbackBaseUrl, maxSolveSeconds);
