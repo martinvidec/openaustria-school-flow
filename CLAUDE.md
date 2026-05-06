@@ -16,15 +16,11 @@ Wenn ein User-Prompt versehentlich `/gsd:*` enthält: SOFORT nachfragen *"GSD-Di
 
 Begründung: GSD-State über zu viele Files verteilt → Plan-vs-Realität-Drift → Phase 17 PASS-WITH-FOLLOWUP behauptet Stabilität, aber Smoke-PR PR #10 ging mit 155/113 rot. Memory-File `feedback_no_more_gsd.md` hat den vollen Kontext.
 
-## D2 — Branch-Lockdown auf `gsd/phase-17-ci-stabilization` (User-Direktive 2026-05-02)
+## ~~D2 — Branch-Lockdown auf `gsd/phase-17-ci-stabilization`~~ (AUFGEHOBEN 2026-05-06)
 
-**Branch-Wechsel und Branch-Erstellen sind VERBOTEN** bis Phase-17-Fixes durch sind und PR #10 grün ohne `--admin`-Override mergt.
-
-Verboten: `git checkout <other>`, `git switch <other>`, `git checkout -b <new>`, `git switch -c <new>`, `git worktree add …`, `gh pr create --head <other>`, jeder Vorschlag *"sollen wir das auf einem chore/* Branch machen?"*.
-
-Erlaubt: Direkte Commits auf `gsd/phase-17-ci-stabilization`, `git push` auf den existierenden Branch, Updates an PR #10, alle Read-only-git-Befehle, `gh issue create`/`gh pr view`/`gh pr edit`.
-
-Wenn ein Bug-Fix "logisch" einen separaten Branch wäre (z.B. CI-workflow-fix als chore/*): EGAL — hier auf phase-17 committen. PR #10 wird groß, das ist OK. Memory-File `feedback_branch_lockdown_phase_17.md` hat den vollen Kontext.
+> **Status: nicht mehr aktiv.** Lockdown 2026-05-02 → 2026-05-06; die Bedingung *"PR #10 grün mergt ohne `--admin`-Override"* wurde mit Run [25405725332](https://github.com/martinvidec/openaustria-school-flow/actions/runs/25405725332) (307 passed / 0 failed) und Squash-Merge `17ea0b1` erfüllt. Standard-Branch-Disziplin ist wieder maßgeblich (siehe Memory `feedback_phase_branch_discipline.md`: Parallel-Branches OK soweit geordnet gemerged, Scope-Treue, kein versehentliches Arbeiten am falschen Branch).
+>
+> Die Lehre aus Phase 17 (race-family bei parallelen Specs auf shared per-school Resources) ist als Pattern-of-Record im Memory `project_e2e_parallel_cleanup_race_family.md` festgehalten — relevant für jede neue e2e-cleanup-Hook.
 
 ---
 
