@@ -4,6 +4,90 @@ import { PrismaClient } from '../src/config/database/generated/client.js';
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
+type KeycloakUserKey = 'admin' | 'lehrer' | 'eltern' | 'schueler' | 'schulleitung';
+
+const FALLBACK_KC_IDS: Record<KeycloakUserKey, string> = {
+  admin:        '00000000-0000-0000-0000-000000000001',
+  lehrer:       '00000000-0000-0000-0000-000000000002',
+  eltern:       '00000000-0000-0000-0000-000000000003',
+  schueler:     '00000000-0000-0000-0000-000000000004',
+  schulleitung: '00000000-0000-0000-0000-000000000005',
+};
+
+const KC_USERNAME_BY_KEY: Record<KeycloakUserKey, string> = {
+  admin:        'admin-user',
+  lehrer:       'lehrer-user',
+  eltern:       'eltern-user',
+  schueler:     'schueler-user',
+  schulleitung: 'schulleitung-user',
+};
+
+/**
+ * Resolve the live Keycloak user UUIDs for the five seeded test accounts.
+ *
+ * Why this exists: docker/keycloak/realm-export.json pins fixed UUIDs, but a
+ * Keycloak container that was started BEFORE those fixed IDs were added has
+ * random UUIDs in its keycloak-db volume. Without this lookup the seed writes
+ * the fallback `00000000-…` IDs, login succeeds but `/users/me` returns 404
+ * because no Person row matches the JWT's sub claim.
+ *
+ * Strategy: hit `/realms/master/.../token` (admin-cli password grant), then
+ * GET `/admin/realms/<realm>/users` and map by username. Falls back silently
+ * to the fixed UUIDs if Keycloak is unreachable (CI / offline seed runs).
+ */
+async function resolveKeycloakUserIds(): Promise<Record<KeycloakUserKey, string>> {
+  const baseUrl  = process.env.KEYCLOAK_URL ?? 'http://localhost:8080';
+  const realm    = process.env.KEYCLOAK_REALM ?? 'schoolflow';
+  const adminUser = process.env.KEYCLOAK_BOOTSTRAP_USER ?? 'admin';
+  const adminPass = process.env.KEYCLOAK_BOOTSTRAP_PASSWORD ?? 'admin';
+
+  try {
+    const tokenRes = await fetch(`${baseUrl}/realms/master/protocol/openid-connect/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'password',
+        client_id: 'admin-cli',
+        username: adminUser,
+        password: adminPass,
+      }),
+    });
+    if (!tokenRes.ok) {
+      throw new Error(`token endpoint returned ${tokenRes.status}`);
+    }
+    const { access_token: accessToken } = (await tokenRes.json()) as { access_token: string };
+
+    const usersRes = await fetch(`${baseUrl}/admin/realms/${realm}/users?max=100`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!usersRes.ok) {
+      throw new Error(`user list endpoint returned ${usersRes.status}`);
+    }
+    const users = (await usersRes.json()) as Array<{ id: string; username: string }>;
+    const byUsername = new Map(users.map((u) => [u.username, u.id]));
+
+    const resolved = {} as Record<KeycloakUserKey, string>;
+    let matched = 0;
+    for (const key of Object.keys(KC_USERNAME_BY_KEY) as KeycloakUserKey[]) {
+      const live = byUsername.get(KC_USERNAME_BY_KEY[key]);
+      if (live) {
+        resolved[key] = live;
+        matched += 1;
+      } else {
+        resolved[key] = FALLBACK_KC_IDS[key];
+      }
+    }
+    console.log(`Resolved ${matched}/5 Keycloak user IDs from live realm '${realm}'`);
+    return resolved;
+  } catch (err) {
+    console.warn(
+      `Keycloak lookup failed (${(err as Error).message}); using fixed fallback UUIDs. ` +
+        'Login will only work if realm-export.json was loaded with these IDs.',
+    );
+    return FALLBACK_KC_IDS;
+  }
+}
+
 // =====================================================
 // Seed fixture UUIDs (Phase 15.1 — UUID-aligned with @IsUUID() DTO validators)
 // =====================================================
@@ -812,19 +896,20 @@ async function main() {
   // =====================================================
   // Section: Keycloak user linkage for test fixtures
   // =====================================================
-  // Fixed UUIDs come from docker/keycloak/realm-export.json users[].id.
-  // This creates Person + Teacher/Student/Parent records for each Keycloak test user
-  // so login works immediately after a fresh docker compose up + db push + seed.
-  const KC_ADMIN_ID = '00000000-0000-0000-0000-000000000001';
-  const KC_LEHRER_ID = '00000000-0000-0000-0000-000000000002';
-  const KC_ELTERN_ID = '00000000-0000-0000-0000-000000000003';
-  const KC_SCHUELER_ID = '00000000-0000-0000-0000-000000000004';
-  const KC_SCHULLEITUNG_ID = '00000000-0000-0000-0000-000000000005';
+  // Looks up the live Keycloak UUIDs by username so a stale keycloak-db volume
+  // (random UUIDs) self-heals on the next seed run. Falls back to the fixed
+  // realm-export.json IDs if Keycloak is unreachable.
+  const kcIds = await resolveKeycloakUserIds();
+  const KC_ADMIN_ID = kcIds.admin;
+  const KC_LEHRER_ID = kcIds.lehrer;
+  const KC_ELTERN_ID = kcIds.eltern;
+  const KC_SCHUELER_ID = kcIds.schueler;
+  const KC_SCHULLEITUNG_ID = kcIds.schulleitung;
 
   // Lehrer: Maria Mueller -> new TEACHER person + teacher record
   const lehrerPerson = await prisma.person.upsert({
     where: { id: SEED_PERSON_KC_LEHRER_UUID },
-    update: {},
+    update: { keycloakUserId: KC_LEHRER_ID },
     create: {
       id: SEED_PERSON_KC_LEHRER_UUID,
       schoolId: school.id,
@@ -851,7 +936,7 @@ async function main() {
   // Schulleitung: Elisabeth Fischer -> TEACHER person (schulleitung is role)
   const schulleitungPerson = await prisma.person.upsert({
     where: { id: SEED_PERSON_KC_SCHULLEITUNG_UUID },
-    update: {},
+    update: { keycloakUserId: KC_SCHULLEITUNG_ID },
     create: {
       id: SEED_PERSON_KC_SCHULLEITUNG_UUID,
       schoolId: school.id,
@@ -878,7 +963,7 @@ async function main() {
   // Admin: System Admin -> TEACHER person (no PersonType enum value for ADMIN)
   await prisma.person.upsert({
     where: { id: SEED_PERSON_KC_ADMIN_UUID },
-    update: {},
+    update: { keycloakUserId: KC_ADMIN_ID },
     create: {
       id: SEED_PERSON_KC_ADMIN_UUID,
       schoolId: school.id,
@@ -893,7 +978,7 @@ async function main() {
   // Schueler: Max Huber -> dedicated student linked to class1A.
   const schuelerPerson = await prisma.person.upsert({
     where: { id: SEED_PERSON_KC_SCHUELER_UUID },
-    update: {},
+    update: { keycloakUserId: KC_SCHUELER_ID },
     create: {
       id: SEED_PERSON_KC_SCHUELER_UUID,
       schoolId: school.id,
@@ -920,7 +1005,7 @@ async function main() {
   // Eltern: Franz Huber -> PARENT person + parent record, linked to Lisa Huber (SEED_STUDENT_1_UUID)
   const elternPerson = await prisma.person.upsert({
     where: { id: SEED_PERSON_KC_ELTERN_UUID },
-    update: {},
+    update: { keycloakUserId: KC_ELTERN_ID },
     create: {
       id: SEED_PERSON_KC_ELTERN_UUID,
       schoolId: school.id,
