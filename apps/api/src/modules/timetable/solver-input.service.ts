@@ -230,31 +230,34 @@ export class SolverInputService {
         const period = periods[i];
         const nextPeriod = i + 1 < periods.length ? periods[i + 1] : null;
 
+        // Period.id is shared across weekdays in the schema, so timeslot ids
+        // must be composite (day + period) to satisfy Timefold's planningId
+        // uniqueness invariant. See issue #50 Bug 2.
         if (abWeekEnabled) {
           // Duplicate for A and B weeks
           for (const weekType of ['A', 'B'] as const) {
             const suffix = `-${weekType}`;
             timeslots.push({
-              id: `${period.id}${suffix}`,
+              id: `${day}-${period.id}${suffix}`,
               dayOfWeek: day,
               periodNumber: period.periodNumber,
               startTime: period.startTime,
               endTime: period.endTime,
               weekType,
               isBreak: period.isBreak,
-              nextTimeslotId: nextPeriod ? `${nextPeriod.id}${suffix}` : null,
+              nextTimeslotId: nextPeriod ? `${day}-${nextPeriod.id}${suffix}` : null,
             });
           }
         } else {
           timeslots.push({
-            id: period.id,
+            id: `${day}-${period.id}`,
             dayOfWeek: day,
             periodNumber: period.periodNumber,
             startTime: period.startTime,
             endTime: period.endTime,
             weekType: 'BOTH',
             isBreak: period.isBreak,
-            nextTimeslotId: nextPeriod ? nextPeriod.id : null,
+            nextTimeslotId: nextPeriod ? `${day}-${nextPeriod.id}` : null,
           });
         }
       }
