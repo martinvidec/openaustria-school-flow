@@ -20,6 +20,15 @@ import { expect, test } from '@playwright/test';
 import { getAdminToken, loginAsAdmin } from './helpers/login';
 
 test.describe('Phase 10.2 — Zeitraster save (desktop)', () => {
+  // Quick-fix for issue #54: ZEIT-01 mutates the shared seed-school TimeGrid
+  // via PUT-replace-all, which races against parallel browser projects
+  // (firefox, webkit, mobile-chrome) running the same spec at the same time.
+  // Limit to chromium until the throwaway-school refactor lands.
+  test.skip(
+    ({ browserName }) => browserName !== 'chromium',
+    'flaky on parallel browser projects — see #54 (TimeGrid race; throwaway-school refactor planned)',
+  );
+
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page);
   });
