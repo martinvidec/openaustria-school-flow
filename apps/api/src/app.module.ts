@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { PrismaModule } from './config/database/prisma.module';
 import { QueueModule } from './config/queue/queue.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -40,6 +41,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
       isGlobal: true,
       envFilePath: '../../.env',
     }),
+    ScheduleModule.forRoot(),
     QueueModule,
     PrismaModule,
     AuthModule,

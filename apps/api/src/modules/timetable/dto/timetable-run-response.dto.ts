@@ -34,6 +34,13 @@ export class TimetableRunResponseDto {
   @ApiProperty({ description: 'Whether A/B week mode was enabled for this run' })
   abWeekEnabled!: boolean;
 
+  @ApiPropertyOptional({
+    description:
+      'Human-readable error message — set when status=FAILED (watchdog timeout, sidecar 5xx). Issue #53.',
+    nullable: true,
+  })
+  errorReason!: string | null;
+
   @ApiProperty({ description: 'Run creation timestamp' })
   createdAt!: Date;
 

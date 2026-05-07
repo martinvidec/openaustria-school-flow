@@ -12,6 +12,7 @@ import { ConstraintTemplateController } from './constraint-template.controller';
 import { ConstraintTemplateService } from './constraint-template.service';
 import { ConstraintWeightOverrideController } from './constraint-weight-override.controller';
 import { ConstraintWeightOverrideService } from './constraint-weight-override.service';
+import { SolveWatchdogService } from './solve-watchdog.service';
 
 @Module({
   controllers: [
@@ -31,6 +32,7 @@ import { ConstraintWeightOverrideService } from './constraint-weight-override.se
     SolveProcessor,
     ConstraintTemplateService,
     ConstraintWeightOverrideService,
+    SolveWatchdogService,
   ],
   exports: [
     TimetableService,
