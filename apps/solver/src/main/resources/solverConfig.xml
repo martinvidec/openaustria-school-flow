@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Explicit solver configuration for the SchoolFlow timetabling problem.
+
+  Why this file exists (issue #51):
+    Without an explicit solverConfig.xml, the Quarkus Timefold extension
+    builds an implicit config that under our domain (32 lessons, dual
+    @PlanningVariable, ConstraintConfiguration) failed to insert a
+    Construction Heuristic before Local Search. The result was an
+    instant crash:
+      "Local Search phase (1) needs to start from an initialized
+       solution, but there are (32) uninitialized entities."
+
+  Defaults applied here:
+    - constructionHeuristic with no body  -> Timefold picks
+      FIRST_FIT_DECREASING automatically.
+    - localSearch with no body            -> Timefold picks
+      LATE_ACCEPTANCE automatically.
+
+  Property overrides still win:
+    quarkus.timefold.solver.termination.spent-limit (in
+    application.properties) overrides the XML <termination> below.
+    move-thread-count is also property-driven (Community Edition needs
+    NONE, see #50).
+
+  Domain class lookup:
+    - solutionClass + entityClass are listed explicitly so the Quarkus
+      extension does not need to scan the whole jar — the same
+      annotated classes are still auto-detected by Timefold for the
+      ConstraintConfiguration / @ValueRangeProvider wiring.
+-->
+<solver xmlns="https://timefold.ai/xsd/solver"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="https://timefold.ai/xsd/solver https://timefold.ai/xsd/solver/solver.xsd">
+
+    <solutionClass>at.schoolflow.solver.domain.SchoolTimetable</solutionClass>
+    <entityClass>at.schoolflow.solver.domain.Lesson</entityClass>
+
+    <scoreDirectorFactory>
+        <constraintProviderClass>at.schoolflow.solver.constraints.TimetableConstraintProvider</constraintProviderClass>
+    </scoreDirectorFactory>
+
+    <termination>
+        <!-- Overridden at runtime by quarkus.timefold.solver.termination.spent-limit -->
+        <spentLimit>5m</spentLimit>
+    </termination>
+
+    <constructionHeuristic/>
+    <localSearch/>
+</solver>
