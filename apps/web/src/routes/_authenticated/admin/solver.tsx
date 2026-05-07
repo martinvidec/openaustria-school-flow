@@ -34,7 +34,8 @@ export const Route = createFileRoute('/_authenticated/admin/solver')({
 function AdminSolverPage() {
   const schoolId = useSchoolContext((s) => s.schoolId);
   const navigate = useNavigate();
-  const { isConnected, progress, lastResult } = useSolverSocket(schoolId);
+  const { isConnected, progress, lastResult, activeRun, trackRun } =
+    useSolverSocket(schoolId);
   const [isStarting, setIsStarting] = useState(false);
   const [isActivating, setIsActivating] = useState(false);
 
@@ -52,8 +53,13 @@ function AdminSolverPage() {
       if (!res.ok) {
         throw new Error(`Failed to start solve (HTTP ${res.status})`);
       }
+      // #53 Schicht 1: capture runId from the 202 response so the UI can
+      // show "Wird in Warteschlange aufgenommen…" immediately, and arm
+      // the REST polling fallback for cases where the WS goes silent.
+      const data = (await res.json()) as { runId: string; status: string };
+      trackRun(data.runId);
       toast.info('Stundenplan-Generierung gestartet', {
-        description: 'Der Solver laeuft. Fortschritt erscheint hier.',
+        description: `Run ${data.runId.slice(0, 8)}… eingereiht.`,
       });
     } catch (error) {
       toast.error('Fehler beim Starten der Generierung', {
@@ -88,7 +94,20 @@ function AdminSolverPage() {
     }
   };
 
-  const isRunning = progress !== null;
+  // #53 Schicht 1: explicit run-state machine that drives the UI cards.
+  //   - "running"  = QUEUED or SOLVING (button disabled, queued/progress card)
+  //   - "failed"   = FAILED (red error card with errorReason)
+  //   - "complete" = COMPLETED (green result card via `lastResult`)
+  // Falls back to the legacy `progress !== null` flag so this still works
+  // if the socket fires before activeRun gets the QUEUED snapshot.
+  const isQueued =
+    activeRun?.status === 'QUEUED' && progress === null;
+  const isRunning =
+    progress !== null ||
+    activeRun?.status === 'SOLVING' ||
+    activeRun?.status === 'QUEUED';
+  const failedRun =
+    activeRun?.status === 'FAILED' ? activeRun : null;
 
   return (
     <div className="max-w-[800px] mx-auto space-y-6">
@@ -140,6 +159,31 @@ function AdminSolverPage() {
                 : 'Nicht verbunden (Updates folgen beim Verbinden)'}
             </span>
           </div>
+
+          {/* #53 Schicht 1: queued-state card. Shown while the run is
+              QUEUED and no progress event has arrived yet — closes the
+              "silent void" gap between POST and first solver tick. */}
+          {isQueued && activeRun && (
+            <div
+              className="space-y-2 rounded-md border border-border bg-muted/30 p-4"
+              role="status"
+              aria-live="polite"
+              data-testid="solver-queued-card"
+            >
+              <div className="flex items-center gap-2 text-sm font-semibold">
+                <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-blue-500" />
+                Wird in Warteschlange aufgenommen…
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Run:{' '}
+                <span className="font-mono">{activeRun.runId}</span>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Engine startet gleich. Fortschritt erscheint hier sobald die
+                ersten Lösungen gefunden wurden.
+              </div>
+            </div>
+          )}
 
           {/* Live progress block -- only while solver is running */}
           {progress && (
@@ -194,8 +238,39 @@ function AdminSolverPage() {
         </CardContent>
       </Card>
 
+      {/* #53 Schicht 1: failure card — surfaces the watchdog-detected
+          timeout (or any other FAILED reason) instead of leaving the user
+          staring at a silent spinner. Backed by activeRun.errorReason. */}
+      {failedRun && (
+        <Card
+          className="border-destructive/60 bg-destructive/5"
+          data-testid="solver-failed-card"
+        >
+          <CardHeader>
+            <CardTitle className="text-[20px] text-destructive">
+              Generierung fehlgeschlagen
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Run ID</span>
+              <span className="font-mono text-xs">{failedRun.runId}</span>
+            </div>
+            <div className="rounded-md bg-background/40 p-3 text-sm">
+              {failedRun.errorReason ??
+                'Unbekannter Fehler — siehe API-Logs für Details.'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Bitte Generierung erneut starten. Wiederholen sich Fehler,
+              prüfen Sie unter „Stundenplan-Tuning“ die Constraints und
+              kontaktieren Sie den Support.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Last result card -- only after a solve:complete event */}
-      {lastResult && (
+      {lastResult && lastResult.status !== 'FAILED' && (
         <Card>
           <CardHeader>
             <CardTitle className="text-[20px]">Letztes Ergebnis</CardTitle>

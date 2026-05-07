@@ -730,6 +730,9 @@ model TimetableRun {
   isActive         Boolean     @default(false) @map("is_active")
   maxSolveSeconds  Int         @default(300) @map("max_solve_seconds")
   abWeekEnabled    Boolean     @default(false) @map("ab_week_enabled")
+  // Set when status becomes FAILED (watchdog timeout, sidecar 5xx, validator
+  // failure, etc.). Surfaced as red error card on /admin/solver. Issue #53.
+  errorReason      String?     @map("error_reason")
   createdAt        DateTime    @default(now()) @map("created_at")
   updatedAt        DateTime    @updatedAt @map("updated_at")
 

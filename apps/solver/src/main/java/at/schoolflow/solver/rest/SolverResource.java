@@ -62,6 +62,15 @@ public class SolverResource {
             .connectTimeout(Duration.ofSeconds(10))
             .build();
 
+    /**
+     * Shared secret used to authenticate sidecar -> NestJS callbacks.
+     * NestJS SolverCallbackController.validateSolverSecret rejects requests
+     * without a matching X-Solver-Secret header; we read it from env at
+     * request time so docker-compose env propagation works without rebuild.
+     */
+    private static final String SOLVER_SHARED_SECRET =
+            System.getenv().getOrDefault("SOLVER_SHARED_SECRET", "dev-secret");
+
     /** Tracks solve start times for elapsed seconds calculation */
     private final Map<String, Instant> startTimes = new ConcurrentHashMap<>();
 
@@ -342,6 +351,7 @@ public class SolverResource {
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(url))
                     .header("Content-Type", "application/json")
+                    .header("X-Solver-Secret", SOLVER_SHARED_SECRET)
                     .POST(HttpRequest.BodyPublishers.ofString(json))
                     .timeout(Duration.ofSeconds(5))
                     .build();

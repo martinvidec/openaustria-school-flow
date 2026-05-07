@@ -86,6 +86,10 @@ services:
       - "8081:8081"
     environment:
       QUARKUS_HTTP_PORT: 8081
+      # Sidecar -> NestJS callbacks must include X-Solver-Secret. Both sides
+      # default to "dev-secret"; override via shell env or docker/.env when
+      # running prod. See #53 (Bug 6 in the original audit).
+      SOLVER_SHARED_SECRET: ${SOLVER_SHARED_SECRET:-dev-secret}
     # Solver runs in container, API runs on host (dev setup) — sidecar's
     # callback to host:3000 must resolve to the Mac/Linux host. See #50.
     extra_hosts:
