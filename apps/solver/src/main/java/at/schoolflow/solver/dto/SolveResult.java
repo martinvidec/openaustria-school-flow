@@ -96,7 +96,13 @@ public class SolveResult {
 
     /**
      * A lesson with its solved timeslot and room assignments.
-     * Only the IDs are sent back -- NestJS maps them to full entities.
+     * NestJS maps the IDs to full entities and persists TimetableLesson rows.
+     *
+     * Issue #58: dayOfWeek + periodNumber + weekType are denormalized
+     * out of the Timeslot so NestJS can persist TimetableLesson rows
+     * without an extra DB lookup. SolveResultDto on the NestJS side
+     * declares them required; without these fields validation rejected
+     * the callback with 422.
      */
     public static class SolvedLesson {
 
@@ -109,13 +115,26 @@ public class SolveResult {
         @JsonProperty("roomId")
         private String roomId;
 
+        @JsonProperty("dayOfWeek")
+        private String dayOfWeek;
+
+        @JsonProperty("periodNumber")
+        private int periodNumber;
+
+        @JsonProperty("weekType")
+        private String weekType;
+
         public SolvedLesson() {
         }
 
-        public SolvedLesson(String lessonId, String timeslotId, String roomId) {
+        public SolvedLesson(String lessonId, String timeslotId, String roomId,
+                            String dayOfWeek, int periodNumber, String weekType) {
             this.lessonId = lessonId;
             this.timeslotId = timeslotId;
             this.roomId = roomId;
+            this.dayOfWeek = dayOfWeek;
+            this.periodNumber = periodNumber;
+            this.weekType = weekType;
         }
 
         public String getLessonId() {
@@ -140,6 +159,30 @@ public class SolveResult {
 
         public void setRoomId(String roomId) {
             this.roomId = roomId;
+        }
+
+        public String getDayOfWeek() {
+            return dayOfWeek;
+        }
+
+        public void setDayOfWeek(String dayOfWeek) {
+            this.dayOfWeek = dayOfWeek;
+        }
+
+        public int getPeriodNumber() {
+            return periodNumber;
+        }
+
+        public void setPeriodNumber(int periodNumber) {
+            this.periodNumber = periodNumber;
+        }
+
+        public String getWeekType() {
+            return weekType;
+        }
+
+        public void setWeekType(String weekType) {
+            this.weekType = weekType;
         }
     }
 }

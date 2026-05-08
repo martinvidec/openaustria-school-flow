@@ -27,6 +27,7 @@ import ai.timefold.solver.core.api.solver.SolutionManager;
 import ai.timefold.solver.core.api.solver.SolverManager;
 import at.schoolflow.solver.domain.Lesson;
 import at.schoolflow.solver.domain.SchoolTimetable;
+import at.schoolflow.solver.domain.SolverTimeslot;
 import at.schoolflow.solver.dto.SolveProgress;
 import at.schoolflow.solver.dto.SolveRequest;
 import at.schoolflow.solver.dto.SolveResult;
@@ -205,14 +206,22 @@ public class SolverResource {
             result.setSoftScore(score.softScore());
             result.setElapsedSeconds(elapsed);
 
-            // Map solved lessons to SolvedLesson DTOs
+            // Map solved lessons to SolvedLesson DTOs.
+            // Denormalize dayOfWeek/periodNumber/weekType out of the
+            // assigned Timeslot so NestJS can persist TimetableLesson rows
+            // directly. SolveResultDto on the NestJS side declares these
+            // required (issue #58).
             List<SolveResult.SolvedLesson> solvedLessons = new ArrayList<>();
             for (Lesson lesson : solution.getLessons()) {
                 if (lesson.getTimeslot() != null && lesson.getRoom() != null) {
+                    SolverTimeslot ts = lesson.getTimeslot();
                     solvedLessons.add(new SolveResult.SolvedLesson(
                             lesson.getId(),
-                            lesson.getTimeslot().getId(),
-                            lesson.getRoom().getId()
+                            ts.getId(),
+                            lesson.getRoom().getId(),
+                            ts.getDayOfWeek(),
+                            ts.getPeriodNumber(),
+                            ts.getWeekType()
                     ));
                 }
             }
@@ -348,7 +357,12 @@ public class SolverResource {
             String json = objectMapper.writeValueAsString(payload);
             String url = callbackUrl + path;
 
+            // Pin HTTP/1.1 — Java's default is HTTP/2 with cleartext upgrade,
+            // which Fastify (NestJS) does not handle cleanly: the connection
+            // is accepted but the response is closed before headers, surfacing
+            // as "header parser received no bytes". Issue #58.
             HttpRequest request = HttpRequest.newBuilder()
+                    .version(HttpClient.Version.HTTP_1_1)
                     .uri(URI.create(url))
                     .header("Content-Type", "application/json")
                     .header("X-Solver-Secret", SOLVER_SHARED_SECRET)

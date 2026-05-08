@@ -78,6 +78,10 @@ describe('SolveWatchdogService', () => {
       expect.objectContaining({
         runId: 'run-stuck',
         status: 'FAILED',
+        // #58 — synthetic complete event must carry the same German
+        // reason that was just written to the DB so the FE red card
+        // renders the real message instead of "Unbekannter Fehler".
+        errorReason: expect.stringMatching(/Watchdog-Timeout/),
       }),
     );
   });

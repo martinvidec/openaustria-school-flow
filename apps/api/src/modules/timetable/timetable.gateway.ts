@@ -71,6 +71,11 @@ export class TimetableGateway implements OnGatewayConnection, OnGatewayDisconnec
       hardScore: number;
       softScore: number;
       elapsedSeconds: number;
+      // Issue #58: watchdog-driven FAILED events carry the German timeout
+      // message; normal completions pass null. Frontend mirrors this into
+      // activeRun so the red FAILED card shows the real reason instead of
+      // "Unbekannter Fehler".
+      errorReason?: string | null;
     },
   ): void {
     this.server.to(`school:${schoolId}`).emit('solve:complete', result);

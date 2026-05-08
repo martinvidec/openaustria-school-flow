@@ -49,6 +49,11 @@ export interface SolveProgressEvent {
  * Lightweight completion summary emitted by `/solver` when the run finishes.
  * Matches the payload constructed in SolverCallbackController.handleCompletion
  * (full lesson list is fetched via REST afterwards, not broadcast here).
+ *
+ * Issue #58: errorReason is set when status === 'FAILED' (watchdog timeout,
+ * sidecar 5xx, validator failure). Normal completions pass null. Mirrored
+ * into activeRun so the red FAILED card has the real message at hand
+ * without an extra REST round-trip.
  */
 export interface SolveCompleteEvent {
   runId: string;
@@ -56,6 +61,7 @@ export interface SolveCompleteEvent {
   hardScore: number;
   softScore: number;
   elapsedSeconds: number;
+  errorReason?: string | null;
 }
 
 /**
@@ -238,12 +244,16 @@ export function useSolverSocket(schoolId: string | null | undefined) {
       setLastResult(event);
       setProgress(null);
       // Mirror terminal status into activeRun so the page can render the
-      // FAILED-card from a single source of truth.
+      // FAILED-card from a single source of truth. #58: also mirror
+      // errorReason from the event so the red card shows the real message
+      // (was falling back to "Unbekannter Fehler" because the last poll
+      // had errorReason=null while the run was still SOLVING).
       setActiveRun((prev) =>
         prev && prev.runId === event.runId
           ? {
               ...prev,
               status: event.status as ActiveRunState['status'],
+              errorReason: event.errorReason ?? prev.errorReason,
             }
           : prev,
       );
