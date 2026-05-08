@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getQueueToken } from '@nestjs/bullmq';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { TimetableService } from './timetable.service';
 import { PrismaService } from '../../config/database/prisma.service';
 import { SolverClientService } from './solver-client.service';
@@ -54,6 +54,12 @@ describe('TimetableService', () => {
   const mockPrismaService = {
     school: {
       findUniqueOrThrow: vi.fn().mockResolvedValue(mockSchool),
+    },
+    room: {
+      // #51 defensive pre-check needs at least one room. Default mock
+      // returns 6 (matches the seed-school count); the no-rooms spec
+      // overrides to 0.
+      count: vi.fn().mockResolvedValue(6),
     },
     timetableRun: {
       create: vi.fn().mockResolvedValue(mockRun),
@@ -139,6 +145,18 @@ describe('TimetableService', () => {
           maxSolveSeconds: 300,
         }),
       });
+    });
+
+    it('refuses startSolve with BadRequest when school has zero rooms (#51)', async () => {
+      prismaService.room.count.mockResolvedValueOnce(0);
+
+      await expect(service.startSolve('school-1')).rejects.toThrow(
+        BadRequestException,
+      );
+      // Crucial: do NOT enqueue a job that would crash inside the
+      // sidecar's CH with "uninitialized entities".
+      expect(prismaService.timetableRun.create).not.toHaveBeenCalled();
+      expect(solverQueue.add).not.toHaveBeenCalled();
     });
 
     it('should snapshot the RESOLVED weight map into constraintConfig (D-06)', async () => {

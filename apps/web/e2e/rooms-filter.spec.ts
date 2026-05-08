@@ -13,12 +13,13 @@
  *     appears anywhere in the request URL.
  *
  *   Test 2 — UI-level guard for hasActiveFilters branching:
- *     Selecting Raumtyp=EDV-Raum yields zero matches (the seedTimetableRun
- *     fixture only ever provisions a KLASSENZIMMER room, and prisma:seed
- *     creates ZERO rooms). The empty-state Card must show the filter-aware
- *     copy ("Keine passenden Raeume") and NOT the legacy un-branched copy
- *     ("Keine Raeume angelegt"). Reverting the hasActiveFilters branch in
- *     rooms/index.tsx fails this assertion.
+ *     Selecting Raumtyp=Werkraum yields zero matches. After #51 the
+ *     prisma:seed creates 3 KLASSENZIMMER + Turnsaal + EDV-Raum +
+ *     Musikraum, but neither Werkraum nor Labor — Werkraum is the
+ *     stable empty-filter target. The empty-state Card must show the
+ *     filter-aware copy ("Keine passenden Raeume") and NOT the legacy
+ *     un-branched copy ("Keine Raeume angelegt"). Reverting the
+ *     hasActiveFilters branch in rooms/index.tsx fails this assertion.
  *
  * Closes deferred items 2 + 3 from
  *   .planning/debug/resolved/room-filter-not-working.md
@@ -27,16 +28,15 @@
  *
  * Fixture choice — REUSE seedTimetableRun:
  *   - Self-provisions a Room with roomType KLASSENZIMMER (timetable-run.ts:240-249)
- *     when the seed school has none — guarantees the precondition for
- *     Test 1 (a Klassenzimmer match exists, so the request still fires)
- *     and the precondition for Test 2 (only a Klassenzimmer exists, so
- *     EDV-Raum yields zero matches).
+ *     when the seed school has none — kept for back-compat even though
+ *     prisma:seed now creates rooms (since #51). Test 1 still finds a
+ *     Klassenzimmer match. Test 2 deliberately picks Werkraum (which
+ *     neither seed nor fixture provisions) for guaranteed zero matches.
  *   - Activates MON–FRI school days so the availability grid renders.
  *   - Same fixture used by admin-timetable-edit-perspective.spec.ts —
  *     keeping the contract in one place reduces fixture drift.
- *   If a future seed adds an EDV_RAUM room, Test 2 will start failing —
- *   that's the correct signal. Flip the assertion to a different empty
- *   type (MUSIKRAUM, WERKRAUM) at that point.
+ *   If a future seed adds a WERKRAUM room, Test 2 will start failing —
+ *   that's the correct signal. Flip the assertion to LABOR at that point.
  *
  * Desktop-only via file naming (no `mobile` infix) — playwright.config.ts:42
  * routes `*.spec.ts` files to the desktop project automatically.
@@ -128,12 +128,14 @@ test.describe('Rooms-filter regression — German enum + filter-aware empty stat
   }) => {
     await page.waitForLoadState('networkidle');
 
-    // Pick EDV-Raum — guaranteed zero matches because seedTimetableRun's
-    // self-provisioned room is KLASSENZIMMER and prisma:seed creates zero
-    // rooms. Day filter stays at the default (today's weekday or MONDAY).
+    // Pick Werkraum — guaranteed zero matches. The seed school has 3
+    // KLASSENZIMMER + Turnsaal + EDV-Raum + Musikraum, but neither
+    // Werkraum nor Labor (#51 added rooms; the doc-comment of this file
+    // foresaw exactly this drift and prescribed flipping the filter to
+    // an empty type when it happens). Day filter stays at the default.
     await page.getByRole('combobox').nth(1).click();
     await page
-      .getByRole('option', { name: 'EDV-Raum', exact: true })
+      .getByRole('option', { name: 'Werkraum', exact: true })
       .click();
 
     // Filter-aware copy (the regression target):

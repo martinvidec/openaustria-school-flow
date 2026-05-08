@@ -145,6 +145,16 @@ const SEED_PARENTSTUDENT_KC_ELTERN_UUID = '10000000-0000-4000-8000-000000000005'
 const SEED_REDUCTION_T2_KV_UUID         = '20000000-0000-4000-8000-000000000001';
 const SEED_RULE_RELIGION_1A_UUID        = '20000000-0000-4000-8000-000000000002';
 
+// Solver-input fixed UUIDs (issue #51): the seed school MUST have rooms or
+// the Construction Heuristic cannot initialize Lesson.room (one of two
+// @PlanningVariables) and Local Search crashes with "uninitialized entities".
+const SEED_ROOM_K_1A_UUID               = '30000000-0000-4000-8000-000000000001';
+const SEED_ROOM_K_2A_UUID               = '30000000-0000-4000-8000-000000000002';
+const SEED_ROOM_K_RESERVE_UUID          = '30000000-0000-4000-8000-000000000003';
+const SEED_ROOM_TURNSAAL_UUID           = '30000000-0000-4000-8000-000000000004';
+const SEED_ROOM_EDV_UUID                = '30000000-0000-4000-8000-000000000005';
+const SEED_ROOM_MUSIK_UUID              = '30000000-0000-4000-8000-000000000006';
+
 // Lookup arrays (1-indexed via [n - 1]) for the studentNames loop:
 const SEED_PERSON_STUDENT_UUIDS = [
   SEED_PERSON_STUDENT_1_UUID,
@@ -1045,9 +1055,42 @@ async function main() {
     data: { klassenvorstandId: lehrerTeacher.id },
   });
 
+  // --- Rooms (issue #51) ---
+  // Six rooms covering the four most common Austrian school room types so
+  // the Timefold solver Construction Heuristic always has a value range
+  // for Lesson.room. Capacities match a typical 25–30-student class.
+  const seedRooms: Array<{
+    id: string;
+    name: string;
+    roomType: 'KLASSENZIMMER' | 'TURNSAAL' | 'EDV_RAUM' | 'MUSIKRAUM';
+    capacity: number;
+    equipment: string[];
+  }> = [
+    { id: SEED_ROOM_K_1A_UUID, name: 'Raum 1A', roomType: 'KLASSENZIMMER', capacity: 30, equipment: ['Beamer'] },
+    { id: SEED_ROOM_K_2A_UUID, name: 'Raum 2A', roomType: 'KLASSENZIMMER', capacity: 30, equipment: ['Smartboard'] },
+    { id: SEED_ROOM_K_RESERVE_UUID, name: 'Raum 3 (Reserve)', roomType: 'KLASSENZIMMER', capacity: 28, equipment: [] },
+    { id: SEED_ROOM_TURNSAAL_UUID, name: 'Turnsaal', roomType: 'TURNSAAL', capacity: 60, equipment: [] },
+    { id: SEED_ROOM_EDV_UUID, name: 'EDV-Raum', roomType: 'EDV_RAUM', capacity: 24, equipment: ['PCs', 'Beamer'] },
+    { id: SEED_ROOM_MUSIK_UUID, name: 'Musikraum', roomType: 'MUSIKRAUM', capacity: 28, equipment: ['Klavier'] },
+  ];
+  for (const r of seedRooms) {
+    await prisma.room.upsert({
+      where: { id: r.id },
+      update: {},
+      create: {
+        id: r.id,
+        schoolId: school.id,
+        name: r.name,
+        roomType: r.roomType,
+        capacity: r.capacity,
+        equipment: r.equipment,
+      },
+    });
+  }
+
   console.log(`Seeded ${roles.length} roles and ${allPermissions.length} default permissions`);
   console.log(`Seeded sample school: ${school.name} (${school.schoolType})`);
-  console.log('Seeded 3 teachers, 6 students, 4 subjects, 2 classes, 7 retention policies');
+  console.log(`Seeded 3 teachers, 6 students, 4 subjects, 2 classes, ${seedRooms.length} rooms, 7 retention policies`);
   console.log('Linked 5 Keycloak test users to Person records with Klassenvorstand assignment');
 }
 

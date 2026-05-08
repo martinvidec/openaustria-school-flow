@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { endOfWeek, startOfWeek } from 'date-fns';
@@ -54,6 +59,20 @@ export class TimetableService {
     const school = await this.prisma.school.findUniqueOrThrow({
       where: { id: schoolId },
     });
+
+    // #51 defensive pre-check: Lesson has TWO @PlanningVariables in the
+    // sidecar (timeslot + room). With zero rooms the Construction
+    // Heuristic cannot initialize the room field and Local Search crashes
+    // with "uninitialized entities". Refuse the run upfront with a clear
+    // error so the UI can render a helpful FAILED card instead of a
+    // generic "watchdog timeout" 60+ seconds later.
+    const roomCount = await this.prisma.room.count({ where: { schoolId } });
+    if (roomCount === 0) {
+      throw new BadRequestException(
+        'Stundenplan-Generierung nicht möglich: Diese Schule hat noch keine Räume. ' +
+          'Bitte mindestens einen Raum unter „Räume“ anlegen, dann erneut versuchen.',
+      );
+    }
 
     // D-06 Step 0: load school-scoped DB overrides BEFORE building the payload
     const dbWeights = await this.constraintWeightOverrideService.findOverridesOnly(schoolId);
