@@ -57,13 +57,6 @@ interface AuditEntry {
 }
 
 test.describe('Phase 14 — Solver-Tuning Audit Trail', () => {
-  // Phase 17 deferred: POST /constraint-templates 422 regression — same
-  // root-cause cluster as admin-solver-tuning-restrictions (E2E-SOLVER-04).
-  // See 17-TRIAGE.md row #cluster-14-422-audit-11. Owner: Phase 17.1.
-  test.skip(
-    true,
-    'Phase 17 deferred: POST /constraint-templates 422 regression — see 17-TRIAGE.md row #cluster-14-422-audit-11.',
-  );
 
   test.beforeEach(async ({ page, request }) => {
     await cleanupConstraintTemplatesViaAPI(request);
