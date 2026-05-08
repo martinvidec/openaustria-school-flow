@@ -28,22 +28,6 @@ import {
 const SEED_CLASS_1A = 'seed-class-1a';
 
 test.describe('Phase 14 — Solver-Tuning Class Restrictions (Tab 3)', () => {
-  // Phase 17 deferred: POST /constraint-templates 422 — regression suspected
-  // between Phase 14 final (E2E-SOLVER-04 passing — see 14-03-SUMMARY.md) and
-  // PR #1 baseline run 25065085891 (failing). Shared root cause with
-  // admin-solver-tuning-preferences (E2E-SOLVER-07/-09) and
-  // admin-solver-tuning-audit (E2E-SOLVER-11), all of which fail on the same
-  // POST /constraint-templates seed call. Local repro is blocked
-  // (parallel-worktree environment — API on :3000 not running, identical
-  // constraint to Plans F/D wave-merge verification rows in 17-TRIAGE.md).
-  // Backend-fix path requires live stack to inspect 422 problem+json `type`
-  // (cross-reference-missing vs period-out-of-range vs other) — exceeded the
-  // 30-minute D-12 budget. See 17-TRIAGE.md row #cluster-14-422 and
-  // .planning/phases/17-ci-stabilization/deferred-items.md (Phase 17 deferred).
-  test.skip(
-    true,
-    'Phase 17 deferred: POST /constraint-templates 422 regression — shared root cause with admin-solver-tuning-preferences/audit; live-stack repro required (Phase 17.1 owner). See 17-TRIAGE.md row #cluster-14-422.',
-  );
 
   test.beforeEach(async ({ page, request }) => {
     await cleanupConstraintTemplatesViaAPI(request);
