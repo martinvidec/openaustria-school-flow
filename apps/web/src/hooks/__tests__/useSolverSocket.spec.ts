@@ -112,6 +112,34 @@ describe('useSolverSocket — #53 Schicht 1', () => {
     expect(result.current.activeRun?.errorReason).toMatch(/Watchdog-Timeout/);
   });
 
+  it('mirrors errorReason from solve:complete event into activeRun (#58)', () => {
+    const { result } = renderHook(() => useSolverSocket('s1'), { wrapper });
+    act(() => {
+      result.current.trackRun('run-failed');
+    });
+
+    // Watchdog-style FAILED completion event with the real reason.
+    act(() => {
+      const onComplete = handlers.get('solve:complete');
+      onComplete?.({
+        runId: 'run-failed',
+        status: 'FAILED',
+        hardScore: 0,
+        softScore: 0,
+        elapsedSeconds: 300,
+        errorReason: 'Watchdog-Timeout: Solver-Sidecar hat keine Antwort gesendet.',
+      });
+    });
+
+    // Without the #58 fix, errorReason stays null (last polled value)
+    // and the FE red card falls back to "Unbekannter Fehler".
+    expect(result.current.activeRun).toEqual({
+      runId: 'run-failed',
+      status: 'FAILED',
+      errorReason: expect.stringMatching(/Watchdog-Timeout/),
+    });
+  });
+
   it('cancels polling fallback when a WS progress event arrives within the grace window', async () => {
     apiFetchMock.mockResolvedValue({
       ok: true,

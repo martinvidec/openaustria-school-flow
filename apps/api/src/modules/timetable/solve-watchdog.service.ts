@@ -70,6 +70,9 @@ export class SolveWatchdogService {
         hardScore: 0,
         softScore: 0,
         elapsedSeconds: run.maxSolveSeconds,
+        // Issue #58: hand the reason we just persisted to the open
+        // /admin/solver page so the red FAILED card shows it directly.
+        errorReason: reason,
       });
     }
   }
