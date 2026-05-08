@@ -177,13 +177,30 @@ export interface TimetableRunFixture {
 }
 
 /**
- * Seed exactly one TimetableRun (status COMPLETED, isActive true) and exactly
- * one TimetableLesson at (MONDAY, period 1) for class 1A in the seed school.
+ * Options for `seedTimetableRun`.
+ *
+ * Issue #60: when `active: false`, the run is created with isActive=false
+ * so a spec can drive the Aktivieren-button flow on /admin/solver. The
+ * default stays true to preserve the contract every existing spec relies
+ * on.
+ */
+export interface SeedTimetableRunOptions {
+  /** Default true — passes the run straight into "active" state. */
+  active?: boolean;
+}
+
+/**
+ * Seed exactly one TimetableRun (status COMPLETED) and exactly one
+ * TimetableLesson at (MONDAY, period 1) for class 1A in the seed school.
  *
  * Picks the FIRST classSubject for class 1A and the FIRST Teacher + FIRST
  * Room of the school. All lookups are deterministic via createdAt asc.
  */
-export async function seedTimetableRun(schoolId: string): Promise<TimetableRunFixture> {
+export async function seedTimetableRun(
+  schoolId: string,
+  options: SeedTimetableRunOptions = {},
+): Promise<TimetableRunFixture> {
+  const { active = true } = options;
   const prisma = new PrismaClient({
     adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL ?? '' }),
   });
@@ -297,7 +314,7 @@ export async function seedTimetableRun(schoolId: string): Promise<TimetableRunFi
       data: {
         schoolId,
         status: 'COMPLETED',
-        isActive: true,
+        isActive: active,
         maxSolveSeconds: 300,
         abWeekEnabled: false,
         hardScore: 0,
