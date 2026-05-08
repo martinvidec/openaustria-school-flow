@@ -1,10 +1,12 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useSchoolContext } from '@/stores/school-context-store';
 import { useSolverSocket } from '@/hooks/useSolverSocket';
+import { useRecentTimetableRuns } from '@/hooks/useRecentTimetableRuns';
 import { apiFetch } from '@/lib/api';
 import { GeneratorPageWeightsCard } from '@/components/admin/solver/GeneratorPageWeightsCard';
 
@@ -34,10 +36,16 @@ export const Route = createFileRoute('/_authenticated/admin/solver')({
 function AdminSolverPage() {
   const schoolId = useSchoolContext((s) => s.schoolId);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { isConnected, progress, lastResult, activeRun, trackRun } =
     useSolverSocket(schoolId);
+  // #60: REST-driven listing of recent runs. Independent of WS state so the
+  // user can always recover and activate a COMPLETED run, even when the
+  // solve:complete event was lost.
+  const { data: recentRuns = [] } = useRecentTimetableRuns(schoolId);
   const [isStarting, setIsStarting] = useState(false);
   const [isActivating, setIsActivating] = useState(false);
+  const [activatingRunId, setActivatingRunId] = useState<string | null>(null);
 
   const handleGenerate = async () => {
     if (!schoolId) return;
@@ -91,6 +99,32 @@ function AdminSolverPage() {
       });
     } finally {
       setIsActivating(false);
+    }
+  };
+
+  // #60: activate any run from the REST-driven "Letzte Runs" list. The
+  // existing handleActivate is keyed off `lastResult` (WS state) and is
+  // kept for the live happy-path; this one is the resilient fallback.
+  const handleActivateRun = async (runId: string) => {
+    if (!schoolId) return;
+    setActivatingRunId(runId);
+    try {
+      const res = await apiFetch(
+        `/api/v1/schools/${schoolId}/timetable/runs/${runId}/activate`,
+        { method: 'POST' },
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      toast.success('Stundenplan aktiviert');
+      // Refresh recent-runs so the new isActive=true row is reflected
+      // before navigation.
+      await queryClient.invalidateQueries({ queryKey: ['timetable-runs:recent'] });
+      navigate({ to: '/timetable' });
+    } catch (error) {
+      toast.error('Aktivierung fehlgeschlagen', {
+        description: error instanceof Error ? error.message : 'Unbekannter Fehler',
+      });
+    } finally {
+      setActivatingRunId(null);
     }
   };
 
@@ -237,6 +271,80 @@ function AdminSolverPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* #60: REST-driven "Letzte Runs" card. Resilient to WS event loss —
+          the user can always see and activate any COMPLETED run from the
+          server's actual state, not just the one whose solve:complete
+          event made it through. Hidden when the list is empty (no runs
+          ever started) so the page stays uncluttered for first use. */}
+      {recentRuns.length > 0 && (
+        <Card data-testid="recent-runs-card">
+          <CardHeader>
+            <CardTitle className="text-[20px]">Letzte Runs</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="divide-y divide-border text-sm">
+              {recentRuns.map((run) => {
+                const dt = new Date(run.createdAt);
+                const created = isNaN(dt.getTime())
+                  ? run.createdAt
+                  : dt.toLocaleString('de-AT', {
+                      dateStyle: 'short',
+                      timeStyle: 'short',
+                    });
+                const canActivate =
+                  run.status === 'COMPLETED' && !run.isActive;
+                return (
+                  <li
+                    key={run.id}
+                    className="flex flex-wrap items-center justify-between gap-3 py-3"
+                    data-testid={`recent-run-row-${run.id}`}
+                  >
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs">{run.id}</span>
+                        <span
+                          className={
+                            run.isActive
+                              ? 'rounded bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800'
+                              : run.status === 'COMPLETED'
+                                ? 'rounded bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800'
+                                : run.status === 'FAILED'
+                                  ? 'rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-800'
+                                  : 'rounded bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground'
+                          }
+                        >
+                          {run.isActive ? 'Aktiv' : run.status}
+                        </span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {created}
+                        {run.hardScore !== null && run.softScore !== null && (
+                          <>
+                            {' · '}Hard {run.hardScore} / Soft {run.softScore}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    {canActivate && (
+                      <Button
+                        size="sm"
+                        onClick={() => handleActivateRun(run.id)}
+                        disabled={activatingRunId !== null}
+                        data-testid={`activate-run-${run.id}`}
+                      >
+                        {activatingRunId === run.id
+                          ? 'Wird aktiviert…'
+                          : 'Aktivieren'}
+                      </Button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       {/* #53 Schicht 1: failure card — surfaces the watchdog-detected
           timeout (or any other FAILED reason) instead of leaving the user
