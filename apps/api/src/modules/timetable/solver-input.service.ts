@@ -276,7 +276,7 @@ export class SolverInputService {
       weeklyHours: number;
       preferDoublePeriod: boolean;
       groupId: string | null;
-      subject: { id: string; name: string; subjectType: string; lehrverpflichtungsgruppe: string | null; werteinheitenFactor: number | null };
+      subject: { id: string; name: string; subjectType: string; lehrverpflichtungsgruppe: string | null; werteinheitenFactor: number | null; requiredRoomType: string | null };
       schoolClass: { id: string; name: string; homeRoomId: string | null };
     }>,
     teacherMap: Map<string, { id: string; person: { firstName: string; lastName: string } }>,
@@ -286,9 +286,10 @@ export class SolverInputService {
     for (const cs of classSubjects) {
       if (cs.weeklyHours <= 0) continue;
 
-      // Look up subject's requiredRoomType from subject model
-      // Note: Subject doesn't have requiredRoomType in schema yet -- use null for now
-      const requiredRoomType: string | null = null;
+      // Issue #69: pass the subject's requiredRoomType through to the Java
+      // roomTypeRequirement constraint. null = no requirement, solver
+      // picks freely (the pre-#69 default for every lesson).
+      const requiredRoomType: string | null = cs.subject.requiredRoomType;
 
       // Resolve teacher name
       // Note: ClassSubject doesn't have a direct teacherId in the schema

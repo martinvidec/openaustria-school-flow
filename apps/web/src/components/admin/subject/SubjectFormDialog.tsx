@@ -11,11 +11,30 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   useCreateSubject,
   useUpdateSubject,
   SubjectApiError,
   type SubjectDto,
 } from '@/hooks/useSubjects';
+
+// Issue #69: kept in sync with the Prisma RoomType enum
+// (apps/api/prisma/schema.prisma). German labels per UI-SPEC.
+const ROOM_TYPE_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: 'KLASSENZIMMER', label: 'Klassenzimmer' },
+  { value: 'TURNSAAL', label: 'Turnsaal' },
+  { value: 'EDV_RAUM', label: 'EDV-Raum' },
+  { value: 'WERKRAUM', label: 'Werkraum' },
+  { value: 'LABOR', label: 'Labor' },
+  { value: 'MUSIKRAUM', label: 'Musikraum' },
+];
+const NO_REQUIRED_ROOM = '__no_required_room__';
 
 /**
  * SubjectFormDialog (Phase 11 Plan 11-02 SUBJECT-02).
@@ -48,6 +67,7 @@ export function SubjectFormDialog({ open, onOpenChange, schoolId, subject }: Pro
 
   const [name, setName] = useState('');
   const [shortName, setShortName] = useState('');
+  const [requiredRoomType, setRequiredRoomType] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
   const [shortNameServerError, setShortNameServerError] = useState<string | null>(
     null,
@@ -58,9 +78,16 @@ export function SubjectFormDialog({ open, onOpenChange, schoolId, subject }: Pro
     if (!open) return;
     setName(subject?.name ?? '');
     setShortName(subject?.shortName ?? '');
+    setRequiredRoomType(subject?.requiredRoomType ?? null);
     setTouched(false);
     setShortNameServerError(null);
-  }, [open, subject?.id, subject?.name, subject?.shortName]);
+  }, [
+    open,
+    subject?.id,
+    subject?.name,
+    subject?.shortName,
+    subject?.requiredRoomType,
+  ]);
 
   const errors = {
     name:
@@ -106,9 +133,19 @@ export function SubjectFormDialog({ open, onOpenChange, schoolId, subject }: Pro
 
     try {
       if (isEdit) {
-        await updateMutation.mutateAsync(basePayload);
+        // Update accepts explicit null to clear the requirement.
+        await updateMutation.mutateAsync({
+          ...basePayload,
+          requiredRoomType: requiredRoomType,
+        });
       } else {
-        await createMutation.mutateAsync({ ...basePayload, schoolId });
+        // Create omits the field when "Kein Pflichtraum" is selected;
+        // the API DTO is @IsOptional() so undefined is fine.
+        await createMutation.mutateAsync({
+          ...basePayload,
+          schoolId,
+          ...(requiredRoomType ? { requiredRoomType } : {}),
+        });
       }
       onOpenChange(false);
     } catch (err) {
@@ -187,6 +224,39 @@ export function SubjectFormDialog({ open, onOpenChange, schoolId, subject }: Pro
                 {errors.shortName}
               </p>
             )}
+          </div>
+
+          <div>
+            <Label htmlFor="subject-required-room-type">
+              Pflicht-Raumtyp (optional)
+            </Label>
+            <Select
+              value={requiredRoomType ?? NO_REQUIRED_ROOM}
+              onValueChange={(v) =>
+                setRequiredRoomType(v === NO_REQUIRED_ROOM ? null : v)
+              }
+            >
+              <SelectTrigger
+                id="subject-required-room-type"
+                aria-label="Pflicht-Raumtyp"
+                data-testid="subject-required-room-type-select"
+              >
+                <SelectValue placeholder="Kein Pflichtraum" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_REQUIRED_ROOM}>
+                  Kein Pflichtraum
+                </SelectItem>
+                {ROOM_TYPE_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-1">
+              Der Solver wählt für dieses Fach nur passende Räume (#69).
+            </p>
           </div>
 
           <div

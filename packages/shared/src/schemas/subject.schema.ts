@@ -21,6 +21,19 @@ export const SubjectTypeEnum = z.enum([
 ]);
 export type SubjectTypeInput = z.infer<typeof SubjectTypeEnum>;
 
+// Issue #69: kept in sync with the Prisma `RoomType` enum
+// (apps/api/prisma/schema.prisma). Drives the solver roomTypeRequirement
+// constraint when set on a Subject.
+export const RoomTypeEnum = z.enum([
+  'KLASSENZIMMER',
+  'TURNSAAL',
+  'EDV_RAUM',
+  'WERKRAUM',
+  'LABOR',
+  'MUSIKRAUM',
+]);
+export type RoomTypeInput = z.infer<typeof RoomTypeEnum>;
+
 /**
  * SubjectCreateSchema — used by SubjectFormDialog (create mode) + FE→BE POST.
  *
@@ -39,12 +52,17 @@ export const SubjectCreateSchema = z.object({
   subjectType: SubjectTypeEnum.default('PFLICHT'),
   lehrverpflichtungsgruppe: z.string().optional(),
   werteinheitenFactor: z.number().optional(),
+  // Issue #69: optional, null = no requirement (solver picks freely).
+  requiredRoomType: RoomTypeEnum.optional(),
 });
 
 /**
  * SubjectUpdateSchema — all fields optional (PATCH-style partial update).
+ * requiredRoomType also accepts explicit null to clear the assignment.
  */
-export const SubjectUpdateSchema = SubjectCreateSchema.partial();
+export const SubjectUpdateSchema = SubjectCreateSchema.partial().extend({
+  requiredRoomType: RoomTypeEnum.nullable().optional(),
+});
 
 export type SubjectCreateInput = z.infer<typeof SubjectCreateSchema>;
 export type SubjectUpdateInput = z.infer<typeof SubjectUpdateSchema>;

@@ -541,6 +541,9 @@ model Subject {
   subjectType              SubjectType @map("subject_type")
   lehrverpflichtungsgruppe String?     @map("lehrverpflichtungsgruppe")
   werteinheitenFactor      Float?      @map("werteinheiten_factor")
+  // Issue #69: drives the solver roomTypeRequirement constraint.
+  // Null = no requirement, solver picks freely.
+  requiredRoomType         RoomType?   @map("required_room_type")
   createdAt                DateTime    @default(now()) @map("created_at")
   updatedAt                DateTime    @updatedAt @map("updated_at")
 

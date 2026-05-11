@@ -704,7 +704,11 @@ async function main() {
 
   const subjectBSP = await prisma.subject.upsert({
     where: { schoolId_shortName: { schoolId: school.id, shortName: 'BSP' } },
-    update: {},
+    // Issue #69: backfill requiredRoomType on existing seed installs. The
+    // `update: {}` no-op meant pre-existing seed schools never picked up
+    // the Turnsaal requirement after the schema landed; setting it in the
+    // update branch makes `pnpm dev:up` re-seed self-healing.
+    update: { requiredRoomType: 'TURNSAAL' },
     create: {
       id: 'seed-subject-bsp',
       schoolId: school.id,
@@ -713,6 +717,7 @@ async function main() {
       subjectType: 'PFLICHT',
       lehrverpflichtungsgruppe: 'IVa',
       werteinheitenFactor: 0.857,
+      requiredRoomType: 'TURNSAAL',
     },
   });
 

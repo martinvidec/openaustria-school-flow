@@ -32,6 +32,9 @@ export class SubjectService {
         subjectType: dto.subjectType as any,
         lehrverpflichtungsgruppe: dto.lehrverpflichtungsgruppe,
         werteinheitenFactor: dto.werteinheitenFactor,
+        // Issue #69: optional. null/undefined → no requirement; the solver
+        // roomTypeRequirement constraint only fires when this is non-null.
+        requiredRoomType: dto.requiredRoomType as any,
       },
       include: {
         _count: { select: { classSubjects: true } },
@@ -107,6 +110,10 @@ export class SubjectService {
         subjectType: dto.subjectType as any,
         lehrverpflichtungsgruppe: dto.lehrverpflichtungsgruppe,
         werteinheitenFactor: dto.werteinheitenFactor,
+        // Issue #69: clients send null to clear the requirement, omit to
+        // leave it unchanged. Prisma treats undefined as "don't touch",
+        // null as "SET NULL".
+        requiredRoomType: dto.requiredRoomType as any,
       },
       include: {
         _count: { select: { classSubjects: true } },
