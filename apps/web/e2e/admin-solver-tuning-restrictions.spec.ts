@@ -20,7 +20,6 @@ import {
   CONSTRAINT_API,
   CONSTRAINT_SCHOOL_ID,
   cleanupConstraintTemplatesViaAPI,
-  cleanupConstraintWeightOverridesViaAPI,
   createConstraintTemplateViaAPI,
 } from './helpers/constraints';
 
@@ -28,16 +27,22 @@ import {
 const SEED_CLASS_1A = 'seed-class-1a';
 
 test.describe('Phase 14 — Solver-Tuning Class Restrictions (Tab 3)', () => {
+  // #24 follow-up: scope cleanup to the template types this spec actually
+  // creates. An unscoped wipe races against admin-solver-tuning-preferences
+  // running on a parallel browser project: it deletes the in-flight
+  // SUBJECT_MORNING row mid-test, surfacing as `toHaveCount(1) → 0` on the
+  // other spec. The helper documents exactly this hazard. Also drop the
+  // weight cleanup entirely — this spec never touches weights, the bulk
+  // PUT-empty-map cleanup races against admin-solver-tuning-weights.spec.ts.
+  const OWNED_TEMPLATE_TYPES = ['NO_LESSONS_AFTER'] as const;
 
   test.beforeEach(async ({ page, request }) => {
-    await cleanupConstraintTemplatesViaAPI(request);
-    await cleanupConstraintWeightOverridesViaAPI(request);
+    await cleanupConstraintTemplatesViaAPI(request, [...OWNED_TEMPLATE_TYPES]);
     await loginAsAdmin(page);
   });
 
   test.afterEach(async ({ request }) => {
-    await cleanupConstraintTemplatesViaAPI(request);
-    await cleanupConstraintWeightOverridesViaAPI(request);
+    await cleanupConstraintTemplatesViaAPI(request, [...OWNED_TEMPLATE_TYPES]);
   });
 
   test('E2E-SOLVER-04: class restriction CRUD happy path', async ({ page }) => {

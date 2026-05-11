@@ -38,12 +38,32 @@ import {
   CONSTRAINT_API,
   CONSTRAINT_SCHOOL_ID,
   cleanupConstraintTemplatesViaAPI,
-  cleanupConstraintWeightOverridesViaAPI,
   createConstraintTemplateViaAPI,
 } from './helpers/constraints';
 
 const CONSTRAINT_NAME = 'No same subject doubling';
 const SEED_CLASS_1A = 'seed-class-1a';
+
+/**
+ * Targeted reset for the ONE weight name this spec mutates (#24 follow-up).
+ * Replaces the unscoped bulk-PUT-empty-map cleanup that wiped every
+ * override and raced against admin-solver-tuning-weights.spec.ts on a
+ * parallel browser project. The DELETE endpoint resets a single name to
+ * default without touching siblings.
+ */
+async function resetOwnedWeight(
+  request: import('@playwright/test').APIRequestContext,
+): Promise<void> {
+  const token = await getAdminToken(request);
+  await request
+    .delete(
+      `${CONSTRAINT_API}/schools/${CONSTRAINT_SCHOOL_ID}/constraint-weights/${encodeURIComponent(
+        CONSTRAINT_NAME,
+      )}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    )
+    .catch(() => undefined);
+}
 
 interface AuditEntry {
   id: string;
@@ -57,16 +77,20 @@ interface AuditEntry {
 }
 
 test.describe('Phase 14 — Solver-Tuning Audit Trail', () => {
+  // #24 follow-up: scope template + weight cleanup to what this spec owns
+  // to avoid wiping in-flight rows of admin-solver-tuning-preferences /
+  // admin-solver-tuning-weights on parallel browser projects.
+  const OWNED_TEMPLATE_TYPES = ['NO_LESSONS_AFTER'] as const;
 
   test.beforeEach(async ({ page, request }) => {
-    await cleanupConstraintTemplatesViaAPI(request);
-    await cleanupConstraintWeightOverridesViaAPI(request);
+    await cleanupConstraintTemplatesViaAPI(request, [...OWNED_TEMPLATE_TYPES]);
+    await resetOwnedWeight(request);
     await loginAsAdmin(page);
   });
 
   test.afterEach(async ({ request }) => {
-    await cleanupConstraintTemplatesViaAPI(request);
-    await cleanupConstraintWeightOverridesViaAPI(request);
+    await cleanupConstraintTemplatesViaAPI(request, [...OWNED_TEMPLATE_TYPES]);
+    await resetOwnedWeight(request);
   });
 
   test('E2E-SOLVER-11: audit-log entries emitted for weight + template mutations', async ({
