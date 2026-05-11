@@ -19,7 +19,10 @@ import {
 } from '@/components/ui/select';
 import { SchoolClassCreateSchema } from '@schoolflow/shared';
 import { useCreateClass } from '@/hooks/useClasses';
+import { useRooms } from '@/hooks/useTimetable';
 import { TeacherSearchPopover } from './TeacherSearchPopover';
+
+const NO_HOME_ROOM = '__no_home_room__';
 
 interface Props {
   open: boolean;
@@ -42,9 +45,12 @@ export function ClassCreateDialog({
   const [klassenvorstand, setKlassenvorstand] = useState<
     { id: string; firstName: string; lastName: string } | null
   >(null);
+  const [homeRoomId, setHomeRoomId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const createMutation = useCreateClass(schoolId);
+  const roomsQuery = useRooms(schoolId);
+  const rooms = roomsQuery.data ?? [];
 
   const handleSubmit = async () => {
     const payload = {
@@ -53,6 +59,7 @@ export function ClassCreateDialog({
       yearLevel,
       schoolYearId,
       klassenvorstandId: klassenvorstand?.id,
+      homeRoomId: homeRoomId ?? undefined,
     };
     const parsed = SchoolClassCreateSchema.safeParse(payload);
     if (!parsed.success) {
@@ -71,6 +78,7 @@ export function ClassCreateDialog({
       setName('');
       setYearLevel(1);
       setKlassenvorstand(null);
+      setHomeRoomId(null);
     } catch {
       // toast fired in hook onError
     }
@@ -147,6 +155,28 @@ export function ClassCreateDialog({
               value={klassenvorstand}
               onSelect={setKlassenvorstand}
             />
+          </div>
+
+          <div>
+            <Label htmlFor="class-home-room">Heimraum (optional)</Label>
+            <Select
+              value={homeRoomId ?? NO_HOME_ROOM}
+              onValueChange={(v) =>
+                setHomeRoomId(v === NO_HOME_ROOM ? null : v)
+              }
+            >
+              <SelectTrigger id="class-home-room" aria-label="Heimraum">
+                <SelectValue placeholder="Heimraum wählen …" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_HOME_ROOM}>Kein Heimraum</SelectItem>
+                {rooms.map((r) => (
+                  <SelectItem key={r.id} value={r.id}>
+                    {r.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

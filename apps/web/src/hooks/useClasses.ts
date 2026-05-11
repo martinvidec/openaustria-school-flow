@@ -35,6 +35,8 @@ export interface ClassListItemDto {
   schoolYearId: string;
   klassenvorstandId?: string | null;
   klassenvorstand?: TeacherSummaryDto | null;
+  homeRoomId?: string | null;
+  homeRoom?: { id: string; name: string; roomType?: string } | null;
   _count?: { students: number; classSubjects?: number };
 }
 
@@ -193,6 +195,7 @@ export interface CreateClassPayload {
   yearLevel: number;
   schoolYearId: string;
   klassenvorstandId?: string;
+  homeRoomId?: string;
 }
 
 export function useCreateClass(schoolId: string) {
@@ -223,6 +226,7 @@ export interface UpdateClassPayload {
   name?: string;
   yearLevel?: number;
   klassenvorstandId?: string | null;
+  homeRoomId?: string | null;
 }
 
 export function useUpdateClass(schoolId: string, id: string) {

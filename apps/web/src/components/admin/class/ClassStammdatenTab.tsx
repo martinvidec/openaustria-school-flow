@@ -3,10 +3,21 @@ import { Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { SchoolClassUpdateSchema } from '@schoolflow/shared';
 import { useUpdateClass, type ClassDetailDto } from '@/hooks/useClasses';
+import { useRooms } from '@/hooks/useTimetable';
 import { TeacherSearchPopover } from './TeacherSearchPopover';
 import { SolverReRunBanner } from './SolverReRunBanner';
+
+// Sentinel for the Radix Select — empty string is not allowed as a value.
+const NO_HOME_ROOM = '__no_home_room__';
 
 interface Props {
   schoolId: string;
@@ -27,12 +38,19 @@ export function ClassStammdatenTab({ schoolId, cls, onDirtyChange }: Props) {
         }
       : null,
   );
+  const [homeRoomId, setHomeRoomId] = useState<string | null>(
+    cls.homeRoomId ?? null,
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [savedOnce, setSavedOnce] = useState(false);
 
+  const roomsQuery = useRooms(schoolId);
+  const rooms = roomsQuery.data ?? [];
+
   const dirty =
     name !== cls.name ||
-    (klassenvorstand?.id ?? null) !== (cls.klassenvorstandId ?? null);
+    (klassenvorstand?.id ?? null) !== (cls.klassenvorstandId ?? null) ||
+    (homeRoomId ?? null) !== (cls.homeRoomId ?? null);
 
   useEffect(() => {
     onDirtyChange?.(dirty);
@@ -44,6 +62,7 @@ export function ClassStammdatenTab({ schoolId, cls, onDirtyChange }: Props) {
     const payload = {
       name: name.trim(),
       klassenvorstandId: klassenvorstand?.id ?? null,
+      homeRoomId: homeRoomId ?? null,
     };
     const parsed = SchoolClassUpdateSchema.safeParse(payload);
     if (!parsed.success) {
@@ -97,6 +116,34 @@ export function ClassStammdatenTab({ schoolId, cls, onDirtyChange }: Props) {
           value={klassenvorstand}
           onSelect={setKlassenvorstand}
         />
+      </div>
+
+      <div>
+        <Label htmlFor="class-stammdaten-home-room">Heimraum</Label>
+        <Select
+          value={homeRoomId ?? NO_HOME_ROOM}
+          onValueChange={(v) =>
+            setHomeRoomId(v === NO_HOME_ROOM ? null : v)
+          }
+        >
+          <SelectTrigger
+            id="class-stammdaten-home-room"
+            aria-label="Heimraum"
+          >
+            <SelectValue placeholder="Heimraum wählen …" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={NO_HOME_ROOM}>Kein Heimraum</SelectItem>
+            {rooms.map((r) => (
+              <SelectItem key={r.id} value={r.id}>
+                {r.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground mt-1">
+          Der Solver bevorzugt diesen Raum für die Klasse (#67).
+        </p>
       </div>
 
       <div className="flex justify-end gap-2 pt-2">

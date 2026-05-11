@@ -30,4 +30,12 @@ export class CreateClassDto {
   @IsOptional()
   @IsString()
   klassenvorstandId?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Home room ID (Heimraum). Drives the solver homeRoomPreference soft constraint — see issue #67.',
+  })
+  @IsOptional()
+  @IsString()
+  homeRoomId?: string;
 }

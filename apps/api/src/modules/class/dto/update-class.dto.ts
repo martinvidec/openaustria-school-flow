@@ -30,4 +30,15 @@ export class UpdateClassDto {
   @IsString()
   @MinLength(1)
   klassenvorstandId?: string | null;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    description:
+      'Home room ID (Heimraum). Pass null to clear the assignment. Issue #67.',
+  })
+  @IsOptional()
+  @ValidateIf((_, v) => v !== null)
+  @IsString()
+  @MinLength(1)
+  homeRoomId?: string | null;
 }

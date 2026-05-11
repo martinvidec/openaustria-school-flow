@@ -28,12 +28,14 @@ export const SchoolClassCreateSchema = z.object({
     .max(13, 'Jahrgangsstufe <= 13'),
   schoolYearId: ID_GUARD('Ungültige Schuljahr-ID'),
   klassenvorstandId: ID_GUARD('Ungültige Lehrer-ID').optional(),
+  homeRoomId: ID_GUARD('Ungültige Raum-ID').optional(),
 });
 
 export const SchoolClassUpdateSchema = z.object({
   name: z.string().min(1, 'Pflichtfeld').max(50, 'Maximal 50 Zeichen').optional(),
   yearLevel: z.number().int().min(1).max(13).optional(),
   klassenvorstandId: ID_GUARD('Ungültige Lehrer-ID').nullable().optional(),
+  homeRoomId: ID_GUARD('Ungültige Raum-ID').nullable().optional(),
 });
 
 export const ClassListFiltersSchema = z.object({
