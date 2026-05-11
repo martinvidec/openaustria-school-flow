@@ -1088,6 +1088,19 @@ async function main() {
     });
   }
 
+  // Issue #67: assign home rooms now that both classes and rooms exist.
+  // 1A → Raum 1A, 1B → Raum 2A. Without this, the Java homeRoomPreference
+  // soft constraint never fires and the solver packs every class into
+  // whichever room it grabs first (typically Raum 1A).
+  await prisma.schoolClass.update({
+    where: { id: class1A.id },
+    data: { homeRoomId: SEED_ROOM_K_1A_UUID },
+  });
+  await prisma.schoolClass.update({
+    where: { id: class1B.id },
+    data: { homeRoomId: SEED_ROOM_K_2A_UUID },
+  });
+
   console.log(`Seeded ${roles.length} roles and ${allPermissions.length} default permissions`);
   console.log(`Seeded sample school: ${school.name} (${school.schoolType})`);
   console.log(`Seeded 3 teachers, 6 students, 4 subjects, 2 classes, ${seedRooms.length} rooms, 7 retention policies`);

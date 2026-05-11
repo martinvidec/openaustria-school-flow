@@ -49,8 +49,12 @@ describe('SchoolClassCreateSchema', () => {
     }
   });
 
-  it('rejects invalid schoolYearId uuid', () => {
-    const result = SchoolClassCreateSchema.safeParse({ ...validCreate, schoolYearId: 'nope' });
+  // The schoolYearId guard was relaxed from .uuid() to .min(1) in Plan
+  // 12-03 Rule-1 (parity with the API DTO which has to accept seed-fixture
+  // string IDs like `seed-year-current`). The schema rejects only empty
+  // strings now; arbitrary non-UUID strings like "nope" are valid keys.
+  it('rejects empty schoolYearId', () => {
+    const result = SchoolClassCreateSchema.safeParse({ ...validCreate, schoolYearId: '' });
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error.issues.map((i) => i.message)).toContain('Ungültige Schuljahr-ID');

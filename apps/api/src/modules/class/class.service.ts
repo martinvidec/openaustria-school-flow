@@ -38,10 +38,12 @@ export class ClassService {
         // it, but the service previously discarded it silently. Persist it
         // when present.
         ...(dto.klassenvorstandId ? { klassenvorstandId: dto.klassenvorstandId } : {}),
+        ...(dto.homeRoomId ? { homeRoomId: dto.homeRoomId } : {}),
       },
       include: {
         _count: { select: { students: true } },
         groups: true,
+        homeRoom: true,
       },
     });
   }
@@ -70,6 +72,7 @@ export class ClassService {
             },
           },
           klassenvorstand: { include: { person: true } },
+          homeRoom: true,
         },
         skip: query.skip,
         take: query.limit,
@@ -94,6 +97,7 @@ export class ClassService {
       where: { id },
       include: {
         klassenvorstand: { include: { person: true } },
+        homeRoom: true,
         students: {
           where: { isArchived: false },
           include: { person: true },
@@ -132,11 +136,15 @@ export class ClassService {
     if (dto.klassenvorstandId !== undefined) {
       data.klassenvorstandId = dto.klassenvorstandId; // null clears, uuid sets
     }
+    if (dto.homeRoomId !== undefined) {
+      data.homeRoomId = dto.homeRoomId; // null clears, uuid sets
+    }
     return this.prisma.schoolClass.update({
       where: { id },
       data,
       include: {
         klassenvorstand: { include: { person: true } },
+        homeRoom: true,
         _count: { select: { students: true } },
       },
     });

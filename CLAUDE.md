@@ -274,6 +274,21 @@ How:
 3. Commit the generated migration folder in the same PR as the schema change.
 
 Enforcement: `scripts/check-migration-hygiene.sh` (run locally and in CI) fails any diff where `schema.prisma` changed without a new `migration.sql`. See `apps/api/prisma/README.md` for the full policy, including the shadow database setup needed by `prisma migrate diff`.
+
+### Bug-Fix Regression-Schutz via E2E — hard rule
+
+Jeder Bug-Fix (egal ob Code-Bug, UX-Bug, Daten-Bug) MUSS in derselben PR mindestens **einen Playwright-E2E-Test** mitliefern, der das ursprüngliche Symptom reproduziert hätte. Kein Bug-Fix ohne Regression-Lock.
+
+Why: ohne E2E-Lock hat dieselbe Klasse von Bug wiederholt zurückgefunden — useClasses silent-omission → useTeachers silent-permissiveness → subject.service tenant-leak → useRooms truncation. Jede Iteration kostete eine separate Live-Stack-Debug-Session. Memory `feedback_e2e_first_no_uat.md` (2026-04-21) und das race-family-Pattern in `project_e2e_parallel_cleanup_race_family.md` dokumentieren denselben Mechanismus: ein Test, der den ursprünglichen Bug fängt, fängt auch jede Wiedergeburt.
+
+How to apply:
+1. **Vor dem Fix:** Schreib den Test, der heute rot ist und nach dem Fix grün wird. Schritte: Symptom reproduzieren, Assertion formulieren, im PR-Body als „would fail without the fix" markieren.
+2. **Nach dem Fix:** Verify dass der Test grün ist UND dass der gleiche Test gegen pre-fix-state (`git stash` + run + `git stash pop`) rot wäre.
+3. **Spec-Ort:** UI-Bug → `apps/web/e2e/<surface>.spec.ts`. Backend-Bug, der durch UI sichtbar ist → ebenfalls dort. Pure-API-Bug → API integration test in `apps/api/.../*.spec.ts`.
+4. **Race-Pattern beachten:** Mutating Specs auf shared seed-school → chromium-only-skip + Owned-Prefix-Cleanup (siehe `project_e2e_parallel_cleanup_race_family.md`).
+5. **Ausnahme:** Pure Type-Fixes oder Refactorings ohne Verhaltensänderung. Wenn unklar, ob „Verhaltensänderung" → im Zweifel Test schreiben.
+
+Enforcement: kein automatisches Tooling, aber jede PR-Review fragt aktiv „wo ist der Regression-Test?". Bug-Fix-PRs ohne neuen Spec werden zurückgewiesen, außer der Bug-Class ist explizit als untestbar gerechtfertigt (z.B. Build-Tooling, generated code).
 <!-- GSD:conventions-end -->
 
 <!-- GSD:architecture-start source:ARCHITECTURE.md -->

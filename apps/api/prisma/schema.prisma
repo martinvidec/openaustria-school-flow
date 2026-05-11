@@ -466,10 +466,12 @@ model SchoolClass {
   yearLevel         Int      @map("year_level")
   schoolYearId      String   @map("school_year_id")
   klassenvorstandId String?  @map("klassenvorstand_id")
+  homeRoomId        String?  @map("home_room_id")
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
   klassenvorstand  Teacher?              @relation("Klassenvorstand", fields: [klassenvorstandId], references: [id])
+  homeRoom         Room?                 @relation("ClassHomeRoom", fields: [homeRoomId], references: [id], onDelete: SetNull)
   students         Student[]
   groups           Group[]
   classSubjects    ClassSubject[]
@@ -708,8 +710,9 @@ model Room {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  lessons  TimetableLesson[]
-  bookings RoomBooking[]
+  lessons             TimetableLesson[]
+  bookings            RoomBooking[]
+  homeRoomForClasses  SchoolClass[]     @relation("ClassHomeRoom")
 
   @@unique([schoolId, name])
   @@map("rooms")

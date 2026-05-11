@@ -277,7 +277,7 @@ export class SolverInputService {
       preferDoublePeriod: boolean;
       groupId: string | null;
       subject: { id: string; name: string; subjectType: string; lehrverpflichtungsgruppe: string | null; werteinheitenFactor: number | null };
-      schoolClass: { id: string; name: string };
+      schoolClass: { id: string; name: string; homeRoomId: string | null };
     }>,
     teacherMap: Map<string, { id: string; person: { firstName: string; lastName: string } }>,
   ): SolverLesson[] {
@@ -312,7 +312,11 @@ export class SolverInputService {
           preferDoublePeriod: cs.preferDoublePeriod,
           requiredRoomType,
           requiredEquipment: [],
-          homeRoomId: null,
+          // Issue #67: pass the class's home room through so the Java
+          // homeRoomPreference soft constraint can fire. null falls back
+          // to the pre-#67 behavior (no preference, solver minimizes other
+          // constraints freely).
+          homeRoomId: cs.schoolClass.homeRoomId,
           weekType: 'BOTH',
         });
       }
