@@ -2,17 +2,37 @@ import { Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type { EditorRow } from './StundentafelEditorTable';
+
+interface TeacherOption {
+  id: string;
+  firstName: string;
+  lastName: string;
+}
 
 interface Props {
   rows: EditorRow[];
   onChange: (rows: EditorRow[]) => void;
+  availableTeachers: TeacherOption[];
 }
+
+const NO_TEACHER = '__no_teacher__';
 
 /**
  * Mobile (<640px) collapse of the Stundentafel editor — stacked Cards.
  */
-export function StundentafelMobileCards({ rows, onChange }: Props) {
+export function StundentafelMobileCards({
+  rows,
+  onChange,
+  availableTeachers,
+}: Props) {
   const handleHoursChange = (index: number, value: string) => {
     const num = Number(value);
     if (Number.isNaN(num)) return;
@@ -25,14 +45,33 @@ export function StundentafelMobileCards({ rows, onChange }: Props) {
     onChange(rows.filter((_, i) => i !== index));
   };
 
+  const handleTeacherChange = (index: number, value: string) => {
+    const next = [...rows];
+    if (value === NO_TEACHER) {
+      next[index] = {
+        ...next[index],
+        teacherId: null,
+        teacherDisplayName: undefined,
+      };
+    } else {
+      const t = availableTeachers.find((tt) => tt.id === value);
+      next[index] = {
+        ...next[index],
+        teacherId: value,
+        teacherDisplayName: t ? `${t.lastName} ${t.firstName}` : undefined,
+      };
+    }
+    onChange(next);
+  };
+
   return (
     <div className="sm:hidden space-y-2">
       {rows.map((row, idx) => (
         <div
           key={row.id ?? `new-${row.subjectId}`}
-          className="rounded-md border bg-card p-3"
+          className="rounded-md border bg-card p-3 space-y-2"
         >
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between">
             <span className="font-semibold">{row.subjectShortName ?? row.subjectId}</span>
             {row.isCustomized && (
               <Badge className="bg-amber-100 text-amber-900 hover:bg-amber-100">
@@ -61,6 +100,24 @@ export function StundentafelMobileCards({ rows, onChange }: Props) {
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
+          <Select
+            value={row.teacherId ?? NO_TEACHER}
+            onValueChange={(v) => handleTeacherChange(idx, v)}
+          >
+            <SelectTrigger
+              aria-label={`Lehrkraft für ${row.subjectShortName ?? row.subjectId}`}
+            >
+              <SelectValue placeholder="Nicht zugewiesen" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NO_TEACHER}>Nicht zugewiesen</SelectItem>
+              {availableTeachers.map((t) => (
+                <SelectItem key={t.id} value={t.id}>
+                  {t.lastName} {t.firstName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       ))}
     </div>

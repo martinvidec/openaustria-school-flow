@@ -18,6 +18,11 @@ export interface EditorRow {
   weeklyHours: number;
   isCustomized?: boolean;
   preferDoublePeriod?: boolean;
+  // Issue #71: per-row teacher assignment. null = explicit clear,
+  // undefined = leave unchanged on save. The display name keeps the
+  // select trigger label stable across re-renders without re-fetching.
+  teacherId?: string | null;
+  teacherDisplayName?: string;
 }
 
 interface SubjectOption {
@@ -26,11 +31,22 @@ interface SubjectOption {
   shortName: string;
 }
 
+interface TeacherOption {
+  id: string;
+  firstName: string;
+  lastName: string;
+}
+
 interface Props {
   rows: EditorRow[];
   onChange: (rows: EditorRow[]) => void;
   availableSubjects: SubjectOption[];
+  availableTeachers: TeacherOption[];
 }
+
+// Radix Select cannot use empty string as a value — the unassigned
+// sentinel maps to `teacherId=null` on save (clears the assignment).
+const NO_TEACHER = '__no_teacher__';
 
 /**
  * StundentafelEditorTable — SUBJECT-04 Wochenstunden editor.
@@ -40,7 +56,12 @@ interface Props {
  * manages the flag server-side; this UI reflects the value coming from the
  * backend after save).
  */
-export function StundentafelEditorTable({ rows, onChange, availableSubjects }: Props) {
+export function StundentafelEditorTable({
+  rows,
+  onChange,
+  availableSubjects,
+  availableTeachers,
+}: Props) {
   const usedSubjectIds = new Set(rows.map((r) => r.subjectId));
   const addableSubjects = availableSubjects.filter((s) => !usedSubjectIds.has(s.id));
 
@@ -54,6 +75,25 @@ export function StundentafelEditorTable({ rows, onChange, availableSubjects }: P
 
   const handleDelete = (index: number) => {
     onChange(rows.filter((_, i) => i !== index));
+  };
+
+  const handleTeacherChange = (index: number, value: string) => {
+    const next = [...rows];
+    if (value === NO_TEACHER) {
+      next[index] = {
+        ...next[index],
+        teacherId: null,
+        teacherDisplayName: undefined,
+      };
+    } else {
+      const t = availableTeachers.find((tt) => tt.id === value);
+      next[index] = {
+        ...next[index],
+        teacherId: value,
+        teacherDisplayName: t ? `${t.lastName} ${t.firstName}` : undefined,
+      };
+    }
+    onChange(next);
   };
 
   const handleAdd = (subjectId: string) => {
@@ -77,6 +117,7 @@ export function StundentafelEditorTable({ rows, onChange, availableSubjects }: P
           <tr>
             <th className="px-3 py-2 font-semibold">Fach</th>
             <th className="px-3 py-2 font-semibold tabular-nums w-32">Wochenstunden</th>
+            <th className="px-3 py-2 font-semibold w-56">Lehrkraft</th>
             <th className="px-3 py-2 font-semibold w-28">Status</th>
             <th className="px-3 py-2 w-10" aria-label="Entfernen"></th>
           </tr>
@@ -104,6 +145,27 @@ export function StundentafelEditorTable({ rows, onChange, availableSubjects }: P
                 />
               </td>
               <td className="px-3 py-2">
+                <Select
+                  value={row.teacherId ?? NO_TEACHER}
+                  onValueChange={(v) => handleTeacherChange(idx, v)}
+                >
+                  <SelectTrigger
+                    aria-label={`Lehrkraft für ${row.subjectShortName ?? row.subjectId}`}
+                    data-testid={`stundentafel-teacher-${row.subjectShortName ?? row.subjectId}`}
+                  >
+                    <SelectValue placeholder="Nicht zugewiesen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={NO_TEACHER}>Nicht zugewiesen</SelectItem>
+                    {availableTeachers.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.lastName} {t.firstName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </td>
+              <td className="px-3 py-2">
                 {row.isCustomized ? (
                   <Badge className="bg-amber-100 text-amber-900 hover:bg-amber-100">
                     Angepasst
@@ -126,7 +188,7 @@ export function StundentafelEditorTable({ rows, onChange, availableSubjects }: P
           ))}
           {addableSubjects.length > 0 && (
             <tr className="border-t bg-muted/10">
-              <td className="px-3 py-2" colSpan={4}>
+              <td className="px-3 py-2" colSpan={5}>
                 <div className="flex items-center gap-2">
                   <Select value="" onValueChange={handleAdd}>
                     <SelectTrigger className="w-[240px]" aria-label="Fach hinzufügen">

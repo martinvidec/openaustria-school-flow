@@ -29,7 +29,10 @@ export class ClassSubjectService {
   async findByClass(classId: string) {
     return this.prisma.classSubject.findMany({
       where: { classId },
-      include: { subject: true },
+      // Issue #71: include the assigned teacher so the Stundentafel UI can
+      // render the Lehrer column and so the solver-input service can read
+      // the relation without a second query.
+      include: { subject: true, teacher: { include: { person: true } } },
       orderBy: { subject: { shortName: 'asc' } },
     });
   }
@@ -116,6 +119,10 @@ export class ClassSubjectService {
               isCustomized,
               preferDoublePeriod:
                 row.preferDoublePeriod ?? prior.preferDoublePeriod,
+              // Issue #71: undefined = leave the assignment unchanged;
+              // null = clear it; uuid = set it. Prisma treats undefined as
+              // a no-op here, so the explicit-presence check is implicit.
+              teacherId: row.teacherId,
             },
           });
         } else {
@@ -126,6 +133,10 @@ export class ClassSubjectService {
               weeklyHours: row.weeklyHours,
               isCustomized,
               preferDoublePeriod: row.preferDoublePeriod ?? false,
+              // Issue #71: only set teacherId on create when a real value
+              // was provided. null on a never-existed row is the same as
+              // omitting it (default DB value is NULL).
+              ...(row.teacherId ? { teacherId: row.teacherId } : {}),
             },
           });
         }
@@ -133,7 +144,7 @@ export class ClassSubjectService {
 
       return tx.classSubject.findMany({
         where: { classId },
-        include: { subject: true },
+        include: { subject: true, teacher: { include: { person: true } } },
         orderBy: { subject: { shortName: 'asc' } },
       });
     });
@@ -182,7 +193,7 @@ export class ClassSubjectService {
 
       return tx.classSubject.findMany({
         where: { classId },
-        include: { subject: true },
+        include: { subject: true, teacher: { include: { person: true } } },
         orderBy: { subject: { shortName: 'asc' } },
       });
     });

@@ -138,7 +138,9 @@ export class SolverInputService {
       },
     });
 
-    // 6. Load ClassSubjects with Subject, SchoolClass relations
+    // 6. Load ClassSubjects with Subject, SchoolClass + assigned Teacher.
+    //    Issue #71: include teacher.person so the solver-input lesson DTO
+    //    can carry a real teacherId AND a human-readable teacherName.
     const classSubjects = await this.prisma.classSubject.findMany({
       where: {
         schoolClass: { schoolId },
@@ -146,6 +148,7 @@ export class SolverInputService {
       include: {
         subject: true,
         schoolClass: true,
+        teacher: { include: { person: true } },
       },
     });
 
@@ -276,10 +279,12 @@ export class SolverInputService {
       weeklyHours: number;
       preferDoublePeriod: boolean;
       groupId: string | null;
+      teacherId: string | null;
+      teacher: { id: string; person: { firstName: string; lastName: string } } | null;
       subject: { id: string; name: string; subjectType: string; lehrverpflichtungsgruppe: string | null; werteinheitenFactor: number | null; requiredRoomType: string | null };
       schoolClass: { id: string; name: string; homeRoomId: string | null };
     }>,
-    teacherMap: Map<string, { id: string; person: { firstName: string; lastName: string } }>,
+    _teacherMap: Map<string, { id: string; person: { firstName: string; lastName: string } }>,
   ): SolverLesson[] {
     const lessons: SolverLesson[] = [];
 
@@ -291,13 +296,17 @@ export class SolverInputService {
       // picks freely (the pre-#69 default for every lesson).
       const requiredRoomType: string | null = cs.subject.requiredRoomType;
 
-      // Resolve teacher name
-      // Note: ClassSubject doesn't have a direct teacherId in the schema
-      // The teacher assignment comes from TeacherSubject qualifications
-      // For solver purposes, we need a teacher assigned per ClassSubject
-      // This will be resolved when ClassSubject gets a teacherId field
-      const teacherName = 'Unassigned';
-      const teacherId = '';
+      // Issue #71: read the assignment off the ClassSubject row instead of
+      // hardcoding ''. teacherId='' is what historically broke both
+      // teacherConflict and teacherAvailability hard constraints (the join
+      // on TeacherAvailability.teacherId never matched). When the
+      // assignment is null we still send '', which keeps the lesson
+      // schedulable but unconstrained — the same fallback behaviour the
+      // pre-#71 code shipped, isolated to genuinely unassigned subjects.
+      const teacherId = cs.teacherId ?? '';
+      const teacherName = cs.teacher
+        ? `${cs.teacher.person.lastName} ${cs.teacher.person.firstName}`
+        : 'Unassigned';
 
       for (let i = 0; i < cs.weeklyHours; i++) {
         lessons.push({

@@ -31,6 +31,12 @@ interface SubjectDto {
   shortName: string;
 }
 
+interface TeacherDto {
+  id: string;
+  firstName: string;
+  lastName: string;
+}
+
 function useSubjectsList(schoolId: string | undefined) {
   return useQuery({
     queryKey: ['subjects', schoolId],
@@ -46,9 +52,41 @@ function useSubjectsList(schoolId: string | undefined) {
   });
 }
 
+// Issue #71: light-weight teacher list for the Stundentafel teacher
+// picker. Shape mirrors what `availableTeachers` expects in the editor
+// components; pulled from the existing /teachers endpoint which already
+// supports tenant scoping via `?schoolId=`.
+function useTeacherOptions(schoolId: string | undefined) {
+  return useQuery({
+    queryKey: ['teachers:stundentafel-options', schoolId],
+    queryFn: async (): Promise<TeacherDto[]> => {
+      if (!schoolId) return [];
+      const res = await apiFetch(
+        `/api/v1/teachers?schoolId=${schoolId}&limit=500`,
+      );
+      if (!res.ok) return [];
+      const body = await res.json();
+      const items: Array<{
+        id: string;
+        person?: { firstName?: string; lastName?: string };
+      }> = body.data ?? body ?? [];
+      return items
+        .filter((t) => t.person)
+        .map((t) => ({
+          id: t.id,
+          firstName: t.person!.firstName ?? '',
+          lastName: t.person!.lastName ?? '',
+        }));
+    },
+    enabled: !!schoolId,
+    staleTime: 60_000,
+  });
+}
+
 export function StundentafelTab({ schoolId, cls, onDirtyChange }: Props) {
   const classSubjectsQuery = useClassSubjects(cls.id);
   const subjectsQuery = useSubjectsList(schoolId);
+  const teachersQuery = useTeacherOptions(schoolId);
   const schoolQuery = useSchool(schoolId);
 
   const [rows, setRows] = useState<EditorRow[]>([]);
@@ -71,6 +109,13 @@ export function StundentafelTab({ schoolId, cls, onDirtyChange }: Props) {
           weeklyHours: cs.weeklyHours,
           isCustomized: cs.isCustomized,
           preferDoublePeriod: cs.preferDoublePeriod,
+          // Issue #71: hydrate the teacher assignment from the server
+          // include so the Select trigger renders the saved value
+          // without a follow-up fetch.
+          teacherId: cs.teacherId ?? null,
+          teacherDisplayName: cs.teacher
+            ? `${cs.teacher.person.lastName} ${cs.teacher.person.firstName}`
+            : undefined,
         })),
       );
     }
@@ -81,7 +126,13 @@ export function StundentafelTab({ schoolId, cls, onDirtyChange }: Props) {
     rows.length !== serverRows.length ||
     rows.some((r) => {
       const server = serverRows.find((s) => s.subjectId === r.subjectId);
-      return !server || server.weeklyHours !== r.weeklyHours;
+      if (!server) return true;
+      if (server.weeklyHours !== r.weeklyHours) return true;
+      // Issue #71: treat a teacher change as dirty too. Compare nulls
+      // explicitly (server.teacherId can be null, undefined, or a uuid).
+      const serverTeacher = server.teacherId ?? null;
+      const localTeacher = r.teacherId ?? null;
+      return serverTeacher !== localTeacher;
     });
 
   useEffect(() => {
@@ -96,6 +147,10 @@ export function StundentafelTab({ schoolId, cls, onDirtyChange }: Props) {
           subjectId: r.subjectId,
           weeklyHours: r.weeklyHours,
           preferDoublePeriod: r.preferDoublePeriod,
+          // Issue #71: explicit null clears, undefined would leave it
+          // alone — but `r.teacherId` is always set after hydration
+          // (null or uuid), so we forward it verbatim.
+          teacherId: r.teacherId ?? null,
         })),
       });
       setSavedOnce(true);
@@ -157,9 +212,14 @@ export function StundentafelTab({ schoolId, cls, onDirtyChange }: Props) {
           rows={rows}
           onChange={setRows}
           availableSubjects={subjectsQuery.data ?? []}
+          availableTeachers={teachersQuery.data ?? []}
         />
       </div>
-      <StundentafelMobileCards rows={rows} onChange={setRows} />
+      <StundentafelMobileCards
+        rows={rows}
+        onChange={setRows}
+        availableTeachers={teachersQuery.data ?? []}
+      />
 
       <div className="flex justify-end gap-2">
         <Button

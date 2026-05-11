@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   ArrayMinSize,
@@ -10,6 +10,7 @@ import {
   Max,
   Min,
   MinLength,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 
@@ -44,6 +45,20 @@ export class ClassSubjectRowDto {
   @IsOptional()
   @IsBoolean()
   preferDoublePeriod?: boolean;
+
+  // Issue #71: optional Teacher assignment per ClassSubject row. null
+  // explicitly clears the assignment, undefined leaves it unchanged.
+  // ValidateIf gate is needed because @IsString rejects null.
+  @ApiPropertyOptional({
+    nullable: true,
+    description:
+      'Teacher assigned to teach this subject in this class. Drives the solver teacherConflict + teacherAvailability constraints (issue #71). Pass null to clear.',
+  })
+  @IsOptional()
+  @ValidateIf((_, v) => v !== null)
+  @IsString()
+  @MinLength(1)
+  teacherId?: string | null;
 }
 
 export class UpdateClassSubjectsDto {
