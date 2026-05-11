@@ -63,6 +63,9 @@ export interface UpdateClassSubjectsPayload {
     subjectId: string;
     weeklyHours: number;
     preferDoublePeriod?: boolean;
+    // Issue #71: null clears the assignment, undefined leaves it
+    // unchanged, uuid sets it.
+    teacherId?: string | null;
   }>;
 }
 

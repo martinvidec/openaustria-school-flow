@@ -364,6 +364,7 @@ model Teacher {
   availabilityRules      AvailabilityRule[]
   reductions             TeachingReduction[]
   klassenvorstandClasses SchoolClass[]       @relation("Klassenvorstand")
+  classSubjectAssignments ClassSubject[]     @relation("ClassSubjectTeacher")
 
   // Phase 6 relations
   absences TeacherAbsence[]
@@ -562,6 +563,13 @@ model ClassSubject {
   schoolClass        SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
   subjectId          String      @map("subject_id")
   subject            Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  // Issue #71: the teacher actually assigned to teach this subject in this
+  // class. TeacherSubject is a qualifications table (which teacher CAN
+  // teach the subject); this is the assignment (which teacher DOES). Null
+  // means unassigned — the solver falls back to its pre-#71 behavior
+  // (lesson.teacherId='' which broke teacherConflict + teacherAvailability).
+  teacherId          String?     @map("teacher_id")
+  teacher            Teacher?    @relation("ClassSubjectTeacher", fields: [teacherId], references: [id], onDelete: SetNull)
   groupId            String?     @map("group_id")
   weeklyHours        Int         @map("weekly_hours")
   isCustomized       Boolean     @default(false) @map("is_customized")

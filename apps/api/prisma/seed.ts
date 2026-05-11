@@ -823,12 +823,16 @@ async function main() {
 
   // --- ClassSubjects (AHS_UNTER year 1 Stundentafel applied to both classes) ---
 
-  // Core AHS_UNTER year 1 subjects from Stundentafel (4 seeded subjects)
+  // Core AHS_UNTER year 1 subjects from Stundentafel (4 seeded subjects).
+  // Issue #71: each entry carries a teacherId so the solver's
+  // teacherConflict + teacherAvailability hard constraints have real
+  // teacher keys to join on. Mapping mirrors the qualifications seeded
+  // above: teacher1 owns D + E, teacher2 owns M, teacher3 owns BSP.
   const classSubjectEntries = [
-    { subjectId: subjectDeutsch.id, weeklyHours: 4 },
-    { subjectId: subjectMathematik.id, weeklyHours: 4 },
-    { subjectId: subjectEnglisch.id, weeklyHours: 4 },
-    { subjectId: subjectBSP.id, weeklyHours: 4 },
+    { subjectId: subjectDeutsch.id, weeklyHours: 4, teacherId: teacher1.id },
+    { subjectId: subjectMathematik.id, weeklyHours: 4, teacherId: teacher2.id },
+    { subjectId: subjectEnglisch.id, weeklyHours: 4, teacherId: teacher1.id },
+    { subjectId: subjectBSP.id, weeklyHours: 4, teacherId: teacher3.id },
   ];
 
   for (const cls of [class1A, class1B]) {
@@ -844,7 +848,16 @@ async function main() {
             subjectId: entry.subjectId,
             weeklyHours: entry.weeklyHours,
             isCustomized: false,
+            teacherId: entry.teacherId,
           },
+        });
+      } else if (!existing.teacherId) {
+        // Backfill: rows that pre-date #71 have teacherId=null. Only
+        // patch when the assignment is missing — don't stomp on edits
+        // an admin made via the UI.
+        await prisma.classSubject.update({
+          where: { id: existing.id },
+          data: { teacherId: entry.teacherId },
         });
       }
     }

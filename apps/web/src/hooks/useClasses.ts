@@ -71,6 +71,11 @@ export interface ClassSubjectDto {
   classId: string;
   subjectId: string;
   groupId?: string | null;
+  teacherId?: string | null;
+  teacher?: {
+    id: string;
+    person: { firstName: string; lastName: string };
+  } | null;
   weeklyHours: number;
   isCustomized: boolean;
   preferDoublePeriod: boolean;
