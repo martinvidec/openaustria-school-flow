@@ -24,6 +24,7 @@ import jakarta.ws.rs.core.Response;
 import ai.timefold.solver.core.api.score.analysis.ScoreAnalysis;
 import ai.timefold.solver.core.api.score.buildin.hardsoft.HardSoftScore;
 import ai.timefold.solver.core.api.solver.SolutionManager;
+import ai.timefold.solver.core.api.solver.SolverConfigOverride;
 import ai.timefold.solver.core.api.solver.SolverManager;
 import at.schoolflow.solver.domain.Lesson;
 import at.schoolflow.solver.domain.SchoolTimetable;
@@ -90,20 +91,32 @@ public class SolverResource {
         String runId = request.getRunId();
         String callbackUrl = request.getCallbackUrl();
         SchoolTimetable problem = request.getProblem();
+        int maxSolveSeconds = request.getMaxSolveSeconds();
 
-        LOG.infof("Starting solve for runId=%s, lessons=%d, timeslots=%d, rooms=%d",
+        LOG.infof("Starting solve for runId=%s, lessons=%d, timeslots=%d, rooms=%d, maxSolveSeconds=%d",
                 runId,
                 problem.getLessons().size(),
                 problem.getTimeslots().size(),
-                problem.getRooms().size());
+                problem.getRooms().size(),
+                maxSolveSeconds);
 
         startTimes.put(runId, Instant.now());
         callbackUrls.put(runId, callbackUrl);
         scoreHistories.put(runId, Collections.synchronizedList(new ArrayList<>()));
 
+        // Issue #62: per-request termination override. Without this, the
+        // SolverManager falls back to quarkus.timefold.solver.termination
+        // .spent-limit (5m) and ignores whatever the caller asked for. We
+        // override ONLY this run's termination so future callers that omit
+        // the field still get the global default.
+        SolverConfigOverride<SchoolTimetable> configOverride =
+                new SolverConfigOverride<SchoolTimetable>()
+                        .withTerminationSpentLimit(Duration.ofSeconds(maxSolveSeconds));
+
         solverManager.solveBuilder()
                 .withProblemId(runId)
                 .withProblem(problem)
+                .withConfigOverride(configOverride)
                 .withBestSolutionConsumer(solution -> onBestSolution(runId, solution))
                 .withFinalBestSolutionConsumer(solution -> onFinalSolution(runId, solution))
                 .run();
