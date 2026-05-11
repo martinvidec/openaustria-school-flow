@@ -22,6 +22,12 @@ export class SubjectResponseDto {
   @ApiPropertyOptional({ description: 'Werteinheiten factor', example: 1.0 })
   werteinheitenFactor?: number | null;
 
+  @ApiPropertyOptional({
+    description: 'Required room type — drives the solver (#69)',
+    example: 'TURNSAAL',
+  })
+  requiredRoomType?: string | null;
+
   @ApiProperty({ description: 'Number of classes this subject is assigned to' })
   classSubjectsCount!: number;
 

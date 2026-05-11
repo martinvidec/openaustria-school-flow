@@ -25,6 +25,7 @@ export interface SubjectDto {
   subjectType: string;
   lehrverpflichtungsgruppe?: string | null;
   werteinheitenFactor?: number | null;
+  requiredRoomType?: string | null;
   classSubjects?: Array<{
     id: string;
     classId: string;
@@ -136,6 +137,7 @@ export interface CreateSubjectPayload {
   subjectType?: string;
   lehrverpflichtungsgruppe?: string;
   werteinheitenFactor?: number;
+  requiredRoomType?: string;
 }
 
 export function useCreateSubject(schoolId: string) {

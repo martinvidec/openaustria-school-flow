@@ -8,6 +8,18 @@ enum SubjectTypeDto {
   UNVERBINDLICH = 'UNVERBINDLICH',
 }
 
+// Issue #69: kept in sync with the Prisma `RoomType` enum
+// (apps/api/prisma/schema.prisma). The DTO must list every value the DB
+// enum supports so class-validator accepts admin-form input.
+enum RoomTypeDto {
+  KLASSENZIMMER = 'KLASSENZIMMER',
+  TURNSAAL = 'TURNSAAL',
+  EDV_RAUM = 'EDV_RAUM',
+  WERKRAUM = 'WERKRAUM',
+  LABOR = 'LABOR',
+  MUSIKRAUM = 'MUSIKRAUM',
+}
+
 export class CreateSubjectDto {
   @ApiProperty({ description: 'School ID', example: 'uuid-or-seed-id' })
   // Rule-1 fix (Phase 11 Plan 11-03): accept non-UUID seed IDs (e.g.
@@ -43,4 +55,14 @@ export class CreateSubjectDto {
   @IsOptional()
   @IsNumber()
   werteinheitenFactor?: number;
+
+  @ApiPropertyOptional({
+    enum: RoomTypeDto,
+    description:
+      'Required room type for lessons of this subject. Drives the solver roomTypeRequirement constraint — see issue #69. Null/omitted = no requirement.',
+    example: 'TURNSAAL',
+  })
+  @IsOptional()
+  @IsEnum(RoomTypeDto)
+  requiredRoomType?: RoomTypeDto;
 }
