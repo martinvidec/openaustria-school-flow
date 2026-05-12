@@ -59,6 +59,36 @@ export class ClassSubjectRowDto {
   @IsString()
   @MinLength(1)
   teacherId?: string | null;
+
+  // Issue #72: week rhythm. cycleLength=1 means "every week" (the
+  // historical default). cycleLength=2 + cycleSlotMask=1 → A-week only;
+  // mask=2 → B-week only. Schema is forward-compatible for n>2 but the
+  // API today validates the A/B subset.
+  @ApiPropertyOptional({
+    minimum: 1,
+    maximum: 2,
+    description:
+      'Cycle length in weeks. 1 = every week; 2 = A/B rhythm. Issue #72.',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(2)
+  cycleLength?: number;
+
+  @ApiPropertyOptional({
+    nullable: true,
+    minimum: 1,
+    maximum: 3,
+    description:
+      'Bitmask selecting which slots in the cycle the subject is active. Required when cycleLength > 1; must be null when cycleLength == 1. For cycleLength=2: 1 = A-week, 2 = B-week. Issue #72.',
+  })
+  @IsOptional()
+  @ValidateIf((_, v) => v !== null)
+  @IsInt()
+  @Min(1)
+  @Max(3)
+  cycleSlotMask?: number | null;
 }
 
 export class UpdateClassSubjectsDto {

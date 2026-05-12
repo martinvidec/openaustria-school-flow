@@ -574,6 +574,15 @@ model ClassSubject {
   weeklyHours        Int         @map("weekly_hours")
   isCustomized       Boolean     @default(false) @map("is_customized")
   preferDoublePeriod Boolean     @default(false) @map("prefer_double_period")
+  // Issue #72: week-rhythm fields. cycleLength=1 means "every week"
+  // (the historical implicit default). cycleLength=2 + cycleSlotMask=1
+  // means "A-week only", mask=2 means "B-week only". Forward-compatible
+  // for future n-week rotations (cycleLength=3 + mask=0b001 etc.) — the
+  // schema does not restrict cycleLength, only the API + UI currently
+  // expose the A/B subset. cycleSlotMask is null at cycleLength=1
+  // (no slots to select).
+  cycleLength        Int         @default(1) @map("cycle_length")
+  cycleSlotMask      Int?        @map("cycle_slot_mask")
 
   // Phase 8 relations
   homework Homework[]
