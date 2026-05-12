@@ -22,6 +22,26 @@ Begründung: GSD-State über zu viele Files verteilt → Plan-vs-Realität-Drift
 >
 > Die Lehre aus Phase 17 (race-family bei parallelen Specs auf shared per-school Resources) ist als Pattern-of-Record im Memory `project_e2e_parallel_cleanup_race_family.md` festgehalten — relevant für jede neue e2e-cleanup-Hook.
 
+## D3 — Main bleibt sauber: Merge erst nach grünem CI (User-Direktive 2026-05-12)
+
+**Ein PR wird NICHT in `main` gemerged, bevor sein GitHub-Actions-Run vollständig grün durch ist.** Keine Ausnahmen.
+
+**Verboten:**
+- `gh pr merge --admin` Override, um rote oder pending CI zu umgehen
+- "Wir mergen jetzt, der Fix kommt im nächsten PR" — wenn die Pipeline rot ist, ist Main rot, und jeder neue PR vererbt das Red.
+- `--no-verify` auf push oder Force-Push auf `main` als Quick-Fix
+- Re-Run-Hoffnung bei flaky Tests ohne stabilisierende Maßnahme
+
+**Erlaubt / Gefordert:**
+- PR öffnen, CI laufen lassen, abwarten (`gh pr checks <#>`).
+- Bei rotem CI: Root-Cause fixen, neuen Commit pushen, neuen CI-Lauf abwarten.
+- Mehrere PRs parallel offen ist OK, solange jeder vor seinem Merge grün ist.
+- Bei flaky Tests: stabilisieren oder explizit `skip` mit Issue-Referenz, NICHT mergen.
+
+**Why:** 2026-05-11 wurde PR #70 mit rotem/grünem-aber-stale-tsbuildinfo-CI in `main` gemerged. Folge: TS2322 in `SubjectFormDialog.tsx:139` brach `Build Web` für ALLE downstream-PRs (#74 schon rot gemerged, #72 wäre als nächstes folgendes Opfer). Bis PR #75 den eigentlichen Trigger fixt, überlagern sich Phase-Bugs und main-Bug — Signal kaputt. Sauberer Main = klare CI-Signale, schnelles Triage. Memory `feedback_main_clean_green_ci_only.md` hat den vollen Kontext + Phase-17-Lessons-Learned-Verweis.
+
+**How to apply:** Vor jedem Merge-Vorschlag `gh pr checks <#>` prüfen — muss `pass` über alle Checks zeigen, kein `pending`, kein `failure`. Wenn der User merge anregt, bevor CI grün ist: Rückfrage stellen *"CI ist noch `<status>` — willst du wirklich jetzt mergen?"* und Bestätigung abwarten.
+
 ---
 
 <!-- GSD:project-start source:PROJECT.md -->
