@@ -137,7 +137,10 @@ export interface CreateSubjectPayload {
   subjectType?: string;
   lehrverpflichtungsgruppe?: string;
   werteinheitenFactor?: number;
-  requiredRoomType?: string;
+  // Update path passes explicit null to clear the requirement
+  // (SubjectFormDialog.tsx:136-139). Create path only ever spreads
+  // truthy values, so the wider type doesn't loosen create semantics.
+  requiredRoomType?: string | null;
 }
 
 export function useCreateSubject(schoolId: string) {
