@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { solverTuningApi } from '@/lib/api/solver-tuning';
 
 /**
- * Phase 14-02: read the 15-entry CONSTRAINT_CATALOG (6 HARD + 9 SOFT).
+ * Phase 14-02: read the 16-entry CONSTRAINT_CATALOG (7 HARD + 9 SOFT). The 7th
+ * hard constraint "Week type compatibility" was added in #72.
  *
  * Cache: schoolId-scoped (the endpoint itself is school-scoped per Plan 14-01).
  * staleTime: Infinity — the catalog is a static mirror of the Java solver

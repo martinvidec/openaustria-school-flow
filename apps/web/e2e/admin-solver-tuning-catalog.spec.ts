@@ -27,16 +27,17 @@ test.describe('Phase 14 — Solver-Tuning Catalog (Tab 1)', () => {
   }) => {
     await page.goto('/admin/solver-tuning?tab=constraints');
 
-    // Section headers — locked at 6 HARD + 9 SOFT in CONSTRAINT_CATALOG (Plan 14-01 invariant).
+    // Section headers — locked at 7 HARD + 9 SOFT in CONSTRAINT_CATALOG
+    // (Plan 14-01 baseline + Issue #72 weekTypeCompatibility hard).
     await expect(
-      page.getByRole('heading', { name: 'Hard-Constraints (6)' }),
+      page.getByRole('heading', { name: 'Hard-Constraints (7)' }),
     ).toBeVisible();
     await expect(
       page.getByRole('heading', { name: 'Soft-Constraints (9)' }),
     ).toBeVisible();
 
     // Row count via the locked Plan 14-02 selector `data-severity`.
-    await expect(page.locator('[data-severity="HARD"]')).toHaveCount(6);
+    await expect(page.locator('[data-severity="HARD"]')).toHaveCount(7);
     await expect(page.locator('[data-severity="SOFT"]')).toHaveCount(9);
 
     // Hard rows do NOT have an "Gewichtung bearbeiten" edit button.

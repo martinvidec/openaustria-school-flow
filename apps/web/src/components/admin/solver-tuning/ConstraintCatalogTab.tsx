@@ -7,7 +7,7 @@ import { ConstraintCatalogRow } from './ConstraintCatalogRow';
 /**
  * Phase 14-02 Tab 1 "Constraints" (SOLVER-01).
  *
- * Renders the static 15-entry catalog (6 HARD + 9 SOFT) with section
+ * Renders the static 16-entry catalog (7 HARD + 9 SOFT) with section
  * separator. Reads from `CONSTRAINT_CATALOG` (shared package, no network)
  * for snappy first paint; the `useConstraintCatalog` query runs in the
  * background as a backend-agreement sanity check (the API and shared
@@ -37,8 +37,8 @@ export function ConstraintCatalogTab({ schoolId, onNavigateToWeight }: Props) {
           className="text-lg font-semibold"
         >
           {/* Locked headers per UI-SPEC §Inline micro-copy. Count is fixed at
-              6 HARD + 9 SOFT in CONSTRAINT_CATALOG (Plan 14-01 invariant). */}
-          Hard-Constraints (6)
+              7 HARD + 9 SOFT in CONSTRAINT_CATALOG (Plan 14-01 + #72). */}
+          Hard-Constraints (7)
         </h2>
         <p className="text-sm text-muted-foreground">
           Diese Regeln sind im Solver fest verankert und immer aktiv.
