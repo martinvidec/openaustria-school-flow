@@ -166,3 +166,79 @@ describe('SolverInputService.processConstraintTemplates', () => {
     });
   });
 });
+
+describe('SolverInputService.deriveLessonWeekTypes (Issue #72 regression)', () => {
+  let service: SolverInputService;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        SolverInputService,
+        {
+          provide: PrismaService,
+          useValue: { constraintTemplate: { findMany: vi.fn() } },
+        },
+        {
+          provide: ConstraintTemplateService,
+          useValue: { findActive: vi.fn() },
+        },
+      ],
+    }).compile();
+    service = module.get<SolverInputService>(SolverInputService);
+  });
+
+  // Private method — access via cast. The Issue #72 contract belongs on
+  // the public buildSolverInput pipeline, but the rhythm-derivation logic
+  // is the entire interesting surface and isolating it makes failure modes
+  // readable on the failure line itself.
+  const derive = (
+    length: number,
+    mask: number | null,
+    abEnabled: boolean,
+  ): Array<'BOTH' | 'A' | 'B'> =>
+    (service as any).deriveLessonWeekTypes(length, mask, abEnabled);
+
+  // The original Issue #72 symptom: solver-input.service.ts:321 hardcoded
+  // `weekType: 'BOTH'`. On a school with abWeekEnabled=true, timeslots
+  // split into A/B but every lesson stayed BOTH — per-week semantics dead.
+  // This first assertion is the regression lock: with abWeekEnabled=true,
+  // an every-week subject MUST split into [A, B] lesson variants, not BOTH.
+  it('abWeekEnabled=true + cycleLength=1 → [A, B] (catches the original BOTH-hardcode bug)', () => {
+    expect(derive(1, null, true)).toEqual(['A', 'B']);
+  });
+
+  it('abWeekEnabled=false + cycleLength=1 → [BOTH] (legacy non-A/B path stays untouched)', () => {
+    expect(derive(1, null, false)).toEqual(['BOTH']);
+  });
+
+  it('A-week only: cycleLength=2, mask=0b01, abWeekEnabled=true → [A]', () => {
+    expect(derive(2, 0b01, true)).toEqual(['A']);
+  });
+
+  it('B-week only: cycleLength=2, mask=0b10, abWeekEnabled=true → [B]', () => {
+    expect(derive(2, 0b10, true)).toEqual(['B']);
+  });
+
+  it('BOTH semantics on A/B school: cycleLength=2, mask=0b11, abWeekEnabled=true → [A, B]', () => {
+    expect(derive(2, 0b11, true)).toEqual(['A', 'B']);
+  });
+
+  it('BOTH semantics on non-A/B school: cycleLength=2, mask=0b11, abWeekEnabled=false → [BOTH]', () => {
+    expect(derive(2, 0b11, false)).toEqual(['BOTH']);
+  });
+
+  it('forward-compat: n>2 cycles fall back to every-week — never silently drop subjects', () => {
+    // The UI does not yet emit cycleLength>2. If a row sneaks in via API
+    // or import, expanding to every-week is safer than zero lessons.
+    expect(derive(3, 0b001, true)).toEqual(['A', 'B']);
+    expect(derive(4, 0b1010, false)).toEqual(['BOTH']);
+  });
+
+  it('mask=0 defensive fallback: invalid mask collapses to every-week, never empty', () => {
+    // class-subject.service.ts rejects mask=0 in the API layer; this is a
+    // defence-in-depth assertion that the derive helper alone would not
+    // emit zero lessons even if a row slipped through.
+    expect(derive(2, 0, true)).toEqual(['A', 'B']);
+    expect(derive(2, 0, false)).toEqual(['BOTH']);
+  });
+});

@@ -141,6 +141,8 @@ export class SolverInputService {
     // 6. Load ClassSubjects with Subject, SchoolClass + assigned Teacher.
     //    Issue #71: include teacher.person so the solver-input lesson DTO
     //    can carry a real teacherId AND a human-readable teacherName.
+    //    Issue #72: cycleLength + cycleSlotMask are scalar fields so they
+    //    travel with the select-* implicit by default.
     const classSubjects = await this.prisma.classSubject.findMany({
       where: {
         schoolClass: { schoolId },
@@ -167,8 +169,16 @@ export class SolverInputService {
       (school as any).abWeekEnabled ?? false,
     );
 
-    // Build lessons from ClassSubjects
-    const lessons = this.buildLessons(classSubjects, teacherMap);
+    // Build lessons from ClassSubjects. Issue #72: lesson expansion is
+    // week-rhythm aware — every ClassSubject row generates N×K lessons
+    // where N = weeklyHours and K = number of active cycle slots
+    // (typically 1 for cycleLength=1; 2 for cycleLength=2+mask=BOTH on an
+    // A/B school).
+    const lessons = this.buildLessons(
+      classSubjects,
+      teacherMap,
+      (school as any).abWeekEnabled ?? false,
+    );
 
     // Build rooms
     const solverRooms: SolverRoom[] = rooms.map((r) => ({
@@ -281,10 +291,13 @@ export class SolverInputService {
       groupId: string | null;
       teacherId: string | null;
       teacher: { id: string; person: { firstName: string; lastName: string } } | null;
+      cycleLength: number;
+      cycleSlotMask: number | null;
       subject: { id: string; name: string; subjectType: string; lehrverpflichtungsgruppe: string | null; werteinheitenFactor: number | null; requiredRoomType: string | null };
       schoolClass: { id: string; name: string; homeRoomId: string | null };
     }>,
     _teacherMap: Map<string, { id: string; person: { firstName: string; lastName: string } }>,
+    abWeekEnabled: boolean,
   ): SolverLesson[] {
     const lessons: SolverLesson[] = [];
 
@@ -308,31 +321,88 @@ export class SolverInputService {
         ? `${cs.teacher.person.lastName} ${cs.teacher.person.firstName}`
         : 'Unassigned';
 
+      // Issue #72: derive the lesson weekTypes from the rhythm fields.
+      // For non-A/B schools the rhythm flag collapses to a single BOTH
+      // entry; for A/B schools cycleLength=2+mask=1 → ['A'], mask=2 →
+      // ['B'], cycleLength=1 (every week) → ['A','B'] so the lesson
+      // exists in each week separately. n>2 cycles are accepted by the
+      // schema for forward-compat but the API today only validates the
+      // A/B subset (see UpdateClassSubjectsDto Issue #72 fields).
+      const weekTypes = this.deriveLessonWeekTypes(
+        cs.cycleLength,
+        cs.cycleSlotMask,
+        abWeekEnabled,
+      );
+
       for (let i = 0; i < cs.weeklyHours; i++) {
-        lessons.push({
-          id: `${cs.id}-${i}`,
-          subjectId: cs.subject.id,
-          subjectName: cs.subject.name,
-          teacherId,
-          teacherName,
-          classId: cs.schoolClass.id,
-          className: cs.schoolClass.name,
-          groupId: cs.groupId,
-          studentCount: 0, // derived from class size if needed
-          preferDoublePeriod: cs.preferDoublePeriod,
-          requiredRoomType,
-          requiredEquipment: [],
-          // Issue #67: pass the class's home room through so the Java
-          // homeRoomPreference soft constraint can fire. null falls back
-          // to the pre-#67 behavior (no preference, solver minimizes other
-          // constraints freely).
-          homeRoomId: cs.schoolClass.homeRoomId,
-          weekType: 'BOTH',
-        });
+        for (const weekType of weekTypes) {
+          lessons.push({
+            id: `${cs.id}-${i}-${weekType}`,
+            subjectId: cs.subject.id,
+            subjectName: cs.subject.name,
+            teacherId,
+            teacherName,
+            classId: cs.schoolClass.id,
+            className: cs.schoolClass.name,
+            groupId: cs.groupId,
+            studentCount: 0, // derived from class size if needed
+            preferDoublePeriod: cs.preferDoublePeriod,
+            requiredRoomType,
+            requiredEquipment: [],
+            // Issue #67: pass the class's home room through so the Java
+            // homeRoomPreference soft constraint can fire. null falls back
+            // to the pre-#67 behavior (no preference, solver minimizes other
+            // constraints freely).
+            homeRoomId: cs.schoolClass.homeRoomId,
+            weekType,
+          });
+        }
       }
     }
 
     return lessons;
+  }
+
+  /**
+   * Issue #72: map ClassSubject rhythm (cycleLength + cycleSlotMask) to
+   * the list of lesson weekTypes the solver needs to schedule. Every
+   * weekly hour of a ClassSubject is expanded once per returned weekType,
+   * so a "BOTH" subject on an A/B school yields 2× lessons (one A, one
+   * B) — those are independently scheduled by the solver but constrained
+   * to land in the matching timeslot via the new weekTypeCompatibility
+   * Java constraint.
+   *
+   *   - cycleLength <= 1 OR mask null OR mask covers every cycle slot
+   *     → every-week behaviour. abWeekEnabled=true splits into A+B;
+   *       abWeekEnabled=false collapses to a single BOTH lesson.
+   *   - cycleLength == 2, mask == 0b01 → A-week only.
+   *   - cycleLength == 2, mask == 0b10 → B-week only.
+   *   - cycleLength > 2 → forward-compat fallback to every-week (no UI yet).
+   */
+  private deriveLessonWeekTypes(
+    cycleLength: number,
+    cycleSlotMask: number | null,
+    abWeekEnabled: boolean,
+  ): Array<'BOTH' | 'A' | 'B'> {
+    // Default / "every week"
+    if (cycleLength <= 1 || cycleSlotMask == null) {
+      return abWeekEnabled ? ['A', 'B'] : ['BOTH'];
+    }
+    if (cycleLength === 2) {
+      const aActive = (cycleSlotMask & 0b01) !== 0;
+      const bActive = (cycleSlotMask & 0b10) !== 0;
+      if (aActive && bActive) {
+        return abWeekEnabled ? ['A', 'B'] : ['BOTH'];
+      }
+      if (aActive) return ['A'];
+      if (bActive) return ['B'];
+      // mask=0 — should have been rejected by the service validator, but
+      // fall back to every-week rather than emitting zero lessons.
+      return abWeekEnabled ? ['A', 'B'] : ['BOTH'];
+    }
+    // n>2 cycles not yet emitted by the API; expand as every-week so
+    // unknown rhythms never silently drop subjects from the plan.
+    return abWeekEnabled ? ['A', 'B'] : ['BOTH'];
   }
 
   /**
