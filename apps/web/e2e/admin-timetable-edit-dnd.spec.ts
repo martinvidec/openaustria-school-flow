@@ -241,31 +241,80 @@ test.describe('Phase 04 regression — DnD timetable-edit (commit de9ee2b)', () 
       .first();
     await expect(sourceLesson).toBeVisible();
 
-    const sBox = await sourceLesson.boundingBox();
-    if (!sBox) throw new Error('source bounding box missing');
+    // Resolve the OUTER useDraggable element by walking up to the nearest
+    // ancestor with `aria-roledescription="draggable"` — the attribute is
+    // emitted by useDraggable's `attributes` object and is the explicit
+    // proof that React has committed the draggable wrapper AND the
+    // setNodeRef callback has fired so dnd-kit knows where to attach its
+    // pointerdown listener. Waiting on `sourceLesson` (the inner text
+    // node) alone is not enough: in CI under load the inner text can be
+    // rendered while the outer DraggableLesson is still pending its
+    // first useEffect tick, so the pointerdown lands on an element that
+    // does not yet route through the dnd-kit sensor and the drag is
+    // silently lost (Issue tracking the CI flake recurrence: see PR
+    // description for the original 25757844169 evidence).
+    const draggableSource = sourceLesson.locator(
+      'xpath=ancestor::*[@aria-roledescription="draggable"][1]',
+    );
+    await expect(draggableSource).toBeVisible();
+
+    // Drive coordinates off the OUTER draggable, not the inner text. The
+    // text's bbox is a small subset of the cell and centering on it left
+    // little margin against subpixel layout drift; the outer bbox is the
+    // actual hit target dnd-kit registered.
+    const sBox = await draggableSource.boundingBox();
+    if (!sBox) throw new Error('draggable bounding box missing');
     const sx = sBox.x + sBox.width / 2;
     const sy = sBox.y + sBox.height / 2;
 
     await page.mouse.move(sx, sy);
     await page.mouse.down();
+    // Give React one microtask tick to commit any state triggered by the
+    // pointerdown handler before the threshold-crossing pointermove
+    // arrives. Cheap insurance against the CI-load race where the
+    // pointerdown event is delivered before dnd-kit's document-level
+    // pointermove listener has been attached.
+    await page.waitForTimeout(50);
     // Cross the 8px PointerSensor activation threshold and STOP — do NOT
     // release. We want to inspect the DOM mid-drag.
     await page.mouse.move(sx + 30, sy + 30, { steps: 8 });
 
-    // While drag is active, DraggableLesson sets `data-dragging-source`
-    // on its inner cell (DraggableLesson.tsx:66). The OUTER element (the
-    // one carrying useDraggable's setNodeRef) is the parent of the inner
-    // cell — that outer element is where the regressed CSS transform
-    // would be applied. Wait until the inner attribute appears so the
-    // assertion below cannot race against drag-start.
-    const innerSource = page.locator(
-      `[data-dragging-source="${fixture.lessonId}"]`,
-    );
+    // Active-drag detection via `aria-pressed="true"` on the OUTER
+    // useDraggable element. dnd-kit's `attributes` object sets
+    // `aria-pressed` to true while the draggable's own `isDragging`
+    // is true — same source-of-truth as the inner-cell
+    // `data-dragging-source` attribute, but bound to the element the
+    // test already located instead of a separate selector keyed on
+    // `fixture.lessonId`.
+    //
+    // The pre-fix inner-data-attribute approach was unreliable for two
+    // reasons. (1) Playwright's `toBeVisible` heuristics returned
+    // false intermittently under CI load, likely because the
+    // DragOverlay portal momentarily occludes the source cell's bbox
+    // and Playwright's visibility check briefly considered it
+    // offscreen. (2) The selector keyed on `fixture.lessonId` could
+    // mismatch the lessonId actually rendered in the grid when the
+    // page-query saw an in-flight DB state from a partially-completed
+    // cleanup of the previous test in a repeat-each batch (a stale
+    // ClassSubject still pointed the page-fetched lesson back to the
+    // previous run's id while the fixture variable already held the
+    // new one). The aria-pressed signal sidesteps both: it is
+    // intrinsic to the actually-dragged element regardless of which
+    // lessonId rendered.
+    //
+    // Timeout lifted to 20s (vs the global expect default of 10s) so
+    // a stalled CI worker does not RED-flag a drag that simply needs
+    // an extra rerender tick to commit the attribute.
     await expect(
-      innerSource,
-      'drag must be active (inner cell carries data-dragging-source attribute)',
-    ).toBeVisible();
-    const outerSource = innerSource.locator('xpath=..');
+      draggableSource,
+      'drag must be active (outer draggable carries aria-pressed=true)',
+    ).toHaveAttribute('aria-pressed', 'true', { timeout: 20_000 });
+
+    // The outer draggable IS the setNodeRef-bearing element; this is
+    // where any regressed CSS transform would land (DragOverlay handles
+    // the visual preview separately via portal, so the original must
+    // stay put).
+    const outerSource = draggableSource;
 
     const inlineTransform = await outerSource.evaluate(
       (el: HTMLElement) => el.style.transform || '',
