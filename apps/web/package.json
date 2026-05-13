@@ -13,6 +13,7 @@
     "test:e2e": "playwright test",
     "test:e2e:desktop": "playwright test --project=desktop",
     "test:e2e:mobile": "playwright test --project=mobile-375",
+    "e2e:sweep": "tsx scripts/e2e-sweep.ts",
     "lint": "echo lint-placeholder"
   },
   "dependencies": {
@@ -73,6 +74,7 @@
     "dotenv": "^17.4.2",
     "jsdom": "^29.0.1",
     "tailwindcss": "^4.2.0",
+    "tsx": "^4.21.0",
     "typescript": "~6.0.0",
     "vite": "^8.0.0",
     "vitest": "^4.1.0",
