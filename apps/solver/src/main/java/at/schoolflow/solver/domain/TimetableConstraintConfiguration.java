@@ -57,6 +57,12 @@ public class TimetableConstraintConfiguration {
     @ConstraintWeight("Class timeslot restriction")
     private HardSoftScore classTimeslotRestrictionWeight = HardSoftScore.ONE_HARD;
 
+    // Issue #72: hard constraint pinning each lesson to a timeslot whose
+    // weekType is compatible (BOTH wildcards both sides, otherwise an
+    // exact match). The matching logic lives on Lesson.isWeekCompatible.
+    @ConstraintWeight("Week type compatibility")
+    private HardSoftScore weekTypeCompatibilityWeight = HardSoftScore.ONE_HARD;
+
     // Soft constraints (configurable weights)
     @ConstraintWeight("No same subject doubling")
     private HardSoftScore noSameSubjectDoublingWeight = HardSoftScore.ofSoft(10);

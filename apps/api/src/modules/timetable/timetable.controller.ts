@@ -54,7 +54,7 @@ export class TimetableController {
 
   @Get('constraint-catalog')
   @CheckPermissions({ action: 'read', subject: 'timetable' })
-  @ApiOperation({ summary: 'Get the static catalog of all 15 solver constraints (6 HARD + 9 SOFT)' })
+  @ApiOperation({ summary: 'Get the static catalog of all 16 solver constraints (7 HARD + 9 SOFT)' })
   @ApiResponse({ status: 200, description: 'Constraint catalog' })
   getConstraintCatalog() {
     return CONSTRAINT_CATALOG;

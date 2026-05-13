@@ -111,6 +111,34 @@ export class ClassSubjectService {
         const isCustomized =
           templateHours === undefined ? true : templateHours !== row.weeklyHours;
         const prior = existingBySubject.get(row.subjectId);
+        // Issue #72: enforce cycleLength/cycleSlotMask invariants before
+        // we touch the DB. Saving cycleLength=2 with mask=null (no slots
+        // selected) would silently drop the subject from the solver
+        // input; saving cycleLength=1 with a non-null mask is meaningless
+        // noise.
+        if (row.cycleLength !== undefined && row.cycleLength === 1) {
+          if (row.cycleSlotMask != null) {
+            throw new ConflictException({
+              type: 'https://schoolflow.dev/errors/invalid-cycle',
+              title: 'Ungültiger Wochenrhythmus',
+              status: 409,
+              detail:
+                'cycleSlotMask muss null sein, wenn cycleLength=1 (jede Woche).',
+            });
+          }
+        }
+        if (row.cycleLength !== undefined && row.cycleLength > 1) {
+          if (row.cycleSlotMask == null || row.cycleSlotMask === 0) {
+            throw new ConflictException({
+              type: 'https://schoolflow.dev/errors/invalid-cycle',
+              title: 'Ungültiger Wochenrhythmus',
+              status: 409,
+              detail:
+                'cycleSlotMask muss ein nicht-leerer Bitmask sein, wenn cycleLength>1.',
+            });
+          }
+        }
+
         if (prior) {
           await tx.classSubject.update({
             where: { id: prior.id },
@@ -123,6 +151,11 @@ export class ClassSubjectService {
               // null = clear it; uuid = set it. Prisma treats undefined as
               // a no-op here, so the explicit-presence check is implicit.
               teacherId: row.teacherId,
+              // Issue #72: same Prisma undefined-vs-null semantics applies
+              // here for both cycle fields. Skipping the field leaves the
+              // existing rhythm untouched.
+              cycleLength: row.cycleLength,
+              cycleSlotMask: row.cycleSlotMask,
             },
           });
         } else {
@@ -137,6 +170,15 @@ export class ClassSubjectService {
               // was provided. null on a never-existed row is the same as
               // omitting it (default DB value is NULL).
               ...(row.teacherId ? { teacherId: row.teacherId } : {}),
+              // Issue #72: same — only set non-default cycle values when
+              // the caller explicitly asked. Defaults are cycleLength=1
+              // (every week) and cycleSlotMask=null.
+              ...(row.cycleLength !== undefined
+                ? { cycleLength: row.cycleLength }
+                : {}),
+              ...(row.cycleSlotMask !== undefined
+                ? { cycleSlotMask: row.cycleSlotMask }
+                : {}),
             },
           });
         }

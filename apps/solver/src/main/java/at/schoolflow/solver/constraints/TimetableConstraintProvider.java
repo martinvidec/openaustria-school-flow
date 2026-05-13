@@ -49,6 +49,13 @@ public class TimetableConstraintProvider implements ConstraintProvider {
                 studentGroupConflict(constraintFactory),
                 roomTypeRequirement(constraintFactory),
                 classTimeslotRestriction(constraintFactory),
+                // Issue #72: hard-enforces that lesson.weekType matches its
+                // assigned timeslot.weekType. The Lesson.isWeekCompatible
+                // helper has shipped for months but no constraint consumed
+                // it — the solver could freely place an A-week lesson into
+                // a B-week slot. With the API now emitting per-week lesson
+                // variants this constraint pins them to the matching slot.
+                weekTypeCompatibility(constraintFactory),
                 // Soft constraints (weights from TimetableConstraintConfiguration)
                 noSameSubjectDoubling(constraintFactory),
                 balancedWeeklyDistribution(constraintFactory),
@@ -143,6 +150,22 @@ public class TimetableConstraintProvider implements ConstraintProvider {
                 .filter(lesson -> !lesson.getRequiredRoomType().equals(lesson.getRoom().getRoomType()))
                 .penalizeConfigurable()
                 .asConstraint("Room type requirement");
+    }
+
+    /**
+     * Issue #72: a lesson's weekType must match the assigned timeslot's
+     * weekType. BOTH is the wildcard on either side (a BOTH lesson fits
+     * any timeslot; a BOTH timeslot accepts any lesson). The matching
+     * logic itself lives on {@link Lesson#isWeekCompatible} and is unit-
+     * tested in ConstraintTest; this constraint is the missing wiring
+     * that turns that helper into actual solver behaviour.
+     */
+    public Constraint weekTypeCompatibility(ConstraintFactory constraintFactory) {
+        return constraintFactory
+                .forEach(Lesson.class)
+                .filter(lesson -> !lesson.isWeekCompatible(lesson.getTimeslot()))
+                .penalizeConfigurable()
+                .asConstraint("Week type compatibility");
     }
 
     /**

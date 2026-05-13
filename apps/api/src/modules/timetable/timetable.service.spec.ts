@@ -72,6 +72,13 @@ describe('TimetableService', () => {
     timetableLesson: {
       createMany: vi.fn().mockResolvedValue({ count: 5 }),
     },
+    // Issue #72: handleCompletion now resolves classSubject.teacherId
+    // through a single batch query before INSERT. Default mock returns
+    // an empty list so the handler falls back to teacherId='' (the
+    // legacy behaviour) and the existing assertions still pass.
+    classSubject: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
     $transaction: vi.fn().mockImplementation((args: any[]) => Promise.all(args)),
   };
 
@@ -249,7 +256,7 @@ describe('TimetableService', () => {
         elapsedSeconds: 120,
         lessons: [
           {
-            lessonId: 'cs-1-0',
+            lessonId: 'cs-1-0-BOTH',
             timeslotId: 'ts-1',
             roomId: 'room-1',
             dayOfWeek: 'MONDAY',
@@ -257,7 +264,7 @@ describe('TimetableService', () => {
             weekType: 'BOTH',
           },
           {
-            lessonId: 'cs-1-1',
+            lessonId: 'cs-1-1-BOTH',
             timeslotId: 'ts-2',
             roomId: 'room-1',
             dayOfWeek: 'MONDAY',

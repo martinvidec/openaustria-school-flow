@@ -1,5 +1,5 @@
 /**
- * Static catalog of all 15 solver constraints (6 HARD + 9 SOFT).
+ * Static catalog of all 16 solver constraints (7 HARD + 9 SOFT).
  *
  * SYNC: apps/solver/src/main/java/at/schoolflow/solver/constraints/TimetableConstraintProvider.java
  * SYNC: packages/shared/src/constraint-catalog.ts (frontend mirror)
@@ -20,7 +20,7 @@ export interface ConstraintCatalogEntry {
 }
 
 export const CONSTRAINT_CATALOG: ConstraintCatalogEntry[] = [
-  // === HARD (6) ===
+  // === HARD (7) ===
   {
     name: 'Teacher conflict',
     displayName: 'Lehrkraft-Konflikt',
@@ -62,6 +62,16 @@ export const CONSTRAINT_CATALOG: ConstraintCatalogEntry[] = [
     description: 'Klassen dürfen nicht in gesperrten Perioden unterrichtet werden (siehe Tab Klassen-Sperrzeiten).',
     severity: 'HARD',
     source: 'TimetableConstraintProvider.java#classTimeslotRestriction',
+  },
+  {
+    // Issue #72: hard constraint pinning each lesson to a timeslot whose
+    // weekType is compatible. Activated when the school has A/B-week
+    // rhythms enabled and at least one ClassSubject opts in.
+    name: 'Week type compatibility',
+    displayName: 'A/B-Wochen-Zuordnung',
+    description: 'Stunden mit A- oder B-Wochen-Rhythmus müssen in der passenden Wochenvariante liegen.',
+    severity: 'HARD',
+    source: 'TimetableConstraintProvider.java#weekTypeCompatibility',
   },
 
   // === SOFT (9 — 8 existing + 1 NEW for Phase 14 Task 5) ===

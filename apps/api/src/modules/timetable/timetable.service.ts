@@ -154,27 +154,92 @@ export class TimetableService {
       },
     });
 
-    // Persist lesson assignments
+    // Persist lesson assignments.
+    //
+    // The lessonId carries the source ClassSubject id plus an index and the
+    // weekType variant:
+    //
+    //   `${classSubjectId}-${i}-${weekType}`
+    //
+    // where weekType ∈ {BOTH, A, B}. The legacy parser (Phase 14) called
+    // `lastIndexOf('-')` and dropped only the index suffix, which broke when
+    // Issue #72 introduced the trailing `-${weekType}` segment — the prefix
+    // produced was `${classSubjectId}-${i}` and the FK-less classSubjectId
+    // column got polluted with non-existent ids. The regex below pins the
+    // expected suffix shape explicitly.
+    //
+    // Issue #71 follow-up: also fetch the assigned teacherId from the
+    // ClassSubject record so persisted TimetableLessons carry a real
+    // teacher reference instead of the legacy hardcoded ''. The solver
+    // already respects the assignment for conflict + availability; this
+    // line is what surfaces it in the /timetable UI.
     if (result.lessons && result.lessons.length > 0) {
-      const lessonRecords = result.lessons.map((lesson: SolvedLessonDto) => {
-        // Parse classSubjectId from lessonId format "classSubjectId-index"
-        const lastDash = lesson.lessonId.lastIndexOf('-');
-        const classSubjectId = lesson.lessonId.substring(0, lastDash);
+      const lessonIdRegex = /^(.+)-(\d+)-(BOTH|A|B)$/;
+      const parsed = result.lessons
+        .map((lesson: SolvedLessonDto) => {
+          const match = lesson.lessonId.match(lessonIdRegex);
+          if (!match) {
+            this.logger.error(
+              `Unparseable lessonId from solver, skipping: ${lesson.lessonId}`,
+            );
+            return null;
+          }
+          return {
+            lesson,
+            classSubjectId: match[1],
+          };
+        })
+        .filter(
+          (
+            entry,
+          ): entry is { lesson: SolvedLessonDto; classSubjectId: string } =>
+            entry !== null,
+        );
 
-        return {
-          runId,
-          classSubjectId,
-          teacherId: '', // Teacher assigned by solver, stored in lessonId context
-          roomId: lesson.roomId,
-          dayOfWeek: lesson.dayOfWeek as any,
-          periodNumber: lesson.periodNumber,
-          weekType: lesson.weekType,
-        };
-      });
+      if (parsed.length < result.lessons.length) {
+        this.logger.warn(
+          `Skipped ${
+            result.lessons.length - parsed.length
+          } lessons with unparseable ids (run ${runId})`,
+        );
+      }
 
-      await this.prisma.timetableLesson.createMany({
-        data: lessonRecords,
+      // Resolve teacherIds in a single query keyed by the parsed
+      // classSubjectIds. Subjects without an assigned teacher fall back to
+      // '' so the NOT-NULL teacher_id column stays satisfied (legacy
+      // behaviour pre-#71/#72).
+      const csIds = Array.from(new Set(parsed.map((p) => p.classSubjectId)));
+      const csRows = await this.prisma.classSubject.findMany({
+        where: { id: { in: csIds } },
+        select: { id: true, teacherId: true },
       });
+      const teacherByCs = new Map(
+        csRows.map((cs) => [cs.id, cs.teacherId ?? '']),
+      );
+
+      const lessonRecords = parsed.map(({ lesson, classSubjectId }) => ({
+        runId,
+        classSubjectId,
+        teacherId: teacherByCs.get(classSubjectId) ?? '',
+        roomId: lesson.roomId,
+        dayOfWeek: lesson.dayOfWeek as any,
+        periodNumber: lesson.periodNumber,
+        weekType: lesson.weekType,
+      }));
+
+      if (lessonRecords.length > 0) {
+        try {
+          await this.prisma.timetableLesson.createMany({
+            data: lessonRecords,
+          });
+        } catch (err) {
+          this.logger.error(
+            `createMany failed for run ${runId} (${lessonRecords.length} records): ${(err as Error).message}`,
+            (err as Error).stack,
+          );
+          throw err;
+        }
+      }
 
       this.logger.log(
         `Stored ${lessonRecords.length} lesson assignments for run ${runId}`,
