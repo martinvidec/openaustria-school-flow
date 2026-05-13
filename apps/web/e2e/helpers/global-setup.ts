@@ -1,13 +1,25 @@
 /**
  * Phase 10.3 — Playwright globalSetup.
  *
- * Runs once before any worker spins up. Health-checks the dev stack so
- * Playwright fails fast with a clear message instead of the opaque
- * Keycloak redirect loop that happens when Vite or the API is down.
+ * Runs once before any worker spins up. Two responsibilities:
+ *
+ *   1. Health-checks the dev stack so Playwright fails fast with a clear
+ *      message instead of the opaque Keycloak redirect loop that happens
+ *      when Vite or the API is down.
+ *
+ *   2. Pre-run sweep of E2E leftover rows in the dev DB (#79). Per-spec
+ *      `afterEach` hooks delete their own rows, but a hard-killed run
+ *      skips `afterEach` and leaves E2E-prefixed rows in the live app DB.
+ *      Sweeping at the START of every session guarantees a clean slate
+ *      regardless of how the previous session ended.
+ *
+ * Opt-out: `E2E_SKIP_PRE_SWEEP=1` for the rare case of inspecting leftover
+ * rows mid-debug.
  *
  * Intentionally silent on success — CI logs stay readable.
  */
 import type { FullConfig } from '@playwright/test';
+import { sweepE2ELeftovers, totalSwept } from './sweep-leftovers';
 
 async function healthCheck(url: string, label: string, timeoutMs = 5_000): Promise<void> {
   const controller = new AbortController();
@@ -45,4 +57,16 @@ export default async function globalSetup(_config: FullConfig): Promise<void> {
     healthCheck(webUrl, 'Web/Vite'),
     healthCheck(solverUrl, '[E2E-PRECHECK] Timefold sidecar'),
   ]);
+
+  if (process.env.E2E_SKIP_PRE_SWEEP === '1') return;
+
+  const counts = await sweepE2ELeftovers();
+  const total = totalSwept(counts);
+  if (total > 0) {
+    const nonZero = Object.entries(counts)
+      .filter(([, n]) => n > 0)
+      .map(([tbl, n]) => `${tbl}=${n}`)
+      .join(', ');
+    console.log(`[e2e-sweep] removed ${total} leftover row(s): ${nonZero}`);
+  }
 }
