@@ -43,30 +43,34 @@ test.describe('Issue #81 — Classbook Attendance (desktop)', () => {
     'Mutates the shared seed ClassBookEntry — parallel projects race.',
   );
 
-  let fixture: TimetableRunFixture;
-
-  test.beforeAll(async () => {
-    fixture = await seedTimetableRun(CLASSBOOK_SCHOOL_ID);
-  });
-
-  test.afterAll(async () => {
-    await cleanupTimetableRun(fixture);
-  });
+  // Per-test seeding instead of beforeAll/afterAll. Reason: describe-
+  // level `test.skip(condition, reason)` does NOT gate beforeAll —
+  // beforeAll runs in EVERY project including skipped ones (CI run
+  // 25905955650 hit `cleanupTimetableRun(undefined)` → TypeError in
+  // the desktop-firefox project). Per-test hooks ARE gated by
+  // test.skip, and `if (!fixture)` matches the existing defensive
+  // pattern in admin-timetable-edit-dnd.spec.ts.
+  let fixture: TimetableRunFixture | undefined;
 
   test.beforeEach(async ({ page }) => {
+    fixture = await seedTimetableRun(CLASSBOOK_SCHOOL_ID);
     await loginAsAdmin(page);
   });
 
   test.afterEach(async ({ request }) => {
-    // Restore the canonical alle-anwesend state so a follow-up retry
-    // starts deterministic. Pure read-only assertions in the test body
-    // make this cleanup the single source of mutation-resetting truth.
+    if (!fixture) return;
+    // Restore the canonical alle-anwesend state on the seeded entry,
+    // then cascade-delete the fixture run. Pure read-only assertions in
+    // the test body make this cleanup the single source of mutation-
+    // resetting truth.
     const entry = await resolveEntryByTimetableLesson(
       request,
       CLASSBOOK_SCHOOL_ID,
       fixture.lessonId,
     );
     await resetAttendanceForEntry(request, CLASSBOOK_SCHOOL_ID, entry.id);
+    await cleanupTimetableRun(fixture);
+    fixture = undefined;
   });
 
   test('CB-ATTEND-01: cycle first student to ABSENT → reload persists', async ({
