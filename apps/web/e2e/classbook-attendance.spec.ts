@@ -5,20 +5,33 @@
  * Lehrer öffnet die Stunde → "Alle anwesend" → cyclet einen Schüler auf
  * ABSENT → speichert (debounced bulk PUT) → reload zeigt den Zustand.
  *
- * Chromium-only-skip because every spec mutates the SAME seed
- * `ClassBookEntry` (the MONDAY-period-1-1A row) — parallel browser
- * projects would race on the same Anwesenheitsliste. Matches the
- * race-family pattern documented in
+ * Chromium-only-skip because every spec mutates the SAME seeded
+ * `ClassBookEntry` — parallel browser projects would race on the same
+ * Anwesenheitsliste. Matches the race-family pattern documented in
  * `project_e2e_parallel_cleanup_race_family.md`.
+ *
+ * CI/local divergence note (2026-05-15): the seed (`apps/api/prisma/seed.ts`)
+ * does NOT create any `TimetableLesson` rows — those are produced by a
+ * solver run, which only happens in local dev. The first commit of this
+ * spec assumed a MONDAY/period-1 seed lesson would exist; CI was red
+ * because it doesn't. Switched to the existing `seedTimetableRun()`
+ * fixture (timetable-generation-flow.spec.ts and the DnD/perspective
+ * specs use the same one) which deterministically seeds one
+ * MONDAY/period-1 lesson for class 1A in `beforeAll`. The fixture
+ * cleanup (`afterAll`) cascade-deletes the run.
  */
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/login';
 import {
   CLASSBOOK_SCHOOL_ID,
-  getSeedClassbookLesson,
   resetAttendanceForEntry,
   resolveEntryByTimetableLesson,
 } from './helpers/classbook';
+import {
+  cleanupTimetableRun,
+  seedTimetableRun,
+  type TimetableRunFixture,
+} from './fixtures/timetable-run';
 
 test.describe('Issue #81 — Classbook Attendance (desktop)', () => {
   test.skip(
@@ -30,19 +43,28 @@ test.describe('Issue #81 — Classbook Attendance (desktop)', () => {
     'Mutates the shared seed ClassBookEntry — parallel projects race.',
   );
 
+  let fixture: TimetableRunFixture;
+
+  test.beforeAll(async () => {
+    fixture = await seedTimetableRun(CLASSBOOK_SCHOOL_ID);
+  });
+
+  test.afterAll(async () => {
+    await cleanupTimetableRun(fixture);
+  });
+
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page);
   });
 
   test.afterEach(async ({ request }) => {
-    // Restore the canonical alle-anwesend state so the next spec / run
+    // Restore the canonical alle-anwesend state so a follow-up retry
     // starts deterministic. Pure read-only assertions in the test body
     // make this cleanup the single source of mutation-resetting truth.
-    const lesson = await getSeedClassbookLesson();
     const entry = await resolveEntryByTimetableLesson(
       request,
       CLASSBOOK_SCHOOL_ID,
-      lesson.id,
+      fixture.lessonId,
     );
     await resetAttendanceForEntry(request, CLASSBOOK_SCHOOL_ID, entry.id);
   });
@@ -51,19 +73,17 @@ test.describe('Issue #81 — Classbook Attendance (desktop)', () => {
     page,
     request,
   }) => {
-    const lesson = await getSeedClassbookLesson();
-
     // Force the API-side baseline before opening the UI. The cycle
     // click below assumes PRESENT → ABSENT after one tap; a previously
     // killed run could otherwise leave a row in LATE or EXCUSED.
     const entry = await resolveEntryByTimetableLesson(
       request,
       CLASSBOOK_SCHOOL_ID,
-      lesson.id,
+      fixture.lessonId,
     );
     await resetAttendanceForEntry(request, CLASSBOOK_SCHOOL_ID, entry.id);
 
-    await page.goto(`/classbook/${lesson.id}?tab=anwesenheit`);
+    await page.goto(`/classbook/${fixture.lessonId}?tab=anwesenheit`);
 
     const list = page.getByRole('list', { name: 'Anwesenheitsliste' });
     await expect(list).toBeVisible();

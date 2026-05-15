@@ -3,87 +3,27 @@
  *
  * The classbook surface is anchored on a `TimetableLesson` ID: clicking a
  * timetable cell navigates to `/classbook/<timetableLessonId>` and the
- * backend resolves it to (or creates) a `ClassBookEntry`. To test the
- * surface deterministically we need a stable lesson ID from the seed.
+ * backend resolves it to (or creates) a `ClassBookEntry`. Specs use the
+ * existing `fixtures/timetable-run.ts:seedTimetableRun()` helper to
+ * deterministically seed one such lesson in `beforeAll` (the standard
+ * prisma:seed creates ZERO TimetableLesson rows — they're produced by
+ * solver runs, which only happens in local dev).
  *
- * `getSeedClassbookLesson()` performs a DB lookup via the Prisma client
- * the API ships with (same pattern as `fixtures/orphan-year.ts`) and
- * returns the FIRST 1A Monday lesson — that row is created by
- * `apps/api/prisma/seed.ts` and is therefore reproducible across runs.
- *
- * Cleanup helpers:
- *   - `resetAttendanceForEntry(request, schoolId, entryId)` calls the
- *     `POST /attendance/all-present` endpoint to put the shared seed
- *     entry back into a known-good state after each test.
+ * This module covers the API-side state plumbing tests need on top of
+ * the lesson fixture:
+ *   - `resolveEntryByTimetableLesson` mirrors the UI's lesson→entry
+ *     resolve endpoint so tests can mix UI actions with API state setup
+ *   - `resetAttendanceForEntry` puts a ClassBookEntry back into the
+ *     canonical "alle anwesend" state for use in afterEach hooks
  */
-import 'dotenv/config';
-import { config as dotenvConfig } from 'dotenv';
-import { createRequire } from 'node:module';
-import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { expect, type APIRequestContext } from '@playwright/test';
 import { getAdminToken } from './login';
 import { SEED_SCHOOL_UUID } from '../fixtures/seed-uuids';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-dotenvConfig({ path: path.resolve(__dirname, '../../../../.env') });
-
-const require = createRequire(import.meta.url);
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { PrismaClient } = require('../../../api/dist/config/database/generated/client.js') as {
-  PrismaClient: new (opts?: { adapter?: unknown }) => {
-    timetableLesson: {
-      findFirst: (args: {
-        where: Record<string, unknown>;
-        orderBy?: Record<string, 'asc' | 'desc'>;
-        select?: Record<string, true>;
-      }) => Promise<{ id: string } | null>;
-    };
-    $disconnect: () => Promise<void>;
-  };
-};
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { PrismaPg } = require('../../../api/node_modules/@prisma/adapter-pg') as {
-  PrismaPg: new (opts: { connectionString: string }) => unknown;
-};
 
 export const CLASSBOOK_API =
   process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
 export const CLASSBOOK_SCHOOL_ID =
   process.env.E2E_SCHOOL_ID ?? SEED_SCHOOL_UUID;
-
-/**
- * Find the first MONDAY period-1 lesson for class 1A in the seed timetable.
- *
- * This is the lesson that `apps/api/prisma/seed.ts` creates as part of the
- * baseline schedule (Max Mustermann teaches Deutsch). Stable across runs
- * because the seed is deterministic.
- */
-export async function getSeedClassbookLesson(): Promise<{ id: string }> {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error('getSeedClassbookLesson: DATABASE_URL is not set');
-  }
-  const prisma = new PrismaClient({
-    adapter: new PrismaPg({ connectionString }),
-  });
-  try {
-    const lesson = await prisma.timetableLesson.findFirst({
-      where: { dayOfWeek: 'MONDAY', periodNumber: 1 },
-      orderBy: { id: 'asc' },
-      select: { id: true },
-    });
-    if (!lesson) {
-      throw new Error(
-        'Seed lookup failed — no MONDAY period-1 lesson. Run `pnpm dev:up` to re-seed.',
-      );
-    }
-    return lesson;
-  } finally {
-    await prisma.$disconnect();
-  }
-}
 
 /**
  * Resolve a TimetableLesson ID to its ClassBookEntry via the same endpoint
