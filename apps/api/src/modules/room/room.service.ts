@@ -124,9 +124,12 @@ export class RoomService {
       );
     }
 
-    // Check for TimetableLesson conflict on active run
+    // Check for TimetableLesson conflict on active run. Newest-active wins
+    // when multiple isActive=true rows exist (transient state during parallel
+    // E2E fixtures); matches the timetable.service.getView ordering.
     const activeRun = await this.prisma.timetableRun.findFirst({
       where: { schoolId, isActive: true },
+      orderBy: { createdAt: 'desc' },
     });
     if (activeRun) {
       const lessonConflict = await this.prisma.timetableLesson.findFirst({
@@ -283,9 +286,11 @@ export class RoomService {
     const roomIds = rooms.map((r) => r.id);
     const periods = timeGrid.periods;
 
-    // Query TimetableLesson on active run for all rooms on this day
+    // Query TimetableLesson on active run for all rooms on this day. Newest
+    // active wins (matches the timetable.service.getView ordering).
     const activeRun = await this.prisma.timetableRun.findFirst({
       where: { schoolId, isActive: true },
+      orderBy: { createdAt: 'desc' },
     });
 
     let lessons: any[] = [];

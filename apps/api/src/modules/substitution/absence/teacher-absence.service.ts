@@ -99,9 +99,12 @@ export class TeacherAbsenceService {
     }
 
     return this.prisma.$transaction(async (tx: any) => {
-      // 1. Fetch active TimetableRun (source of lessons to expand against)
+      // 1. Fetch active TimetableRun (source of lessons to expand against).
+      // Newest-active wins when multiple isActive=true rows exist (transient
+      // state during parallel E2E fixtures); matches timetable.service.getView.
       const activeRun = await tx.timetableRun.findFirst({
         where: { schoolId: input.schoolId, isActive: true },
+        orderBy: { createdAt: 'desc' },
       });
       if (!activeRun) {
         throw new NotFoundException(
