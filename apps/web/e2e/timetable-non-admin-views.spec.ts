@@ -15,10 +15,24 @@
  * (Cross-Tenant-Leak via stale state, falscher Hook-Input, etc.), fällt
  * dieser Test um.
  *
- * Read-only Specs — keine Cleanup nötig.
+ * CI/local divergence note (2026-05-15): the standard prisma:seed
+ * creates ZERO TimetableLesson rows (those come from solver runs which
+ * only happen in local dev). The empty-state assertion was therefore
+ * red on CI but green locally. Fixed by seeding one MONDAY/period-1
+ * lesson via the existing `seedTimetableRun()` fixture in `beforeAll`
+ * — the same approach the DnD / perspective / generation-flow specs
+ * use. As a bonus, the seeded lesson points to kc-lehrer (Maria
+ * Mueller), so the lehrer test now asserts a NON-empty timetable as
+ * well, which is tighter coverage than the original empty-state lock.
  */
 import { test, expect } from '@playwright/test';
 import { loginAsRole } from './helpers/login';
+import {
+  cleanupTimetableRun,
+  seedTimetableRun,
+  type TimetableRunFixture,
+} from './fixtures/timetable-run';
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 
 const SEED_CLASS_1A_ID = 'seed-class-1a';
 const SEED_TEACHER_KC_LEHRER_UUID = '10000000-0000-4000-8000-000000000001';
@@ -51,6 +65,16 @@ test.describe('Issue #86 — Timetable non-admin perspectives (desktop)', () => 
     'Three roles sharing one Keycloak realm — sequential chromium run is the cleanest signal.',
   );
 
+  let fixture: TimetableRunFixture;
+
+  test.beforeAll(async () => {
+    fixture = await seedTimetableRun(SEED_SCHOOL_UUID);
+  });
+
+  test.afterAll(async () => {
+    await cleanupTimetableRun(fixture);
+  });
+
   test('TT-VIEW-SCHUELER: schueler-user lands on perspective=class for 1A and lessons render', async ({
     page,
   }) => {
@@ -66,8 +90,8 @@ test.describe('Issue #86 — Timetable non-admin perspectives (desktop)', () => 
     ).toBe(SEED_CLASS_1A_ID);
 
     await expect(page.getByRole('heading', { name: 'Stundenplan' })).toBeVisible();
-    // Empty-state card "Kein Stundenplan vorhanden" must NOT appear for a
-    // schueler in class 1A — the seed schedules 32 lessons for that class.
+    // With the fixture-seeded run, class 1A has at least one lesson.
+    // The "Kein Stundenplan vorhanden" empty-state card must NOT appear.
     await expect(page.getByText('Kein Stundenplan vorhanden')).toHaveCount(0);
   });
 
@@ -89,7 +113,7 @@ test.describe('Issue #86 — Timetable non-admin perspectives (desktop)', () => 
     await expect(page.getByText('Kein Stundenplan vorhanden')).toHaveCount(0);
   });
 
-  test('TT-VIEW-LEHRER: lehrer-user lands on perspective=teacher for their own teacherId, empty state for kc-lehrer', async ({
+  test('TT-VIEW-LEHRER: lehrer-user lands on perspective=teacher for their own teacherId, lessons render', async ({
     page,
   }) => {
     await loginAsRole(page, 'lehrer');
@@ -103,10 +127,10 @@ test.describe('Issue #86 — Timetable non-admin perspectives (desktop)', () => 
       'lehrer-user must request their OWN teacherId — never another teacher\'s',
     ).toBe(SEED_TEACHER_KC_LEHRER_UUID);
 
-    // kc-lehrer is Klassenvorstand of 1A but has no scheduled lessons in
-    // the seed (the actual timetable rows reference f0000000-* teachers).
-    // Empty state locks the "new teacher with no lessons" path — a
-    // legitimate prod scenario when a teacher is hired mid-year.
-    await expect(page.getByText('Kein Stundenplan vorhanden')).toBeVisible();
+    // The fixture pins the seeded lesson to kc-lehrer (Maria Mueller),
+    // so the teacher perspective must surface at least one lesson — the
+    // empty-state card must NOT render.
+    await expect(page.getByRole('heading', { name: 'Stundenplan' })).toBeVisible();
+    await expect(page.getByText('Kein Stundenplan vorhanden')).toHaveCount(0);
   });
 });
