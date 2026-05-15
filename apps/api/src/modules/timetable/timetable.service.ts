@@ -343,9 +343,14 @@ export class TimetableService {
     schoolId: string,
     query: TimetableViewQueryDto,
   ): Promise<TimetableViewResponseDto> {
-    // Find active run for this school
+    // Find active run for this school. Multiple isActive=true rows for a
+    // single school are an inconsistent state the production `activateRun`
+    // transaction prevents, but parallel E2E fixtures can still produce it
+    // briefly. Pick the NEWEST so the active run is deterministic — matches
+    // the implicit expectation in the UI ("the run I just activated wins").
     const activeRun = await this.prisma.timetableRun.findFirst({
       where: { schoolId, isActive: true },
+      orderBy: { createdAt: 'desc' },
     });
 
     // Get school metadata: time grid periods + active school days
