@@ -105,9 +105,16 @@ test.describe('Issue #85 — Admin Offene Vertretungen (desktop)', () => {
     // The OpenSubstitutionsPanel renders "Vertretung fuer: <originalTeacherName>"
     // (apps/web/src/components/substitution/OpenSubstitutionsPanel.tsx:125).
     // kc-lehrer's Person record is Maria Mueller (apps/api/prisma/seed.ts).
+    //
+    // `.first()` guards against the race-family pattern: sibling specs in
+    // the #85 cluster (notably teacher-substitutions-my-absences.spec.ts)
+    // also seed kc-lehrer absences on the same Monday, producing extra rows
+    // in this admin panel and tripping Playwright's strict-mode locator
+    // resolution. The assertion's intent — "panel shows the absent
+    // teacher's name on at least one row" — is preserved.
     await expect(
-      page.getByText(/Vertretung fuer:\s*Maria Mueller/),
-      'panel must show the absent teacher name',
+      page.getByText(/Vertretung fuer:\s*Maria Mueller/).first(),
+      'panel must show the absent teacher name on at least one substitution row',
     ).toBeVisible();
   });
 });
