@@ -68,3 +68,41 @@ export async function resetAttendanceForEntry(
     );
   }
 }
+
+/**
+ * Clear thema/lehrstoff/hausaufgabe on a ClassBookEntry so the next test
+ * sees blank inputs. The ClassBookEntry row is NOT linked to the
+ * TimetableRun fixture (its primary key chain is classSubjectId + date +
+ * period + weekType — see schema.prisma:950) so `cleanupTimetableRun()`
+ * does NOT cascade to it. Without this reset the spec's "Thema persists
+ * after reload" lock would mask a later test that silently inherits the
+ * E2E-flavoured content.
+ *
+ * UpdateLessonContentDto enforces `@IsString()` on each field, so we send
+ * empty strings (not `null`) — the service-side spread guards on
+ * `!== undefined` so empty strings get written through to Prisma verbatim
+ * (lesson-content.service.ts:28).
+ */
+export async function resetLessonContent(
+  request: APIRequestContext,
+  schoolId: string,
+  entryId: string,
+): Promise<void> {
+  const token = await getAdminToken(request);
+  const res = await request.patch(
+    `${CLASSBOOK_API}/schools/${schoolId}/classbook/${entryId}/content`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      data: { thema: '', lehrstoff: '', hausaufgabe: '' },
+    },
+  );
+  if (!res.ok() && res.status() !== 404) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[classbook] resetLessonContent soft-failed (${res.status()}); continuing`,
+    );
+  }
+}
