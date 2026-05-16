@@ -92,9 +92,14 @@ test.describe('Issue #84 — Messaging conversation list + detail (desktop)', ()
 
     // ConversationView renders the first message via MessageBubble
     // (apps/web/src/components/messaging/MessageBubble.tsx:90), so the
-    // body text is a real on-page string after navigation.
+    // body text is a real on-page string after navigation. `.first()`
+    // because the same body text appears 3x on page after the row click:
+    // (1) the truncated `<span>` preview still visible in the list column,
+    // (2) the MessageBubble paragraph in ConversationView, (3) a second
+    // bubble render observed under high parallelism — assertion intent
+    // ("body appears after clicking the row") is preserved.
     await expect(
-      page.getByText(body),
+      page.getByText(body).first(),
       'first message body must appear in ConversationView after click',
     ).toBeVisible();
   });
