@@ -45,6 +45,45 @@ export async function resolveEntryByTimetableLesson(
 }
 
 /**
+ * Sweep all student notes attached to a ClassBookEntry. Used in afterEach
+ * to keep the next test's "Keine Notizen vorhanden" empty-state assertion
+ * deterministic — `cleanupTimetableRun()` does NOT cascade to
+ * ClassBookEntry (no FK), so notes survive run-cleanup and leak into the
+ * next test's view of the same lesson.
+ *
+ * Best-effort: swallows individual DELETE failures so a half-applied
+ * fixture from a previously killed run doesn't block this run's cleanup.
+ */
+export async function cleanupNotesForEntry(
+  request: APIRequestContext,
+  schoolId: string,
+  entryId: string,
+): Promise<void> {
+  const token = await getAdminToken(request);
+  const listRes = await request.get(
+    `${CLASSBOOK_API}/schools/${schoolId}/classbook/${entryId}/notes`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!listRes.ok()) {
+    // 404 ⇒ entry already gone (parallel cleanup). Nothing to sweep.
+    return;
+  }
+  const notes = (await listRes.json()) as Array<{ id: string }>;
+  for (const note of notes) {
+    const delRes = await request.delete(
+      `${CLASSBOOK_API}/schools/${schoolId}/classbook/notes/${note.id}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    if (!delRes.ok() && delRes.status() !== 404) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[classbook] cleanupNotesForEntry delete ${note.id} soft-failed (${delRes.status()}); continuing`,
+      );
+    }
+  }
+}
+
+/**
  * Put a ClassBookEntry's attendance back into the canonical "alle anwesend"
  * state so the next test starts deterministic. Used in afterEach hooks.
  */
