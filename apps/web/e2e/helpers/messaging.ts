@@ -36,6 +36,21 @@ export interface CreateBroadcastInput {
   body: string;
   scopeId: string;
   scope?: 'CLASS' | 'YEAR_GROUP' | 'SCHOOL';
+  /**
+   * Optional inline poll. Sent to the backend as the `pollData` field
+   * (NOT `poll`) so `ConversationController.create` routes the first
+   * message through `PollService.createWithMessage` and an actual
+   * `polls` row is created. The frontend `useCreateConversation` hook
+   * uses the wrong field name (`poll`), so the UI compose flow can't
+   * actually create polls today — this helper is the only path that
+   * attaches a poll end-to-end. Tracked in the PR #107 body.
+   */
+  pollData?: {
+    question: string;
+    type: 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE';
+    options: string[];
+    deadline?: string;
+  };
 }
 
 export interface CreateDirectInput {
@@ -79,6 +94,9 @@ export async function createBroadcastConversation(
         scopeId: input.scopeId,
         subject: input.subject,
         body: input.body,
+        // Only spread when truthy so the broadcast helper stays
+        // backward-compatible with callers that omit the field.
+        ...(input.pollData ? { pollData: input.pollData } : {}),
       },
     },
   );
@@ -127,6 +145,40 @@ export async function createDirectConversation(
   ).toBeTruthy();
   const body = (await res.json()) as { id: string; subject: string | null };
   return { id: body.id, subject: body.subject };
+}
+
+/**
+ * Send a single message to an existing conversation as `actorRole`
+ * (default 'lehrer'). Wraps POST `/conversations/:id/messages`
+ * (`message.controller.ts:41`).
+ *
+ * Used by the realtime spec to fire a `message:new` Socket.IO event
+ * AFTER the recipient's page has already mounted and the messaging
+ * socket is connected — the event invalidates the messages query
+ * and a re-fetch lands the new body without any UI reload.
+ */
+export async function sendMessageViaAPI(
+  request: APIRequestContext,
+  conversationId: string,
+  options: { body: string; actorRole?: Role },
+): Promise<{ id: string; body: string }> {
+  const role = options.actorRole ?? 'lehrer';
+  const token = await getRoleToken(request, role);
+  const res = await request.post(
+    `${MESSAGING_API}/schools/${MESSAGING_SCHOOL_ID}/conversations/${conversationId}/messages`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      data: { body: options.body },
+    },
+  );
+  expect(
+    res.ok(),
+    `POST /conversations/${conversationId}/messages (as ${role}) → ${res.status()} ${await res.text()}`,
+  ).toBeTruthy();
+  return (await res.json()) as { id: string; body: string };
 }
 
 /**
