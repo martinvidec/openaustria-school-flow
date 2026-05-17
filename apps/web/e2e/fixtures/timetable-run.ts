@@ -34,7 +34,10 @@ import { createRequire } from 'node:module';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { SEED_TEACHER_KC_LEHRER_UUID } from './seed-uuids';
+import {
+  SEED_TEACHER_2_UUID,
+  SEED_TEACHER_KC_LEHRER_UUID,
+} from './seed-uuids';
 
 // Belt-and-braces dotenv. `import 'dotenv/config'` above loads from CWD (fine
 // when the runner is invoked from the repo root). Playwright workers run with
@@ -107,6 +110,13 @@ const { PrismaClient } = require('../../../api/dist/config/database/generated/cl
     };
     timetableLesson: {
       create: (args: { data: Record<string, unknown> }) => Promise<{ id: string }>;
+      deleteMany: (args: { where: { id: string } }) => Promise<unknown>;
+    };
+    teacherAbsence: {
+      deleteMany: (args: { where: Record<string, unknown> }) => Promise<unknown>;
+    };
+    handoverNote: {
+      deleteMany: (args: { where: Record<string, unknown> }) => Promise<unknown>;
     };
     $disconnect: () => Promise<void>;
   };
@@ -394,6 +404,161 @@ export async function cleanupTimetableRun(fixture: TimetableRunFixture): Promise
     // eslint-disable-next-line no-console
     console.warn(
       `[timetable-run fixture] cleanup failed for runId=${fixture.runId}:`,
+      err,
+    );
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Second-teacher lesson extension (Issue #85, SUB-LEHRER-INCOMING)
+// ---------------------------------------------------------------------------
+
+export interface SecondTeacherLessonFixture {
+  /** Echoed back so callers can scope downstream cleanups. */
+  runId: string;
+  lessonId: string;
+  /** Anna Lehrerin (`SEED_TEACHER_2_UUID`). */
+  teacherId: string;
+  /** Display name in "{firstName} {lastName}" order. */
+  teacherFullName: string;
+  /** Always MONDAY for now — paired with `seedTimetableRun`'s MONDAY/period-1. */
+  dayOfWeek: 'MONDAY';
+  /** Always 2 — different from `seedTimetableRun`'s period-1 so kc-lehrer is free to substitute. */
+  periodNumber: 2;
+}
+
+/**
+ * Add a SECOND TimetableLesson to an existing fixture's TimetableRun,
+ * taught by Anna Lehrerin (`SEED_TEACHER_2_UUID`) at MONDAY/period-2.
+ *
+ * Why a second lesson rather than a second run: keeping a single
+ * TimetableRun avoids the "multiple active runs" tie-breaker in
+ * `TimetableService.getView` and matches the per-school singleton
+ * invariant the production code enforces.
+ *
+ * Why MONDAY/period-2: paired with the existing fixture lesson at
+ * MONDAY/period-1 (kc-lehrer). At period-2 kc-lehrer has no lesson,
+ * so when Anna is absent the assign-substitute pre-check
+ * (`substitution.service.ts:91-108` Pitfall-2 guard) finds kc-lehrer
+ * free and accepts the OFFER. At a colliding period the assign would
+ * 409.
+ *
+ * Cleanup: piggy-backs on `cleanupTimetableRun` — the lesson is
+ * cascade-deleted via runId FK when the run is dropped. No bespoke
+ * cleanup needed unless an OFFERED Substitution survived
+ * (cancelAbsenceViaAPI deletes PENDING only). The companion
+ * `purgeAbsencesViaPrisma` in `helpers/substitutions.ts` handles that.
+ */
+export async function seedSecondTeacherLesson(
+  parent: TimetableRunFixture,
+): Promise<SecondTeacherLessonFixture> {
+  const prisma = new PrismaClient({
+    adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL ?? '' }),
+  });
+  try {
+    const teacher = await prisma.teacher.findFirst({
+      where: { schoolId: parent.schoolId, id: SEED_TEACHER_2_UUID },
+      include: { person: true },
+    });
+    if (!teacher) {
+      throw new Error(
+        `Teacher ${SEED_TEACHER_2_UUID} (Anna Lehrerin) not found — re-run prisma:seed`,
+      );
+    }
+    const teacherFullName = teacher.person
+      ? `${teacher.person.firstName} ${teacher.person.lastName}`
+      : teacher.id;
+
+    const lesson = await prisma.timetableLesson.create({
+      data: {
+        runId: parent.runId,
+        classSubjectId: parent.classSubjectId,
+        teacherId: teacher.id,
+        roomId: parent.roomId,
+        dayOfWeek: 'MONDAY',
+        periodNumber: 2,
+        weekType: 'BOTH',
+      },
+    });
+
+    return {
+      runId: parent.runId,
+      lessonId: lesson.id,
+      teacherId: teacher.id,
+      teacherFullName,
+      dayOfWeek: 'MONDAY',
+      periodNumber: 2,
+    };
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+/**
+ * Pre-test sweep for stale handover notes left behind by previously
+ * crashed or interrupted `substitutions-handover.spec.ts` runs.
+ *
+ * Why this is needed even though afterEach calls `cancelAbsenceViaAPI`:
+ *   - `cancelAbsenceViaAPI` only marks the absence CANCELLED and
+ *     deletes PENDING substitutions for THAT specific absenceId. If a
+ *     previous run died between save-note and afterEach (CI timeout,
+ *     ctrl-C, OOM kill), the absence stays ACTIVE and the note stays
+ *     in DB forever.
+ *   - On the next run, `/teacher/substitutions` Section 2 renders BOTH
+ *     the stale absence AND the new one, both with "Notiz bearbeiten"
+ *     buttons. `.first()` then picks the stale row and the assertion
+ *     `toHaveValue(noteContent)` reads the OLD timestamp content —
+ *     observed failure on parallel run 2026-05-17.
+ *
+ * Scoped to the `E2E-SUB-HANDOVER-` content prefix so sibling specs
+ * that write handover notes (none today, but defensive) and the
+ * production seed data are untouched. Handover notes cascade-delete
+ * their attachments via the `HandoverAttachment.handoverNoteId`
+ * onDelete: Cascade FK, so attachment rows + on-disk files are
+ * collected by `HandoverService.deleteNote` semantics — but here we
+ * skip the on-disk unlink because (a) the file path lives only in the
+ * Node API service and (b) orphan attachment files in `uploads/` are
+ * harmless test residue, mopped up by the standard
+ * `pnpm db:e2e:reset` flow.
+ */
+export async function purgeStaleE2EHandoverNotes(): Promise<void> {
+  const prisma = new PrismaClient({
+    adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL ?? '' }),
+  });
+  try {
+    await prisma.handoverNote.deleteMany({
+      where: { content: { startsWith: 'E2E-SUB-HANDOVER-' } },
+    });
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('[timetable-run fixture] purgeStaleE2EHandoverNotes failed:', err);
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+/**
+ * Hard-delete a TeacherAbsence (cascades through Substitution and
+ * HandoverNote). Use this when a spec has assigned a substitute and
+ * the substitution is OFFERED/CONFIRMED — the public `cancelAbsence`
+ * endpoint only marks the absence as CANCELLED and only deletes
+ * PENDING substitutions, leaving OFFERED rows in the DB and tripping
+ * subsequent spec runs.
+ *
+ * Idempotent: a no-op if the absence is already gone.
+ */
+export async function purgeAbsenceViaPrisma(absenceId: string): Promise<void> {
+  const prisma = new PrismaClient({
+    adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL ?? '' }),
+  });
+  try {
+    await prisma.teacherAbsence.deleteMany({ where: { id: absenceId } });
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[timetable-run fixture] purgeAbsenceViaPrisma failed for absenceId=${absenceId}:`,
       err,
     );
   } finally {
