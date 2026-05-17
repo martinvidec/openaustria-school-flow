@@ -19,6 +19,15 @@ import { createRequire } from 'node:module';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { expect, type APIRequestContext } from '@playwright/test';
+import { getRoleToken } from './login';
+import { SEED_SCHOOL_UUID } from '../fixtures/seed-uuids';
+
+export const EXCUSES_API =
+  process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
+export const EXCUSES_SCHOOL_ID =
+  process.env.E2E_SCHOOL_ID ?? SEED_SCHOOL_UUID;
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenvConfig({ path: path.resolve(__dirname, '../../../../.env') });
@@ -49,6 +58,66 @@ const { PrismaPg } = require('../../../api/node_modules/@prisma/adapter-pg') as 
  * shared state.
  */
 export const EXCUSES_NOTE_PREFIX = 'E2E-EXC-';
+
+export interface CreateExcuseInput {
+  studentId: string;
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+  reason: 'KRANK' | 'ARZTTERMIN' | 'FAMILIAER' | 'SONSTIG';
+  note?: string;
+}
+
+export interface CreatedExcuse {
+  id: string;
+  status: string;
+}
+
+/**
+ * POST /excuses as the kc-eltern parent — used to seed PENDING excuses
+ * for the teacher-review spec without driving the parent UI first.
+ * Returns the new excuse id so afterEach can assert cleanup happened.
+ */
+export async function createExcuseAsParentViaAPI(
+  request: APIRequestContext,
+  input: CreateExcuseInput,
+): Promise<CreatedExcuse> {
+  const token = await getRoleToken(request, 'eltern');
+  const res = await request.post(
+    `${EXCUSES_API}/schools/${EXCUSES_SCHOOL_ID}/classbook/excuses`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      data: {
+        studentId: input.studentId,
+        startDate: input.startDate,
+        endDate: input.endDate,
+        reason: input.reason,
+        note: input.note,
+      },
+    },
+  );
+  expect(
+    res.ok(),
+    `POST /classbook/excuses seed → ${res.status()} ${await res.text()}`,
+  ).toBeTruthy();
+  const body = (await res.json()) as { id: string; status: string };
+  return { id: body.id, status: body.status };
+}
+
+/**
+ * Today's date as YYYY-MM-DD — ExcuseForm's default. Used by specs that
+ * seed an excuse covering "today" so the date-range validation rules
+ * (start within last 30 days, end >= start) don't kick in.
+ */
+export function todayISODate(anchor: Date = new Date()): string {
+  const d = new Date(anchor);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 
 /**
  * Delete every AbsenceExcuse whose `note` field starts with the supplied
