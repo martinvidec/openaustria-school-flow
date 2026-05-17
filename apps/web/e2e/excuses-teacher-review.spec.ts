@@ -51,7 +51,7 @@ test.describe('Issue #83 — Excuses teacher review (desktop)', () => {
 
   test.beforeEach(async ({ request }) => {
     const today = todayISODate();
-    noteText = `${EXCUSES_NOTE_PREFIX}${Date.now()} — review-flow test`;
+    noteText = `${EXCUSES_NOTE_PREFIX}REVIEW-${Date.now()} — review-flow test`;
     excuse = await createExcuseAsParentViaAPI(request, {
       studentId: SEED_STUDENT_LISA_HUBER_UUID,
       startDate: today,
@@ -66,11 +66,13 @@ test.describe('Issue #83 — Excuses teacher review (desktop)', () => {
   });
 
   test.afterEach(async () => {
-    // Sweep ALL E2E-EXC- excuses, not just the one created here. A
-    // killed previous run could leave parallel siblings behind, and
-    // those would clutter the review list assertion the next time this
-    // spec runs against an unclean DB.
-    await cleanupE2EExcuses();
+    // Sweep only this spec's own E2E-EXC-REVIEW- rows. Sibling spec
+    // excuses-parent-submit uses a different sub-prefix (E2E-EXC-PARENT-)
+    // so the two cleanups don't deactivate each other's mid-test
+    // fixtures — earlier race where a parent-submit afterEach swept
+    // teacher-review's seeded excuse mid-flight and the PATCH /review
+    // then 404'd silently (success toast never fired).
+    await cleanupE2EExcuses(`${EXCUSES_NOTE_PREFIX}REVIEW-`);
     excuse = undefined;
   });
 
