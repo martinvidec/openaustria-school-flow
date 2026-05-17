@@ -58,7 +58,12 @@ test.describe('Issue #84 — Messaging DIRECT 1:1 (lehrer → eltern, desktop)',
     // member of DIRECT conversations and so cannot see them via the
     // member-scoped GET. Deletion still goes through the admin token
     // inside the helper (DELETE requires manage:communication).
-    await cleanupE2EConversations(request, MESSAGING_PREFIX, 'lehrer');
+    // Scope sweep to this spec's own sub-prefix so sibling messaging
+    // specs running in parallel don't sweep our mid-test DIRECT row
+    // (race-family from PR #107 parallel-run failure: shared
+    // `E2E-MSG-` prefix made every spec's afterEach sweep every
+    // other spec's conversations).
+    await cleanupE2EConversations(request, `${MESSAGING_PREFIX}DIRECT-`, 'lehrer');
     created = null;
   });
 

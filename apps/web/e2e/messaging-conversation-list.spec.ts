@@ -43,11 +43,12 @@ test.describe('Issue #84 — Messaging conversation list + detail (desktop)', ()
   let created: CreatedConversation | null = null;
 
   test.afterEach(async ({ request }) => {
-    // Sweep ALL `E2E-MSG-` rows, not just the one created in beforeEach.
-    // A killed previous run could leave parallel siblings behind, and
-    // their members include the eltern-user — which would clutter the
-    // ConversationList assertion below the next time this spec runs.
-    await cleanupE2EConversations(request, MESSAGING_PREFIX);
+    // Scope sweep to this spec's own `LIST-` sub-prefix so sibling
+    // messaging specs running in parallel don't sweep our mid-test
+    // conversation (race-family from the parallel-run failure
+    // observed in PR #107). Per-spec sub-prefixes are the agreed
+    // pattern for the messaging surface — see PR #107 body.
+    await cleanupE2EConversations(request, `${MESSAGING_PREFIX}LIST-`);
     created = null;
   });
 
