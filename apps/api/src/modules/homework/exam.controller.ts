@@ -68,6 +68,7 @@ export class ExamController {
   @ApiQuery({ name: 'classSubjectId', required: false, description: 'Filter by class subject' })
   @ApiResponse({ status: 200, description: 'List of exams' })
   async findAll(
+    @Param('schoolId') schoolId: string,
     @Query('classId') classId?: string,
     @Query('classSubjectId') classSubjectId?: string,
   ) {
@@ -77,8 +78,11 @@ export class ExamController {
     if (classSubjectId) {
       return this.examService.findByClassSubject(classSubjectId);
     }
-    // Without filters, return empty -- callers should provide a filter
-    return [];
+    // No filter → return every exam on the school. Mirrors GET /homework's
+    // no-filter branch (homework.controller.ts findAll). The /timetable
+    // cell-badge aggregation depends on this — without it ExamBadge is
+    // silently disabled school-wide on the timetable surface.
+    return this.examService.findBySchool(schoolId);
   }
 
   /**

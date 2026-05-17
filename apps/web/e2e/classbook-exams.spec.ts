@@ -61,7 +61,7 @@ test.describe('Issue #82 — Classbook Exam create + collision (desktop)', () =>
     // Sweep ALL E2E-EX- rows. No FK to TimetableRun, so
     // cleanupTimetableRun does NOT cascade to Exam rows; they
     // accumulate across specs without this explicit sweep.
-    await cleanupE2EExams(request);
+    await cleanupE2EExams(request, `${EXAMS_TITLE_PREFIX}CREATE-`);
     if (fixture) {
       await cleanupTimetableRun(fixture);
       fixture = undefined;
@@ -75,7 +75,7 @@ test.describe('Issue #82 — Classbook Exam create + collision (desktop)', () =>
     if (!fixture) throw new Error('fixture not seeded');
 
     // API-side baseline so the empty-state check below is honest.
-    await cleanupE2EExams(request);
+    await cleanupE2EExams(request, `${EXAMS_TITLE_PREFIX}CREATE-`);
 
     await page.goto(`/classbook/${fixture.lessonId}?tab=aufgaben`);
 
@@ -98,7 +98,7 @@ test.describe('Issue #82 — Classbook Exam create + collision (desktop)', () =>
     ).toBeVisible();
 
     const ts = Date.now();
-    const title1 = `${EXAMS_TITLE_PREFIX}${ts}-A — Mathe Schularbeit`;
+    const title1 = `${EXAMS_TITLE_PREFIX}CREATE-${ts}-A — Mathe Schularbeit`;
     const sharedDate = isoDaysFromNow(2);
 
     await page.getByLabel('Titel *').fill(title1);
@@ -135,7 +135,7 @@ test.describe('Issue #82 — Classbook Exam create + collision (desktop)', () =>
       page.getByRole('heading', { name: 'Pruefung eintragen', level: 2 }),
     ).toBeVisible();
 
-    const title2 = `${EXAMS_TITLE_PREFIX}${ts}-B — Mathe Wiederholung`;
+    const title2 = `${EXAMS_TITLE_PREFIX}CREATE-${ts}-B — Mathe Wiederholung`;
     await page.getByLabel('Titel *').fill(title2);
     await page.getByLabel('Datum *').fill(sharedDate);
 

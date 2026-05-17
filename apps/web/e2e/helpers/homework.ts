@@ -5,7 +5,7 @@
  * through the REST endpoint — no Prisma-direct bridge needed (the
  * excuses helper has the Prisma bridge for that gap).
  */
-import { type APIRequestContext } from '@playwright/test';
+import { expect, type APIRequestContext } from '@playwright/test';
 import { getAdminToken } from './login';
 import { SEED_SCHOOL_UUID } from '../fixtures/seed-uuids';
 
@@ -51,6 +51,44 @@ export async function cleanupE2EHomework(
           .catch(() => undefined),
       ),
   );
+}
+
+export interface CreateHomeworkInput {
+  title: string;
+  description?: string;
+  dueDate: string; // YYYY-MM-DD
+  classSubjectId: string;
+}
+
+export interface CreatedHomework {
+  id: string;
+}
+
+/**
+ * Seed a Homework row via the REST endpoint (admin auth). Returns the
+ * new homework id. Used by specs that need the cell-badge surface
+ * state without driving the HomeworkDialog UI.
+ */
+export async function createHomeworkViaAPI(
+  request: APIRequestContext,
+  input: CreateHomeworkInput,
+): Promise<CreatedHomework> {
+  const token = await getAdminToken(request);
+  const res = await request.post(
+    `${HOMEWORK_API}/schools/${HOMEWORK_SCHOOL_ID}/homework`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      data: input,
+    },
+  );
+  expect(
+    res.ok(),
+    `POST /homework seed → ${res.status()} ${await res.text()}`,
+  ).toBeTruthy();
+  return (await res.json()) as CreatedHomework;
 }
 
 /**
