@@ -41,7 +41,7 @@ test.describe('Issue #83 — Excuses parent submit (desktop)', () => {
     // killed previous run could leave parallel siblings behind, and
     // those would clutter the list assertion below the next time the
     // spec runs against an unclean DB.
-    await cleanupE2EExcuses();
+    await cleanupE2EExcuses(`${EXCUSES_NOTE_PREFIX}PARENT-`);
   });
 
   test('EXC-PARENT-01: eltern submits an excuse → toast → row visible in submitted list with PENDING badge', async ({
@@ -60,8 +60,14 @@ test.describe('Issue #83 — Excuses parent submit (desktop)', () => {
     // Lisa Huber is the only seed child of Franz Huber (kc-eltern).
     // The cross-tenant assertion here is that Lisa's name appears, not
     // a sibling-tenant child or an empty value.
+    //
+    // Scope by the form region — sibling spec excuses-teacher-review
+    // may seed an excuse for the same Lisa Huber and leak an
+    // ExcuseCard with the same name as a `<h3>` heading further down
+    // the page; the form-Kind paragraph is the assertion target.
+    const kindLabel = page.getByText('Kind', { exact: true });
     await expect(
-      page.getByText('Lisa Huber'),
+      kindLabel.locator('..').getByText('Lisa Huber'),
       'Kind field must render Lisa Huber for Franz Huber (kc-eltern) per the seed ParentStudent link',
     ).toBeVisible();
 
@@ -75,7 +81,7 @@ test.describe('Issue #83 — Excuses parent submit (desktop)', () => {
     // sibling specs' rows in the list assertion. EXCUSES_NOTE_PREFIX
     // is what the cleanup sweep uses, so this stamp doubles as the
     // cleanup discriminator.
-    const note = `${EXCUSES_NOTE_PREFIX}${Date.now()} — Lisa hat Fieber`;
+    const note = `${EXCUSES_NOTE_PREFIX}PARENT-${Date.now()} — Lisa hat Fieber`;
     await page.getByLabel(/Anmerkung/).fill(note);
 
     await page
