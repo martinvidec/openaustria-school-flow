@@ -107,6 +107,57 @@ export async function createExcuseAsParentViaAPI(
 }
 
 /**
+ * Stub PDF whose first 4 bytes are the PDF magic signature
+ * (`excuse.service.ts:19` MAGIC_BYTES['application/pdf']). The server
+ * also enforces the MIME allowlist + 5 MB Fastify multipart limit;
+ * 13 bytes passes all three checks. Held in-memory so the spec doesn't
+ * touch the filesystem.
+ */
+export const STUB_PDF_ATTACHMENT = Buffer.from('%PDF-1.4 test', 'utf-8');
+
+/**
+ * Upload a PDF/JPG/PNG attachment to an existing excuse as the
+ * supplied role (default 'eltern' — the only role that can submit
+ * excuses and thus the canonical attachment author). Wraps the
+ * multipart upload endpoint
+ * (`excuse.controller.ts:117` POST `/excuses/:id/attachment`).
+ *
+ * Uses the Playwright `request.post` `multipart` option which produces
+ * the same wire format @fastify/multipart expects, including the
+ * filename + mimeType headers.
+ */
+export async function uploadExcuseAttachmentViaAPI(
+  request: APIRequestContext,
+  excuseId: string,
+  options: {
+    filename: string;
+    mimeType?: string;
+    buffer?: Buffer;
+    actorRole?: 'eltern' | 'lehrer' | 'admin' | 'schulleitung' | 'schueler';
+  },
+): Promise<void> {
+  const role = options.actorRole ?? 'eltern';
+  const token = await getRoleToken(request, role);
+  const res = await request.post(
+    `${EXCUSES_API}/schools/${EXCUSES_SCHOOL_ID}/classbook/excuses/${excuseId}/attachment`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+      multipart: {
+        file: {
+          name: options.filename,
+          mimeType: options.mimeType ?? 'application/pdf',
+          buffer: options.buffer ?? STUB_PDF_ATTACHMENT,
+        },
+      },
+    },
+  );
+  expect(
+    res.ok(),
+    `POST /excuses/${excuseId}/attachment → ${res.status()} ${await res.text()}`,
+  ).toBeTruthy();
+}
+
+/**
  * Today's date as YYYY-MM-DD — ExcuseForm's default. Used by specs that
  * seed an excuse covering "today" so the date-range validation rules
  * (start within last 30 days, end >= start) don't kick in.
