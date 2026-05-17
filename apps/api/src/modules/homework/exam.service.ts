@@ -117,6 +117,23 @@ export class ExamService {
     return rows.map((r: any) => this.toDto(r));
   }
 
+  /**
+   * Return every Exam row on a school, ordered by date asc. Mirrors
+   * `HomeworkService.findBySchool` so the /timetable cell-badge
+   * aggregation (which calls `useExams(schoolId)` with no class filter)
+   * receives a non-empty result. Prior behaviour returned `[]` for the
+   * no-filter branch, which silently disabled ExamBadge across the
+   * entire timetable surface.
+   */
+  async findBySchool(schoolId: string): Promise<ExamDto[]> {
+    const rows = await this.prisma.exam.findMany({
+      where: { schoolId },
+      orderBy: { date: 'asc' },
+      include: CLASS_SUBJECT_INCLUDE,
+    });
+    return rows.map((r: any) => this.toDto(r));
+  }
+
   async findByClassSubject(classSubjectId: string): Promise<ExamDto[]> {
     const rows = await this.prisma.exam.findMany({
       where: { classSubjectId },

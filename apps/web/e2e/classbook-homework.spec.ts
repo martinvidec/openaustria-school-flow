@@ -58,7 +58,7 @@ test.describe('Issue #82 — Classbook Homework create (desktop)', () => {
     // there's no FK to TimetableRun, so cleanupTimetableRun() does NOT
     // cascade to Homework rows; they accumulate across specs without
     // this explicit sweep.
-    await cleanupE2EHomework(request);
+    await cleanupE2EHomework(request, `${HOMEWORK_TITLE_PREFIX}CREATE-`);
     if (fixture) {
       await cleanupTimetableRun(fixture);
       fixture = undefined;
@@ -74,7 +74,7 @@ test.describe('Issue #82 — Classbook Homework create (desktop)', () => {
     // Make sure no leftover homework from a killed prior run pollutes
     // the assertions below — the empty-state and the row-visibility
     // checks both depend on a known starting state.
-    await cleanupE2EHomework(request);
+    await cleanupE2EHomework(request, `${HOMEWORK_TITLE_PREFIX}CREATE-`);
 
     await page.goto(`/classbook/${fixture.lessonId}?tab=aufgaben`);
 
@@ -102,7 +102,7 @@ test.describe('Issue #82 — Classbook Homework create (desktop)', () => {
 
     // Timestamped title doubles as the cleanup discriminator (the
     // prefix-sweep in afterEach hooks on HOMEWORK_TITLE_PREFIX).
-    const title = `${HOMEWORK_TITLE_PREFIX}${Date.now()} — Mathe Kapitel 3`;
+    const title = `${HOMEWORK_TITLE_PREFIX}CREATE-${Date.now()} — Mathe Kapitel 3`;
     await page.getByLabel('Titel *').fill(title);
     await page
       .getByLabel('Beschreibung')

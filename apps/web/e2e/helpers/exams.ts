@@ -7,7 +7,7 @@
  * helper-file edits while in flight (PR #99 ships homework.ts; this
  * branch ships exams.ts).
  */
-import { type APIRequestContext } from '@playwright/test';
+import { expect, type APIRequestContext } from '@playwright/test';
 import { getAdminToken } from './login';
 import { SEED_SCHOOL_UUID } from '../fixtures/seed-uuids';
 
@@ -65,6 +65,48 @@ export async function cleanupE2EExams(
         .catch(() => undefined),
     ),
   );
+}
+
+export interface CreateExamInput {
+  title: string;
+  date: string; // YYYY-MM-DD
+  classSubjectId: string;
+  classId: string;
+  duration?: number;
+  description?: string;
+}
+
+export interface CreatedExam {
+  id: string;
+}
+
+/**
+ * Seed an Exam row via the REST endpoint (admin auth). Returns the new
+ * exam id. Used by specs that need the cell-badge surface state without
+ * driving the ExamDialog UI.
+ */
+export async function createExamViaAPI(
+  request: APIRequestContext,
+  input: CreateExamInput,
+): Promise<CreatedExam> {
+  const token = await getAdminToken(request);
+  const res = await request.post(
+    `${EXAMS_API}/schools/${EXAMS_SCHOOL_ID}/exams`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      data: input,
+    },
+  );
+  expect(
+    res.ok(),
+    `POST /exams seed → ${res.status()} ${await res.text()}`,
+  ).toBeTruthy();
+  // POST /exams returns `{ exam: {...}, collision?: {...} }` per exam.service
+  const body = (await res.json()) as { exam: { id: string } };
+  return { id: body.exam.id };
 }
 
 /**
