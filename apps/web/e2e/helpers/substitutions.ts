@@ -100,6 +100,75 @@ export async function cancelAbsenceViaAPI(
 }
 
 /**
+ * GET /substitutions as admin. Returns the raw array (PENDING +
+ * OFFERED + DECLINED — `substitution.service.ts:419`). Specs use this
+ * to locate a freshly-created PENDING substitution by `absenceId` so
+ * they can pass its `id` into `assignSubstituteViaAPI`.
+ */
+export async function listSubstitutionsViaAPI(
+  request: APIRequestContext,
+): Promise<
+  Array<{
+    id: string;
+    absenceId: string;
+    status: string;
+    substituteTeacherId: string | null;
+    originalTeacherId: string;
+    periodNumber: number;
+    dayOfWeek: string;
+  }>
+> {
+  const token = await getAdminToken(request);
+  const res = await request.get(
+    `${SUBSTITUTIONS_API}/schools/${SUBSTITUTIONS_SCHOOL_ID}/substitutions`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  expect(
+    res.ok(),
+    `GET /substitutions → ${res.status()}`,
+  ).toBeTruthy();
+  return (await res.json()) as Array<{
+    id: string;
+    absenceId: string;
+    status: string;
+    substituteTeacherId: string | null;
+    originalTeacherId: string;
+    periodNumber: number;
+    dayOfWeek: string;
+  }>;
+}
+
+/**
+ * POST /substitutions/:id/assign as admin — PENDING/DECLINED → OFFERED
+ * (`substitution.controller.ts:60`). Re-runs the Pitfall-2 conflict
+ * guard server-side; throws on 409 so the spec fails loud if the
+ * candidate is unexpectedly unavailable. The caller is responsible
+ * for ensuring the candidate is free at the substitution's
+ * (dayOfWeek, periodNumber) slot.
+ */
+export async function assignSubstituteViaAPI(
+  request: APIRequestContext,
+  substitutionId: string,
+  candidateTeacherId: string,
+): Promise<void> {
+  const token = await getAdminToken(request);
+  const res = await request.post(
+    `${SUBSTITUTIONS_API}/schools/${SUBSTITUTIONS_SCHOOL_ID}/substitutions/${substitutionId}/assign`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      data: { candidateTeacherId },
+    },
+  );
+  expect(
+    res.ok(),
+    `POST /substitutions/${substitutionId}/assign → ${res.status()} ${await res.text()}`,
+  ).toBeTruthy();
+}
+
+/**
  * Compute the YYYY-MM-DD string for the next MONDAY at-or-after the
  * given anchor date (defaults to today). Used to align test absences
  * with the seedTimetableRun fixture's MONDAY/period-1 lesson so the
