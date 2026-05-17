@@ -112,6 +112,12 @@ export class AttendanceService {
       updatedAt: entry.updatedAt.toISOString(),
       subjectName: classSubject.subject.name,
       className: classSubject.schoolClass.name,
+      // classId is required by ExamDialog to satisfy CreateExamDto.classId
+      // (@IsNotEmpty) — without it the Pruefung-eintragen flow on
+      // /classbook/$lessonId silently 422s. Surfacing it on the
+      // by-timetable-lesson response is the cheapest fix; the frontend
+      // route already passes the entry verbatim into the dialog props.
+      classId: classSubject.classId,
       teacherName: teacher ? `${teacher.person.firstName} ${teacher.person.lastName}` : undefined,
     };
   }
