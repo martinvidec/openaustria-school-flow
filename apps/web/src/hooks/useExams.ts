@@ -87,6 +87,12 @@ export function useCreateExam(schoolId: string) {
     },
     onSuccess: (_data) => {
       queryClient.invalidateQueries({ queryKey: examKeys.all(schoolId) });
+      // Collision-check uses its own key family (`exam-collision`) and is
+      // NOT covered by examKeys.all — without this explicit invalidation
+      // the next ExamDialog open on the same (class, date) reads the
+      // cached pre-create `hasCollision: false` for the full staleTime
+      // window, so the override-flow warning never renders.
+      queryClient.invalidateQueries({ queryKey: ['exam-collision', schoolId] });
       toast.success('Pruefung eingetragen');
     },
     onError: (error: Error) => {

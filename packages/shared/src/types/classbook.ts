@@ -20,6 +20,7 @@ export interface ClassBookEntryDto {
   // Joined fields (populated by by-timetable-lesson endpoint and other joined queries)
   subjectName?: string;
   className?: string;
+  classId?: string;
   teacherName?: string;
   createdAt: string;
   updatedAt: string;

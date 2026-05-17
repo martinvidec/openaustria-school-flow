@@ -178,6 +178,7 @@ function ClassBookLessonPage() {
             )}
             <HomeworkExamList
               schoolId={schoolId}
+              classId={entry.classId}
               classSubjectId={entry.classSubjectId}
               role={primaryRole}
             />
@@ -198,6 +199,7 @@ function ClassBookLessonPage() {
         open={examDialogOpen}
         mode="create"
         schoolId={schoolId}
+        classId={entry.classId}
         classSubjectId={entry.classSubjectId}
         onClose={() => setExamDialogOpen(false)}
       />
