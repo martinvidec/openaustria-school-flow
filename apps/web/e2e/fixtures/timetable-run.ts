@@ -112,6 +112,10 @@ const { PrismaClient } = require('../../../api/dist/config/database/generated/cl
       create: (args: { data: Record<string, unknown> }) => Promise<{ id: string }>;
       deleteMany: (args: { where: { id: string } }) => Promise<unknown>;
     };
+    timetableLessonEdit: {
+      create: (args: { data: Record<string, unknown> }) => Promise<{ id: string; createdAt: Date }>;
+      deleteMany: (args: { where: { id: string } }) => Promise<unknown>;
+    };
     teacherAbsence: {
       deleteMany: (args: { where: Record<string, unknown> }) => Promise<unknown>;
     };
@@ -559,6 +563,96 @@ export async function purgeAbsenceViaPrisma(absenceId: string): Promise<void> {
     // eslint-disable-next-line no-console
     console.warn(
       `[timetable-run fixture] purgeAbsenceViaPrisma failed for absenceId=${absenceId}:`,
+      err,
+    );
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+export interface TimetableEditFixture {
+  /** TimetableLessonEdit row id — used by cleanup to scope the delete. */
+  editId: string;
+  /** ISO-string of `created_at` so the spec can render the same Berlin-local
+   *  "dd.MM.yyyy HH:mm" string the EditHistoryPanel produces via date-fns. */
+  createdAtISO: string;
+}
+
+/**
+ * Seed a single TimetableLessonEdit row of type "move" against an existing
+ * TimetableRun + TimetableLesson (use seedTimetableRun() first). The
+ * EditHistoryPanel renders the row as:
+ *
+ *   "${prevDay} ${prevPeriod}. Std. -> ${newDay} ${newPeriod}. Std."
+ *
+ * (see apps/web/src/components/timetable/EditHistoryPanel.tsx:100). The
+ * action badge label is "Verschoben" for `editAction = 'move'` per
+ * ACTION_LABELS in the same file.
+ *
+ * Why Prisma-direct: the backend exposes a PATCH lesson-move endpoint
+ * (timetable.controller.ts:184), but driving an actual move via API would
+ * require correct CSRF/auth headers AND would mutate the real lesson grid
+ * — a wider blast radius than a single edit-history row needs. The
+ * `TimetableLessonEdit` row is a pure audit-log entry with no FK
+ * cascades back to the lesson it references, so a direct insert is
+ * deterministic and self-contained.
+ *
+ * Fields:
+ * - lessonId / runId — passed in from a seedTimetableRun() fixture
+ * - editedBy — UUID-shaped string; the page doesn't require a real
+ *   User row (no FK) and only renders `editedByName` if present in the
+ *   DTO, which the backend leaves undefined.
+ * - previousState / newState — minimal {dayOfWeek, periodNumber} so the
+ *   description renderer at EditHistoryPanel.tsx:101 has something to
+ *   format. The spec asserts on the resulting "MONDAY 1. Std. -> TUESDAY 2. Std."
+ *   string.
+ */
+export async function seedTimetableEdit(
+  runId: string,
+  lessonId: string,
+): Promise<TimetableEditFixture> {
+  const prisma = new PrismaClient({
+    adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL ?? '' }),
+  });
+  try {
+    const edit = await prisma.timetableLessonEdit.create({
+      data: {
+        runId,
+        lessonId,
+        editedBy: '00000000-0000-4000-8000-00000000e2e1',
+        editAction: 'move',
+        previousState: { dayOfWeek: 'MONDAY', periodNumber: 1 },
+        newState: { dayOfWeek: 'TUESDAY', periodNumber: 2 },
+      },
+    });
+    return {
+      editId: edit.id,
+      createdAtISO: edit.createdAt.toISOString(),
+    };
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
+/**
+ * Hard-delete a single TimetableLessonEdit row. The TimetableRun cleanup
+ * does NOT cascade to TimetableLessonEdit (the FK on `run_id` has no
+ * onDelete: Cascade in schema.prisma:799), so specs MUST clean up their
+ * own edit rows or they accumulate on the seed school's runs and skew
+ * subsequent specs' history-length assertions.
+ */
+export async function cleanupTimetableEdit(
+  fixture: TimetableEditFixture,
+): Promise<void> {
+  const prisma = new PrismaClient({
+    adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL ?? '' }),
+  });
+  try {
+    await prisma.timetableLessonEdit.deleteMany({ where: { id: fixture.editId } });
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[timetable-run fixture] cleanupTimetableEdit failed for editId=${fixture.editId}:`,
       err,
     );
   } finally {
