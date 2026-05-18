@@ -42,6 +42,29 @@ Begründung: GSD-State über zu viele Files verteilt → Plan-vs-Realität-Drift
 
 **How to apply:** Vor jedem Merge-Vorschlag `gh pr checks <#>` prüfen — muss `pass` über alle Checks zeigen, kein `pending`, kein `failure`. Wenn der User merge anregt, bevor CI grün ist: Rückfrage stellen *"CI ist noch `<status>` — willst du wirklich jetzt mergen?"* und Bestätigung abwarten.
 
+## D4 — E2E-Tests müssen deterministisch laufen können (User-Direktive 2026-05-18)
+
+**E2E-Specs sind by-design deterministisch zu bauen.** Race-Workarounds sind KEIN Designziel — sie maskieren Architekturprobleme, die bei jeder neuen parallelen Spec wieder aufpoppen.
+
+**Verboten als Race-Defense:**
+- `test.skip(({ browserName }) => browserName !== 'chromium', ...)` als ALLEINIGE Begründung "weil sonst race"
+- "Disjoint personas" zwischen Specs (Hack aus PR #111 / Issue #88) damit nicht zwei Worker dieselbe Singleton-Row touchen
+- Pre/Post-Test-Purges die nur funktionieren wenn andere Specs nicht GLEICHZEITIG schreiben
+- "Race ist bekannt, wir lassen den flake durchschnaufen" + Re-Run-Hoffnung
+
+**Erlaubt / Gefordert:**
+- **Throwaway-School-Fixture als Default für neue Specs:** eigene `schoolId` pro Spec/Test, am Ende cascade-deleten. `SEED_SCHOOL_UUID` nur lesen, nicht beschreiben — außer wenn KC-User-Bindung das zwingend macht (dann explizit dokumentieren).
+- **Architektonischer Fix bei Race-Discovery:** transactional cleanup, unique-per-test-keys, isolierte resources. Nicht das Symptom mit chromium-only patchen, sondern die geteilte Resource entkoppeln.
+- **Pragmatischer Workaround zulässig** — aber NUR mit `// FIXME: deterministic-e2e #112` Comment + Verweis auf [Issue #112](https://github.com/martinvidec/openaustria-school-flow/issues/112), das die Bestandsaufnahme + Refactor trackt.
+
+**Why:** PR #109 CI rot wegen `zeitraster.spec.ts` ↔ `wochentage.spec.ts` Race auf `/time-grid` PUT-replace-all — beide writer, kein Skip auf `wochentage`. Pre-existing seit Phase 10. Meine #87-Specs sind nicht der Auslöser, aber jede neue chromium-Spec erhöht die Race-Wahrscheinlichkeit. Memory `feedback_e2e_deterministic.md` + `project_e2e_parallel_cleanup_race_family.md` enthalten den vollen Kontext und die Liste aktiver Race-Families (TimeGrid, active-TimetableRun-singleton, CalendarToken pre-existing rows, ClassBookEntry @@unique-Kollisionen).
+
+**How to apply:**
+1. Bei JEDER neuen E2E-Spec: throwaway-school-Fixture als Default versuchen. Wenn nicht möglich → in der Spec-Begründung dokumentieren WARUM nicht.
+2. Bei Race-Discovery in einer Bestandsspec: zuerst das Determinismus-Issue konsultieren, dort den Fix tracken, nicht ad-hoc chromium-only-skip dranschrauben.
+3. Bei den noch offenen E2E-Issues (#103 Klassenbuch-Realtime u.ä.): explizit prüfen ob throwaway-school möglich ist BEVOR Spec-Code geschrieben wird.
+4. Existierende chromium-only-skip + disjoint-personas Workarounds bleiben TEMPORÄR drin, sind aber im Determinismus-Issue zu listen und mittelfristig zu entfernen.
+
 ---
 
 <!-- GSD:project-start source:PROJECT.md -->
