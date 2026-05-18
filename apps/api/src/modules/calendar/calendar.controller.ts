@@ -32,7 +32,7 @@ export class CalendarController {
   // ---------------------------------------------------------------------------
 
   @Public()
-  @Get('api/v1/calendar/:token.ics')
+  @Get('calendar/:token.ics')
   @ApiOperation({ summary: 'Get iCal feed by subscription token' })
   @ApiParam({ name: 'token', description: 'Calendar subscription token' })
   async getIcs(
@@ -59,7 +59,7 @@ export class CalendarController {
   // JWT-protected token management
   // ---------------------------------------------------------------------------
 
-  @Post('api/v1/schools/:schoolId/calendar/token')
+  @Post('schools/:schoolId/calendar/token')
   @ApiBearerAuth()
   @CheckPermissions({ action: 'create', subject: 'calendar-token' })
   @ApiOperation({ summary: 'Create a calendar subscription token' })
@@ -70,7 +70,7 @@ export class CalendarController {
     return this.calendarService.generateToken(user.id, schoolId);
   }
 
-  @Get('api/v1/schools/:schoolId/calendar/token')
+  @Get('schools/:schoolId/calendar/token')
   @ApiBearerAuth()
   @CheckPermissions({ action: 'read', subject: 'calendar-token' })
   @ApiOperation({ summary: 'Get current calendar subscription token' })
@@ -92,7 +92,7 @@ export class CalendarController {
     };
   }
 
-  @Delete('api/v1/schools/:schoolId/calendar/token')
+  @Delete('schools/:schoolId/calendar/token')
   @ApiBearerAuth()
   @CheckPermissions({ action: 'delete', subject: 'calendar-token' })
   @ApiOperation({ summary: 'Revoke current token and generate a new one' })
