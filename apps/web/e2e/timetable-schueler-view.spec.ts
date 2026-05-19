@@ -60,10 +60,11 @@ test.describe('Issue #86 — Timetable Schüler view (desktop)', () => {
     ({ isMobile }) => isMobile,
     'Perspective routing is identical across viewports — desktop only for the first lock.',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'Mutates active TimetableRun on shared seed school — chromium is the sole writer.',
-  );
+  // Phase 4 of #112: chromium-only-skip removed. The active-TimetableRun
+  // race is now closed by the Postgres advisory lock in seedTimetableRun()
+  // (commit 9991e74). Parallel firefox + chromium workers seeding for the
+  // same seed school serialize at the lock; this spec is read-only after
+  // the lock is held, so cross-project parallelism is safe.
 
   let fixture: TimetableRunFixture | undefined;
 
