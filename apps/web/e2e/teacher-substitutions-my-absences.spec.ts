@@ -46,10 +46,6 @@ test.describe('Issue #85 — Teacher Meine Abwesenheiten (desktop)', () => {
     ({ isMobile }) => isMobile,
     'Section-2 rendering is identical across viewports — desktop only for the first lock.',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'Race-family: mutates the shared seed-school TimetableRun + substitutions.',
-  );
 
   // Per-test seed; describe-level test.skip does NOT gate beforeAll/afterAll
   // (lesson from #86 / #81). Per-test hooks ARE gated; the if-guard belts-and-

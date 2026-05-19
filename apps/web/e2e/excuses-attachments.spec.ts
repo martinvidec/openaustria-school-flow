@@ -53,17 +53,18 @@ import {
   uploadExcuseAttachmentViaAPI,
   type CreatedExcuse,
 } from './helpers/excuses';
+import { acquireAdvisoryLock, type AdvisoryLock } from './helpers/advisory-lock';
 
 const SEED_STUDENT_LISA_HUBER_UUID = 'e0000000-0000-4000-8000-000000000001';
+// Per #112 phase 4 wave 2c (#121): shared with the other two excuses
+// specs so cross-spec AND cross-project parallel runs serialize on the
+// per-student row family.
+const EXCUSES_STUDENT_LOCK_KEY = `excuses:${SEED_STUDENT_LISA_HUBER_UUID}`;
 
 test.describe('Issue #83 — Excuses attachments (desktop)', () => {
   test.skip(
     ({ isMobile }) => isMobile,
     'Attachment chip layout is identical across viewports — desktop only for the first lock.',
-  );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'AbsenceExcuse rows for kc-eltern accumulate on parallel projects — chromium is the sole writer.',
   );
 
   // Sibling specs (excuses-parent-submit, excuses-teacher-review) use
@@ -73,8 +74,18 @@ test.describe('Issue #83 — Excuses attachments (desktop)', () => {
   // teacher-review race recorded in `excuses-teacher-review.spec.ts:73`).
   const ATT_PREFIX = `${EXCUSES_NOTE_PREFIX}ATT-`;
 
+  let lock: AdvisoryLock | undefined;
+
+  test.beforeEach(async () => {
+    lock = await acquireAdvisoryLock(EXCUSES_STUDENT_LOCK_KEY);
+  });
+
   test.afterEach(async () => {
     await cleanupE2EExcuses(ATT_PREFIX);
+    if (lock) {
+      await lock.release();
+      lock = undefined;
+    }
   });
 
   test('EXC-ATT-PARENT-01: eltern submits an excuse with PDF attachment → toast → attachment chip visible after reload', async ({

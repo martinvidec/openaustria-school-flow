@@ -62,10 +62,6 @@ test.describe('Issue #85 — Teacher Offene Anfragen Section 1 (desktop)', () =>
     ({ isMobile }) => isMobile,
     'Section-1 rendering is desktop-only for the first lock; mobile is a follow-up if the SubstituteOfferCard layout drifts.',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'Race-family: mutates the shared seed-school TimetableRun + assigns kc-lehrer as substitute.',
-  );
 
   let fixture: TimetableRunFixture | undefined;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

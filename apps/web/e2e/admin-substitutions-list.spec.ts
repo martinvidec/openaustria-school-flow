@@ -42,10 +42,6 @@ test.describe('Issue #85 — Admin Offene Vertretungen (desktop)', () => {
     ({ isMobile }) => isMobile,
     'Panel rendering is identical across viewports — desktop only for the first lock.',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'Race-family: mutates the shared seed-school TimetableRun.',
-  );
 
   // Per-test seeding — describe-level test.skip does NOT gate
   // beforeAll/afterAll (CI lesson from #81/#86). Per-test hooks ARE

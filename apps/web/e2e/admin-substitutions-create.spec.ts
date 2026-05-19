@@ -45,10 +45,6 @@ test.describe('Issue #85 — Admin Neue Abwesenheit erfassen UI flow (desktop)',
     ({ isMobile }) => isMobile,
     'AbsenceForm is desktop-prioritised — mobile flow is a follow-up slice once the form layout is mobile-audited.',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'Race-family: mutates the shared seed-school TimetableRun + absences.',
-  );
 
   let fixture: TimetableRunFixture | undefined;
   // The UI flow leaves the absence row created via POST /absences on

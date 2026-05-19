@@ -67,10 +67,6 @@ test.describe('Issue #85 — Uebergabenotiz author flow + attachment (desktop)',
     ({ isMobile }) => isMobile,
     'HandoverNoteEditor dialog is desktop-prioritised; mobile layout is a follow-up audit once the dialog\'s textarea height is mobile-tuned.',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'Race-family: mutates the shared seed-school TimetableRun + absences.',
-  );
 
   let fixture: TimetableRunFixture | undefined;
   let absence: CreatedAbsence | undefined;
