@@ -33,48 +33,45 @@
  * findFirst that mis-orders the where clause and grabs an
  * arbitrary token.
  *
- * Race-Family-Achtung: chromium-only-skip + purge BOTH personas in
- * beforeEach/afterEach (the purge helper takes an array of roles).
+ * Race-Family-Achtung: Issue #112 Phase 2.5a (#117) — per-(schoolId,
+ * role) Postgres advisory lock acquired on BOTH personas in sorted
+ * order (eltern → lehrer). The sibling generate.spec (lehrer) and
+ * revoke.spec (eltern) acquire their single lock and block on this
+ * spec's set; the sorted acquisition order makes ABBA deadlock
+ * impossible. Cross-browser safe; previous chromium-only-skip and
+ * disjoint-personas workaround (schueler+admin) removed — this spec
+ * is back on the originally-intended lehrer+eltern personas now that
+ * the advisory lock eliminates the race.
  */
 import { test, expect } from '@playwright/test';
 import { loginAsRole } from './helpers/login';
 import {
   apiBaseFromE2eEnv,
-  purgeCalendarTokensForRoles,
+  seedCalendarTokenContext,
+  cleanupCalendarTokenContext,
+  type CalendarTokenContext,
 } from './helpers/calendar-tokens';
 import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 
-/**
- * Use personas that are NOT shared with the sibling generate.spec
- * (lehrer) or revoke.spec (eltern). Without this isolation, parallel
- * workers running across the three files race on the same persona's
- * CalendarToken row — observed 2026-05-18 as the empty-state
- * assertion in generate.spec going red because rbac.spec had just
- * created a lehrer token in its own beforeEach window.
- *
- * `schueler` and `admin` are otherwise-untouched by #88 specs.
- * Both have calendar-token CRUD permissions per
- * apps/api/prisma/seed.ts (lines 460-462 schueler, line 217 admin
- * "manage all").
- */
-const ROLES = ['schueler', 'admin'] as const;
+const ROLES = ['lehrer', 'eltern'] as const;
 
 test.describe('Issue #88 — iCal RBAC / per-user isolation (desktop)', () => {
   test.skip(
     ({ isMobile }) => isMobile,
     'iCal subscription is a desktop-anchored workflow.',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'Mutates singleton CalendarToken rows for two personas on the seed school — chromium is the sole writer.',
-  );
+
+  let ctx: CalendarTokenContext | undefined;
 
   test.beforeEach(async () => {
-    await purgeCalendarTokensForRoles(SEED_SCHOOL_UUID, ROLES);
+    ctx = await seedCalendarTokenContext(SEED_SCHOOL_UUID, ROLES);
   });
 
   test.afterEach(async () => {
-    await purgeCalendarTokensForRoles(SEED_SCHOOL_UUID, ROLES);
+    if (ctx) {
+      await cleanupCalendarTokenContext(ctx);
+      ctx = undefined;
+    }
   });
 
   test('ICAL-RBAC-PER-USER: two different users get distinct tokens, both URLs serve valid ICS', async ({
@@ -89,8 +86,8 @@ test.describe('Issue #88 — iCal RBAC / per-user isolation (desktop)', () => {
       const pageA = await ctxA.newPage();
       const pageB = await ctxB.newPage();
 
-      // --- Schueler in context A --------------------------------------
-      await loginAsRole(pageA, 'schueler');
+      // --- Lehrer in context A ----------------------------------------
+      await loginAsRole(pageA, 'lehrer');
       await pageA.goto('/settings');
       await pageA
         .getByRole('button', { name: 'Kalender-URL erstellen' })
@@ -106,8 +103,8 @@ test.describe('Issue #88 — iCal RBAC / per-user isolation (desktop)', () => {
       const urlA = (await urlElementA.textContent())?.trim() ?? '';
       expect(urlA).toMatch(/^\/api\/v1\/calendar\/[0-9a-f-]{36}\.ics$/i);
 
-      // --- Admin in context B -----------------------------------------
-      await loginAsRole(pageB, 'admin');
+      // --- Eltern in context B ----------------------------------------
+      await loginAsRole(pageB, 'eltern');
       await pageB.goto('/settings');
       await pageB
         .getByRole('button', { name: 'Kalender-URL erstellen' })
@@ -139,8 +136,8 @@ test.describe('Issue #88 — iCal RBAC / per-user isolation (desktop)', () => {
         request.get(`${apiBase}${urlA}`, { headers: {} }),
         request.get(`${apiBase}${urlB}`, { headers: {} }),
       ]);
-      expect(icsA.status(), 'Schueler ICS endpoint must return 200').toBe(200);
-      expect(icsB.status(), 'Admin ICS endpoint must return 200').toBe(200);
+      expect(icsA.status(), 'Lehrer ICS endpoint must return 200').toBe(200);
+      expect(icsB.status(), 'Eltern ICS endpoint must return 200').toBe(200);
       const bodyA = await icsA.text();
       const bodyB = await icsB.text();
       expect(bodyA.startsWith('BEGIN:VCALENDAR')).toBe(true);
