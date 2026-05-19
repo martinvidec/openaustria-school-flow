@@ -5,11 +5,6 @@
  * Lehrer öffnet die Stunde → "Alle anwesend" → cyclet einen Schüler auf
  * ABSENT → speichert (debounced bulk PUT) → reload zeigt den Zustand.
  *
- * Chromium-only-skip because every spec mutates the SAME seeded
- * `ClassBookEntry` — parallel browser projects would race on the same
- * Anwesenheitsliste. Matches the race-family pattern documented in
- * `project_e2e_parallel_cleanup_race_family.md`.
- *
  * CI/local divergence note (2026-05-15): the seed (`apps/api/prisma/seed.ts`)
  * does NOT create any `TimetableLesson` rows — those are produced by a
  * solver run, which only happens in local dev. The first commit of this
@@ -38,11 +33,6 @@ test.describe('Issue #81 — Classbook Attendance (desktop)', () => {
     ({ isMobile }) => isMobile,
     'Attendance contract is identical across viewports — desktop only for the first lock.',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'Mutates the shared seed ClassBookEntry — parallel projects race.',
-  );
-
   // Per-test seeding instead of beforeAll/afterAll. Reason: describe-
   // level `test.skip(condition, reason)` does NOT gate beforeAll —
   // beforeAll runs in EVERY project including skipped ones (CI run

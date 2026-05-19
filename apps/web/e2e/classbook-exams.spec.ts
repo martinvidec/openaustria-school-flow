@@ -45,10 +45,6 @@ test.describe('Issue #82 — Classbook Exam create + collision (desktop)', () =>
     ({ isMobile }) => isMobile,
     'Dialog + collision-warning layout is identical across viewports — desktop only for the first lock.',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'Mutates Exam rows on the shared seed class — chromium is the sole writer.',
-  );
 
   let fixture: TimetableRunFixture | undefined;
 
