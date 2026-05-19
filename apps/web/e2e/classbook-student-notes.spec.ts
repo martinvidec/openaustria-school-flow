@@ -40,10 +40,6 @@ test.describe('Issue #81 — Classbook Student-Notes (desktop)', () => {
     ({ isMobile }) => isMobile,
     'Note-create flow is identical across viewports — desktop only for the first lock.',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'Mutates the shared seed ClassBookEntry — parallel projects race.',
-  );
 
   // Per-test seeding — describe-level test.skip does NOT gate beforeAll
   // (CI lesson from #81 attendance). Per-test hooks ARE gated.
