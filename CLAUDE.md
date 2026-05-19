@@ -65,6 +65,34 @@ Begründung: GSD-State über zu viele Files verteilt → Plan-vs-Realität-Drift
 3. Bei den noch offenen E2E-Issues (#103 Klassenbuch-Realtime u.ä.): explizit prüfen ob throwaway-school möglich ist BEVOR Spec-Code geschrieben wird.
 4. Existierende chromium-only-skip + disjoint-personas Workarounds bleiben TEMPORÄR drin, sind aber im Determinismus-Issue zu listen und mittelfristig zu entfernen.
 
+## D5 — GitHub Issue-Relationships statt nur Text-Refs (User-Direktive 2026-05-19)
+
+**Wenn Issues in Beziehung stehen (Tracking → Sub-Tasks, Epic → Sub-Issues, Bug → Regression-Test), MUSS die Relationship über GitHub's native parent/sub-issue Feature gesetzt werden — nicht nur als `Refs #N` Text im Body.**
+
+**Why:** Text-Refs sind unsichtbar in der GitHub-UI Hierarchie. Echte Sub-Issue-Beziehungen erscheinen in der Issue-Sidebar mit Progress-Bar, sind in GitHub Project-Boards gruppierbar, und ermöglichen automatische Status-Aggregation (geschlossene Sub-Issues → Parent-Progress wandert ohne manuelle Pflege).
+
+**Verboten als ALLEINIGE Verknüpfung:**
+- Nur `Refs #112` im Body, ohne echte Sub-Issue-Relationship
+- Nur eine Checklist mit `- [ ] #N` im Tracking-Body
+- "Closes #N" im PR ist OK, aber ergänzt die Relationship, ersetzt sie nicht
+
+**Erlaubt / Gefordert:**
+- Sub-Issue-Link via GraphQL `addSubIssue` Mutation (siehe Memory `feedback_issue_relationships.md`)
+- `Refs #N` Text-Link IST OK als zusätzliche Lesehilfe im Body
+- "Closes #N" in PR-Body bleibt Standard für Auto-Close
+
+**How to apply:**
+1. Beim Anlegen verwandter Issues: nach `gh issue create` immer die Sub-Issue-Beziehung setzen:
+   ```bash
+   # Node-IDs holen
+   gh api graphql -f query='query { repository(owner: "OWNER", name: "REPO") { issue(number: N) { id } } }'
+   # Verknüpfen
+   gh api graphql -f query='mutation { addSubIssue(input: { issueId: "PARENT_ID", subIssueId: "CHILD_ID" }) { subIssue { number } } }'
+   ```
+2. Verifikation via `subIssues(first: 20) { nodes { number title } }` Query.
+3. Constraint: ein Sub-Issue kann nur EINEN Parent haben. Bei Konflikt vorher `parent { number }` checken.
+4. Memory `feedback_issue_relationships.md` hat das Code-Pattern + Anwendungsfälle.
+
 ---
 
 <!-- GSD:project-start source:PROJECT.md -->
