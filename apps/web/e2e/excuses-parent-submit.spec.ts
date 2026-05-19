@@ -25,16 +25,28 @@
 import { test, expect } from '@playwright/test';
 import { loginAsRole } from './helpers/login';
 import { EXCUSES_NOTE_PREFIX, cleanupE2EExcuses } from './helpers/excuses';
+import { acquireAdvisoryLock, type AdvisoryLock } from './helpers/advisory-lock';
+
+// All three excuses specs target the same seed student (Lisa Huber,
+// kc-eltern's only child) and share `AbsenceExcuse` rows on that
+// student. Sub-prefix isolation prevents cross-spec data collisions,
+// but parallel runs of the SAME spec across browser projects would
+// still interleave list views + cleanup sweeps. The per-student lock
+// (shared by all three excuses specs) serializes them — both
+// intra-spec (chromium ↔ firefox) and inter-spec.
+const EXCUSES_STUDENT_LOCK_KEY = 'excuses:e0000000-0000-4000-8000-000000000001';
 
 test.describe('Issue #83 — Excuses parent submit (desktop)', () => {
   test.skip(
     ({ isMobile }) => isMobile,
     'Form layout is identical across viewports — desktop only for the first lock.',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'AbsenceExcuse rows for kc-eltern accumulate on parallel projects — chromium is the sole writer.',
-  );
+
+  let lock: AdvisoryLock | undefined;
+
+  test.beforeEach(async () => {
+    lock = await acquireAdvisoryLock(EXCUSES_STUDENT_LOCK_KEY);
+  });
 
   test.afterEach(async () => {
     // Sweep ALL E2E-EXC- excuses, not just the one created here. A
@@ -42,6 +54,10 @@ test.describe('Issue #83 — Excuses parent submit (desktop)', () => {
     // those would clutter the list assertion below the next time the
     // spec runs against an unclean DB.
     await cleanupE2EExcuses(`${EXCUSES_NOTE_PREFIX}PARENT-`);
+    if (lock) {
+      await lock.release();
+      lock = undefined;
+    }
   });
 
   test('EXC-PARENT-01: eltern submits an excuse → toast → row visible in submitted list with PENDING badge', async ({

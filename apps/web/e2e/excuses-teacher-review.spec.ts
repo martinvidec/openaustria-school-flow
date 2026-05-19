@@ -33,23 +33,26 @@ import {
   todayISODate,
   type CreatedExcuse,
 } from './helpers/excuses';
+import { acquireAdvisoryLock, type AdvisoryLock } from './helpers/advisory-lock';
 
 const SEED_STUDENT_LISA_HUBER_UUID = 'e0000000-0000-4000-8000-000000000001';
+// Per #112 phase 4 wave 2c (#121): shared with excuses-parent-submit
+// and excuses-attachments so cross-spec AND cross-project parallel
+// runs serialize on the per-student row family.
+const EXCUSES_STUDENT_LOCK_KEY = `excuses:${SEED_STUDENT_LISA_HUBER_UUID}`;
 
 test.describe('Issue #83 — Excuses teacher review (desktop)', () => {
   test.skip(
     ({ isMobile }) => isMobile,
     'Review-list layout is identical across viewports — desktop only for the first lock.',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'AbsenceExcuse rows for kc-eltern accumulate on parallel projects — chromium is the sole writer.',
-  );
 
+  let lock: AdvisoryLock | undefined;
   let excuse: CreatedExcuse | undefined;
   let noteText: string;
 
   test.beforeEach(async ({ request }) => {
+    lock = await acquireAdvisoryLock(EXCUSES_STUDENT_LOCK_KEY);
     const today = todayISODate();
     noteText = `${EXCUSES_NOTE_PREFIX}REVIEW-${Date.now()} — review-flow test`;
     excuse = await createExcuseAsParentViaAPI(request, {
@@ -74,6 +77,10 @@ test.describe('Issue #83 — Excuses teacher review (desktop)', () => {
     // then 404'd silently (success toast never fired).
     await cleanupE2EExcuses(`${EXCUSES_NOTE_PREFIX}REVIEW-`);
     excuse = undefined;
+    if (lock) {
+      await lock.release();
+      lock = undefined;
+    }
   });
 
   test('EXC-TEACHER-01: kc-lehrer accepts a PENDING excuse → toast → card disappears from PENDING list', async ({
