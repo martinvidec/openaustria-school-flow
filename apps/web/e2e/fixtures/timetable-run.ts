@@ -54,6 +54,7 @@ const require = createRequire(import.meta.url);
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const { PrismaClient } = require('../../../api/dist/config/database/generated/client.js') as {
   PrismaClient: new (opts?: { adapter?: unknown }) => {
+    $executeRawUnsafe: (sql: string) => Promise<number>;
     classSubject: {
       findFirst: (args: {
         where: Record<string, unknown>;
@@ -188,6 +189,51 @@ export interface TimetableRunFixture {
    * selector exists on the lesson cell prior to dragging).
    */
   subjectAbbreviation: string;
+  /**
+   * INTERNAL — Issue #112 Phase 2. The Prisma client that holds the
+   * Postgres advisory lock acquired in `seedTimetableRun()`. The lock
+   * is session-scoped (held until `$disconnect()`), so we KEEP THIS
+   * CONNECTION OPEN across the entire test lifecycle (beforeEach +
+   * test body + afterEach) and let `cleanupTimetableRun()` close it.
+   *
+   * Why a held connection: `pg_advisory_lock(N)` is session-scoped,
+   * not transaction-scoped (we can't use the cheaper xact_lock variant
+   * because the fixture seeds + the test body + the cleanup span
+   * MULTIPLE separate Prisma calls, each of which would commit and
+   * release a xact_lock). The only way to keep the lock alive across
+   * those calls is to keep the underlying connection alive.
+   *
+   * Connection-cost analysis: Playwright runs ~4 workers; each holds
+   * 1 fixture-bound connection while its test is in flight; plus the
+   * regular API connection pool. Postgres default max_connections=100
+   * → plenty of headroom.
+   *
+   * Crash-safety: if a test process is killed mid-test without calling
+   * cleanup, Postgres releases the lock when TCP keepalive eventually
+   * detects the dead connection (~minutes). Acceptable for E2E.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _lockClient: any;
+  /** The bigint lock key — released by cleanup via `pg_advisory_unlock`. */
+  _lockKey: string;
+}
+
+/**
+ * Deterministic schoolId → bigint lock key. We only need uniqueness
+ * within the E2E `pg_advisory_lock` namespace, not crypto strength.
+ *
+ * 32-bit FNV-1a over the schoolId string, returned as a decimal string
+ * (BigInt-safe for the $queryRawUnsafe path).
+ */
+function schoolLockKey(schoolId: string): string {
+  let h = 2166136261; // FNV offset basis (32-bit)
+  for (let i = 0; i < schoolId.length; i++) {
+    h ^= schoolId.charCodeAt(i);
+    // FNV prime, kept in 32-bit by Math.imul.
+    h = Math.imul(h, 16777619);
+  }
+  // Coerce to non-negative 32-bit unsigned for Postgres.
+  return (h >>> 0).toString();
 }
 
 /**
@@ -218,6 +264,29 @@ export async function seedTimetableRun(
   const prisma = new PrismaClient({
     adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL ?? '' }),
   });
+
+  // ── Issue #112 Phase 2 — acquire per-school advisory lock ──────────
+  // Held until `cleanupTimetableRun()` calls $disconnect — covers the
+  // ENTIRE test lifecycle (seed → test body → cleanup), so a parallel
+  // spec on the same schoolId blocks here until we release.
+  //
+  // Why this addresses the active-TimetableRun-singleton race:
+  // before this change, two parallel beforeEach calls could both
+  // create active runs within ms of each other; the backend's
+  // `findFirst({ schoolId, isActive: true }, orderBy createdAt desc)`
+  // returns the LATEST, which is whichever beforeEach committed last
+  // — so Spec A could see Spec B's lessons mid-test. Serializing the
+  // seed-through-cleanup window eliminates the overlap entirely.
+  //
+  // Using $queryRawUnsafe + numeric key interpolated as string: Prisma
+  // 7 driver-adapter $queryRaw template tag has historically been
+  // finicky with bigints across the pg-adapter boundary; the Unsafe
+  // variant + decimal-string lock key is simpler and just as safe
+  // because the key is derived from a controlled string via FNV-1a,
+  // not from user input.
+  const lockKey = schoolLockKey(schoolId);
+  await prisma.$executeRawUnsafe(`SELECT pg_advisory_lock(${lockKey})`);
+
   try {
     // 1. ClassSubject for seed-class-1a — deterministic FIRST entry by
     //    createdAt asc, joined with Subject for the shortName the timetable
@@ -365,10 +434,24 @@ export async function seedTimetableRun(
       fixtureRoomId,
       reactivatedDays,
       subjectAbbreviation: classSubject.subject.shortName,
+      _lockClient: prisma,
+      _lockKey: lockKey,
     };
-  } finally {
+  } catch (err) {
+    // If seeding fails, release the lock + disconnect immediately so
+    // we don't leak a connection AND don't block parallel specs.
+    try {
+      await prisma.$executeRawUnsafe(`SELECT pg_advisory_unlock(${lockKey})`);
+    } catch {
+      /* best-effort */
+    }
     await prisma.$disconnect();
+    throw err;
   }
+  // NOTE: no `finally { $disconnect }` here — the lock must survive
+  // the seed call so that `cleanupTimetableRun()` releases it AFTER
+  // the test body has run. See `_lockClient` JSDoc on the fixture
+  // interface for the rationale.
 }
 
 /**
@@ -380,9 +463,22 @@ export async function seedTimetableRun(
  * ergonomics of orphan-year.ts.
  */
 export async function cleanupTimetableRun(fixture: TimetableRunFixture): Promise<void> {
-  const prisma = new PrismaClient({
-    adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL ?? '' }),
-  });
+  // Reuse the held Prisma client so we both (a) keep the advisory lock
+  // alive through the cleanup queries and (b) release it on the SAME
+  // session that holds it. A fresh client wouldn't see the lock and
+  // pg_advisory_unlock(N) would no-op + warn.
+  const prisma = fixture._lockClient as {
+    $executeRawUnsafe: (sql: string) => Promise<number>;
+    timetableRun: { deleteMany: (args: { where: { id: string } }) => Promise<unknown> };
+    room: { deleteMany: (args: { where: { id: string } }) => Promise<unknown> };
+    schoolDay: {
+      updateMany: (args: {
+        where: Record<string, unknown>;
+        data: Record<string, unknown>;
+      }) => Promise<unknown>;
+    };
+    $disconnect: () => Promise<void>;
+  };
   try {
     // Delete the run first so the cascade removes TimetableLesson rows and
     // releases the FK on Room.
@@ -411,6 +507,22 @@ export async function cleanupTimetableRun(fixture: TimetableRunFixture): Promise
       err,
     );
   } finally {
+    // ── Issue #112 Phase 2 — release the advisory lock + disconnect ──
+    // The pg_advisory_unlock call must run on the SAME connection that
+    // acquired the lock (Postgres session-scoping). Best-effort: an
+    // already-released or disconnected session no-ops with a server
+    // warning, which is harmless.
+    try {
+      await prisma.$executeRawUnsafe(
+        `SELECT pg_advisory_unlock(${fixture._lockKey})`,
+      );
+    } catch (lockErr) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[timetable-run fixture] pg_advisory_unlock failed for key=${fixture._lockKey}:`,
+        lockErr,
+      );
+    }
     await prisma.$disconnect();
   }
 }
