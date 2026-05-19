@@ -50,14 +50,18 @@
  * working, but the public endpoint still serves their personal
  * timetable + Klausur dates to whoever cached the old URL.
  *
- * Race-Family-Achtung: chromium-only-skip + purge in beforeEach/
- * afterEach for the same singleton-row reason as the generate spec.
+ * Race-Family-Achtung: Issue #112 Phase 2.5a (#117) — per-(schoolId,
+ * role) Postgres advisory lock serializes parallel specs sharing the
+ * eltern persona. Cross-browser safe; previous chromium-only-skip
+ * removed.
  */
 import { test, expect } from '@playwright/test';
 import { loginAsRole } from './helpers/login';
 import {
   apiBaseFromE2eEnv,
-  purgeCalendarTokensForRoles,
+  seedCalendarTokenContext,
+  cleanupCalendarTokenContext,
+  type CalendarTokenContext,
 } from './helpers/calendar-tokens';
 import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 
@@ -68,17 +72,18 @@ test.describe('Issue #88 — iCal revoke (desktop)', () => {
     ({ isMobile }) => isMobile,
     'iCal subscription is a desktop-anchored workflow (URL is copied into a desktop calendar app).',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'Mutates the singleton CalendarToken row for eltern-user on the seed school — chromium is the sole writer.',
-  );
+
+  let ctx: CalendarTokenContext | undefined;
 
   test.beforeEach(async () => {
-    await purgeCalendarTokensForRoles(SEED_SCHOOL_UUID, [ROLE]);
+    ctx = await seedCalendarTokenContext(SEED_SCHOOL_UUID, [ROLE]);
   });
 
   test.afterEach(async () => {
-    await purgeCalendarTokensForRoles(SEED_SCHOOL_UUID, [ROLE]);
+    if (ctx) {
+      await cleanupCalendarTokenContext(ctx);
+      ctx = undefined;
+    }
   });
 
   test('ICAL-REVOKE-ELTERN: "Token erneuern" hard-deletes the old token (old URL → 404, new URL → 200)', async ({

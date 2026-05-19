@@ -39,18 +39,18 @@
  * "my calendar app silently stops syncing" — no toast, no error,
  * no log line on the user's side.
  *
- * Race-Family-Achtung: chromium-only-skip + purgeCalendarTokensFor
- * in both beforeEach and afterEach. CalendarToken is per-(userId,
- * schoolId) — multiple workers running this spec for the same
- * lehrer would race the @@unique constraint on the `token` column
- * and the unconditional INSERT (calendar.service.ts:32 has no
- * upsert), so chromium is the sole writer.
+ * Race-Family-Achtung: Issue #112 Phase 2.5a (#117) — a per-(schoolId,
+ * role) Postgres advisory lock serializes the purge → seed → test
+ * body → cleanup window across parallel specs that share the lehrer
+ * persona. Cross-browser safe; previous chromium-only-skip removed.
  */
 import { test, expect } from '@playwright/test';
 import { loginAsRole } from './helpers/login';
 import {
   apiBaseFromE2eEnv,
-  purgeCalendarTokensForRoles,
+  seedCalendarTokenContext,
+  cleanupCalendarTokenContext,
+  type CalendarTokenContext,
 } from './helpers/calendar-tokens';
 import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 
@@ -61,17 +61,18 @@ test.describe('Issue #88 — iCal generate (desktop)', () => {
     ({ isMobile }) => isMobile,
     'iCal subscription is a desktop-anchored workflow (URL is copied into a desktop calendar app). Mobile coverage belongs to its own *.mobile.spec.ts that asserts the "URL kopieren" button surfaces below the URL field on base/sm.',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'Mutates the singleton CalendarToken row for lehrer-user on the seed school — chromium is the sole writer (race-family precedent).',
-  );
+
+  let ctx: CalendarTokenContext | undefined;
 
   test.beforeEach(async () => {
-    await purgeCalendarTokensForRoles(SEED_SCHOOL_UUID, [ROLE]);
+    ctx = await seedCalendarTokenContext(SEED_SCHOOL_UUID, [ROLE]);
   });
 
   test.afterEach(async () => {
-    await purgeCalendarTokensForRoles(SEED_SCHOOL_UUID, [ROLE]);
+    if (ctx) {
+      await cleanupCalendarTokenContext(ctx);
+      ctx = undefined;
+    }
   });
 
   test('ICAL-GEN-LEHRER: "Kalender-URL erstellen" → toast + URL renders → public GET returns valid VCALENDAR', async ({

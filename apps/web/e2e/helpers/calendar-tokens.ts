@@ -47,6 +47,7 @@ import {
   SEED_PERSON_KC_SCHUELER_UUID,
   SEED_PERSON_KC_SCHULLEITUNG_UUID,
 } from '../fixtures/seed-uuids';
+import { acquireAdvisoryLock, type AdvisoryLock } from './advisory-lock';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -112,49 +113,124 @@ export function apiBaseFromE2eEnv(): string {
   return apiUrl.replace(/\/api\/v1\/?$/, '');
 }
 
+
+// ---------------------------------------------------------------------------
+// Lock-bound CalendarToken context (Issue #112 Phase 2.5a / #117)
+// ---------------------------------------------------------------------------
+
 /**
- * Resolve Keycloak user UUIDs from the Person table for the given
- * roles. Returns only the userIds that have a non-null
- * keycloakUserId — defensive against a seed run that skipped
- * Keycloak linking (e.g. when Keycloak was unreachable and seed
- * fell back to default UUIDs).
+ * Handle returned by `seedCalendarTokenContext` — carries the held
+ * advisory lock so cleanup can release it and the seed-school + roles
+ * so afterEach can re-purge on the SAME locked session.
  */
-async function resolveKeycloakUserIds(
+export interface CalendarTokenContext {
+  schoolId: string;
+  roles: ReadonlyArray<CalendarTestRole>;
+  /** Held advisory lock(s) — released in `cleanupCalendarTokenContext`. */
+  _lock: AdvisoryLock;
+}
+
+/**
+ * Resource-key namespace for CalendarToken locks. Distinct namespace
+ * prefix per resource type so a 32-bit FNV-1a hash collision with the
+ * `active-timetable-run:` keys (or any future namespace) is impossible
+ * by construction — they live in orthogonal namespaces by string
+ * prefix, hash collision only matters within the same namespace.
+ *
+ * One lock per (schoolId, role) — that's the row-identity the
+ * @@unique-less CalendarToken table effectively keys by (the service
+ * does `findFirst({ schoolId, userId })` and unconditionally INSERTs
+ * a new row when missing). Specs sharing a role serialize; specs on
+ * disjoint roles run in parallel without blocking each other.
+ */
+function calendarTokenLockKeys(
+  schoolId: string,
   roles: ReadonlyArray<CalendarTestRole>,
-): Promise<string[]> {
-  const personIds = roles.map((r) => PERSON_UUID_BY_ROLE[r]);
-  const prisma = new PrismaClient({
-    adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL ?? '' }),
-  });
+): string[] {
+  return roles.map((r) => `calendar-token:${schoolId}:${r}`);
+}
+
+/**
+ * Acquire the per-(schoolId, role) advisory lock(s) for the given
+ * personas + purge any leftover CalendarToken rows on the locked
+ * session. The returned context MUST be passed to
+ * `cleanupCalendarTokenContext` in `afterEach` so the lock is
+ * released — leaking it would block parallel specs forever.
+ *
+ * Why purge here AND in afterEach: parallel specs that share a role
+ * (e.g. generate-lehrer and rbac-lehrer-eltern) serialize on the
+ * `calendar-token:<schoolId>:lehrer` lock, but each STILL needs to
+ * see a clean empty state at the start of its test body — the
+ * previous holder may have left rows in the table (the test body
+ * itself creates rows; only afterEach + this function clean them up).
+ * Purge inside the locked window so no parallel writer can squeeze
+ * a row in between.
+ */
+export async function seedCalendarTokenContext(
+  schoolId: string,
+  roles: CalendarTestRole | ReadonlyArray<CalendarTestRole>,
+): Promise<CalendarTokenContext> {
+  const roleList = Array.isArray(roles)
+    ? (roles as ReadonlyArray<CalendarTestRole>)
+    : [roles as CalendarTestRole];
+
+  const lock = await acquireAdvisoryLock(calendarTokenLockKeys(schoolId, roleList));
   try {
-    const rows = await prisma.person.findMany({
-      where: { id: { in: personIds } },
-      select: { id: true, keycloakUserId: true },
-    });
-    return rows
-      .map((p) => p.keycloakUserId)
-      .filter((id): id is string => id != null && id.length > 0);
-  } finally {
-    await prisma.$disconnect();
+    await purgeCalendarTokensOnSession(lock, schoolId, roleList);
+    return { schoolId, roles: roleList, _lock: lock };
+  } catch (err) {
+    // Acquisition succeeded but purge failed — release the lock so
+    // parallel specs aren't blocked and re-throw.
+    await lock.release();
+    throw err;
   }
 }
 
 /**
- * Hard-delete every CalendarToken row for the given roles on the
- * seed school. Used in beforeEach and afterEach so each spec starts
- * with a deterministic empty-state and leaves no residue.
- *
- * Implementation note: the helper resolves keycloakUserId via the
- * Person table at call time rather than hard-coding UUIDs, because
- * Keycloak generates fresh user UUIDs per realm-import and the
- * realm-export.json IDs do NOT survive a re-import. Hard-coding
- * would silently no-op against a re-imported realm.
+ * Re-purge CalendarToken rows on the still-locked session, then
+ * release the lock. Idempotent: callers can invoke this safely from
+ * an `afterEach` even when the test failed early — the purge is
+ * scoped to the seed school + specific roles, so it cannot interfere
+ * with other specs (which hold their own locks on their own
+ * roles).
  */
-export async function purgeCalendarTokensForRoles(
+export async function cleanupCalendarTokenContext(
+  ctx: CalendarTokenContext,
+): Promise<void> {
+  try {
+    await purgeCalendarTokensOnSession(ctx._lock, ctx.schoolId, ctx.roles);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[calendar-tokens helper] cleanupCalendarTokenContext purge failed for roles=${ctx.roles.join(',')}:`,
+      err,
+    );
+  } finally {
+    await ctx._lock.release();
+  }
+}
+
+/**
+ * INTERNAL — purge CalendarToken rows on the Prisma session that
+ * holds the advisory lock. We resolve keycloakUserId on the SAME
+ * session so the (already-running) Person.findMany participates in
+ * the lock's session and we don't open + close a second connection
+ * per call.
+ */
+async function purgeCalendarTokensOnSession(
+  lock: AdvisoryLock,
   schoolId: string,
   roles: ReadonlyArray<CalendarTestRole>,
 ): Promise<void> {
-  const userIds = await resolveKeycloakUserIds(roles);
+  const personIds = roles.map((r) => PERSON_UUID_BY_ROLE[r]);
+  const prisma = lock._client as InstanceType<typeof PrismaClient>;
+  const rows = await prisma.person.findMany({
+    where: { id: { in: personIds } },
+    select: { id: true, keycloakUserId: true },
+  });
+  const userIds = rows
+    .map((p) => p.keycloakUserId)
+    .filter((id): id is string => id != null && id.length > 0);
   if (userIds.length === 0) {
     // eslint-disable-next-line no-console
     console.warn(
@@ -162,20 +238,7 @@ export async function purgeCalendarTokensForRoles(
     );
     return;
   }
-  const prisma = new PrismaClient({
-    adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL ?? '' }),
+  await prisma.calendarToken.deleteMany({
+    where: { schoolId, userId: { in: userIds } },
   });
-  try {
-    await prisma.calendarToken.deleteMany({
-      where: { schoolId, userId: { in: userIds } },
-    });
-  } catch (err) {
-    // eslint-disable-next-line no-console
-    console.warn(
-      `[calendar-tokens helper] purgeCalendarTokensForRoles failed for roles=${roles.join(',')}:`,
-      err,
-    );
-  } finally {
-    await prisma.$disconnect();
-  }
 }
