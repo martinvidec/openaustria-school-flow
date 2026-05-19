@@ -45,24 +45,39 @@ import {
   sendMessageViaAPI,
   type CreatedConversation,
 } from './helpers/messaging';
+import { acquireAdvisoryLock, type AdvisoryLock } from './helpers/advisory-lock';
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 
 test.describe('Issue #84 — Messaging realtime (Socket.IO, desktop)', () => {
   test.skip(
     ({ isMobile }) => isMobile,
     'List-detail two-pane layout is desktop-only; mobile realtime parity is a follow-up once the mobile route lands.',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'DIRECT lehrer↔eltern is a per-pair singleton; parallel browser projects collide on the directPairKey.',
-  );
 
+  // Issue #112 Phase 4 wave 2b (#120): DIRECT lehrer↔eltern is a per-pair
+  // singleton (find-or-create on `directPairKey`). Shared with the
+  // messaging-direct-1on1 spec — without the lock, a parallel run on
+  // the other spec would interleave messages into the same row and
+  // contaminate the realtime delivery assertion. Lock acquired here
+  // serializes both specs cross-spec AND cross-project.
+  let lock: AdvisoryLock | undefined;
   let created: CreatedConversation | null = null;
+
+  test.beforeEach(async () => {
+    lock = await acquireAdvisoryLock(
+      `messaging:direct:lehrer-eltern:${SEED_SCHOOL_UUID}`,
+    );
+  });
 
   test.afterEach(async ({ request }) => {
     // Scope sweep to this spec's own sub-prefix so sibling messaging
     // specs running in parallel don't sweep our mid-test DIRECT row.
     await cleanupE2EConversations(request, `${MESSAGING_PREFIX}RT-`, 'lehrer');
     created = null;
+    if (lock) {
+      await lock.release();
+      lock = undefined;
+    }
   });
 
   test('MSG-REALTIME-01: kc-eltern sees a kc-lehrer-sent message land via Socket.IO without page.reload()', async ({

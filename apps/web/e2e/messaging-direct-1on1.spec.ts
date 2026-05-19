@@ -39,18 +39,29 @@ import {
   createDirectConversation,
   type CreatedConversation,
 } from './helpers/messaging';
+import { acquireAdvisoryLock, type AdvisoryLock } from './helpers/advisory-lock';
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 
 test.describe('Issue #84 — Messaging DIRECT 1:1 (lehrer → eltern, desktop)', () => {
   test.skip(
     ({ isMobile }) => isMobile,
     'List-detail two-pane layout is desktop-only; mobile has a separate route a future slice will cover.',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'DIRECT rows share a per-pair singleton (directPairKey) on the seed users; parallel browser projects collide mid-flight.',
-  );
 
+  // Issue #112 Phase 4 wave 2b (#120): DIRECT lehrer↔eltern is a per-pair
+  // singleton (find-or-create on `directPairKey`). The realtime spec
+  // (messaging-realtime.spec.ts) also writes to the same pair — without
+  // the lock, two parallel specs would see each other's mid-test
+  // messages on the shared row. Lock serializes both specs cross-spec
+  // AND cross-project.
+  let lock: AdvisoryLock | undefined;
   let created: CreatedConversation | null = null;
+
+  test.beforeEach(async () => {
+    lock = await acquireAdvisoryLock(
+      `messaging:direct:lehrer-eltern:${SEED_SCHOOL_UUID}`,
+    );
+  });
 
   test.afterEach(async ({ request }) => {
     // Sweep DIRECT rows whose latest message body carries the E2E-MSG-
@@ -65,6 +76,10 @@ test.describe('Issue #84 — Messaging DIRECT 1:1 (lehrer → eltern, desktop)',
     // other spec's conversations).
     await cleanupE2EConversations(request, `${MESSAGING_PREFIX}DIRECT-`, 'lehrer');
     created = null;
+    if (lock) {
+      await lock.release();
+      lock = undefined;
+    }
   });
 
   test('MSG-DIRECT-01: lehrer-sent DIRECT message appears in eltern-user list and opens with body', async ({

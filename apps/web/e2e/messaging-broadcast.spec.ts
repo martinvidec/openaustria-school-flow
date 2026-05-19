@@ -52,10 +52,6 @@ test.describe('Issue #84 — Messaging broadcast via ComposeDialog (desktop)', (
     ({ isMobile }) => isMobile,
     'ComposeDialog is desktop-prioritised — mobile layout uses a different sheet pattern that will be locked in a follow-up.',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'Shared seed-school broadcasts race on parallel browser projects.',
-  );
 
   test.afterEach(async ({ request }) => {
     // Scope to this spec's own sub-prefix so a sibling spec's afterEach
