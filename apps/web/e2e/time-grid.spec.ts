@@ -1,5 +1,5 @@
 /**
- * Phase 10.2 + Issue #112 Phase 1 — TimeGrid (Periods + Unterrichtstage) save.
+ * Phase 10.2 + Issue #112 Phase 2.5b — TimeGrid (Periods + Unterrichtstage) save.
  *
  * Consolidated from the formerly-separate `zeitraster.spec.ts` and
  * `wochentage.spec.ts`. Both files PUT the same `/api/v1/schools/:id/time-grid`
@@ -15,23 +15,16 @@
  *
  * Originally surfaced in PR #109 CI (2026-05-18; ZEIT-01 red on the
  * issue #87 PR even though that PR didn't touch the time-grid surface).
- * PR #54/#55 had previously chromium-only-skipped ZEIT-01 to dodge an
- * inter-project variant of the same race, but the intra-chromium race
- * survived because `wochentage.spec.ts` had no skip and writes to the
- * same singleton.
+ * Phase 1 (PR #114) merged the two files under `describe.serial` and
+ * pinned chromium-only as a pragmatic intra-chromium fix.
  *
- * Phase 1 fix from Issue #112: merge BOTH writers into one describe
- * block under `describe.configure({ mode: 'serial' })`. Playwright
- * guarantees serial-mode tests run on ONE worker sequentially → no
- * race possible. We keep the chromium-only-skip for inter-project
- * safety (PR #54/#55's reasoning still applies to firefox + mobile).
- *
- * This is NOT the throwaway-school architecture sketched in #112
- * originally — that requires a schema relaxation of
- * `Person.keycloakUserId` from `@unique` to `@@unique([keycloakUserId,
- * schoolId])` so one KC user can own a Person per throwaway school.
- * The serial-mode workaround is the pragmatic Phase 1 deliverable;
- * the schema refactor is tracked separately as the "real" fix.
+ * Phase 2.5b (Issue #118, this PR) replaces those workarounds with a
+ * per-schoolId Postgres advisory lock from `helpers/advisory-lock.ts`
+ * (extracted in Issue #117). The lock serializes parallel runs across
+ * workers AND across projects (chromium ↔ firefox ↔ mobile), so:
+ *   - `describe.serial` removed — the lock is a stronger guarantee that
+ *     doesn't pin all tests to a single worker.
+ *   - `chromium-only-skip` removed — WOCH-01 is back on cross-browser.
  *
  * Tests:
  *   ZEIT-01 — happy-path add-period + save + API readback persistence
@@ -46,24 +39,26 @@
  */
 import { expect, test } from '@playwright/test';
 import { getAdminToken, loginAsAdmin } from './helpers/login';
+import { acquireAdvisoryLock, type AdvisoryLock } from './helpers/advisory-lock';
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 
-// FIXME: deterministic-e2e #112 — using serial mode here is a Phase 1
-// workaround. The "real" fix is the throwaway-school architecture once
-// the Person.keycloakUserId schema constraint is relaxed.
-test.describe.configure({ mode: 'serial' });
-
-test.describe('TimeGrid save (Periods + Unterrichtstage) — Phase 10.2 / Issue #112 Phase 1', () => {
-  // FIXME: deterministic-e2e #112 — chromium-only skip persists from
-  // PR #54/#55 for inter-project race-safety (firefox + mobile would
-  // race the same time-grid singleton). Removable once schema-level
-  // throwaway-school refactor lands.
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'Mutates the shared seed-school TimeGrid via PUT-replace-all — chromium is the sole writer. See #112.',
-  );
+test.describe('TimeGrid save (Periods + Unterrichtstage) — Phase 10.2 / Issue #112 Phase 2.5b', () => {
+  // Per-schoolId advisory lock. The TimeGrid PUT-replace-all on
+  // school-time-grid.service.ts:82-104 mutates one row-set per school;
+  // serializing every spec that touches the seed school is enough to
+  // remove the race and lets chromium + firefox run in parallel.
+  let lock: AdvisoryLock | undefined;
 
   test.beforeEach(async ({ page }) => {
+    lock = await acquireAdvisoryLock(`time-grid:${SEED_SCHOOL_UUID}`);
     await loginAsAdmin(page);
+  });
+
+  test.afterEach(async () => {
+    if (lock) {
+      await lock.release();
+      lock = undefined;
+    }
   });
 
   test('ZEIT-01: Happy-Path — add period, save, assert DB persistence via API', async ({
