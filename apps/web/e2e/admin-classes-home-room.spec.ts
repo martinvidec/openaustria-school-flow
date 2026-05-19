@@ -32,6 +32,7 @@ import {
   createClassViaAPI,
 } from './helpers/students';
 import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
+import { acquireAdvisoryLock, type AdvisoryLock } from './helpers/advisory-lock';
 
 const PREFIX = 'E2E-HR-';
 const NO_HOME_ROOM_SENTINEL = '__no_home_room__';
@@ -77,23 +78,34 @@ test.describe('Issue #67 — Admin Classes Heimraum (desktop)', () => {
     ({ isMobile }) => isMobile,
     'Heimraum form contract is identical across viewports — desktop only.',
   );
-  // Mutating classes on the seed school from parallel browser projects
-  // races on the same school resources (PUT /classes/:id from chromium
-  // and firefox can land on a class that the other project's cleanup
-  // just deleted, or share a colliding timestamp suffix). Scope to
-  // chromium until the throwaway-school fixture lands — same pattern as
-  // timetable-generation-flow.spec.ts and project_e2e_parallel_cleanup_race_family.md.
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'flaky on parallel browser projects — shared seed-school race (see #54).',
-  );
+
+  // Issue #112 phase 4 wave 2d (#122): per-spec advisory lock serializes
+  // parallel browser projects on the cleanup-by-prefix race. Both
+  // chromium and firefox running this spec would otherwise sweep each
+  // other's mid-test classes via the `E2E-HR-` afterEach.
+  let lock: AdvisoryLock | undefined;
 
   test.beforeEach(async ({ page }) => {
+    // Two locks acquired in sorted order:
+    //   - per-spec key serializes parallel browser projects on the
+    //     `E2E-HR-` cleanup sweep
+    //   - shared `e2e-rows-on-seed-school` key blocks the
+    //     `e2e-sweep-canary` spec from running its destructive
+    //     `sweepE2ELeftovers` (which deletes EVERY E2E-* row in the
+    //     school) while our mid-test classes are alive
+    lock = await acquireAdvisoryLock([
+      `admin-classes-home-room:${SEED_SCHOOL_UUID}`,
+      `e2e-rows-on-seed-school:${SEED_SCHOOL_UUID}`,
+    ]);
     await loginAsAdmin(page);
   });
 
   test.afterEach(async ({ request }) => {
     await cleanupE2EClasses(request, PREFIX);
+    if (lock) {
+      await lock.release();
+      lock = undefined;
+    }
   });
 
   test('E2E-CLS-HR-EDIT-ASSIGN: pick Heimraum via Select → save → persists', async ({

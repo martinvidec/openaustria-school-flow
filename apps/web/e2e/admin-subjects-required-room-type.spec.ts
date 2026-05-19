@@ -27,6 +27,7 @@ import { expect, test } from '@playwright/test';
 import { getAdminToken, loginAsAdmin } from './helpers/login';
 import { cleanupE2ESubjects, createSubjectViaAPI } from './helpers/subjects';
 import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
+import { acquireAdvisoryLock, type AdvisoryLock } from './helpers/advisory-lock';
 
 const PREFIX = 'E2E-RRT-';
 const API = 'http://localhost:3000/api/v1';
@@ -66,20 +67,27 @@ test.describe('Issue #69 — Subject Pflicht-Raumtyp (desktop)', () => {
     ({ isMobile }) => isMobile,
     'Pflicht-Raumtyp form contract is identical across viewports — desktop only.',
   );
-  // Mutating subjects on the seed school from parallel browser projects
-  // shares school resources; the chromium-only pattern is the established
-  // mitigation for this surface (same as admin-classes-home-room.spec.ts).
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'flaky on parallel browser projects — shared seed-school race.',
-  );
+
+  // Issue #112 phase 4 wave 2d (#122): per-spec advisory lock serializes
+  // parallel browser projects on the cleanup-by-prefix race.
+  let lock: AdvisoryLock | undefined;
 
   test.beforeEach(async ({ page }) => {
+    // See admin-classes-home-room.spec.ts for the two-lock rationale —
+    // per-spec key + shared canary-sweep guard.
+    lock = await acquireAdvisoryLock([
+      `admin-subjects-required-room-type:${SEED_SCHOOL_UUID}`,
+      `e2e-rows-on-seed-school:${SEED_SCHOOL_UUID}`,
+    ]);
     await loginAsAdmin(page);
   });
 
   test.afterEach(async ({ request }) => {
     await cleanupE2ESubjects(request, PREFIX);
+    if (lock) {
+      await lock.release();
+      lock = undefined;
+    }
   });
 
   test('E2E-SUB-RRT-CREATE: dialog with Pflicht-Raumtyp=Turnsaal → POST carries TURNSAAL', async ({
