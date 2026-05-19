@@ -35,10 +35,6 @@ test.describe('Issue #84 — Messaging conversation list + detail (desktop)', ()
     ({ isMobile }) => isMobile,
     'List-detail two-pane layout is desktop-only; mobile has a separate route the next slice will cover.',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'Conversation rows on the shared seed school race on parallel browser projects.',
-  );
 
   let created: CreatedConversation | null = null;
 

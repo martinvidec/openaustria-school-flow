@@ -54,10 +54,6 @@ test.describe('Issue #84 — Messaging inline polls (desktop)', () => {
     ({ isMobile }) => isMobile,
     'PollDisplay is desktop-prioritised — mobile rendering is identical but the list-detail navigation differs.',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'Shared seed-school conversations race on parallel browser projects.',
-  );
 
   let created: CreatedConversation | null = null;
 
