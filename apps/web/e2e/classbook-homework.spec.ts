@@ -40,10 +40,6 @@ test.describe('Issue #82 — Classbook Homework create (desktop)', () => {
     ({ isMobile }) => isMobile,
     'Dialog layout is identical across viewports — desktop only for the first lock.',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'Mutates Homework rows on the shared seed ClassSubject — chromium is the sole writer.',
-  );
 
   let fixture: TimetableRunFixture | undefined;
 

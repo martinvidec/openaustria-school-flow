@@ -37,10 +37,6 @@ test.describe('Issue #81 — Classbook Grade-Matrix (desktop)', () => {
     ({ isMobile }) => isMobile,
     'GradeMatrix layout is identical across viewports — desktop only for the first lock.',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'Mutates Grade rows on the shared seed ClassSubject — chromium is the sole writer.',
-  );
 
   let fixture: TimetableRunFixture | undefined;
 
