@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { apiFetch } from '@/lib/api';
-import { useSchoolContext } from '@/stores/school-context-store';
+import { useSchoolContext, type AvailableSchool } from '@/stores/school-context-store';
 
 interface UserContextResponse {
   schoolId: string;
+  availableSchools: AvailableSchool[];
   personId: string;
   personType: string;
   firstName: string;

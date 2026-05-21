@@ -62,6 +62,7 @@ test.describe('AUTH-CTX — GET /api/v1/users/me after composite-unique schema m
 
       const body = (await res.json()) as {
         schoolId: string;
+        availableSchools: Array<{ schoolId: string; schoolName: string; personType: string }>;
         personId: string;
         personType: string;
         firstName: string;
@@ -73,6 +74,12 @@ test.describe('AUTH-CTX — GET /api/v1/users/me after composite-unique schema m
 
       expect(body.schoolId, 'schoolId from Person.findFirst').toBeTruthy();
       expect(body.personId, 'personId resolved').toBeTruthy();
+
+      // Issue #135 — every persona with a Person row reports at least one
+      // membership in availableSchools and the active schoolId must appear
+      // in that list.
+      expect(body.availableSchools.length).toBeGreaterThan(0);
+      expect(body.availableSchools.some((s) => s.schoolId === body.schoolId)).toBe(true);
 
       const expectation = ROLE_EXPECTATIONS[role];
       expect(body.personType).toBe(expectation.personType);
