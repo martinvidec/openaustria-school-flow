@@ -15,6 +15,7 @@ const mockPrisma = {
   person: {
     findMany: vi.fn(),
     findUnique: vi.fn(),
+    findFirst: vi.fn(),
   },
   teacher: {
     findUnique: vi.fn(),
@@ -190,7 +191,7 @@ describe('UserDirectoryService', () => {
       mockPrisma.userRole.findMany.mockResolvedValue([
         { userId: 'kc-1', role: { name: 'admin' } },
       ]);
-      mockPrisma.person.findUnique.mockResolvedValue({
+      mockPrisma.person.findFirst.mockResolvedValue({
         id: 'p1',
         keycloakUserId: 'kc-1',
         personType: 'TEACHER',
@@ -212,15 +213,14 @@ describe('UserDirectoryService', () => {
 
   describe('linkPerson', () => {
     it('happy path — TEACHER personType dispatches to teacherService.linkKeycloakUser', async () => {
-      mockPrisma.person.findUnique
-        .mockResolvedValueOnce(null) // user-side pre-check: no existing link
-        .mockResolvedValueOnce({
-          id: 'p1',
-          keycloakUserId: null,
-          personType: 'TEACHER',
-          firstName: 'Anna',
-          lastName: 'Müller',
-        });
+      mockPrisma.person.findFirst.mockResolvedValueOnce(null); // user-side pre-check: no existing link
+      mockPrisma.person.findUnique.mockResolvedValueOnce({
+        id: 'p1',
+        keycloakUserId: null,
+        personType: 'TEACHER',
+        firstName: 'Anna',
+        lastName: 'Müller',
+      });
       mockPrisma.teacher.findUnique.mockResolvedValue({ personId: 'p1' });
       mockTeacher.linkKeycloakUser.mockResolvedValue({ id: 'p1' });
 
@@ -230,7 +230,7 @@ describe('UserDirectoryService', () => {
     });
 
     it('throws 409 when user is already linked to a different Person (user-side pre-check)', async () => {
-      mockPrisma.person.findUnique.mockResolvedValueOnce({
+      mockPrisma.person.findFirst.mockResolvedValueOnce({
         id: 'p-other',
         keycloakUserId: 'kc-1',
         personType: 'TEACHER',
@@ -244,15 +244,14 @@ describe('UserDirectoryService', () => {
     });
 
     it('throws 409 when target Person is already linked to a different keycloakUserId (person-side pre-check, prevents silent link-theft)', async () => {
-      mockPrisma.person.findUnique
-        .mockResolvedValueOnce(null) // user has no link
-        .mockResolvedValueOnce({
-          id: 't1',
-          keycloakUserId: 'kc-OTHER',
-          personType: 'TEACHER',
-          firstName: 'Maria',
-          lastName: 'Huber',
-        });
+      mockPrisma.person.findFirst.mockResolvedValueOnce(null); // user has no link
+      mockPrisma.person.findUnique.mockResolvedValueOnce({
+        id: 't1',
+        keycloakUserId: 'kc-OTHER',
+        personType: 'TEACHER',
+        firstName: 'Maria',
+        lastName: 'Huber',
+      });
       mockPrisma.teacher.findUnique.mockResolvedValue({ personId: 't1' });
       mockKc.findUserById.mockResolvedValue({
         id: 'kc-OTHER',
@@ -273,8 +272,8 @@ describe('UserDirectoryService', () => {
     });
 
     it('translates Prisma P2002 to 409 (defensive race-condition fallback)', async () => {
+      mockPrisma.person.findFirst.mockResolvedValueOnce(null); // user has no link
       mockPrisma.person.findUnique
-        .mockResolvedValueOnce(null) // user has no link
         .mockResolvedValueOnce({
           id: 't1',
           keycloakUserId: null,
@@ -298,15 +297,14 @@ describe('UserDirectoryService', () => {
     });
 
     it('STUDENT personType dispatches to studentService.linkKeycloakUser', async () => {
-      mockPrisma.person.findUnique
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce({
-          id: 's1',
-          keycloakUserId: null,
-          personType: 'STUDENT',
-          firstName: 'S',
-          lastName: 'T',
-        });
+      mockPrisma.person.findFirst.mockResolvedValueOnce(null);
+      mockPrisma.person.findUnique.mockResolvedValueOnce({
+        id: 's1',
+        keycloakUserId: null,
+        personType: 'STUDENT',
+        firstName: 'S',
+        lastName: 'T',
+      });
       mockPrisma.student.findUnique.mockResolvedValue({ personId: 's1' });
       mockStudent.linkKeycloakUser.mockResolvedValue({ id: 's1' });
 
@@ -315,15 +313,14 @@ describe('UserDirectoryService', () => {
     });
 
     it('PARENT personType dispatches to parentService.linkKeycloakUser', async () => {
-      mockPrisma.person.findUnique
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce({
-          id: 'p1',
-          keycloakUserId: null,
-          personType: 'PARENT',
-          firstName: 'P',
-          lastName: 'A',
-        });
+      mockPrisma.person.findFirst.mockResolvedValueOnce(null);
+      mockPrisma.person.findUnique.mockResolvedValueOnce({
+        id: 'p1',
+        keycloakUserId: null,
+        personType: 'PARENT',
+        firstName: 'P',
+        lastName: 'A',
+      });
       mockPrisma.parent.findUnique.mockResolvedValue({ personId: 'p1' });
       mockParent.linkKeycloakUser.mockResolvedValue({ id: 'p1' });
 
@@ -334,7 +331,7 @@ describe('UserDirectoryService', () => {
 
   describe('unlinkPerson', () => {
     it('returns silently when no link exists (idempotent no-op)', async () => {
-      mockPrisma.person.findUnique.mockResolvedValue(null);
+      mockPrisma.person.findFirst.mockResolvedValue(null);
       await expect(service.unlinkPerson('kc-1')).resolves.toBeUndefined();
       expect(mockTeacher.unlinkKeycloakUser).not.toHaveBeenCalled();
       expect(mockStudent.unlinkKeycloakUser).not.toHaveBeenCalled();
@@ -342,7 +339,7 @@ describe('UserDirectoryService', () => {
     });
 
     it('dispatches teacher unlink for TEACHER personType', async () => {
-      mockPrisma.person.findUnique.mockResolvedValue({
+      mockPrisma.person.findFirst.mockResolvedValue({
         id: 'p1',
         keycloakUserId: 'kc-1',
         personType: 'TEACHER',

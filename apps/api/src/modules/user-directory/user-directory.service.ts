@@ -163,7 +163,7 @@ export class UserDirectoryService {
         where: { userId },
         include: { role: true },
       }),
-      this.prisma.person.findUnique({ where: { keycloakUserId: userId } }),
+      this.prisma.person.findFirst({ where: { keycloakUserId: userId } }),
     ]);
 
     return {
@@ -214,7 +214,7 @@ export class UserDirectoryService {
    */
   async linkPerson(userId: string, dto: LinkPersonDto): Promise<{ person: unknown }> {
     // (a) user-side pre-check
-    const existing = await this.prisma.person.findUnique({
+    const existing = await this.prisma.person.findFirst({
       where: { keycloakUserId: userId },
     });
     if (existing && existing.id !== dto.personId) {
@@ -365,10 +365,10 @@ export class UserDirectoryService {
   }
 
   async unlinkPerson(userId: string): Promise<void> {
-    const person = await this.prisma.person.findUnique({
+    const person = await this.prisma.person.findFirst({
       where: { keycloakUserId: userId },
       include: { teacher: true, student: true, parent: true },
-    } as any);
+    });
     if (!person) return;
     if (person.personType === 'TEACHER' && (person as any).teacher) {
       await this.teacherService.unlinkKeycloakUser((person as any).teacher.id);

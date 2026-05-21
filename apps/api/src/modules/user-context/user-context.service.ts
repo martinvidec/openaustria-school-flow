@@ -7,7 +7,7 @@ export class UserContextService {
   constructor(private prisma: PrismaService) {}
 
   async getUserContext(keycloakUserId: string): Promise<UserContextResponseDto> {
-    const person = await this.prisma.person.findUnique({
+    const person = await this.prisma.person.findFirst({
       where: { keycloakUserId },
       include: {
         teacher: true,
