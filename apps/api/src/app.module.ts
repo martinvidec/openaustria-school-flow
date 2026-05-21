@@ -7,6 +7,7 @@ import { QueueModule } from './config/queue/queue.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
+import { CurrentSchoolInterceptor } from './modules/auth/interceptors/current-school.interceptor';
 import { AuditInterceptor } from './modules/audit/audit.interceptor';
 import { HealthModule } from './modules/health/health.module';
 import { SchoolModule } from './modules/school/school.module';
@@ -77,6 +78,10 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CurrentSchoolInterceptor,
     },
     {
       provide: APP_INTERCEPTOR,

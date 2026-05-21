@@ -7,6 +7,12 @@ interface ChildContext {
   className: string;
 }
 
+export interface AvailableSchool {
+  schoolId: string;
+  schoolName: string;
+  personType: string;
+}
+
 interface SchoolContextState {
   schoolId: string | null;
   personType: string | null;
@@ -22,6 +28,13 @@ interface SchoolContextState {
   activeSchoolYearId: string | null;
   abWeekEnabled: boolean;
   isLoaded: boolean;
+  // Issue #135 — multi-school context. `availableSchools` is the user's
+  // Person memberships (one entry per school). `currentSchoolId` is what
+  // `apiFetch` injects into the `X-School-Id` header on every request;
+  // defaults to `schoolId` on first hydration so single-school users see
+  // no behavior change.
+  availableSchools: AvailableSchool[];
+  currentSchoolId: string | null;
 
   setContext: (data: {
     schoolId: string;
@@ -35,7 +48,9 @@ interface SchoolContextState {
     children?: ChildContext[];
     activeSchoolYearId?: string | null;
     abWeekEnabled?: boolean;
+    availableSchools?: AvailableSchool[];
   }) => void;
+  setCurrentSchool: (schoolId: string) => void;
 }
 
 export const useSchoolContext = create<SchoolContextState>((set) => ({
@@ -51,6 +66,8 @@ export const useSchoolContext = create<SchoolContextState>((set) => ({
   activeSchoolYearId: null,
   abWeekEnabled: false,
   isLoaded: false,
+  availableSchools: [],
+  currentSchoolId: null,
 
   setContext: (data) =>
     set({
@@ -65,6 +82,10 @@ export const useSchoolContext = create<SchoolContextState>((set) => ({
       children: data.children ?? [],
       activeSchoolYearId: data.activeSchoolYearId ?? null,
       abWeekEnabled: data.abWeekEnabled ?? false,
+      availableSchools: data.availableSchools ?? [],
+      currentSchoolId: data.schoolId,
       isLoaded: true,
     }),
+
+  setCurrentSchool: (schoolId) => set({ currentSchoolId: schoolId }),
 }));

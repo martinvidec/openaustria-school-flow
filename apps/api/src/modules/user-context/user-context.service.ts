@@ -6,9 +6,29 @@ import { UserContextResponseDto } from './dto/user-context.dto';
 export class UserContextService {
   constructor(private prisma: PrismaService) {}
 
-  async getUserContext(keycloakUserId: string): Promise<UserContextResponseDto> {
-    const person = await this.prisma.person.findFirst({
+  async getUserContext(
+    keycloakUserId: string,
+    currentSchoolId: string | null,
+  ): Promise<UserContextResponseDto> {
+    const memberships = await this.prisma.person.findMany({
       where: { keycloakUserId },
+      select: {
+        schoolId: true,
+        personType: true,
+        school: { select: { name: true } },
+      },
+    });
+
+    if (memberships.length === 0) {
+      throw new NotFoundException(
+        'Person record not found for authenticated user',
+      );
+    }
+
+    const activeSchoolId = currentSchoolId ?? memberships[0].schoolId;
+
+    const person = await this.prisma.person.findFirst({
+      where: { keycloakUserId, schoolId: activeSchoolId },
       include: {
         teacher: true,
         student: {
@@ -34,13 +54,20 @@ export class UserContextService {
     });
 
     if (!person) {
+      // The interceptor validated the schoolId against memberships, so this
+      // path is reachable only if a Person row was deleted mid-request.
       throw new NotFoundException(
-        'Person record not found for authenticated user',
+        'Person record not found for the active school context',
       );
     }
 
     const result: UserContextResponseDto = {
       schoolId: person.schoolId,
+      availableSchools: memberships.map((m) => ({
+        schoolId: m.schoolId,
+        schoolName: m.school.name,
+        personType: m.personType,
+      })),
       personId: person.id,
       personType: person.personType,
       firstName: person.firstName,

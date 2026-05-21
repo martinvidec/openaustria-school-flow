@@ -1,8 +1,26 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-export class UserContextResponseDto {
-  @ApiProperty({ description: 'School ID the user belongs to' })
+export class AvailableSchoolDto {
+  @ApiProperty({ description: 'School ID this user has a Person row in' })
   schoolId!: string;
+
+  @ApiProperty({ description: 'School display name' })
+  schoolName!: string;
+
+  @ApiProperty({ description: 'Person type within this school (TEACHER, STUDENT, PARENT)' })
+  personType!: string;
+}
+
+export class UserContextResponseDto {
+  @ApiProperty({ description: 'Active School ID (first available membership if X-School-Id absent)' })
+  schoolId!: string;
+
+  @ApiProperty({
+    description:
+      'All schools this user has a Person row in. Used by the frontend to populate the schoolId switcher and to send X-School-Id headers.',
+    type: [AvailableSchoolDto],
+  })
+  availableSchools!: AvailableSchoolDto[];
 
   @ApiProperty({ description: 'Person record ID' })
   personId!: string;
