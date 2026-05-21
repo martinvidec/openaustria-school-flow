@@ -50,7 +50,7 @@ export class ExcuseService {
     }
 
     // Resolve parent from keycloakUserId
-    const parentPerson = await this.prisma.person.findUnique({
+    const parentPerson = await this.prisma.person.findFirst({
       where: { keycloakUserId: parentKeycloakId },
       include: { parent: true },
     });
@@ -254,7 +254,7 @@ export class ExcuseService {
    * List excuses submitted by a parent. Order by createdAt DESC.
    */
   async getExcusesForParent(parentKeycloakId: string) {
-    const parentPerson = await this.prisma.person.findUnique({
+    const parentPerson = await this.prisma.person.findFirst({
       where: { keycloakUserId: parentKeycloakId },
       include: { parent: true },
     });
@@ -304,7 +304,7 @@ export class ExcuseService {
    */
   async getPendingExcusesForKlassenvorstand(teacherKeycloakId: string, schoolId: string) {
     // Resolve teacher
-    const person = await this.prisma.person.findUnique({
+    const person = await this.prisma.person.findFirst({
       where: { keycloakUserId: teacherKeycloakId },
       include: { teacher: true },
     });

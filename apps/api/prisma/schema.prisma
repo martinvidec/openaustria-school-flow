@@ -318,7 +318,7 @@ model Person {
   id                   String     @id @default(uuid())
   schoolId             String     @map("school_id")
   school               School     @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  keycloakUserId       String?    @unique @map("keycloak_user_id")
+  keycloakUserId       String?    @map("keycloak_user_id")
   personType           PersonType @map("person_type")
   firstName            String     @map("first_name")
   lastName             String     @map("last_name")
@@ -338,7 +338,9 @@ model Person {
   parent         Parent?
   consentRecords ConsentRecord[]
 
+  @@unique([keycloakUserId, schoolId], name: "keycloakUserId_schoolId")
   @@index([schoolId])
+  @@index([keycloakUserId])
   @@map("persons")
 }
 

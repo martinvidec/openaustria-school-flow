@@ -93,6 +93,39 @@ Begründung: GSD-State über zu viele Files verteilt → Plan-vs-Realität-Drift
 3. Constraint: ein Sub-Issue kann nur EINEN Parent haben. Bei Konflikt vorher `parent { number }` checken.
 4. Memory `feedback_issue_relationships.md` hat das Code-Pattern + Anwendungsfälle.
 
+## D6 — GitHub Issue-Dependencies (blocked-by) setzen und respektieren (User-Direktive 2026-05-20)
+
+**Wenn ein Issue erst angegangen werden kann, nachdem ein anderes fertig ist, MUSS eine native GitHub "blocked by" Relationship via GraphQL `addBlockedBy` gesetzt werden — nicht nur "Depends on #N" Text im Body.**
+
+**Why:** Wie bei Sub-Issues (D5) sind Text-Refs unsichtbar in der GitHub-UI. Echte blocked-by/blocking Relationships erscheinen in der Issue-Sidebar, sind in Project-Boards filterbar ("show ready / unblocked"), und verhindern dass ich versehentlich an blockierten Issues arbeite. Auslöser 2026-05-20: nach Sub-Issue-Erstellung für Tracking #123 hingen #134/#135 an #133, #136 an #133+#134+#135, #137 an #136, #138 an #137 — diese Kette muss sichtbar + tooled sein, sonst greift bei Wave-Roll-out wieder das "ich arbeite an irgendwas blockiertem"-Pattern.
+
+**Verboten als ALLEINIGE Verknüpfung:**
+- Nur `Depends on #N` oder "Hard-blocks on #N" als Text im Body
+- Nur eine "Dependencies"-Sektion in Markdown ohne native Relationship
+- Stillschweigendes Annehmen "der Reviewer wird's schon richtig priorisieren"
+
+**Erlaubt / Gefordert:**
+- blocked-by Link via GraphQL `addBlockedBy` Mutation
+- `Depends on #N` Text-Link IST OK als zusätzliche Lesehilfe im Body
+- Vor jeder Arbeit an einem Issue: `blockedBy` querien und ggf. nachfragen
+
+**How to apply:**
+
+1. **Beim Anlegen verwandter Issues**: nach `addSubIssue` (D5) zusätzlich blocked-by setzen wenn Reihenfolge zwingend ist:
+   ```bash
+   # input: issueId = das BLOCKIERTE Issue, blockingIssueId = das das es BLOCKIERT
+   gh api graphql -f query='mutation { addBlockedBy(input: { issueId: "BLOCKED_ID", blockingIssueId: "BLOCKING_ID" }) { issue { number } blockingIssue { number } } }'
+   ```
+2. **Mehrere Blocker pro Issue**: für jeden Blocker eine separate Mutation. Ein Issue kann von N Issues blockiert sein.
+3. **Vor Arbeitsbeginn an einem Issue Quick-Check**:
+   ```bash
+   gh api graphql -f query='query { repository(owner: "OWNER", name: "REPO") { issue(number: N) { blockedBy(first: 10) { nodes { number title state } } } } }'
+   ```
+   Sind alle Blocker `CLOSED` → ready. Steht ein `OPEN` Blocker drin → STOP und Rückfrage stellen *"Issue #N ist von #M blockiert (state: OPEN) — trotzdem starten oder erst #M?"*
+4. **Inverse Richtung**: `blocking(first: 10)` zeigt, was dieses Issue selbst blockiert (nützlich beim Closing-Review).
+5. **Remove**: `removeBlockedBy(input: { issueId, blockingIssueId })` wenn Dependency hinfällig.
+6. **Memory** `feedback_issue_blocked_by.md` hat das Code-Pattern + Workflow.
+
 ---
 
 <!-- GSD:project-start source:PROJECT.md -->

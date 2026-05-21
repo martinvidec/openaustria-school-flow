@@ -75,7 +75,7 @@ export class KeycloakAdminService implements OnModuleInit {
     return Promise.all(
       users.map(async (u): Promise<KeycloakUserResponseDto> => {
         const linked = u.id
-          ? await this.prisma.person.findUnique({
+          ? await this.prisma.person.findFirst({
               where: { keycloakUserId: u.id },
               select: { id: true, firstName: true, lastName: true },
             })

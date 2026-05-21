@@ -43,7 +43,7 @@ const mockConfig = {
 
 const mockPrisma = {
   person: {
-    findUnique: vi.fn(),
+    findFirst: vi.fn(),
   },
 };
 
@@ -97,7 +97,7 @@ describe('KeycloakAdminService', () => {
     kcMock.users.find.mockResolvedValue([
       { id: 'kc-1', email: 'maria@schule.at', firstName: 'Maria', lastName: 'Huber', enabled: true },
     ]);
-    mockPrisma.person.findUnique.mockResolvedValue({
+    mockPrisma.person.findFirst.mockResolvedValue({
       id: 'person-99',
       firstName: 'Maria',
       lastName: 'Huber',
@@ -112,7 +112,7 @@ describe('KeycloakAdminService', () => {
       alreadyLinkedToPersonId: 'person-99',
       alreadyLinkedToPersonName: 'Maria Huber',
     });
-    expect(mockPrisma.person.findUnique).toHaveBeenCalledWith({
+    expect(mockPrisma.person.findFirst).toHaveBeenCalledWith({
       where: { keycloakUserId: 'kc-1' },
       select: { id: true, firstName: true, lastName: true },
     });
@@ -122,7 +122,7 @@ describe('KeycloakAdminService', () => {
     kcMock.users.find.mockResolvedValue([]);
     const results = await service.findUsersByEmail('noone');
     expect(results).toEqual([]);
-    expect(mockPrisma.person.findUnique).not.toHaveBeenCalled();
+    expect(mockPrisma.person.findFirst).not.toHaveBeenCalled();
   });
 
   // ---------------------------------------------------------------------------
