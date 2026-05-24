@@ -50,6 +50,15 @@ const { PrismaClient } = require('../../../api/dist/config/database/generated/cl
       findFirst: (args: any) => Promise<any>;
       create: (args: any) => Promise<{ id: string; keycloakUserId: string | null; schoolId: string }>;
     };
+    student: {
+      create: (args: any) => Promise<{ id: string; personId: string }>;
+    };
+    classBookEntry: {
+      create: (args: any) => Promise<{ id: string }>;
+    };
+    attendanceRecord: {
+      create: (args: any) => Promise<{ id: string }>;
+    };
     school: {
       create: (args: any) => Promise<{ id: string; name: string }>;
       delete: (args: any) => Promise<unknown>;
@@ -101,10 +110,16 @@ const buildPrisma = () =>
   });
 
 /** Maps seed-bound Keycloak roles to Prisma `PersonType` enum values. */
-type SeedRole = 'lehrer' | 'schulleitung' | 'schueler' | 'eltern';
+type SeedRole = 'lehrer' | 'schulleitung' | 'schueler' | 'eltern' | 'admin';
 const ROLE_TO_PERSON_TYPE: Record<SeedRole, 'TEACHER' | 'STUDENT' | 'PARENT'> = {
   lehrer: 'TEACHER',
   schulleitung: 'TEACHER',
+  // Issue #138 — admin gets a TEACHER Person row in the throwaway. Admin's
+  // tenant identity (the X-School-Id validation in CurrentSchoolInterceptor)
+  // is what we actually need; the PersonType is a schema requirement that
+  // doesn't drive any authorization (admin's privileges come from KC roles
+  // via CASL, not from Person.personType).
+  admin: 'TEACHER',
   schueler: 'STUDENT',
   eltern: 'PARENT',
 };
@@ -118,15 +133,39 @@ export interface ThrowawaySchoolOptions {
   namePrefix?: string;
   /**
    * Issue #137 — opt-in timetable stack for UI specs that need a TimetableRun
-   * to render against. Provisions: Teacher row (for `roles.lehrer` Person),
-   * Subject, ClassSubject (joining Class[0] + Subject + Teacher), Room,
-   * TimeGrid with period 1 (08:00-08:50), SchoolDays MON-FRI active,
-   * TimetableRun (active), TimetableLesson at MONDAY/period-1.
-   *
-   * Requires `roles.lehrer` to be enabled — otherwise there's no Person to
-   * promote to a Teacher row. Throws otherwise.
+   * to render against. Provisions: Teacher row (for `roles.lehrer` Person if
+   * present, otherwise a generic fixture-only Person), Subject, ClassSubject
+   * (joining Class[0] + Subject + Teacher), Room, TimeGrid with period 1
+   * (08:00-08:50), SchoolDays MON-FRI active, TimetableRun (active),
+   * TimetableLesson at MONDAY/period-1.
    */
   withTimetableStack?: boolean;
+  /**
+   * Issue #138 — list of students to provision in the throwaway. Each entry
+   * creates a Person + Student row enrolled in `classIds[0]`. Names show up
+   * verbatim in any UI that lists students (e.g. /statistics/absence).
+   * Requires `withClasses >= 1`.
+   */
+  withStudents?: Array<{ firstName: string; lastName: string }>;
+  /**
+   * Issue #138 — opt-in ClassBookEntry + AttendanceRecord rows for specs
+   * that exercise classbook / attendance / statistics surfaces. References
+   * the timetable stack's classSubject + teacher (so requires
+   * `withTimetableStack: true`) and a contiguous prefix of `withStudents`
+   * (so requires `withStudents.length >= attendance.length`).
+   */
+  withClassbookEntry?: {
+    /** YYYY-MM-DD — the calendar date the ClassBookEntry pins to. */
+    date: string;
+    /** Period number; must NOT collide with `withTimetableStack`'s period-1 lesson. */
+    period?: number;
+    attendance: Array<{
+      /** Index into `withStudents` — `0` = first student, etc. */
+      studentIndex: number;
+      status: 'PRESENT' | 'ABSENT' | 'LATE' | 'EXCUSED';
+      lateMinutes?: number;
+    }>;
+  };
 }
 
 export interface ThrowawayTimetableStack {
@@ -157,6 +196,10 @@ export interface ThrowawaySchoolFixture {
   keycloakUserIds: Partial<Record<SeedRole, string>>;
   /** Populated when `withTimetableStack: true` was passed. */
   timetable?: ThrowawayTimetableStack;
+  /** Issue #138 — Student.id values matching the `withStudents` indexes. */
+  studentIds: string[];
+  /** Issue #138 — Populated when `withClassbookEntry` was passed. */
+  classBookEntryId?: string;
   cleanup: () => Promise<void>;
 }
 
@@ -180,6 +223,7 @@ async function resolveSeedKeycloakIds(
     const personIdByRole: Record<SeedRole, string> = {
       lehrer: 'd0000000-0000-4000-8000-000000000001',
       schulleitung: 'd0000000-0000-4000-8000-000000000002',
+      admin: 'd0000000-0000-4000-8000-000000000003',
       schueler: 'd0000000-0000-4000-8000-000000000004',
       eltern: 'd0000000-0000-4000-8000-000000000005',
     };
@@ -213,14 +257,19 @@ export async function createThrowawaySchool(
     withTimetableStack = false,
   } = options;
 
-  if (withTimetableStack && !roles.lehrer) {
-    throw new Error(
-      'createThrowawaySchool: withTimetableStack requires roles.lehrer (need a Person row to promote to Teacher)',
-    );
-  }
   if (withTimetableStack && withClasses < 1) {
     throw new Error(
       'createThrowawaySchool: withTimetableStack requires withClasses >= 1 (need a class for the ClassSubject)',
+    );
+  }
+  if (options.withClassbookEntry && !options.withTimetableStack) {
+    throw new Error(
+      'createThrowawaySchool: withClassbookEntry requires withTimetableStack (need teacherId + classSubjectId)',
+    );
+  }
+  if (options.withClassbookEntry && (!options.withStudents || options.withStudents.length === 0)) {
+    throw new Error(
+      'createThrowawaySchool: withClassbookEntry requires withStudents (need student rows to attach attendance to)',
     );
   }
 
@@ -282,15 +331,34 @@ export async function createThrowawaySchool(
 
     let timetable: ThrowawayTimetableStack | undefined;
     if (withTimetableStack) {
-      const lehrerPersonId = personIds.lehrer!;
       const classIdForStack = classIds[0];
 
-      // Teacher row for the lehrer Person. Teacher.personId is @unique
-      // (one Teacher per Person) — the throwaway Person was created fresh
-      // above, so no collision.
+      // Teacher row needs a Person row. Prefer the lehrer Person if the
+      // caller opted into roles.lehrer (legacy #137 path — kc-lehrer drives
+      // the spec); otherwise create a generic fixture-only Person so admin-
+      // driven specs (statistics-absence, admin-timetable-history) can still
+      // get a teacherId without dragging lehrer into the test.
+      let teacherPersonId: string;
+      if (personIds.lehrer) {
+        teacherPersonId = personIds.lehrer;
+      } else {
+        const fixtureTeacherPerson = await prisma.person.create({
+          data: {
+            schoolId: school.id,
+            personType: 'TEACHER',
+            firstName: `${namePrefix}-FixtureTeacher`,
+            lastName: suffix,
+          },
+        });
+        teacherPersonId = fixtureTeacherPerson.id;
+      }
+
+      // Teacher row for the Person. Teacher.personId is @unique (one
+      // Teacher per Person) — the Person was created fresh above, so no
+      // collision.
       const teacher = await prisma.teacher.create({
         data: {
-          personId: lehrerPersonId,
+          personId: teacherPersonId,
           schoolId: school.id,
         },
       });
@@ -391,6 +459,83 @@ export async function createThrowawaySchool(
       };
     }
 
+    // Issue #138 — students for admin-driven specs (statistics-absence,
+    // classbook surfaces). Each Student needs its own Person row; enroll
+    // them in classIds[0].
+    const studentIds: string[] = [];
+    if (options.withStudents && options.withStudents.length > 0) {
+      if (classIds.length === 0) {
+        throw new Error('createThrowawaySchool: withStudents requires withClasses >= 1');
+      }
+      const classForStudents = classIds[0];
+      for (const [i, name] of options.withStudents.entries()) {
+        const personRow = await prisma.person.create({
+          data: {
+            schoolId: school.id,
+            personType: 'STUDENT',
+            firstName: name.firstName,
+            lastName: name.lastName,
+          },
+        });
+        const studentRow = await prisma.student.create({
+          data: {
+            personId: personRow.id,
+            schoolId: school.id,
+            classId: classForStudents,
+            studentNumber: `${namePrefix}-S${i + 1}-${suffix}`,
+          },
+        });
+        studentIds.push(studentRow.id);
+      }
+    }
+
+    // Issue #138 — single ClassBookEntry + attendance records pinned to a
+    // deterministic date. The entry's unique key is (classSubjectId, date,
+    // periodNumber, weekType) — caller controls the period to avoid
+    // collisions with withTimetableStack's MONDAY/period-1 lesson.
+    let classBookEntryId: string | undefined;
+    if (options.withClassbookEntry) {
+      const cb = options.withClassbookEntry;
+      const period = cb.period ?? 5;
+      const stack = timetable!; // validated above
+      // ClassBookEntry.dayOfWeek mirrors the timetable-lesson's weekday
+      // semantically (i.e. "this is the Monday lesson"), independent of
+      // the calendar `date` column. Hardcoding MONDAY matches the
+      // timetable stack's seeded lesson and avoids the DayOfWeek enum
+      // missing SUNDAY trap when the caller passes a weekend date. This
+      // mirrors the legacy `fixtures/absence-stats.ts` behavior which
+      // hardcoded 'FRIDAY' even though 2026-03-15 is a Sunday.
+      const entry = await prisma.classBookEntry.create({
+        data: {
+          classSubjectId: stack.classSubjectId,
+          dayOfWeek: 'MONDAY',
+          periodNumber: period,
+          weekType: 'BOTH',
+          date: new Date(`${cb.date}T00:00:00Z`),
+          teacherId: stack.teacherId,
+          schoolId: school.id,
+        },
+      });
+      classBookEntryId = entry.id;
+
+      for (const att of cb.attendance) {
+        if (att.studentIndex >= studentIds.length) {
+          throw new Error(
+            `createThrowawaySchool: withClassbookEntry.attendance[].studentIndex=${att.studentIndex} out of range (only ${studentIds.length} students provisioned)`,
+          );
+        }
+        await prisma.attendanceRecord.create({
+          data: {
+            classBookEntryId: entry.id,
+            studentId: studentIds[att.studentIndex],
+            status: att.status,
+            lateMinutes: att.lateMinutes,
+            recordedBy: stack.teacherId,
+          },
+        });
+      }
+    }
+
     const capturedTimetable = timetable;
     const cleanup = async () => {
       const p = buildPrisma();
@@ -425,6 +570,8 @@ export async function createThrowawaySchool(
       personIds,
       keycloakUserIds,
       timetable,
+      studentIds,
+      classBookEntryId,
       cleanup,
     };
   } finally {
