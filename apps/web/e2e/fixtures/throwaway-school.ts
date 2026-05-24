@@ -61,6 +61,31 @@ const { PrismaClient } = require('../../../api/dist/config/database/generated/cl
     schoolClass: {
       create: (args: any) => Promise<{ id: string; name: string }>;
     };
+    teacher: {
+      create: (args: any) => Promise<{ id: string; personId: string }>;
+    };
+    subject: {
+      create: (args: any) => Promise<{ id: string; shortName: string }>;
+    };
+    classSubject: {
+      create: (args: any) => Promise<{ id: string; classId: string; subjectId: string }>;
+    };
+    room: {
+      create: (args: any) => Promise<{ id: string; name: string }>;
+    };
+    schoolDay: {
+      create: (args: any) => Promise<unknown>;
+    };
+    timeGrid: {
+      create: (args: any) => Promise<{ id: string }>;
+    };
+    timetableRun: {
+      create: (args: any) => Promise<{ id: string }>;
+      deleteMany: (args: any) => Promise<unknown>;
+    };
+    timetableLesson: {
+      create: (args: any) => Promise<{ id: string; dayOfWeek: string; periodNumber: number }>;
+    };
     $disconnect: () => Promise<void>;
   };
 };
@@ -91,6 +116,34 @@ export interface ThrowawaySchoolOptions {
   withClasses?: number;
   /** Prefix for the school's name + class names — keeps cross-spec greps trivial. */
   namePrefix?: string;
+  /**
+   * Issue #137 — opt-in timetable stack for UI specs that need a TimetableRun
+   * to render against. Provisions: Teacher row (for `roles.lehrer` Person),
+   * Subject, ClassSubject (joining Class[0] + Subject + Teacher), Room,
+   * TimeGrid with period 1 (08:00-08:50), SchoolDays MON-FRI active,
+   * TimetableRun (active), TimetableLesson at MONDAY/period-1.
+   *
+   * Requires `roles.lehrer` to be enabled — otherwise there's no Person to
+   * promote to a Teacher row. Throws otherwise.
+   */
+  withTimetableStack?: boolean;
+}
+
+export interface ThrowawayTimetableStack {
+  teacherId: string;
+  subjectId: string;
+  subjectShortName: string;
+  classSubjectId: string;
+  roomId: string;
+  timeGridId: string;
+  timetableRunId: string;
+  timetableLessonId: string;
+  /** The class the ClassSubject is bound to (always classIds[0] today). */
+  classId: string;
+  /** MONDAY — exposed for clarity in spec assertions. */
+  lessonDayOfWeek: 'MONDAY';
+  /** 1 — the seeded lesson's period. */
+  lessonPeriodNumber: 1;
 }
 
 export interface ThrowawaySchoolFixture {
@@ -102,6 +155,8 @@ export interface ThrowawaySchoolFixture {
   personIds: Partial<Record<SeedRole, string>>;
   /** Keycloak user IDs (the seed-bound `sub` claim values) for each seed role used. */
   keycloakUserIds: Partial<Record<SeedRole, string>>;
+  /** Populated when `withTimetableStack: true` was passed. */
+  timetable?: ThrowawayTimetableStack;
   cleanup: () => Promise<void>;
 }
 
@@ -155,7 +210,19 @@ export async function createThrowawaySchool(
     roles = { lehrer: true },
     withClasses = 1,
     namePrefix = 'E2E-TS',
+    withTimetableStack = false,
   } = options;
+
+  if (withTimetableStack && !roles.lehrer) {
+    throw new Error(
+      'createThrowawaySchool: withTimetableStack requires roles.lehrer (need a Person row to promote to Teacher)',
+    );
+  }
+  if (withTimetableStack && withClasses < 1) {
+    throw new Error(
+      'createThrowawaySchool: withTimetableStack requires withClasses >= 1 (need a class for the ClassSubject)',
+    );
+  }
 
   const prisma = buildPrisma();
   try {
@@ -213,11 +280,137 @@ export async function createThrowawaySchool(
       personIds[role] = person.id;
     }
 
+    let timetable: ThrowawayTimetableStack | undefined;
+    if (withTimetableStack) {
+      const lehrerPersonId = personIds.lehrer!;
+      const classIdForStack = classIds[0];
+
+      // Teacher row for the lehrer Person. Teacher.personId is @unique
+      // (one Teacher per Person) — the throwaway Person was created fresh
+      // above, so no collision.
+      const teacher = await prisma.teacher.create({
+        data: {
+          personId: lehrerPersonId,
+          schoolId: school.id,
+        },
+      });
+
+      const subject = await prisma.subject.create({
+        data: {
+          schoolId: school.id,
+          name: `${namePrefix}-Math`,
+          shortName: `M${suffix.slice(-4)}`, // keep @@unique([schoolId, shortName]) trivially safe
+          subjectType: 'PFLICHT',
+        },
+      });
+
+      const classSubject = await prisma.classSubject.create({
+        data: {
+          classId: classIdForStack,
+          subjectId: subject.id,
+          teacherId: teacher.id,
+          weeklyHours: 1,
+        },
+      });
+
+      const room = await prisma.room.create({
+        data: {
+          schoolId: school.id,
+          name: `${namePrefix}-R-${suffix}`,
+          roomType: 'KLASSENZIMMER',
+          capacity: 30,
+          equipment: [],
+        },
+      });
+
+      // TimeGrid + a single period — the timetable view needs at least one
+      // period to render a column slot at periodNumber=1.
+      const timeGrid = await prisma.timeGrid.create({
+        data: {
+          schoolId: school.id,
+          periods: {
+            create: [
+              {
+                periodNumber: 1,
+                startTime: '08:00',
+                endTime: '08:50',
+                isBreak: false,
+                label: '1. Stunde',
+                durationMin: 50,
+              },
+            ],
+          },
+        },
+      });
+
+      // SchoolDays MON-FRI active — the timetable view filters out inactive
+      // days from the grid columns.
+      for (const dayOfWeek of ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'] as const) {
+        await prisma.schoolDay.create({
+          data: { schoolId: school.id, dayOfWeek, isActive: true },
+        });
+      }
+
+      const run = await prisma.timetableRun.create({
+        data: {
+          schoolId: school.id,
+          status: 'COMPLETED',
+          isActive: true,
+          maxSolveSeconds: 300,
+          abWeekEnabled: false,
+          hardScore: 0,
+          softScore: 0,
+          elapsedSeconds: 1,
+        },
+      });
+
+      const lesson = await prisma.timetableLesson.create({
+        data: {
+          runId: run.id,
+          classSubjectId: classSubject.id,
+          teacherId: teacher.id,
+          roomId: room.id,
+          dayOfWeek: 'MONDAY',
+          periodNumber: 1,
+          weekType: 'BOTH',
+        },
+      });
+
+      timetable = {
+        teacherId: teacher.id,
+        subjectId: subject.id,
+        subjectShortName: subject.shortName,
+        classSubjectId: classSubject.id,
+        roomId: room.id,
+        timeGridId: timeGrid.id,
+        timetableRunId: run.id,
+        timetableLessonId: lesson.id,
+        classId: classIdForStack,
+        lessonDayOfWeek: 'MONDAY',
+        lessonPeriodNumber: 1,
+      };
+    }
+
+    const capturedTimetable = timetable;
     const cleanup = async () => {
       const p = buildPrisma();
       try {
+        // Issue #137 — `timetable_lessons.room_id` is still RESTRICT (#137
+        // intentionally keeps it so admin Room deletes get a 409 instead
+        // of silently nuking lessons). For the throwaway cleanup that
+        // means we MUST delete the TimetableRun first — its CASCADE on
+        // `run_id` removes the lessons, freeing the FK on Room before the
+        // School cascade tries to drop the Room.
+        if (capturedTimetable) {
+          await p.timetableRun.deleteMany({
+            where: { id: capturedTimetable.timetableRunId },
+          });
+        }
         // School.delete cascades to every per-school row via the FK chain
-        // (post-#136 audit closes the 5 remaining gaps).
+        // (post-#136 + #137 audit closes 8 cascade gaps total). The
+        // exam.class_id + exam/homework.class_subject_id CASCADEs added in
+        // #137 resolve the diamond-cascade race PG hit when both branches
+        // fired concurrently.
         await p.school.delete({ where: { id: school.id } });
       } finally {
         await p.$disconnect();
@@ -231,6 +424,7 @@ export async function createThrowawaySchool(
       classIds,
       personIds,
       keycloakUserIds,
+      timetable,
       cleanup,
     };
   } finally {
