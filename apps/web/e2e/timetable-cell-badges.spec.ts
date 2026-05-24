@@ -1,107 +1,119 @@
 /**
  * Issue #82 — Timetable cell badges (Homework + Exam) regression-lock.
  *
- * Third sub-spec of the Hausaufgaben/Klausuren coverage gap (closes #82
- * alongside #99 + #100). Locks the cross-surface render contract that
- * homework and exam badges land on the right timetable cell when the
- * Lehrer opens /timetable:
+ * Migrated to the throwaway-school architecture in #137 (Phase 3 pilot):
+ *   - Per-spec School + active TimetableRun + Lesson + ClassSubject + Teacher
+ *     are provisioned via `createThrowawaySchool({ withTimetableStack: true })`,
+ *     so the chromium-only-skip race-defense ("Mutates Homework + Exam rows
+ *     on the shared seed class — chromium is the sole writer") is GONE.
+ *   - Cross-project parallel execution (chromium + firefox) is the success
+ *     criterion: every worker writes Homework + Exam rows on its OWN throwaway
+ *     classSubject, so race-on-shared-resource cannot recur.
+ *   - Frontend school-context switch via `setCurrentSchoolInBrowser` after
+ *     `loginAsRole(lehrer)` so `apiFetch` injects `X-School-Id: <throwaway>`
+ *     on every subsequent request (see ADR docs/adr/0001-current-school-context.md).
  *
- *   1. Seed a TimetableRun fixture (MONDAY/period-1 lesson for class 1A,
- *      teacher = kc-lehrer Maria Mueller).
- *   2. Seed ONE Homework and ONE Exam against the fixture's
- *      classSubjectId via API.
- *   3. kc-lehrer logs in → /timetable defaults to perspective=teacher
- *      for her own teacherId.
+ * Asserts (unchanged from the pre-migration regression intent):
+ *   1. Seeded TimetableLesson at MONDAY/period-1 (kc-lehrer Maria Mueller as
+ *      teacher in the throwaway school).
+ *   2. Seeded Homework + Exam against the throwaway classSubjectId via API.
+ *   3. kc-lehrer logs in → /timetable defaults to teacher perspective for
+ *      her throwaway-school teacherId.
  *   4. The seeded cell renders TimetableCellBadges with both icons —
- *      aria-label="Hausaufgabe: <title>" and "Pruefung: <title>"
- *      identify them deterministically.
+ *      aria-label="Hausaufgabe: <title>" and "Pruefung: <title>".
  *   5. Click each badge → Popover opens with the seeded title visible.
  *
- * Exercises the renderCellWithBadges path in /timetable/index.tsx, the
- * useHomework + useExams aggregation, and the badge Popover trigger.
- * Bug-class guard: if HomeworkBadge stops accepting its homework prop
- * or the badge container drops aria-label, this spec turns red loudly.
- *
- * Chromium-only-skip per the race-family precedent — every spec on
- * this surface writes Homework / Exam rows on the shared seed class.
+ * Cleanup: `fixture.cleanup()` does `prisma.school.delete()` which cascades
+ * through Homework + Exam + TimetableLesson + TimetableRun + ClassSubject +
+ * Teacher + Subject + Room + SchoolDay + TimeGrid + Person (post-#136
+ * cascade audit: 25/25 School FKs are CASCADE). No per-row sweeps needed.
  */
 import { test, expect } from '@playwright/test';
 import { loginAsRole } from './helpers/login';
 import {
   HOMEWORK_TITLE_PREFIX,
-  cleanupE2EHomework,
   createHomeworkViaAPI,
   isoDaysFromNow as homeworkDateInDays,
 } from './helpers/homework';
 import {
   EXAMS_TITLE_PREFIX,
-  cleanupE2EExams,
   createExamViaAPI,
   isoDaysFromNow as examDateInDays,
 } from './helpers/exams';
 import {
-  cleanupTimetableRun,
-  seedTimetableRun,
-  type TimetableRunFixture,
-} from './fixtures/timetable-run';
-import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
+  createThrowawaySchool,
+  type ThrowawaySchoolFixture,
+} from './fixtures/throwaway-school';
+import { useThrowawaySchoolHeader } from './helpers/school-context';
 
-const SEED_CLASS_1A_ID = 'seed-class-1a';
-
-test.describe('Issue #82 — Timetable cell badges (desktop)', () => {
+test.describe('Issue #82 — Timetable cell badges (desktop, throwaway-school)', () => {
   test.skip(
     ({ isMobile }) => isMobile,
     'Cell-badge contract is identical across viewports — desktop only for the first lock.',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'Mutates Homework + Exam rows on the shared seed class — chromium is the sole writer.',
-  );
+  // No chromium-only-skip: #137 migration to throwaway-school eliminates the
+  // shared-seed-class race that made the original spec a sole-writer.
 
-  let fixture: TimetableRunFixture | undefined;
+  let fixture: ThrowawaySchoolFixture | undefined;
   let homeworkTitle: string;
   let examTitle: string;
 
-  test.beforeEach(async ({ page, request }) => {
-    fixture = await seedTimetableRun(SEED_SCHOOL_UUID);
+  test.beforeEach(async ({ request }) => {
+    fixture = await createThrowawaySchool({
+      roles: { lehrer: true },
+      withClasses: 1,
+      withTimetableStack: true,
+      namePrefix: 'E2E-CB',
+    });
+    const stack = fixture.timetable!;
 
     const ts = Date.now();
     homeworkTitle = `${HOMEWORK_TITLE_PREFIX}BADGE-${ts} — Kapitel 5 lesen`;
     examTitle = `${EXAMS_TITLE_PREFIX}BADGE-${ts} — Schularbeit 1`;
 
-    await createHomeworkViaAPI(request, {
-      title: homeworkTitle,
-      description: 'Aufgaben 1–12 auf Seite 47',
-      dueDate: homeworkDateInDays(2),
-      classSubjectId: fixture.classSubjectId,
-    });
-    await createExamViaAPI(request, {
-      title: examTitle,
-      date: examDateInDays(7),
-      classSubjectId: fixture.classSubjectId,
-      classId: SEED_CLASS_1A_ID,
-    });
-
-    await loginAsRole(page, 'lehrer');
+    await createHomeworkViaAPI(
+      request,
+      {
+        title: homeworkTitle,
+        description: 'Aufgaben 1-12 auf Seite 47',
+        dueDate: homeworkDateInDays(2),
+        classSubjectId: stack.classSubjectId,
+      },
+      fixture.schoolId,
+    );
+    await createExamViaAPI(
+      request,
+      {
+        title: examTitle,
+        date: examDateInDays(7),
+        classSubjectId: stack.classSubjectId,
+        classId: stack.classId,
+      },
+      fixture.schoolId,
+    );
   });
 
-  test.afterEach(async ({ request }) => {
-    // Sweep by BADGE- sub-prefix so parallel specs (classbook-homework,
-    // classbook-exams) only delete their own rows. Pattern lifted from
-    // the recent excuses cross-spec cleanup-race fix.
-    await cleanupE2EHomework(request, `${HOMEWORK_TITLE_PREFIX}BADGE-`);
-    await cleanupE2EExams(request, `${EXAMS_TITLE_PREFIX}BADGE-`);
+  test.afterEach(async () => {
     if (fixture) {
-      await cleanupTimetableRun(fixture);
+      await fixture.cleanup();
       fixture = undefined;
     }
   });
 
   test('CB-BADGE-01: Lehrer sees Homework + Exam badges on the seeded cell, popovers open with seeded content', async ({
     page,
+    context,
   }) => {
     if (!fixture) throw new Error('fixture not seeded');
 
+    // ── Issue #137 — Bind every HTTP request from this BrowserContext to
+    // the throwaway school via the X-School-Id header. Includes the very
+    // first /users/me that hydrates useSchoolContext, so the frontend
+    // store starts (and stays) on the throwaway — no Prisma-ordering
+    // race for the default membership.
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
+
+    await loginAsRole(page, 'lehrer');
     await page.goto('/timetable');
 
     // Wait for the grid to mount. The kc-lehrer perspective lands on

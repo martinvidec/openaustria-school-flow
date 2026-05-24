@@ -88,10 +88,11 @@ export interface CreatedExam {
 export async function createExamViaAPI(
   request: APIRequestContext,
   input: CreateExamInput,
+  schoolId: string = EXAMS_SCHOOL_ID,
 ): Promise<CreatedExam> {
   const token = await getAdminToken(request);
   const res = await request.post(
-    `${EXAMS_API}/schools/${EXAMS_SCHOOL_ID}/exams`,
+    `${EXAMS_API}/schools/${schoolId}/exams`,
     {
       headers: {
         Authorization: `Bearer ${token}`,

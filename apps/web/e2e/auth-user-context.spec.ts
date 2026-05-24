@@ -27,6 +27,7 @@
  */
 import { expect, test } from '@playwright/test';
 import { getRoleToken, type Role } from './helpers/login';
+import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 
 const API = process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
 
@@ -52,8 +53,12 @@ test.describe('AUTH-CTX — GET /api/v1/users/me after composite-unique schema m
       request,
     }) => {
       const token = await getRoleToken(request, role);
+      // Issue #137 — explicit X-School-Id makes this spec deterministic
+      // when sibling specs transiently provision throwaway Person rows
+      // for the same seed KC user. Without the header, /users/me falls
+      // back to "first membership" which is non-deterministic mid-flight.
       const res = await request.get(`${API}/users/me`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}`, 'X-School-Id': SEED_SCHOOL_UUID },
       });
 
       // The regression: a stale findUnique({ keycloakUserId }) call against

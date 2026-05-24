@@ -1423,7 +1423,7 @@ model Homework {
   createdAt        DateTime       @default(now()) @map("created_at")
   updatedAt        DateTime       @updatedAt @map("updated_at")
 
-  classSubject     ClassSubject   @relation(fields: [classSubjectId], references: [id])
+  classSubject     ClassSubject   @relation(fields: [classSubjectId], references: [id], onDelete: Cascade)
   classBookEntry   ClassBookEntry? @relation(fields: [classBookEntryId], references: [id], onDelete: SetNull)
   school           School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
@@ -1447,8 +1447,8 @@ model Exam {
   createdAt      DateTime     @default(now()) @map("created_at")
   updatedAt      DateTime     @updatedAt @map("updated_at")
 
-  classSubject   ClassSubject @relation(fields: [classSubjectId], references: [id])
-  schoolClass    SchoolClass  @relation(fields: [classId], references: [id])
+  classSubject   ClassSubject @relation(fields: [classSubjectId], references: [id], onDelete: Cascade)
+  schoolClass    SchoolClass  @relation(fields: [classId], references: [id], onDelete: Cascade)
   school         School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   @@index([classId, date])

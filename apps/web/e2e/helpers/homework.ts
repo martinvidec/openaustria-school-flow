@@ -72,10 +72,11 @@ export interface CreatedHomework {
 export async function createHomeworkViaAPI(
   request: APIRequestContext,
   input: CreateHomeworkInput,
+  schoolId: string = HOMEWORK_SCHOOL_ID,
 ): Promise<CreatedHomework> {
   const token = await getAdminToken(request);
   const res = await request.post(
-    `${HOMEWORK_API}/schools/${HOMEWORK_SCHOOL_ID}/homework`,
+    `${HOMEWORK_API}/schools/${schoolId}/homework`,
     {
       headers: {
         Authorization: `Bearer ${token}`,

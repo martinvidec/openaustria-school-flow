@@ -89,3 +89,12 @@ export const useSchoolContext = create<SchoolContextState>((set) => ({
 
   setCurrentSchool: (schoolId) => set({ currentSchoolId: schoolId }),
 }));
+
+// Issue #137 — Expose the store on `window` in non-production builds so
+// Playwright specs can call `setCurrentSchool` from `page.evaluate(...)`
+// without a UI switcher (which doesn't ship yet — separate sub-issue).
+// Production builds skip this so the store stays an implementation detail.
+if (typeof window !== 'undefined' && import.meta.env.MODE !== 'production') {
+  (window as unknown as { __schoolContextStore?: typeof useSchoolContext }).__schoolContextStore =
+    useSchoolContext;
+}
