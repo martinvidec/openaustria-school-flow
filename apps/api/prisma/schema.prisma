@@ -1425,7 +1425,7 @@ model Homework {
 
   classSubject     ClassSubject   @relation(fields: [classSubjectId], references: [id])
   classBookEntry   ClassBookEntry? @relation(fields: [classBookEntryId], references: [id], onDelete: SetNull)
-  school           School         @relation(fields: [schoolId], references: [id])
+  school           School         @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   @@index([classSubjectId, dueDate])
   @@index([schoolId])
@@ -1449,7 +1449,7 @@ model Exam {
 
   classSubject   ClassSubject @relation(fields: [classSubjectId], references: [id])
   schoolClass    SchoolClass  @relation(fields: [classId], references: [id])
-  school         School       @relation(fields: [schoolId], references: [id])
+  school         School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   @@index([classId, date])
   @@index([classSubjectId])
@@ -1480,7 +1480,7 @@ model ImportJob {
   completedAt    DateTime?          @map("completed_at")
   createdAt      DateTime           @default(now()) @map("created_at")
 
-  school         School             @relation(fields: [schoolId], references: [id])
+  school         School             @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   @@index([schoolId, createdAt])
   @@map("import_jobs")
@@ -1495,7 +1495,7 @@ model CalendarToken {
   token     String   @unique
   createdAt DateTime @default(now()) @map("created_at")
 
-  school    School   @relation(fields: [schoolId], references: [id])
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("calendar_tokens")
@@ -1513,7 +1513,7 @@ model SisApiKey {
   createdBy String    @map("created_by")
   createdAt DateTime  @default(now()) @map("created_at")
 
-  school    School    @relation(fields: [schoolId], references: [id])
+  school    School    @relation(fields: [schoolId], references: [id], onDelete: Cascade)
 
   @@index([schoolId])
   @@map("sis_api_keys")
