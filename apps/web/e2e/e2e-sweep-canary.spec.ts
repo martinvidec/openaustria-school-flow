@@ -7,21 +7,16 @@
  * Without the sweep helper this test would fail because the canary row
  * inserted in the arrange step would still be visible after the call.
  *
- * Strategy: insert one `E2E-CANARY-…` row per swept table directly via
- * Prisma (mirroring the orphan-year fixture pattern), call the sweep,
- * and assert every canary is gone. Direct DB I/O — no HTTP — so the
- * sweep helper is exercised in the same path globalSetup uses.
+ * Strategy: spin up a throwaway school (#136 / D4-primary), insert one
+ * `E2E-CANARY-…` row per swept table into it directly via Prisma, then
+ * call the now-scopable `sweepE2ELeftovers({ schoolId })` (#156) and
+ * assert every canary is gone. Direct DB I/O — no HTTP — so the sweep
+ * helper is exercised in the same path globalSetup uses.
  *
- * Chromium-only by design — NOT a per-resource race like the
- * #122 admin-config family. `sweepE2ELeftovers` is destructive on
- * EVERY `startsWith: 'E2E-'` row in persons / classes / subjects /
- * rooms / dsfa / constraints / audit-reasons / attachments. Dropping
- * the skip would let a parallel-project canary run mid-test through
- * an unrelated CRUD spec (admin-classes-*, admin-subjects-*, …) and
- * delete its in-flight rows. A proper fix requires routing every
- * `E2E-` writer through a shared advisory lock — out of scope for
- * #122. FIXME: deterministic-e2e #112 — drop this skip once the
- * global-sweep-vs-writers lock lands.
+ * Issue #156 — runs cross-browser. The scoped sweep variant introduced
+ * here only touches rows in the throwaway school, so a parallel-project
+ * worker running an unrelated CRUD spec on the seed school can no longer
+ * collide with our destructive call.
  */
 import 'dotenv/config';
 import { config as dotenvConfig } from 'dotenv';
@@ -30,8 +25,7 @@ import { createRequire } from 'node:module';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { sweepE2ELeftovers, totalSwept } from './helpers/sweep-leftovers';
-import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
-import { acquireAdvisoryLock } from './helpers/advisory-lock';
+import { createThrowawaySchool } from './fixtures/throwaway-school';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -46,12 +40,6 @@ const { PrismaClient } = require('../../api/dist/config/database/generated/clien
     subject: { create: (args: { data: Record<string, unknown> }) => Promise<{ id: string }> };
     room: { create: (args: { data: Record<string, unknown> }) => Promise<{ id: string }> };
     dsfaEntry: { create: (args: { data: Record<string, unknown> }) => Promise<{ id: string }> };
-    schoolYear: {
-      findFirst: (args: {
-        where: Record<string, unknown>;
-        select?: Record<string, true>;
-      }) => Promise<{ id: string } | null>;
-    };
     $disconnect: () => Promise<void>;
   };
 };
@@ -63,26 +51,18 @@ const { PrismaPg } = require('../../api/node_modules/@prisma/adapter-pg') as {
 test.describe('Issue #79 — E2E sweep regression lock', () => {
   test.skip(
     ({ isMobile }) => isMobile,
-    'Sweep is viewport-agnostic — desktop chromium is enough.',
-  );
-  // FIXME: deterministic-e2e #112 — sweep helper is destructive across
-  // EVERY E2E-* row in the seed school; serializing it cross-project
-  // requires a global lock acquired by every E2E-* writer. Tracked as
-  // a #112 follow-up; for now the chromium-only-skip stays.
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'sweepE2ELeftovers is destructive globally — see #112 follow-up.',
+    'Sweep is viewport-agnostic — desktop is enough.',
   );
 
-  test('CANARY-SWEEP-01: sweepE2ELeftovers removes E2E-prefixed rows in persons / school_classes / subjects / rooms / dsfa_entries', async () => {
-    // Issue #112 phase 4 wave 2d (#122): acquire the `e2e-rows-on-seed-school`
-    // lock so admin-config specs (admin-classes-home-room, -stundentafel-,
-    // -subjects-required-room-type) cannot have mid-flight rows when our
-    // destructive `sweepE2ELeftovers` runs. The lock is held for the
-    // entire test body — release in `finally`.
-    const lock = await acquireAdvisoryLock(
-      `e2e-rows-on-seed-school:${SEED_SCHOOL_UUID}`,
-    );
+  test('CANARY-SWEEP-01: scoped sweepE2ELeftovers removes E2E-prefixed rows in persons / school_classes / subjects / rooms / dsfa_entries', async () => {
+    // Isolate the test to a freshly-created school. The scoped sweep
+    // helper (#156) only touches rows in this school, so parallel
+    // workers on the seed school never collide with our destructive call.
+    const throwaway = await createThrowawaySchool({
+      roles: {},
+      withClasses: 0,
+      namePrefix: 'E2E-SWEEP-CANARY',
+    });
     const prisma = new PrismaClient({
       adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL ?? '' }),
     });
@@ -95,16 +75,9 @@ test.describe('Issue #79 — E2E sweep regression lock', () => {
     const dsfaTitle = `e2e-15-canary-dsfa-${ts}`;
 
     try {
-      const year = await prisma.schoolYear.findFirst({
-        where: { schoolId: SEED_SCHOOL_UUID },
-        select: { id: true },
-      });
-      expect(year, 'seed school must have at least one SchoolYear').not.toBeNull();
-      const schoolYearId = year!.id;
-
       await prisma.person.create({
         data: {
-          schoolId: SEED_SCHOOL_UUID,
+          schoolId: throwaway.schoolId,
           personType: 'STUDENT',
           firstName: personFirstName,
           lastName: 'Canary',
@@ -112,15 +85,15 @@ test.describe('Issue #79 — E2E sweep regression lock', () => {
       });
       await prisma.schoolClass.create({
         data: {
-          schoolId: SEED_SCHOOL_UUID,
+          schoolId: throwaway.schoolId,
           name: classNameLit,
           yearLevel: 1,
-          schoolYearId,
+          schoolYearId: throwaway.schoolYearId,
         },
       });
       await prisma.subject.create({
         data: {
-          schoolId: SEED_SCHOOL_UUID,
+          schoolId: throwaway.schoolId,
           name: subjectName,
           shortName: `EC-${ts.toString().slice(-4)}`,
           subjectType: 'PFLICHT',
@@ -128,7 +101,7 @@ test.describe('Issue #79 — E2E sweep regression lock', () => {
       });
       await prisma.room.create({
         data: {
-          schoolId: SEED_SCHOOL_UUID,
+          schoolId: throwaway.schoolId,
           name: roomName,
           roomType: 'KLASSENZIMMER',
           capacity: 20,
@@ -136,28 +109,28 @@ test.describe('Issue #79 — E2E sweep regression lock', () => {
       });
       await prisma.dsfaEntry.create({
         data: {
-          schoolId: SEED_SCHOOL_UUID,
+          schoolId: throwaway.schoolId,
           title: dsfaTitle,
           description: 'canary',
           dataCategories: [],
         },
       });
 
-      // Pre-sweep assertion — canary rows MUST be visible. If this fails
-      // the test setup is broken, not the sweep.
-      const preCounts = await sweepE2ELeftovers();
-      const preTotal = totalSwept(preCounts);
+      // Pre-sweep assertion — the scoped sweep must find exactly our 5
+      // canary rows (no other E2E-prefixed rows exist in this freshly-
+      // created school).
+      const preCounts = await sweepE2ELeftovers({ schoolId: throwaway.schoolId });
       expect(
-        preTotal,
-        'sweep should have found at least the 5 canary rows we just inserted',
-      ).toBeGreaterThanOrEqual(5);
+        totalSwept(preCounts),
+        'scoped sweep must find exactly the 5 canary rows inserted into the throwaway school',
+      ).toBe(5);
 
-      // Post-sweep — re-running sweep should find nothing.
-      const postCounts = await sweepE2ELeftovers();
-      expect(totalSwept(postCounts), 'sweep is idempotent — second run is a no-op').toBe(0);
+      // Post-sweep — re-running scoped sweep should find nothing.
+      const postCounts = await sweepE2ELeftovers({ schoolId: throwaway.schoolId });
+      expect(totalSwept(postCounts), 'scoped sweep is idempotent — second run is a no-op').toBe(0);
     } finally {
       await prisma.$disconnect();
-      await lock.release();
+      await throwaway.cleanup();
     }
   });
 });
