@@ -95,6 +95,10 @@ const { PrismaClient } = require('../../../api/dist/config/database/generated/cl
     timetableLesson: {
       create: (args: any) => Promise<{ id: string; dayOfWeek: string; periodNumber: number }>;
     };
+    timetableLessonEdit: {
+      create: (args: any) => Promise<{ id: string }>;
+      deleteMany: (args: any) => Promise<unknown>;
+    };
     $disconnect: () => Promise<void>;
   };
 };
@@ -129,7 +133,15 @@ export interface ThrowawaySchoolOptions {
   roles?: Partial<Record<SeedRole, boolean>>;
   /** Number of SchoolClasses to seed (default 1). */
   withClasses?: number;
-  /** Prefix for the school's name + class names — keeps cross-spec greps trivial. */
+  /**
+   * Issue #138 — explicit class names that override the default
+   * `${namePrefix}-K{i+1}` generation. Must match `withClasses` in length.
+   * Useful for UI specs that select a class by name (PerspectiveSelector
+   * shows the name not the id) — passing `['1A']` keeps assertions
+   * identical to pre-migration seed-school specs.
+   */
+  classNames?: string[];
+  /** Prefix for the school's name + (default) class names — keeps cross-spec greps trivial. */
   namePrefix?: string;
   /**
    * Issue #137 — opt-in timetable stack for UI specs that need a TimetableRun
@@ -166,6 +178,17 @@ export interface ThrowawaySchoolOptions {
       lateMinutes?: number;
     }>;
   };
+  /**
+   * Issue #138 wave 2 — opt-in TimetableLessonEdit audit-log row attached
+   * to the timetable stack's lesson. Single "move" edit row; EditHistoryPanel
+   * renders the description as
+   *   `${previousState.dayOfWeek} ${previousState.periodNumber}. Std. -> ${newState.dayOfWeek} ${newState.periodNumber}. Std.`
+   * Requires `withTimetableStack: true`.
+   */
+  withTimetableEdit?: {
+    previousState: { dayOfWeek: string; periodNumber: number };
+    newState: { dayOfWeek: string; periodNumber: number };
+  };
 }
 
 export interface ThrowawayTimetableStack {
@@ -200,6 +223,8 @@ export interface ThrowawaySchoolFixture {
   studentIds: string[];
   /** Issue #138 — Populated when `withClassbookEntry` was passed. */
   classBookEntryId?: string;
+  /** Issue #138 wave 2 — Populated when `withTimetableEdit` was passed. */
+  timetableEditId?: string;
   cleanup: () => Promise<void>;
 }
 
@@ -272,6 +297,16 @@ export async function createThrowawaySchool(
       'createThrowawaySchool: withClassbookEntry requires withStudents (need student rows to attach attendance to)',
     );
   }
+  if (options.classNames && options.classNames.length !== withClasses) {
+    throw new Error(
+      `createThrowawaySchool: classNames.length (${options.classNames.length}) must match withClasses (${withClasses})`,
+    );
+  }
+  if (options.withTimetableEdit && !withTimetableStack) {
+    throw new Error(
+      'createThrowawaySchool: withTimetableEdit requires withTimetableStack (no lesson to attach the edit to)',
+    );
+  }
 
   const prisma = buildPrisma();
   try {
@@ -302,7 +337,7 @@ export async function createThrowawaySchool(
       const klass = await prisma.schoolClass.create({
         data: {
           schoolId: school.id,
-          name: `${namePrefix}-K${i + 1}`,
+          name: options.classNames?.[i] ?? `${namePrefix}-K${i + 1}`,
           yearLevel: 5 + i,
           schoolYearId: schoolYear.id,
         },
@@ -536,10 +571,42 @@ export async function createThrowawaySchool(
       }
     }
 
+    // Issue #138 wave 2 — single TimetableLessonEdit audit-log row. No FK
+    // on runId/lessonId means we have to delete the row explicitly in
+    // cleanup (won't cascade from TimetableRun delete). The editedBy
+    // column is a free-form string — fixture uses a deterministic UUID-
+    // shaped placeholder so the row is visually distinguishable from
+    // production-edited rows in a debugger.
+    let timetableEditId: string | undefined;
+    if (options.withTimetableEdit) {
+      const stack = timetable!; // validated above
+      const edit = await prisma.timetableLessonEdit.create({
+        data: {
+          runId: stack.timetableRunId,
+          lessonId: stack.timetableLessonId,
+          editedBy: '00000000-0000-4000-8000-00000000e2e1',
+          editAction: 'move',
+          previousState: options.withTimetableEdit.previousState,
+          newState: options.withTimetableEdit.newState,
+        },
+      });
+      timetableEditId = edit.id;
+    }
+
     const capturedTimetable = timetable;
     const cleanup = async () => {
       const p = buildPrisma();
       try {
+        // Issue #138 wave 2 — TimetableLessonEdit has NO FK on runId or
+        // lessonId (Prisma schema omits @relation for both — schema audit
+        // confirmed). Cascade from School/Run does NOT reach edit rows;
+        // explicit deleteMany scoped to our run keeps them from ghosting
+        // future history-length assertions.
+        if (capturedTimetable) {
+          await p.timetableLessonEdit.deleteMany({
+            where: { runId: capturedTimetable.timetableRunId },
+          });
+        }
         // Issue #137 — `timetable_lessons.room_id` is still RESTRICT (#137
         // intentionally keeps it so admin Room deletes get a 409 instead
         // of silently nuking lessons). For the throwaway cleanup that
@@ -572,6 +639,7 @@ export async function createThrowawaySchool(
       timetable,
       studentIds,
       classBookEntryId,
+      timetableEditId,
       cleanup,
     };
   } finally {
