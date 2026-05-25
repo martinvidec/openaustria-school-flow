@@ -194,6 +194,20 @@ export interface ThrowawaySchoolOptions {
     previousState: { dayOfWeek: string; periodNumber: number };
     newState: { dayOfWeek: string; periodNumber: number };
   };
+  /**
+   * Issue #149 (Phase 3.5/1) — opt-in second TimetableLesson taught by a
+   * DIFFERENT Teacher at MONDAY/period-2, sharing the timetable stack's
+   * ClassSubject + Room + Run. Mirrors the legacy `seedSecondTeacherLesson`
+   * companion of `seedTimetableRun` — needed by substitution specs that
+   * exercise the assign-substitute flow (one teacher absent, a free second
+   * teacher available at a non-colliding period).
+   *
+   * Requires `withTimetableStack: true`. Cleanup piggy-backs on the run
+   * cascade — no extra plumbing required. The second Teacher's Person row
+   * is created fresh inside the throwaway school, so the School cascade
+   * deletes it on `fixture.cleanup()`.
+   */
+  withSecondTeacherLesson?: boolean;
 }
 
 export interface ThrowawayTimetableStack {
@@ -208,6 +222,15 @@ export interface ThrowawayTimetableStack {
   teacherDisplayName: string;
   subjectId: string;
   subjectShortName: string;
+  /**
+   * Issue #149 — alias of `subjectShortName` matching the legacy
+   * `TimetableRunFixture.subjectAbbreviation` field name. The timetable-view
+   * API exposes this verbatim as `TimetableViewLesson.subjectAbbreviation`
+   * (timetable.service.ts:447) and the visible cell label uses it; the
+   * alias smooths the consumer-spec migration in #153 (one fewer rename
+   * per spec).
+   */
+  subjectAbbreviation: string;
   classSubjectId: string;
   roomId: string;
   timeGridId: string;
@@ -223,6 +246,31 @@ export interface ThrowawayTimetableStack {
   lessonPeriodNumber: 1;
 }
 
+/**
+ * Issue #149 — return shape for the optional second TimetableLesson
+ * provisioned by `withSecondTeacherLesson: true`. Mirrors the field set
+ * of the legacy `SecondTeacherLessonFixture` so consumer migration in
+ * #153 is a flat rename rather than a redesign.
+ */
+export interface ThrowawaySecondTeacherLesson {
+  /** Teacher.id of the second teacher (NOT the timetable stack's primary). */
+  teacherId: string;
+  /**
+   * Display name in `${firstName} ${lastName}` order — matches the legacy
+   * `SecondTeacherLessonFixture.teacherFullName`. (Primary teacher exposes
+   * `teacherDisplayName` in `${lastName} ${firstName}` order; the two are
+   * intentionally different because they're consumed in different UI
+   * contexts.)
+   */
+  teacherFullName: string;
+  /** Always MONDAY — paired with the primary lesson at MONDAY/period-1. */
+  dayOfWeek: 'MONDAY';
+  /** Always 2 — non-colliding with the primary lesson's period-1. */
+  periodNumber: 2;
+  /** TimetableLesson.id of the second lesson. */
+  timetableLessonId: string;
+}
+
 export interface ThrowawaySchoolFixture {
   schoolId: string;
   schoolName: string;
@@ -234,6 +282,8 @@ export interface ThrowawaySchoolFixture {
   keycloakUserIds: Partial<Record<SeedRole, string>>;
   /** Populated when `withTimetableStack: true` was passed. */
   timetable?: ThrowawayTimetableStack;
+  /** Issue #149 — Populated when `withSecondTeacherLesson: true` was passed. */
+  secondTeacher?: ThrowawaySecondTeacherLesson;
   /** Issue #138 — Student.id values matching the `withStudents` indexes. */
   studentIds: string[];
   /** Issue #138 — Populated when `withClassbookEntry` was passed. */
@@ -327,6 +377,11 @@ export async function createThrowawaySchool(
   if (options.withTimetableEdit && !withTimetableStack) {
     throw new Error(
       'createThrowawaySchool: withTimetableEdit requires withTimetableStack (no lesson to attach the edit to)',
+    );
+  }
+  if (options.withSecondTeacherLesson && !withTimetableStack) {
+    throw new Error(
+      'createThrowawaySchool: withSecondTeacherLesson requires withTimetableStack (no run + classSubject + room to attach the second lesson to)',
     );
   }
 
@@ -517,6 +572,7 @@ export async function createThrowawaySchool(
         teacherDisplayName,
         subjectId: subject.id,
         subjectShortName: subject.shortName,
+        subjectAbbreviation: subject.shortName,
         classSubjectId: classSubject.id,
         roomId: room.id,
         timeGridId: timeGrid.id,
@@ -628,6 +684,50 @@ export async function createThrowawaySchool(
       timetableEditId = edit.id;
     }
 
+    // Issue #149 (Phase 3.5/1) — second TimetableLesson at MONDAY/period-2,
+    // taught by a fresh fixture-only Teacher. Mirrors the legacy
+    // `seedSecondTeacherLesson` companion: same Run + ClassSubject + Room,
+    // distinct teacher, non-colliding period. Cascade-clean via run delete
+    // (lesson) + school delete (teacher + person).
+    let secondTeacher: ThrowawaySecondTeacherLesson | undefined;
+    if (options.withSecondTeacherLesson) {
+      const stack = timetable!; // validated above
+      const secondFirstName = `${namePrefix}-Teacher2`;
+      const secondLastName = `${suffix}-T2`;
+      const secondPerson = await prisma.person.create({
+        data: {
+          schoolId: school.id,
+          personType: 'TEACHER',
+          firstName: secondFirstName,
+          lastName: secondLastName,
+        },
+      });
+      const secondTeacherRow = await prisma.teacher.create({
+        data: {
+          personId: secondPerson.id,
+          schoolId: school.id,
+        },
+      });
+      const secondLesson = await prisma.timetableLesson.create({
+        data: {
+          runId: stack.timetableRunId,
+          classSubjectId: stack.classSubjectId,
+          teacherId: secondTeacherRow.id,
+          roomId: stack.roomId,
+          dayOfWeek: 'MONDAY',
+          periodNumber: 2,
+          weekType: 'BOTH',
+        },
+      });
+      secondTeacher = {
+        teacherId: secondTeacherRow.id,
+        teacherFullName: `${secondFirstName} ${secondLastName}`,
+        dayOfWeek: 'MONDAY',
+        periodNumber: 2,
+        timetableLessonId: secondLesson.id,
+      };
+    }
+
     const capturedTimetable = timetable;
     const cleanup = async () => {
       const p = buildPrisma();
@@ -672,6 +772,7 @@ export async function createThrowawaySchool(
       personIds,
       keycloakUserIds,
       timetable,
+      secondTeacher,
       studentIds,
       classBookEntryId,
       timetableEditId,

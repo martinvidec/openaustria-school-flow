@@ -114,6 +114,63 @@ test.describe('THROW — throwaway-school fixture smoke (#136)', () => {
     expect(meAfterBody.availableSchools.map((s) => s.schoolId)).toContain(SEED_SCHOOL_UUID);
   });
 
+  test('THROW-04 — withTimetableStack + withSecondTeacherLesson provisions two distinct lessons at MONDAY/period-1 and MONDAY/period-2 (#149)', async ({
+    request,
+  }) => {
+    const fixture = await createThrowawaySchool({
+      roles: { lehrer: true },
+      withClasses: 1,
+      classNames: ['1A'],
+      withTimetableStack: true,
+      withSecondTeacherLesson: true,
+    });
+    try {
+      expect(fixture.timetable, 'withTimetableStack populates timetable').toBeDefined();
+      expect(fixture.secondTeacher, 'withSecondTeacherLesson populates secondTeacher').toBeDefined();
+
+      const stack = fixture.timetable!;
+      const second = fixture.secondTeacher!;
+
+      // Primary teacher at MONDAY/period-1; second teacher at MONDAY/period-2.
+      // Same class + same room, distinct lessons + distinct teachers.
+      expect(stack.lessonDayOfWeek).toBe('MONDAY');
+      expect(stack.lessonPeriodNumber).toBe(1);
+      expect(second.dayOfWeek).toBe('MONDAY');
+      expect(second.periodNumber).toBe(2);
+      expect(second.teacherId).not.toBe(stack.teacherId);
+      expect(second.timetableLessonId).not.toBe(stack.timetableLessonId);
+      // subjectAbbreviation alias is populated (consumer-spec migration parity
+      // for the legacy `TimetableRunFixture.subjectAbbreviation` field name).
+      expect(stack.subjectAbbreviation).toBe(stack.subjectShortName);
+      // teacherFullName uses `${firstName} ${lastName}` order — matches the
+      // legacy `SecondTeacherLessonFixture.teacherFullName` contract.
+      expect(second.teacherFullName).toMatch(/^E2E-TS-Teacher2 \d+-T2$/);
+
+      // /timetable view via the teacher perspective shows the primary lesson.
+      // (The view endpoint requires perspective + perspectiveId; teacher
+      // perspective is the cheapest to assert because we already have a
+      // teacherId on hand.) Validates that the seeded run + active SchoolDays
+      // + period round-trip cleanly through the same surface the consumer
+      // specs read in #153.
+      const token = await getRoleToken(request, 'lehrer');
+      const view = await request.get(
+        `${API}/schools/${fixture.schoolId}/timetable/view?perspective=teacher&perspectiveId=${stack.teacherId}`,
+        { headers: { Authorization: `Bearer ${token}`, 'X-School-Id': fixture.schoolId } },
+      );
+      expect(view.status(), 'timetable view (teacher) 200').toBe(200);
+      const body = (await view.json()) as {
+        lessons?: Array<{ id: string; dayOfWeek: string; periodNumber: number; teacherId: string }>;
+      };
+      const lessonIds = new Set((body.lessons ?? []).map((l) => l.id));
+      expect(
+        lessonIds.has(stack.timetableLessonId),
+        'primary lesson visible under primary-teacher perspective',
+      ).toBeTruthy();
+    } finally {
+      await fixture.cleanup();
+    }
+  });
+
   test('THROW-03 — multiple roles in one fixture all show up in availableSchools', async ({
     request,
   }) => {

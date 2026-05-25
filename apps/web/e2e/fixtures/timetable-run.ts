@@ -1,4 +1,27 @@
 /**
+ * **LEGACY (Phase 3.5, Issue #149)** — this file ships the seed-school-bound
+ * `seedTimetableRun` / `seedSecondTeacherLesson` family that holds the
+ * `active-timetable-run:SEED_SCHOOL_UUID` advisory lock for its entire
+ * lifecycle. It exists in lock-protected form until #153 (Phase 3.5/6)
+ * migrates the 18 remaining consumer specs onto the throwaway-school
+ * fixture (`apps/web/e2e/fixtures/throwaway-school.ts`).
+ *
+ * **DO NOT add new consumers.** New specs MUST use
+ * `createThrowawaySchool({ withTimetableStack: true, withSecondTeacherLesson?: true })`
+ * per CLAUDE.md D4 (throwaway-school = PRIMARY since PR #146). The throwaway
+ * fixture exposes every field a `TimetableRunFixture` consumer reads
+ * (`teacherId`, `teacherDisplayName`, `classSubjectId`, `subjectAbbreviation`,
+ * `lessonId` → `timetable.timetableLessonId`, `runId` → `timetable.timetableRunId`),
+ * plus the optional second-teacher MONDAY/period-2 lesson via
+ * `withSecondTeacherLesson: true`.
+ *
+ * The legacy helpers below are unchanged in behavior — same advisory-lock
+ * mechanic, same seed-school dependency. When the final consumer migrates,
+ * Issue #155 (Phase 3.5/8) deletes this file and its companion
+ * `helpers/advisory-lock.ts`.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ *
  * Quick task 260425-u72 — fixture for the admin timetable-edit DnD regression spec.
  *
  * Seeds the MINIMUM data the timetable-edit page needs to render exactly one
@@ -233,6 +256,10 @@ export interface SeedTimetableRunOptions {
  *
  * Picks the FIRST classSubject for class 1A and the FIRST Teacher + FIRST
  * Room of the school. All lookups are deterministic via createdAt asc.
+ *
+ * @deprecated Issue #149 — new specs MUST use
+ *   `createThrowawaySchool({ withTimetableStack: true })`. This helper
+ *   stays only until Issue #153 migrates the 18 remaining consumers.
  */
 export async function seedTimetableRun(
   schoolId: string,
@@ -489,6 +516,11 @@ export interface SecondTeacherLessonFixture {
 /**
  * Add a SECOND TimetableLesson to an existing fixture's TimetableRun,
  * taught by Anna Lehrerin (`SEED_TEACHER_2_UUID`) at MONDAY/period-2.
+ *
+ * @deprecated Issue #149 — new specs MUST use
+ *   `createThrowawaySchool({ withTimetableStack: true, withSecondTeacherLesson: true })`.
+ *   This helper stays only until Issue #153 migrates the lone consumer
+ *   (`teacher-substitutions-incoming.spec.ts`).
  *
  * Why a second lesson rather than a second run: keeping a single
  * TimetableRun avoids the "multiple active runs" tie-breaker in
