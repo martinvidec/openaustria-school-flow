@@ -1,77 +1,78 @@
 /**
  * Phase 10.2 + Issue #112 Phase 2.5b — TimeGrid (Periods + Unterrichtstage) save.
  *
+ * Issue #148 (Phase 3.5/2) — migrated to throwaway-school per CLAUDE.md D4.
+ * The advisory-lock workaround for the seed-school PUT-replace-all race is
+ * gone; each spec now mutates its own throwaway School's TimeGrid in
+ * isolation, so chromium + firefox + repeated workers can run in parallel
+ * without coordination.
+ *
  * Consolidated from the formerly-separate `zeitraster.spec.ts` and
- * `wochentage.spec.ts`. Both files PUT the same `/api/v1/schools/:id/time-grid`
- * endpoint, which is implemented as a `deleteMany + createMany` over the
- * full TimeGrid (school-time-grid.service.ts:82-104). Running them in
- * parallel — even within the same chromium project on different workers —
- * produces this race:
- *
- *   Worker A (was zeitraster): PUT { periods:[P1, P2_marker_A], schoolDays:[MO] }
- *   Worker B (was wochentage): PUT { periods:[P1], schoolDays:[MO, SA] }
- *   tx_B commits LAST → DB has [P1] (no marker) → Worker A API readback
- *   fails: "period with label E2E-NNNNNN .toBeDefined()" → flake.
- *
- * Originally surfaced in PR #109 CI (2026-05-18; ZEIT-01 red on the
- * issue #87 PR even though that PR didn't touch the time-grid surface).
- * Phase 1 (PR #114) merged the two files under `describe.serial` and
- * pinned chromium-only as a pragmatic intra-chromium fix.
- *
- * Phase 2.5b (Issue #118, this PR) replaces those workarounds with a
- * per-schoolId Postgres advisory lock from `helpers/advisory-lock.ts`
- * (extracted in Issue #117). The lock serializes parallel runs across
- * workers AND across projects (chromium ↔ firefox ↔ mobile), so:
- *   - `describe.serial` removed — the lock is a stronger guarantee that
- *     doesn't pin all tests to a single worker.
- *   - `chromium-only-skip` removed — WOCH-01 is back on cross-browser.
+ * `wochentage.spec.ts`. Both files PUT the same
+ * `/api/v1/schools/:id/time-grid` endpoint, which is implemented as a
+ * `deleteMany + createMany` over the full TimeGrid
+ * (school-time-grid.service.ts:82-104). Pre-#148 they raced on the seed
+ * school; post-#148 each spec owns its school so the race is gone by
+ * construction.
  *
  * Tests:
  *   ZEIT-01 — happy-path add-period + save + API readback persistence
  *   ZEIT-02 — error-path mocked 422 → red toast, no green toast (silent-4xx guard)
  *   WOCH-01 — toggle SATURDAY active, save, API readback persistence; cleanup
- *
- * Prerequisites:
- *   - docker compose up -d postgres redis keycloak
- *   - API on :3000, Vite on :5173
- *   - prisma:seed executed (admin + sample school)
- *   - DATABASE_URL exported in the runner shell
  */
 import { expect, test } from '@playwright/test';
-import { getAdminToken, loginAsAdmin } from './helpers/login';
-import { acquireAdvisoryLock, type AdvisoryLock } from './helpers/advisory-lock';
-import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
+import { loginAsRole, getAdminToken } from './helpers/login';
+import {
+  createThrowawaySchool,
+  type ThrowawaySchoolFixture,
+} from './fixtures/throwaway-school';
+import { useThrowawaySchoolHeader } from './helpers/school-context';
 
-test.describe('TimeGrid save (Periods + Unterrichtstage) — Phase 10.2 / Issue #112 Phase 2.5b', () => {
-  // Per-schoolId advisory lock. The TimeGrid PUT-replace-all on
-  // school-time-grid.service.ts:82-104 mutates one row-set per school;
-  // serializing every spec that touches the seed school is enough to
-  // remove the race and lets chromium + firefox run in parallel.
-  let lock: AdvisoryLock | undefined;
+const API = process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
 
-  test.beforeEach(async ({ page }) => {
-    lock = await acquireAdvisoryLock(`time-grid:${SEED_SCHOOL_UUID}`);
-    await loginAsAdmin(page);
+test.describe('TimeGrid save (Periods + Unterrichtstage) — throwaway-school (#148)', () => {
+  let fixture: ThrowawaySchoolFixture | undefined;
+
+  test.beforeEach(async () => {
+    // `withTimetableStack: true` provisions: TimeGrid w/ period 1 (08:00-08:50,
+    // durationMin=50), SchoolDays MON-FRI all isActive=true, plus a Teacher +
+    // ClassSubject + Room + Run + Lesson the spec doesn't strictly need but
+    // which come bundled. The Run/Lesson rows are harmless residue here and
+    // cascade-clean via fixture.cleanup(). No standalone `withTimeGrid` option
+    // exists today — the #147 tracker explicitly endorsed reusing
+    // withTimetableStack for time-grid-only specs.
+    fixture = await createThrowawaySchool({
+      roles: { admin: true },
+      withClasses: 1,
+      withTimetableStack: true,
+      namePrefix: 'E2E-TG',
+    });
   });
 
   test.afterEach(async () => {
-    if (lock) {
-      await lock.release();
-      lock = undefined;
+    if (fixture) {
+      await fixture.cleanup();
+      fixture = undefined;
     }
   });
 
   test('ZEIT-01: Happy-Path — add period, save, assert DB persistence via API', async ({
     page,
+    context,
     request,
   }) => {
+    if (!fixture) throw new Error('fixture not seeded');
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
+    await loginAsRole(page, 'admin');
+
     await page.goto('/admin/school/settings?tab=timegrid');
     // Sanity: PeriodsEditor + Speichern present.
     await expect(page.getByText('Unterrichtstage', { exact: true })).toBeVisible();
 
     // TimeGridSchema requires at least one Unterrichtstag. Ensure Mo is
-    // active (no-op if already pressed) so the client-side validator in
-    // TimeGridTab doesn't short-circuit before the PUT is issued.
+    // active (no-op on throwaway since fixture seeds MON-FRI active) so the
+    // client-side validator in TimeGridTab doesn't short-circuit before the
+    // PUT is issued.
     const moToggle = page.getByRole('button', { name: 'Unterrichtstag Mo' });
     if ((await moToggle.getAttribute('data-state')) !== 'on') {
       await moToggle.click();
@@ -97,25 +98,13 @@ test.describe('TimeGrid save (Periods + Unterrichtstage) — Phase 10.2 / Issue 
     await page.getByRole('button', { name: 'Speichern' }).first().click();
     await expect(page.getByText(/Aenderungen gespeichert/)).toBeVisible();
 
-    // Persistence check — hit the API directly. The GET /time-grid endpoint
-    // is not implemented (pre-existing gap logged in deferred-items.md),
-    // but `GET /schools/:id` embeds the timeGrid sub-object with periods.
-    // This is the canonical proof that the PUT actually landed in the DB
-    // and closes the UAT 500-regression surface:
-    //   1. Fix 1 (commit 23d09bc) ensures the client sends durationMin.
-    //   2. This API-layer assertion proves the server persisted the row.
+    // Persistence check — hit the API directly with the throwaway schoolId.
+    // The GET /time-grid endpoint is not implemented (pre-existing gap), but
+    // `GET /schools/:id` embeds the timeGrid sub-object with periods.
     const token = await getAdminToken(request);
-    const schoolsRes = await request.get('http://localhost:3000/api/v1/schools', {
-      headers: { Authorization: `Bearer ${token}` },
+    const schoolRes = await request.get(`${API}/schools/${fixture.schoolId}`, {
+      headers: { Authorization: `Bearer ${token}`, 'X-School-Id': fixture.schoolId },
     });
-    expect(schoolsRes.ok(), 'schools list').toBeTruthy();
-    const schools = (await schoolsRes.json()) as Array<{ id: string }>;
-    expect(schools.length).toBeGreaterThan(0);
-    const schoolId = schools[0].id;
-    const schoolRes = await request.get(
-      `http://localhost:3000/api/v1/schools/${schoolId}`,
-      { headers: { Authorization: `Bearer ${token}` } },
-    );
     expect(schoolRes.ok(), 'school detail').toBeTruthy();
     const school = (await schoolRes.json()) as {
       timeGrid: {
@@ -131,45 +120,26 @@ test.describe('TimeGrid save (Periods + Unterrichtstage) — Phase 10.2 / Issue 
     const saved = school.timeGrid!.periods.find((p) => p.label === marker);
     expect(saved, `period with label ${marker}`).toBeDefined();
     // Regression guard: durationMin must be stored (==50 for 08:00-08:50).
-    // Before the Task 1.5 fix this assertion would fail because the PUT
-    // rejected with 422 and the row never landed.
     expect(saved!.durationMin).toBe(50);
 
-    // Cleanup — delete the marker period via direct PUT so the spec is
-    // idempotent. We filter out only the marker row and replay everything
-    // else with durationMin re-derived. (Can't use the UI delete button
-    // because the UI doesn't hydrate from the missing GET.)
-    const remainingPeriods = school
-      .timeGrid!.periods.filter((p) => p.label !== marker)
-      .map((p, i) => ({
-        periodNumber: i + 1,
-        label: p.label ?? '',
-        startTime: p.startTime,
-        endTime: p.endTime,
-        isBreak: false,
-        durationMin: p.durationMin,
-      }));
-    const cleanupRes = await request.put(
-      `http://localhost:3000/api/v1/schools/${schoolId}/time-grid?force=true`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        data: { periods: remainingPeriods },
-      },
-    );
-    expect(cleanupRes.ok(), 'cleanup PUT').toBeTruthy();
+    // No spec-internal API cleanup needed — fixture.cleanup() cascade-drops
+    // the entire School including its TimeGrid + periods. The pre-migration
+    // cleanup PUT existed only because the spec mutated the seed school.
   });
 
   test('ZEIT-02: Error-Path — mocked 422 triggers red toast, no green toast', async ({
     page,
+    context,
   }) => {
+    if (!fixture) throw new Error('fixture not seeded');
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
+    await loginAsRole(page, 'admin');
+
     await page.goto('/admin/school/settings?tab=timegrid');
     await expect(page.getByText('Unterrichtstage', { exact: true })).toBeVisible();
 
-    // Ensure Mo is on so TimeGridSchema passes client-side validation and
-    // the PUT actually fires — otherwise our mock never gets hit.
+    // Mo is active by default on the throwaway (fixture seeds MON-FRI), but
+    // belt-and-braces in case the fixture seeding changes.
     const moToggle = page.getByRole('button', { name: 'Unterrichtstag Mo' });
     if ((await moToggle.getAttribute('data-state')) !== 'on') {
       await moToggle.click();
@@ -211,8 +181,13 @@ test.describe('TimeGrid save (Periods + Unterrichtstage) — Phase 10.2 / Issue 
 
   test('WOCH-01: toggle Saturday active, save, assert DB persistence via API', async ({
     page,
+    context,
     request,
   }) => {
+    if (!fixture) throw new Error('fixture not seeded');
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
+    await loginAsRole(page, 'admin');
+
     await page.goto('/admin/school/settings?tab=timegrid');
 
     // Sanity — the improved section heading + toggles are present.
@@ -229,15 +204,11 @@ test.describe('TimeGrid save (Periods + Unterrichtstage) — Phase 10.2 / Issue 
     const saButton = page.getByRole('button', { name: 'Unterrichtstag Sa' });
     await expect(saButton).toBeVisible();
 
-    // TimeGridSchema requires ≥1 Periode AND ≥1 Unterrichtstag — otherwise
-    // Save short-circuits on the client-side validator ("Mindestens eine
-    // Periode erforderlich" / "Mindestens ein Unterrichtstag erforderlich")
-    // and the PUT never fires. Because GET /time-grid is 404 in this
-    // codebase, the TimeGridTab form mounts in an empty state; we must
-    // bootstrap a minimum-valid state before the Saturday test can exercise
-    // the save flow in isolation. PUT overwrites periods/schoolDays in
-    // full (tx.deleteMany + createMany), so we drive the bootstrap through
-    // the UI to exercise the real PeriodsEditor + Toggle path.
+    // On throwaway the fixture has already provisioned MON-FRI + a TimeGrid
+    // with one period, so the bootstrap branch from the seed-school era
+    // (needsPeriod / needsMo) is a no-op here. Kept defensively in case
+    // future fixture changes drop the seeded state — the spec asserts on
+    // the post-bootstrap form, not on the pre-bootstrap empty-state UI.
     const removeButtons = page.getByRole('button', { name: 'Periode entfernen' });
     const moToggle = page.getByRole('button', { name: 'Unterrichtstag Mo' });
     const needsPeriod = (await removeButtons.count()) === 0;
@@ -257,20 +228,14 @@ test.describe('TimeGrid save (Periods + Unterrichtstage) — Phase 10.2 / Issue 
       expect(bootstrapRes.status(), 'bootstrap PUT status').toBe(200);
     }
 
-    // Look up the schoolId now so we can both (a) read initial persisted
-    // state from the API and (b) assert the save round-trip landed.
+    // Read initial persisted state from the API directly with the throwaway
+    // schoolId. The legacy `GET /schools` listing + `[0].id` lookup is gone —
+    // we own the schoolId from the fixture.
     const token = await getAdminToken(request);
-    const schoolsRes = await request.get('http://localhost:3000/api/v1/schools', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    expect(schoolsRes.ok(), 'schools list').toBeTruthy();
-    const schools = (await schoolsRes.json()) as Array<{ id: string }>;
-    expect(schools.length).toBeGreaterThan(0);
-    const schoolId = schools[0].id;
 
     const readSchoolDays = async (): Promise<string[]> => {
-      const r = await request.get(`http://localhost:3000/api/v1/schools/${schoolId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const r = await request.get(`${API}/schools/${fixture!.schoolId}`, {
+        headers: { Authorization: `Bearer ${token}`, 'X-School-Id': fixture!.schoolId },
       });
       expect(r.ok(), 'school detail').toBeTruthy();
       const body = (await r.json()) as {
@@ -284,8 +249,7 @@ test.describe('TimeGrid save (Periods + Unterrichtstage) — Phase 10.2 / Issue 
 
     // Align the UI with the persisted state: if DB says Sa is OFF, the UI
     // should show aria-pressed=false for Sa at this point. If DB says Sa
-    // is ON, aria-pressed should be true. (After the bootstrap save the
-    // local form state and DB are in sync.)
+    // is ON, aria-pressed should be true.
     expect(await saButton.getAttribute('aria-pressed')).toBe(String(initiallyActive));
 
     // Toggle Sa → click Speichern → wait for PUT response (not toast —
@@ -307,19 +271,8 @@ test.describe('TimeGrid save (Periods + Unterrichtstage) — Phase 10.2 / Issue 
     const after = await readSchoolDays();
     expect(after.includes('SATURDAY')).toBe(!initiallyActive);
 
-    // Cleanup — toggle Sa back to original state + Save so the spec is
-    // idempotent across re-runs. Without this, running WOCH-01 twice in a
-    // row could leave Saturday pinned on/off for downstream specs.
-    await saButton.click();
-    expect(await saButton.getAttribute('aria-pressed')).toBe(String(initiallyActive));
-    const cleanupResponse = page.waitForResponse(
-      (r) => r.url().includes('/time-grid') && r.request().method() === 'PUT',
-    );
-    await page.getByRole('button', { name: 'Speichern' }).first().click();
-    const cleanupRes = await cleanupResponse;
-    expect(cleanupRes.status(), 'cleanup PUT status').toBe(200);
-
-    const restored = await readSchoolDays();
-    expect(restored.includes('SATURDAY')).toBe(initiallyActive);
+    // No idempotency cleanup needed — fixture.cleanup() drops the school.
+    // The pre-migration "toggle Sa back" + save was only there because the
+    // spec mutated the shared seed school.
   });
 });
