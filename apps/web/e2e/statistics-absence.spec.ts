@@ -1,96 +1,109 @@
 /**
  * Issue #87 — Absence-Statistics (Abwesenheitsstatistik) coverage.
  *
- * Surface: /statistics/absence (apps/web/src/routes/_authenticated/
- * statistics/absence.tsx, 50 LoC) → renders AbsenceStatisticsPanel.
- * Today only `roles-smoke.spec.ts` proves the page renders ohne crash;
- * there is no assertion that the per-student aggregation MATCHES the
- * underlying attendance data — exactly the kind of silent drift that
- * the statistics service's status-→-counter switch (statistics.service.
- * ts:144) and the D-04 Schulunterrichtsgesetz rule "Verspaetet >15 Min
- * zaehlt als abwesend" could quietly break.
+ * Migrated to the throwaway-school architecture in #138 wave 1: per-spec
+ * School + Class + Students + ClassBookEntry + AttendanceRecord rows
+ * provisioned via `createThrowawaySchool({ withStudents, withClassbookEntry })`,
+ * so the chromium-only-skip race-defense ("Mutates ClassBookEntry +
+ * AttendanceRecord on the shared seed class 1A — chromium is the sole
+ * writer") is GONE.
+ *
+ * Surface: /statistics/absence — renders AbsenceStatisticsPanel which
+ * auto-selects the first class by yearLevel+name asc. With a throwaway
+ * school there's only the throwaway class, so the auto-select picks it
+ * deterministically.
  *
  * Test-Strategie — single end-to-end aggregation lock:
  *
- *   STATS-AGG-3STUDENTS: seed exactly ONE ClassBookEntry on a fixed
- *   date (STATS_FIXTURE_DATE = 2026-03-15) with three AttendanceRecords:
+ *   STATS-AGG-3STUDENTS: seed exactly ONE ClassBookEntry on a fixed date
+ *   (STATS_FIXTURE_DATE) with three AttendanceRecords:
  *     - Lisa Huber    → PRESENT
  *     - Felix Bauer   → ABSENT
- *     - Sophie Wagner → LATE, lateMinutes=20 (counts as 1 Verspaetet
- *                          AND 1 Verspaetet>15Min per D-04)
+ *     - Sophie Wagner → LATE, lateMinutes=20 (counts as 1 Verspaetet AND
+ *                          1 Verspaetet>15Min per D-04 Schulunterrichts-
+ *                          gesetz, AND in absenceRate)
  *
- *   Admin opens /statistics/absence, the page auto-selects class 1A
- *   (the first class by yearLevel+name asc), the spec sets BOTH date
- *   inputs to the fixture date so the API filter narrows to our entry
- *   only, and the spec then asserts the three Fehlquote values:
+ *   Admin opens /statistics/absence, the page auto-selects the throwaway
+ *   class (only one available), the spec sets BOTH date inputs to the
+ *   fixture date, and asserts:
  *     - Felix Bauer  → 100.0%
  *     - Lisa Huber   →   0.0%
- *     - Sophie Wagner→ 100.0% (the >15min late + the absent share the
- *                              "counts as absent" semantics in absenceRate)
+ *     - Sophie Wagner→ 100.0%
  *
- * Why a fixed date instead of "today": the page's default date range
- * is the current Austrian school semester (statistics.service.ts:15
- * getSemesterDateRange), which spans ~5 months. Without a fixed date
- * input override, any leftover attendance noise from other classbook
- * specs in the same semester would pollute the counts and make the
- * assertions race-prone. The spec pins BOTH date inputs to
- * STATS_FIXTURE_DATE so the API call passes startDate=endDate=
- * 2026-03-15 and the backend filter `gte/lte` returns only the
- * fixture's entry. The fixture also uses a unique periodNumber (5,
- * not the period=1 that seedTimetableRun() uses) so the
- * ClassBookEntry.@@unique constraint can't collide with the
- * classbook-related fixtures.
+ * Why these names match the pre-migration seed names: keeps the assertions
+ * byte-identical to the original spec, minimizing diff for code review.
+ * The throwaway provisions Persons with these names, so the textual
+ * assertions still hit.
  *
- * Why Prisma-direct fixture: the path to create a ClassBookEntry via
- * API is `GET /classbook/by-timetable-lesson/:id` which upserts an
- * entry from a TimetableLesson — but it pins the entry's date to
- * the lesson's date (today) and the period to the lesson's period.
- * That doesn't give us deterministic control over the (classSubjectId,
- * date, period, weekType) tuple the statistics service aggregates on,
- * and would require seeding additional TimetableLessons for each
- * spec iteration. Direct Prisma insert hits the same uniqueness
- * constraint without the extra round-trips.
+ * Why a fixed date instead of today: pins the API filter to a single day,
+ * so the test only sees its own entry — bulletproof against parallel
+ * specs writing attendance on other dates (even though the throwaway
+ * already isolates per-school).
  *
- * Race-Family-Achtung: chromium-only-skip + per-test seed/cleanup.
- * The fixture deletes the ClassBookEntry in afterEach, which cascades
- * to the AttendanceRecord rows via `AttendanceRecord.classBookEntry`
- * onDelete: Cascade (schema.prisma:961).
+ * Cleanup: `fixture.cleanup()` drops the throwaway school via
+ * prisma.school.delete cascade — Person/Student/ClassBookEntry/
+ * AttendanceRecord all dissolve in the FK chain (post-#136+#137 cascade
+ * audit).
  */
 import { test, expect } from '@playwright/test';
 import { loginAsRole } from './helpers/login';
 import {
-  cleanupAbsenceStats,
-  seedAbsenceStats,
-  STATS_FIXTURE_DATE,
-  type AbsenceStatsFixture,
-} from './fixtures/absence-stats';
-import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
+  createThrowawaySchool,
+  type ThrowawaySchoolFixture,
+} from './fixtures/throwaway-school';
+import { useThrowawaySchoolHeader } from './helpers/school-context';
 
-test.describe('Issue #87 — Absence-Statistics (desktop)', () => {
+export const STATS_FIXTURE_DATE = '2026-03-15';
+
+test.describe('Issue #87 — Absence-Statistics (desktop, throwaway-school)', () => {
   test.skip(
     ({ isMobile }) => isMobile,
     'Statistics table is wider than mobile viewport (horizontal scroll required) — mobile coverage would belong to its own *.mobile.spec.ts that asserts the sticky-name-column behaviour.',
   );
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'Mutates ClassBookEntry + AttendanceRecord rows on the shared seed class 1A — chromium is the sole writer (race-family precedent).',
-  );
+  // No chromium-only-skip: #138 wave 1 migration to throwaway-school
+  // eliminates the shared-seed-class race that made the original spec
+  // a sole-writer.
 
-  let fixture: AbsenceStatsFixture | undefined;
+  let fixture: ThrowawaySchoolFixture | undefined;
 
   test.beforeEach(async () => {
-    fixture = await seedAbsenceStats(SEED_SCHOOL_UUID);
+    fixture = await createThrowawaySchool({
+      roles: { admin: true },
+      withClasses: 1,
+      withTimetableStack: true,
+      withStudents: [
+        { firstName: 'Lisa', lastName: 'Huber' },
+        { firstName: 'Felix', lastName: 'Bauer' },
+        { firstName: 'Sophie', lastName: 'Wagner' },
+      ],
+      withClassbookEntry: {
+        date: STATS_FIXTURE_DATE,
+        period: 5,
+        attendance: [
+          { studentIndex: 0, status: 'PRESENT' }, // Lisa
+          { studentIndex: 1, status: 'ABSENT' }, // Felix
+          { studentIndex: 2, status: 'LATE', lateMinutes: 20 }, // Sophie
+        ],
+      },
+      namePrefix: 'E2E-SA',
+    });
   });
 
   test.afterEach(async () => {
-    if (!fixture) return;
-    await cleanupAbsenceStats(fixture);
-    fixture = undefined;
+    if (fixture) {
+      await fixture.cleanup();
+      fixture = undefined;
+    }
   });
 
   test('STATS-AGG-3STUDENTS: aggregated Fehlquote per student matches the seeded PRESENT/ABSENT/LATE>15 attendance', async ({
     page,
+    context,
   }) => {
+    if (!fixture) throw new Error('fixture not seeded');
+
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
+
     await loginAsRole(page, 'admin');
     await page.goto('/statistics/absence');
 
@@ -107,10 +120,9 @@ test.describe('Issue #87 — Absence-Statistics (desktop)', () => {
     await dateInputs.nth(1).fill(STATS_FIXTURE_DATE);
 
     // Wait for the table to render with the seeded data.
-    // The page auto-selects classes[0] on mount (1A by yearLevel+name asc),
-    // so by the time we land here the API request for statistics has
-    // already been kicked off for 1A. The date-input changes invalidate
-    // the query and trigger a refetch.
+    // The page auto-selects classes[0] on mount; the throwaway school has
+    // exactly one class so the selection is deterministic. The date-input
+    // changes invalidate the query and trigger a refetch.
     const table = page.locator('table');
     await expect(table).toBeVisible();
 
@@ -126,9 +138,6 @@ test.describe('Issue #87 — Absence-Statistics (desktop)', () => {
     await expect(sophieRow).toBeVisible();
 
     // ── Felix Bauer: ABSENT → 100.0% Fehlquote ────────────────────────
-    // formatPercentage = `${value.toFixed(1)}%` ⇒ JS .toFixed uses dot,
-    // not the German comma decimal separator (AbsenceStatisticsPanel.
-    // tsx:49). The literal "100.0%" string therefore matches exactly.
     await expect(
       felixRow.getByText('100.0%', { exact: true }),
       'Felix Bauer is ABSENT for 1 of 1 lesson → Fehlquote 100.0% (absentUnexcused / totalLessons * 100, statistics.service.ts:170)',
@@ -142,10 +151,9 @@ test.describe('Issue #87 — Absence-Statistics (desktop)', () => {
 
     // ── Sophie Wagner: LATE 20min → 100.0% Fehlquote ──────────────────
     // D-04 Schulunterrichtsgesetz: lateMinutes > 15 counts in
-    // lateOver15MinCount AND in absenceRate.
-    // statistics.service.ts:171 puts (absentUnexcused + absentExcused +
-    // lateOver15Min) / totalLessons into absenceRate → (0 + 0 + 1) / 1 =
-    // 100.0%.
+    // lateOver15MinCount AND in absenceRate. statistics.service.ts:171
+    // puts (absentUnexcused + absentExcused + lateOver15Min) / totalLessons
+    // into absenceRate → (0 + 0 + 1) / 1 = 100.0%.
     await expect(
       sophieRow.getByText('100.0%', { exact: true }),
       'Sophie Wagner is LATE with lateMinutes=20 → lateOver15MinCount=1 → Fehlquote 100.0% (D-04 Schulunterrichtsgesetz rule)',
