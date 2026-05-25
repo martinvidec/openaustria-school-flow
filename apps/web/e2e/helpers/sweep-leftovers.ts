@@ -68,6 +68,20 @@ interface PrismaLike {
 
 export type SweepCounts = Record<string, number>;
 
+export interface SweepOptions {
+  /**
+   * Issue #156 — when set, restrict every per-school deleteMany to this
+   * `schoolId`. Tables that lack a `schoolId` column (groups / roles /
+   * permission_overrides) are skipped entirely in scoped mode (they get
+   * cleaned via the throwaway-school cascade or are not produced by
+   * scoped tests).
+   *
+   * Default (undefined) preserves the legacy global behavior used by
+   * `global-setup.ts` and the standalone `pnpm e2e:sweep` script.
+   */
+  schoolId?: string;
+}
+
 /**
  * Prefix conventions enforced by `apps/web/e2e/helpers/*.ts`:
  *   - `E2E-…`  (uppercase) — every CRUD-style spec (Persons / Classes /
@@ -88,13 +102,19 @@ export type SweepCounts = Record<string, number>;
  *     cleanup-by-templateType is sufficient (`constraints.ts:121`).
  *   - `audit_entries` — auditable trail; let retention policy handle them.
  */
-export async function sweepE2ELeftovers(): Promise<SweepCounts> {
+export async function sweepE2ELeftovers(
+  options: SweepOptions = {},
+): Promise<SweepCounts> {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
     throw new Error(
       'sweepE2ELeftovers: DATABASE_URL not set. Source .env or apps/api/.env first.',
     );
   }
+  const scope = options.schoolId;
+  const scoped = (extra: Record<string, unknown>): Record<string, unknown> =>
+    scope === undefined ? extra : { ...extra, schoolId: scope };
+
   const prisma = new PrismaClient({
     adapter: new PrismaPg({ connectionString }),
   });
@@ -102,86 +122,98 @@ export async function sweepE2ELeftovers(): Promise<SweepCounts> {
   try {
     counts['persons'] = (
       await prisma.person.deleteMany({
-        where: {
+        where: scoped({
           OR: [
             { firstName: { startsWith: 'E2E-' } },
             { lastName: { startsWith: 'E2E-' } },
             { firstName: { startsWith: 'e2e-15-' } },
             { lastName: { startsWith: 'e2e-15-' } },
           ],
-        },
+        }),
       })
     ).count;
 
     counts['school_classes'] = (
       await prisma.schoolClass.deleteMany({
-        where: { name: { startsWith: 'E2E-' } },
+        where: scoped({ name: { startsWith: 'E2E-' } }),
       })
     ).count;
 
-    counts['groups'] = (
-      await prisma.group.deleteMany({
-        where: { name: { startsWith: 'E2E-' } },
-      })
-    ).count;
+    // Group has no schoolId column — scope-filtering is impossible. In
+    // scoped mode we rely on the throwaway-school cascade (Group →
+    // SchoolClass → School) to clean child rows.
+    if (scope === undefined) {
+      counts['groups'] = (
+        await prisma.group.deleteMany({
+          where: { name: { startsWith: 'E2E-' } },
+        })
+      ).count;
+    }
 
     counts['subjects'] = (
       await prisma.subject.deleteMany({
-        where: { name: { startsWith: 'E2E-' } },
+        where: scoped({ name: { startsWith: 'E2E-' } }),
       })
     ).count;
 
     counts['rooms'] = (
       await prisma.room.deleteMany({
-        where: { name: { startsWith: 'E2E-' } },
+        where: scoped({ name: { startsWith: 'E2E-' } }),
       })
     ).count;
 
     counts['resources'] = (
       await prisma.resource.deleteMany({
-        where: { name: { startsWith: 'E2E-' } },
+        where: scoped({ name: { startsWith: 'E2E-' } }),
       })
     ).count;
 
-    counts['roles'] = (
-      await prisma.role.deleteMany({
-        where: { name: { startsWith: 'E2E-' } },
-      })
-    ).count;
+    // Role is global (no schoolId) — only swept in unscoped mode.
+    if (scope === undefined) {
+      counts['roles'] = (
+        await prisma.role.deleteMany({
+          where: { name: { startsWith: 'E2E-' } },
+        })
+      ).count;
+    }
 
     counts['dsfa_entries'] = (
       await prisma.dsfaEntry.deleteMany({
-        where: { title: { startsWith: 'e2e-15-' } },
+        where: scoped({ title: { startsWith: 'e2e-15-' } }),
       })
     ).count;
 
     counts['vvz_entries'] = (
       await prisma.vvzEntry.deleteMany({
-        where: { activityName: { startsWith: 'e2e-15-' } },
+        where: scoped({ activityName: { startsWith: 'e2e-15-' } }),
       })
     ).count;
 
     counts['retention_policies'] = (
       await prisma.retentionPolicy.deleteMany({
-        where: { dataCategory: { startsWith: 'e2e-15-' } },
+        where: scoped({ dataCategory: { startsWith: 'e2e-15-' } }),
       })
     ).count;
 
     counts['constraint_weight_overrides'] = (
       await prisma.constraintWeightOverride.deleteMany({
-        where: { constraintName: { startsWith: 'E2E-' } },
+        where: scoped({ constraintName: { startsWith: 'E2E-' } }),
       })
     ).count;
 
-    counts['permission_overrides'] = (
-      await prisma.permissionOverride.deleteMany({
-        where: { reason: { startsWith: 'E2E-USR-' } },
-      })
-    ).count;
+    // PermissionOverride is keyed on Keycloak userId, not schoolId — not
+    // scopable. Throwaway-school specs do not produce these.
+    if (scope === undefined) {
+      counts['permission_overrides'] = (
+        await prisma.permissionOverride.deleteMany({
+          where: { reason: { startsWith: 'E2E-USR-' } },
+        })
+      ).count;
+    }
 
     counts['import_jobs'] = (
       await prisma.importJob.deleteMany({
-        where: { fileName: { startsWith: 'E2E-' } },
+        where: scoped({ fileName: { startsWith: 'E2E-' } }),
       })
     ).count;
 
