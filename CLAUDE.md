@@ -53,17 +53,16 @@ Begründung: GSD-State über zu viele Files verteilt → Plan-vs-Realität-Drift
 - "Race ist bekannt, wir lassen den flake durchschnaufen" + Re-Run-Hoffnung
 
 **Erlaubt / Gefordert:**
-- **Throwaway-School-Fixture als Default für neue Specs:** eigene `schoolId` pro Spec/Test, am Ende cascade-deleten. `SEED_SCHOOL_UUID` nur lesen, nicht beschreiben — außer wenn KC-User-Bindung das zwingend macht (dann explizit dokumentieren).
+- **Throwaway-School-Fixture als PRIMARY für neue Specs:** `createThrowawaySchool()` aus `apps/web/e2e/fixtures/throwaway-school.ts` erzeugt pro Spec eine eigene `schoolId` + Stammdaten + optionale Person/Teacher/Subject/ClassSubject/Room/TimeGrid/Run/Lesson/Students/ClassBookEntry/TimetableLessonEdit. Cleanup via `fixture.cleanup()` (cascade-delete der School). Header-Binding via `useThrowawaySchoolHeader(context, fixture.schoolId)`. `SEED_SCHOOL_UUID` nur lesen, nicht beschreiben — außer wenn KC-User-Bindung das zwingend macht (dann explizit dokumentieren).
 - **Architektonischer Fix bei Race-Discovery:** transactional cleanup, unique-per-test-keys, isolierte resources. Nicht das Symptom mit chromium-only patchen, sondern die geteilte Resource entkoppeln.
 - **Pragmatischer Workaround zulässig** — aber NUR mit `// FIXME: deterministic-e2e #112` Comment + Verweis auf [Issue #112](https://github.com/martinvidec/openaustria-school-flow/issues/112), das die Bestandsaufnahme + Refactor trackt.
 
-**Why:** PR #109 CI rot wegen `zeitraster.spec.ts` ↔ `wochentage.spec.ts` Race auf `/time-grid` PUT-replace-all — beide writer, kein Skip auf `wochentage`. Pre-existing seit Phase 10. Meine #87-Specs sind nicht der Auslöser, aber jede neue chromium-Spec erhöht die Race-Wahrscheinlichkeit. Memory `feedback_e2e_deterministic.md` + `project_e2e_parallel_cleanup_race_family.md` enthalten den vollen Kontext und die Liste aktiver Race-Families (TimeGrid, active-TimetableRun-singleton, CalendarToken pre-existing rows, ClassBookEntry @@unique-Kollisionen).
+**Why:** PR #109 CI rot wegen `zeitraster.spec.ts` ↔ `wochentage.spec.ts` Race auf `/time-grid` PUT-replace-all — beide writer, kein Skip auf `wochentage`. Pre-existing seit Phase 10. Phase 3 (#123 → #133/#134/#135/#136/#137/#138) hat die architektonische Lösung gebaut: composite `Person.keycloakUserId @@unique([keycloakUserId, schoolId])` (#133), CurrentSchoolInterceptor mit `X-School-Id` header (#135), `createThrowawaySchool` Fixture inkl. timetable / classbook / edit stacks (#136 + #137 + #138). Memory `feedback_e2e_deterministic.md` + `project_e2e_parallel_cleanup_race_family.md` haben den Kontext.
 
 **How to apply:**
-1. Bei JEDER neuen E2E-Spec: throwaway-school-Fixture als Default versuchen. Wenn nicht möglich → in der Spec-Begründung dokumentieren WARUM nicht.
-2. Bei Race-Discovery in einer Bestandsspec: zuerst das Determinismus-Issue konsultieren, dort den Fix tracken, nicht ad-hoc chromium-only-skip dranschrauben.
-3. Bei den noch offenen E2E-Issues (#103 Klassenbuch-Realtime u.ä.): explizit prüfen ob throwaway-school möglich ist BEVOR Spec-Code geschrieben wird.
-4. Existierende chromium-only-skip + disjoint-personas Workarounds bleiben TEMPORÄR drin, sind aber im Determinismus-Issue zu listen und mittelfristig zu entfernen.
+1. Bei JEDER neuen E2E-Spec: throwaway-school-Fixture **ist der Default**. Spec-Pattern: `createThrowawaySchool({ roles, withClasses, withTimetableStack?, withStudents?, withClassbookEntry?, withTimetableEdit? })` → `useThrowawaySchoolHeader(context, fixture.schoolId)` → assertions → `fixture.cleanup()` in afterEach. Wenn nicht möglich → in der Spec-Begründung dokumentieren WARUM nicht (z.B. spec testet seed-bound Auth-Flow ohne Schreibrechte).
+2. Bei Race-Discovery in einer Bestandsspec: zuerst auf throwaway-school migrieren statt ad-hoc chromium-only-skip dranzuschrauben.
+3. Existierende advisory-locks (`helpers/advisory-lock.ts`) auf seed-school-shared resources (TimeGrid, CalendarToken, messaging, classbook, excuses, etc.) sind LEGACY — sie werden pro Spec entfernt sobald die jeweilige Spec auf throwaway migriert ist. Tracker: ein eigenes Follow-up Issue (Phase 3.5).
 
 ## D5 — GitHub Issue-Relationships statt nur Text-Refs (User-Direktive 2026-05-19)
 

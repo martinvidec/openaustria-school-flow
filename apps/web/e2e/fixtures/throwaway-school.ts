@@ -148,10 +148,15 @@ export interface ThrowawaySchoolOptions {
    * to render against. Provisions: Teacher row (for `roles.lehrer` Person if
    * present, otherwise a generic fixture-only Person), Subject, ClassSubject
    * (joining Class[0] + Subject + Teacher), Room, TimeGrid with period 1
-   * (08:00-08:50), SchoolDays MON-FRI active, TimetableRun (active),
-   * TimetableLesson at MONDAY/period-1.
+   * (08:00-08:50), SchoolDays MON-FRI active, TimetableRun (active by
+   * default), TimetableLesson at MONDAY/period-1.
+   *
+   * Issue #138 wave 3 — pass `{ active: false }` to seed a COMPLETED but
+   * inactive TimetableRun (covers the activation-recovery flow from #60).
+   * The boolean shorthand `true` stays equivalent to `{ active: true }`
+   * so existing callers keep working unchanged.
    */
-  withTimetableStack?: boolean;
+  withTimetableStack?: boolean | { active?: boolean };
   /**
    * Issue #138 — list of students to provision in the throwaway. Each entry
    * creates a Person + Student row enrolled in `classIds[0]`. Names show up
@@ -193,12 +198,22 @@ export interface ThrowawaySchoolOptions {
 
 export interface ThrowawayTimetableStack {
   teacherId: string;
+  /**
+   * Issue #138 wave 3 — Teacher display name in the format the
+   * PerspectiveSelector renders: `${lastName} ${firstName}` (per
+   * apps/web/src/hooks/useTimetable.ts:78). Specs use this to pick the
+   * right "Lehrer" option from the dropdown without depending on the
+   * exact internal id of the throwaway teacher.
+   */
+  teacherDisplayName: string;
   subjectId: string;
   subjectShortName: string;
   classSubjectId: string;
   roomId: string;
   timeGridId: string;
   timetableRunId: string;
+  /** True when the seeded TimetableRun is `isActive=true` (the default). */
+  timetableRunActive: boolean;
   timetableLessonId: string;
   /** The class the ClassSubject is bound to (always classIds[0] today). */
   classId: string;
@@ -281,6 +296,13 @@ export async function createThrowawaySchool(
     namePrefix = 'E2E-TS',
     withTimetableStack = false,
   } = options;
+  // Normalize the boolean | object overload into a single shape downstream.
+  const timetableStackConfig: false | { active: boolean } =
+    withTimetableStack === false
+      ? false
+      : withTimetableStack === true
+        ? { active: true }
+        : { active: withTimetableStack.active ?? true };
 
   if (withTimetableStack && withClasses < 1) {
     throw new Error(
@@ -374,19 +396,29 @@ export async function createThrowawaySchool(
       // driven specs (statistics-absence, admin-timetable-history) can still
       // get a teacherId without dragging lehrer into the test.
       let teacherPersonId: string;
+      let teacherFirstName: string;
+      let teacherLastName: string;
       if (personIds.lehrer) {
         teacherPersonId = personIds.lehrer;
+        teacherFirstName = `${namePrefix}-lehrer`;
+        teacherLastName = suffix;
       } else {
+        teacherFirstName = `${namePrefix}-FixtureTeacher`;
+        teacherLastName = suffix;
         const fixtureTeacherPerson = await prisma.person.create({
           data: {
             schoolId: school.id,
             personType: 'TEACHER',
-            firstName: `${namePrefix}-FixtureTeacher`,
-            lastName: suffix,
+            firstName: teacherFirstName,
+            lastName: teacherLastName,
           },
         });
         teacherPersonId = fixtureTeacherPerson.id;
       }
+      // PerspectiveSelector renders this exact string (`${lastName} ${firstName}`,
+      // useTimetable.ts:78); expose it so specs can pick the right
+      // "Lehrer" option from the dropdown.
+      const teacherDisplayName = `${teacherLastName} ${teacherFirstName}`;
 
       // Teacher row for the Person. Teacher.personId is @unique (one
       // Teacher per Person) — the Person was created fresh above, so no
@@ -454,11 +486,12 @@ export async function createThrowawaySchool(
         });
       }
 
+      const runActive = (timetableStackConfig as { active: boolean }).active;
       const run = await prisma.timetableRun.create({
         data: {
           schoolId: school.id,
           status: 'COMPLETED',
-          isActive: true,
+          isActive: runActive,
           maxSolveSeconds: 300,
           abWeekEnabled: false,
           hardScore: 0,
@@ -481,12 +514,14 @@ export async function createThrowawaySchool(
 
       timetable = {
         teacherId: teacher.id,
+        teacherDisplayName,
         subjectId: subject.id,
         subjectShortName: subject.shortName,
         classSubjectId: classSubject.id,
         roomId: room.id,
         timeGridId: timeGrid.id,
         timetableRunId: run.id,
+        timetableRunActive: runActive,
         timetableLessonId: lesson.id,
         classId: classIdForStack,
         lessonDayOfWeek: 'MONDAY',
