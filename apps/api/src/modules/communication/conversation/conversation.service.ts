@@ -216,9 +216,15 @@ export class ConversationService {
 
     const directPairKey = [userId, dto.recipientId].sort().join(':');
 
-    // Upsert: find existing or create new (Pitfall 5)
+    // Upsert: find existing or create new (Pitfall 5).
+    //
+    // Issue #150 — the lookup is scoped to (schoolId, directPairKey) so a
+    // user with memberships in multiple schools gets a SEPARATE DIRECT
+    // conversation per school. Pre-#150 the column was globally @unique,
+    // which silently aliased every cross-school DIRECT attempt back to
+    // whichever school first created the pair.
     const existing = await this.prisma.conversation.findUnique({
-      where: { directPairKey },
+      where: { schoolId_directPairKey: { schoolId, directPairKey } },
       include: {
         conversationMembers: true,
         messages: {

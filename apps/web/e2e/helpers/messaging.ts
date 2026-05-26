@@ -51,6 +51,13 @@ export interface CreateBroadcastInput {
     options: string[];
     deadline?: string;
   };
+  /**
+   * Issue #150 — throwaway-school override. When set, the helper posts to
+   * `/schools/<schoolId>/conversations` and sends `X-School-Id: <schoolId>`
+   * for tenant scoping. Default (undefined) keeps the seed-school path so
+   * legacy callers stay unchanged.
+   */
+  schoolId?: string;
 }
 
 export interface CreateDirectInput {
@@ -62,6 +69,10 @@ export interface CreateDirectInput {
    * sender for the lehrer→eltern flow specified in #84.
    */
   actorRole?: Role;
+  /**
+   * Issue #150 — throwaway-school override (see CreateBroadcastInput).
+   */
+  schoolId?: string;
 }
 
 export interface CreatedConversation {
@@ -82,12 +93,16 @@ export async function createBroadcastConversation(
   input: CreateBroadcastInput,
 ): Promise<CreatedConversation> {
   const token = await getAdminToken(request);
+  const schoolId = input.schoolId ?? MESSAGING_SCHOOL_ID;
   const res = await request.post(
-    `${MESSAGING_API}/schools/${MESSAGING_SCHOOL_ID}/conversations`,
+    `${MESSAGING_API}/schools/${schoolId}/conversations`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
+        // Always send X-School-Id when an explicit schoolId is provided
+        // — the legacy default-SEED path stays header-less for back-compat.
+        ...(input.schoolId ? { 'X-School-Id': input.schoolId } : {}),
       },
       data: {
         scope: input.scope ?? 'CLASS',
@@ -125,12 +140,14 @@ export async function createDirectConversation(
 ): Promise<CreatedConversation> {
   const role = input.actorRole ?? 'lehrer';
   const token = await getRoleToken(request, role);
+  const schoolId = input.schoolId ?? MESSAGING_SCHOOL_ID;
   const res = await request.post(
-    `${MESSAGING_API}/schools/${MESSAGING_SCHOOL_ID}/conversations`,
+    `${MESSAGING_API}/schools/${schoolId}/conversations`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
+        ...(input.schoolId ? { 'X-School-Id': input.schoolId } : {}),
       },
       data: {
         scope: 'DIRECT',
@@ -160,16 +177,18 @@ export async function createDirectConversation(
 export async function sendMessageViaAPI(
   request: APIRequestContext,
   conversationId: string,
-  options: { body: string; actorRole?: Role },
+  options: { body: string; actorRole?: Role; schoolId?: string },
 ): Promise<{ id: string; body: string }> {
   const role = options.actorRole ?? 'lehrer';
   const token = await getRoleToken(request, role);
+  const schoolId = options.schoolId ?? MESSAGING_SCHOOL_ID;
   const res = await request.post(
-    `${MESSAGING_API}/schools/${MESSAGING_SCHOOL_ID}/conversations/${conversationId}/messages`,
+    `${MESSAGING_API}/schools/${schoolId}/conversations/${conversationId}/messages`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
+        ...(options.schoolId ? { 'X-School-Id': options.schoolId } : {}),
       },
       data: { body: options.body },
     },
