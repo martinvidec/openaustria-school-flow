@@ -21,9 +21,17 @@ import { AuthenticatedUser } from '../types/authenticated-user';
  *   - Requests without `req.user` (auth-rejected upstream) are skipped.
  *   - Loads `Person.findMany({ where: { keycloakUserId } })` to determine
  *     valid memberships. Single indexed lookup post-#133 composite-unique.
+ *     Ordered by `school.createdAt asc` so the SEED school (oldest in any
+ *     environment) is always membership #0 — eliminates a latent race
+ *     surfaced by parallel admin-throwaway e2e specs (#152): with two
+ *     workers each provisioning a throwaway school for the seed `admin`
+ *     KC user, an unordered findMany returns memberships in whichever
+ *     order Postgres happens to pick, so legacy specs that omit
+ *     X-School-Id intermittently landed on a sibling worker's throwaway.
  *   - With `X-School-Id` header: must match a membership, else 403.
- *   - Without header: defaults to the first membership's `schoolId`, or
- *     `null` if the user has no Person row (e.g., admin-only KC accounts).
+ *   - Without header: defaults to the first membership's `schoolId` per
+ *     the deterministic ordering above, or `null` if the user has no
+ *     Person row (e.g., admin-only KC accounts).
  */
 @Injectable()
 export class CurrentSchoolInterceptor implements NestInterceptor {
@@ -49,6 +57,7 @@ export class CurrentSchoolInterceptor implements NestInterceptor {
     const memberships = await this.prisma.person.findMany({
       where: { keycloakUserId: user.id },
       select: { schoolId: true },
+      orderBy: { school: { createdAt: 'asc' } },
     });
     const memberSchoolIds = memberships.map((m) => m.schoolId);
 

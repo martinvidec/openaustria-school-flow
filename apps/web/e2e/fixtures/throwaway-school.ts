@@ -233,6 +233,13 @@ export interface ThrowawayTimetableStack {
   subjectAbbreviation: string;
   classSubjectId: string;
   roomId: string;
+  /**
+   * Issue #152 — Room.name as stored in DB. Exposed because UI room
+   * pickers (e.g. ClassStammdatenTab Heimraum Select, ClassCreateDialog)
+   * render rooms by name not id, so a spec that wants to pick "the
+   * fixture room" needs the visible label, not just the FK.
+   */
+  roomName: string;
   timeGridId: string;
   timetableRunId: string;
   /** True when the seeded TimetableRun is `isActive=true` (the default). */
@@ -575,6 +582,7 @@ export async function createThrowawaySchool(
         subjectAbbreviation: subject.shortName,
         classSubjectId: classSubject.id,
         roomId: room.id,
+        roomName: room.name,
         timeGridId: timeGrid.id,
         timetableRunId: run.id,
         timetableRunActive: runActive,
