@@ -1,15 +1,19 @@
 /**
  * Issue #67 — Admin Classes Heimraum assignment.
  *
+ * Issue #152 (Phase 3.5/5) — migrated to throwaway-school per CLAUDE.md D4.
+ * The `admin-classes-home-room:` and `e2e-rows-on-seed-school:` advisory
+ * locks are gone; each spec owns its own throwaway School so the
+ * cleanup-by-prefix race can no longer fire.
+ *
  * Covers the two UI affordances added by the home-room PR:
  *   - E2E-CLS-HR-EDIT-ASSIGN: ClassStammdatenTab → Heimraum Select →
  *                              Speichern → PUT /classes/:id carries
  *                              homeRoomId, value persists across reload.
  *   - E2E-CLS-HR-EDIT-CLEAR:  Pre-assigned class → Heimraum=Kein Heimraum
  *                              → Speichern → PUT body homeRoomId=null.
- *   - E2E-CLS-HR-CREATE:      ClassCreateDialog with Heimraum=Raum 2A →
- *                              POST /classes carries homeRoomId, list view
- *                              shows the new class with the home room set.
+ *   - E2E-CLS-HR-CREATE:      ClassCreateDialog with Heimraum=throwaway room
+ *                              → POST /classes carries homeRoomId.
  *
  * DOM contract:
  *   - ClassStammdatenTab.tsx — `<SelectTrigger id="class-stammdaten-home-room"
@@ -19,58 +23,59 @@
  *   - Sentinel `__no_home_room__` clears the assignment (Radix Select
  *     does not accept empty string as a value).
  *
- * Cross-room verification uses the seed rooms (Raum 1A / Raum 2A /
- * Turnsaal etc.) — `apps/api/prisma/seed.ts` Issue #67 patch makes
- * 1A → Raum 1A and 1B → Raum 2A the default seed state, so live-solve
- * coverage stays in the integration test suite, not here. This spec
- * locks down the UI contract only.
+ * Throwaway provides exactly one Room (`fixture.timetable.roomName`) — the
+ * spec picks it as the home room. Empty-state UX ("Kein Heimraum") is
+ * still exercised by the CLEAR test.
  */
-import { expect, test } from '@playwright/test';
-import { getAdminToken, loginAsAdmin } from './helpers/login';
+import { expect, test, type APIRequestContext } from '@playwright/test';
+import { getAdminToken, loginAsRole } from './helpers/login';
 import {
-  cleanupE2EClasses,
-  createClassViaAPI,
-} from './helpers/students';
-import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
-import { acquireAdvisoryLock, type AdvisoryLock } from './helpers/advisory-lock';
+  createThrowawaySchool,
+  type ThrowawaySchoolFixture,
+} from './fixtures/throwaway-school';
+import { useThrowawaySchoolHeader } from './helpers/school-context';
 
 const PREFIX = 'E2E-HR-';
-const NO_HOME_ROOM_SENTINEL = '__no_home_room__';
+const API = process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
 
-const API = 'http://localhost:3000/api/v1';
-
-interface RoomDto {
-  id: string;
-  name: string;
-}
-
-async function listRooms(
-  request: import('@playwright/test').APIRequestContext,
-): Promise<RoomDto[]> {
+async function createClass(
+  request: APIRequestContext,
+  schoolId: string,
+  schoolYearId: string,
+  fields: { name: string; yearLevel?: number },
+): Promise<{ id: string; name: string }> {
   const token = await getAdminToken(request);
-  const res = await request.get(
-    `${API}/schools/${SEED_SCHOOL_UUID}/rooms?page=1&limit=50`,
-    { headers: { Authorization: `Bearer ${token}` } },
-  );
-  expect(res.ok(), 'GET /rooms').toBeTruthy();
-  const body = (await res.json()) as { data?: RoomDto[] } | RoomDto[];
-  const items = Array.isArray(body) ? body : body.data ?? [];
-  return items;
+  const res = await request.post(`${API}/classes`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'X-School-Id': schoolId,
+      'Content-Type': 'application/json',
+    },
+    data: {
+      schoolId,
+      schoolYearId,
+      name: fields.name,
+      yearLevel: fields.yearLevel ?? 5,
+    },
+  });
+  expect(res.ok(), `POST /classes (${fields.name})`).toBeTruthy();
+  return (await res.json()) as { id: string; name: string };
 }
 
 async function fetchClass(
-  request: import('@playwright/test').APIRequestContext,
+  request: APIRequestContext,
   id: string,
+  schoolId: string,
 ): Promise<{ id: string; homeRoomId: string | null }> {
   const token = await getAdminToken(request);
   const res = await request.get(`${API}/classes/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${token}`, 'X-School-Id': schoolId },
   });
   expect(res.ok(), `GET /classes/${id}`).toBeTruthy();
   return (await res.json()) as { id: string; homeRoomId: string | null };
 }
 
-test.describe('Issue #67 — Admin Classes Heimraum (desktop)', () => {
+test.describe('Issue #67 — Admin Classes Heimraum (throwaway-school, #152)', () => {
   // The Heimraum UI is the same on mobile (same Radix Select + same form
   // wiring); the spec exercises the wire-up, not viewport-specific
   // affordances. Stick to desktop.
@@ -79,57 +84,53 @@ test.describe('Issue #67 — Admin Classes Heimraum (desktop)', () => {
     'Heimraum form contract is identical across viewports — desktop only.',
   );
 
-  // Issue #112 phase 4 wave 2d (#122): per-spec advisory lock serializes
-  // parallel browser projects on the cleanup-by-prefix race. Both
-  // chromium and firefox running this spec would otherwise sweep each
-  // other's mid-test classes via the `E2E-HR-` afterEach.
-  let lock: AdvisoryLock | undefined;
+  let fixture: ThrowawaySchoolFixture | undefined;
 
-  test.beforeEach(async ({ page }) => {
-    // Two locks acquired in sorted order:
-    //   - per-spec key serializes parallel browser projects on the
-    //     `E2E-HR-` cleanup sweep
-    //   - shared `e2e-rows-on-seed-school` key blocks the
-    //     `e2e-sweep-canary` spec from running its destructive
-    //     `sweepE2ELeftovers` (which deletes EVERY E2E-* row in the
-    //     school) while our mid-test classes are alive
-    lock = await acquireAdvisoryLock([
-      `admin-classes-home-room:${SEED_SCHOOL_UUID}`,
-      `e2e-rows-on-seed-school:${SEED_SCHOOL_UUID}`,
-    ]);
-    await loginAsAdmin(page);
+  test.beforeEach(async () => {
+    fixture = await createThrowawaySchool({
+      roles: { admin: true },
+      withClasses: 1,
+      withTimetableStack: true,
+      namePrefix: 'E2E-HR',
+    });
   });
 
-  test.afterEach(async ({ request }) => {
-    await cleanupE2EClasses(request, PREFIX);
-    if (lock) {
-      await lock.release();
-      lock = undefined;
+  test.afterEach(async () => {
+    if (fixture) {
+      await fixture.cleanup();
+      fixture = undefined;
     }
   });
 
   test('E2E-CLS-HR-EDIT-ASSIGN: pick Heimraum via Select → save → persists', async ({
     page,
+    context,
     request,
   }) => {
+    if (!fixture) throw new Error('fixture not seeded');
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
+    await loginAsRole(page, 'admin');
+
+    const targetRoom = {
+      id: fixture.timetable!.roomId,
+      name: fixture.timetable!.roomName,
+    };
+
     const ts = Date.now().toString().slice(-6);
-    const cls = await createClassViaAPI(request, { name: `${PREFIX}A-${ts}` });
+    const cls = await createClass(
+      request,
+      fixture.schoolId,
+      fixture.schoolYearId,
+      { name: `${PREFIX}A-${ts}` },
+    );
 
     // Verify start state has no home room.
-    const before = await fetchClass(request, cls.id);
+    const before = await fetchClass(request, cls.id, fixture.schoolId);
     expect(before.homeRoomId, 'class starts with no home room').toBeNull();
-
-    const rooms = await listRooms(request);
-    // Use the second Klassenzimmer in the seed so this spec never collides
-    // with the seed defaults (1A → Raum 1A, 1B → Raum 2A) — Raum 3 (Reserve)
-    // is the safe pick.
-    const targetRoom = rooms.find((r) => r.name === 'Raum 3 (Reserve)');
-    expect(targetRoom, 'Raum 3 (Reserve) exists in seed').toBeTruthy();
-    if (!targetRoom) return;
 
     await page.goto(`/admin/classes/${cls.id}?tab=stammdaten`);
 
-    // Open the Heimraum Select and pick the target room.
+    // Open the Heimraum Select and pick the throwaway's room.
     await page.getByRole('combobox', { name: 'Heimraum' }).click();
     await page.getByRole('option', { name: targetRoom.name }).click();
 
@@ -150,7 +151,7 @@ test.describe('Issue #67 — Admin Classes Heimraum (desktop)', () => {
     ).toBe(targetRoom.id);
 
     // Persistence — fetch class via API and verify the new value sticks.
-    const after = await fetchClass(request, cls.id);
+    const after = await fetchClass(request, cls.id, fixture.schoolId);
     expect(after.homeRoomId).toBe(targetRoom.id);
 
     // Reload the page — the Select must rehydrate with the saved value.
@@ -162,29 +163,39 @@ test.describe('Issue #67 — Admin Classes Heimraum (desktop)', () => {
 
   test('E2E-CLS-HR-EDIT-CLEAR: switch from Heimraum → Kein Heimraum → save → PUT homeRoomId=null', async ({
     page,
+    context,
     request,
   }) => {
+    if (!fixture) throw new Error('fixture not seeded');
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
+    await loginAsRole(page, 'admin');
+
+    const startRoom = {
+      id: fixture.timetable!.roomId,
+      name: fixture.timetable!.roomName,
+    };
+
     const ts = Date.now().toString().slice(-6);
-    const rooms = await listRooms(request);
-    const startRoom = rooms.find((r) => r.name === 'Raum 3 (Reserve)');
-    expect(startRoom, 'Raum 3 (Reserve) exists in seed').toBeTruthy();
-    if (!startRoom) return;
 
     // Seed the class with a home room already set so the clear flow has
-    // something to remove. createClassViaAPI accepts klassenvorstandId
-    // today; we set the room via a direct PUT afterwards rather than
-    // expanding the helper signature.
-    const cls = await createClassViaAPI(request, { name: `${PREFIX}C-${ts}` });
+    // something to remove.
+    const cls = await createClass(
+      request,
+      fixture.schoolId,
+      fixture.schoolYearId,
+      { name: `${PREFIX}C-${ts}` },
+    );
     const token = await getAdminToken(request);
     await request.put(`${API}/classes/${cls.id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
+        'X-School-Id': fixture.schoolId,
         'Content-Type': 'application/json',
       },
       data: { homeRoomId: startRoom.id },
     });
 
-    const before = await fetchClass(request, cls.id);
+    const before = await fetchClass(request, cls.id, fixture.schoolId);
     expect(before.homeRoomId).toBe(startRoom.id);
 
     await page.goto(`/admin/classes/${cls.id}?tab=stammdaten`);
@@ -207,20 +218,26 @@ test.describe('Issue #67 — Admin Classes Heimraum (desktop)', () => {
     expect(reqBody.homeRoomId, 'PUT body homeRoomId is null').toBeNull();
 
     // Verify clear took effect.
-    const after = await fetchClass(request, cls.id);
+    const after = await fetchClass(request, cls.id, fixture.schoolId);
     expect(after.homeRoomId).toBeNull();
   });
 
   test('E2E-CLS-HR-CREATE: ClassCreateDialog with Heimraum → POST carries homeRoomId', async ({
     page,
+    context,
     request,
   }) => {
+    if (!fixture) throw new Error('fixture not seeded');
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
+    await loginAsRole(page, 'admin');
+
+    const targetRoom = {
+      id: fixture.timetable!.roomId,
+      name: fixture.timetable!.roomName,
+    };
+
     const ts = Date.now().toString().slice(-6);
     const className = `${PREFIX}N-${ts}`;
-    const rooms = await listRooms(request);
-    const targetRoom = rooms.find((r) => r.name === 'Raum 3 (Reserve)');
-    expect(targetRoom, 'Raum 3 (Reserve) exists in seed').toBeTruthy();
-    if (!targetRoom) return;
 
     await page.goto('/admin/classes');
 
@@ -237,8 +254,8 @@ test.describe('Issue #67 — Admin Classes Heimraum (desktop)', () => {
     // Schuljahr — must be picked explicitly. The dialog's defaultSchoolYearId
     // only populates when the school-context-store has activeSchoolYearId;
     // in a fresh E2E session that field may not be hydrated, surfacing an
-    // "Ungültige Schuljahr-ID" inline error. (Same approach as
-    // admin-classes-crud.spec.ts.)
+    // "Ungültige Schuljahr-ID" inline error. Throwaway provisions exactly
+    // one SchoolYear so picking `.first()` is deterministic.
     await dialog.getByLabel('Schuljahr').click();
     await page.getByRole('option').first().click();
 
@@ -265,7 +282,7 @@ test.describe('Issue #67 — Admin Classes Heimraum (desktop)', () => {
     // Defence-in-depth: fetch the created class via API and confirm the
     // value landed in the DB, not just in the request body.
     const body = (await postRes.json()) as { id: string };
-    const persisted = await fetchClass(request, body.id);
+    const persisted = await fetchClass(request, body.id, fixture.schoolId);
     expect(persisted.homeRoomId).toBe(targetRoom.id);
   });
 });

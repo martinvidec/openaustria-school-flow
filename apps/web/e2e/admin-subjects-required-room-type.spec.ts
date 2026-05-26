@@ -1,6 +1,11 @@
 /**
  * Issue #69 — Subject Pflicht-Raumtyp assignment.
  *
+ * Issue #152 (Phase 3.5/5) — migrated to throwaway-school per CLAUDE.md D4.
+ * The `admin-subjects-required-room-type:` and `e2e-rows-on-seed-school:`
+ * advisory locks are gone; each spec owns its own throwaway School so
+ * parallel cleanup-by-prefix sweeps can no longer collide.
+ *
  * Covers the UI affordance shipped in the requiredRoomType PR:
  *   - E2E-SUB-RRT-CREATE: SubjectFormDialog create-mode with
  *                          Pflicht-Raumtyp = Turnsaal → POST /subjects
@@ -18,41 +23,65 @@
  *     aria-label="Pflicht-Raumtyp">` (data-testid same).
  *   - Sentinel `__no_required_room__` clears the assignment (Radix Select
  *     does not accept empty string as a value).
- *
- * Scoped to desktop + chromium-only per the parallel-cleanup race family
- * — same pattern as admin-classes-home-room.spec.ts (#67) and
- * project_e2e_parallel_cleanup_race_family.md.
  */
-import { expect, test } from '@playwright/test';
-import { getAdminToken, loginAsAdmin } from './helpers/login';
-import { cleanupE2ESubjects, createSubjectViaAPI } from './helpers/subjects';
-import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
-import { acquireAdvisoryLock, type AdvisoryLock } from './helpers/advisory-lock';
+import { expect, test, type APIRequestContext } from '@playwright/test';
+import { getAdminToken, loginAsRole } from './helpers/login';
+import {
+  createThrowawaySchool,
+  type ThrowawaySchoolFixture,
+} from './fixtures/throwaway-school';
+import { useThrowawaySchoolHeader } from './helpers/school-context';
 
+const API = process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
 const PREFIX = 'E2E-RRT-';
-const API = 'http://localhost:3000/api/v1';
 
 async function fetchSubject(
-  request: import('@playwright/test').APIRequestContext,
+  request: APIRequestContext,
   id: string,
+  schoolId: string,
 ): Promise<{ id: string; requiredRoomType: string | null }> {
   const token = await getAdminToken(request);
   const res = await request.get(`${API}/subjects/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${token}`, 'X-School-Id': schoolId },
   });
   expect(res.ok(), `GET /subjects/${id}`).toBeTruthy();
   return (await res.json()) as { id: string; requiredRoomType: string | null };
 }
 
+async function createSubject(
+  request: APIRequestContext,
+  schoolId: string,
+  fields: { name: string; shortName: string },
+): Promise<{ id: string; name: string; shortName: string }> {
+  const token = await getAdminToken(request);
+  const res = await request.post(`${API}/subjects`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'X-School-Id': schoolId,
+      'Content-Type': 'application/json',
+    },
+    data: {
+      schoolId,
+      name: fields.name,
+      shortName: fields.shortName,
+      subjectType: 'PFLICHT',
+    },
+  });
+  expect(res.ok(), `POST /subjects (${fields.name})`).toBeTruthy();
+  return (await res.json()) as { id: string; name: string; shortName: string };
+}
+
 async function setSubjectRequiredRoomType(
-  request: import('@playwright/test').APIRequestContext,
+  request: APIRequestContext,
   id: string,
+  schoolId: string,
   value: string | null,
 ): Promise<void> {
   const token = await getAdminToken(request);
   const res = await request.put(`${API}/subjects/${id}`, {
     headers: {
       Authorization: `Bearer ${token}`,
+      'X-School-Id': schoolId,
       'Content-Type': 'application/json',
     },
     data: { requiredRoomType: value },
@@ -60,7 +89,7 @@ async function setSubjectRequiredRoomType(
   expect(res.ok(), `PUT /subjects/${id} requiredRoomType=${value}`).toBeTruthy();
 }
 
-test.describe('Issue #69 — Subject Pflicht-Raumtyp (desktop)', () => {
+test.describe('Issue #69 — Subject Pflicht-Raumtyp (throwaway-school, #152)', () => {
   // Mobile renders the same SubjectFormDialog with the same Select;
   // the contract is identical, no viewport-specific affordance to test.
   test.skip(
@@ -68,32 +97,33 @@ test.describe('Issue #69 — Subject Pflicht-Raumtyp (desktop)', () => {
     'Pflicht-Raumtyp form contract is identical across viewports — desktop only.',
   );
 
-  // Issue #112 phase 4 wave 2d (#122): per-spec advisory lock serializes
-  // parallel browser projects on the cleanup-by-prefix race.
-  let lock: AdvisoryLock | undefined;
+  let fixture: ThrowawaySchoolFixture | undefined;
 
-  test.beforeEach(async ({ page }) => {
-    // See admin-classes-home-room.spec.ts for the two-lock rationale —
-    // per-spec key + shared canary-sweep guard.
-    lock = await acquireAdvisoryLock([
-      `admin-subjects-required-room-type:${SEED_SCHOOL_UUID}`,
-      `e2e-rows-on-seed-school:${SEED_SCHOOL_UUID}`,
-    ]);
-    await loginAsAdmin(page);
+  test.beforeEach(async () => {
+    fixture = await createThrowawaySchool({
+      roles: { admin: true },
+      withClasses: 1,
+      withTimetableStack: true,
+      namePrefix: 'E2E-RRT',
+    });
   });
 
-  test.afterEach(async ({ request }) => {
-    await cleanupE2ESubjects(request, PREFIX);
-    if (lock) {
-      await lock.release();
-      lock = undefined;
+  test.afterEach(async () => {
+    if (fixture) {
+      await fixture.cleanup();
+      fixture = undefined;
     }
   });
 
   test('E2E-SUB-RRT-CREATE: dialog with Pflicht-Raumtyp=Turnsaal → POST carries TURNSAAL', async ({
     page,
+    context,
     request,
   }) => {
+    if (!fixture) throw new Error('fixture not seeded');
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
+    await loginAsRole(page, 'admin');
+
     const ts = Date.now().toString().slice(-6);
     const subjectName = `${PREFIX}Sport-${ts}`;
     // Keep Kürzel short (max 8). Combine a stable prefix with the last
@@ -134,22 +164,27 @@ test.describe('Issue #69 — Subject Pflicht-Raumtyp (desktop)', () => {
 
     // DB persistence verification.
     const body = (await postRes.json()) as { id: string };
-    const persisted = await fetchSubject(request, body.id);
+    const persisted = await fetchSubject(request, body.id, fixture.schoolId);
     expect(persisted.requiredRoomType).toBe('TURNSAAL');
   });
 
   test('E2E-SUB-RRT-EDIT-ASSIGN: pick Turnsaal → save → PUT body + DB persist', async ({
     page,
+    context,
     request,
   }) => {
+    if (!fixture) throw new Error('fixture not seeded');
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
+    await loginAsRole(page, 'admin');
+
     const ts = Date.now().toString().slice(-6);
-    const subject = await createSubjectViaAPI(request, {
+    const subject = await createSubject(request, fixture.schoolId, {
       name: `${PREFIX}A-${ts}`,
       shortName: `A${ts.slice(-4)}`,
     });
 
     // Start state — no requiredRoomType.
-    const before = await fetchSubject(request, subject.id);
+    const before = await fetchSubject(request, subject.id, fixture.schoolId);
     expect(before.requiredRoomType).toBeNull();
 
     await page.goto('/admin/subjects');
@@ -179,25 +214,29 @@ test.describe('Issue #69 — Subject Pflicht-Raumtyp (desktop)', () => {
     const reqBody = JSON.parse(putRes.request().postData() ?? '{}');
     expect(reqBody.requiredRoomType, 'PUT body sets TURNSAAL').toBe('TURNSAAL');
 
-    const after = await fetchSubject(request, subject.id);
+    const after = await fetchSubject(request, subject.id, fixture.schoolId);
     expect(after.requiredRoomType).toBe('TURNSAAL');
   });
 
   test('E2E-SUB-RRT-EDIT-CLEAR: switch from Turnsaal → Kein Pflichtraum → PUT body null', async ({
     page,
+    context,
     request,
   }) => {
+    if (!fixture) throw new Error('fixture not seeded');
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
+    await loginAsRole(page, 'admin');
+
     const ts = Date.now().toString().slice(-6);
-    const subject = await createSubjectViaAPI(request, {
+    const subject = await createSubject(request, fixture.schoolId, {
       name: `${PREFIX}C-${ts}`,
       shortName: `C${ts.slice(-4)}`,
     });
 
     // Seed-state: pre-set requiredRoomType so the clear flow has something
-    // to remove. The createSubjectViaAPI helper doesn't accept the field
-    // today; PATCH afterwards rather than expanding the helper signature.
-    await setSubjectRequiredRoomType(request, subject.id, 'TURNSAAL');
-    const before = await fetchSubject(request, subject.id);
+    // to remove.
+    await setSubjectRequiredRoomType(request, subject.id, fixture.schoolId, 'TURNSAAL');
+    const before = await fetchSubject(request, subject.id, fixture.schoolId);
     expect(before.requiredRoomType).toBe('TURNSAAL');
 
     await page.goto('/admin/subjects');
@@ -224,7 +263,7 @@ test.describe('Issue #69 — Subject Pflicht-Raumtyp (desktop)', () => {
     const reqBody = JSON.parse(putRes.request().postData() ?? '{}');
     expect(reqBody.requiredRoomType, 'PUT body sets null').toBeNull();
 
-    const after = await fetchSubject(request, subject.id);
+    const after = await fetchSubject(request, subject.id, fixture.schoolId);
     expect(after.requiredRoomType).toBeNull();
   });
 });

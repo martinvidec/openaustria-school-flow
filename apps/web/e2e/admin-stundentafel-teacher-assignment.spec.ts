@@ -1,6 +1,11 @@
 /**
  * Issue #71 — Stundentafel teacher assignment.
  *
+ * Issue #152 (Phase 3.5/5) — migrated to throwaway-school per CLAUDE.md D4.
+ * The `admin-stundentafel-teacher-assignment:` and
+ * `e2e-rows-on-seed-school:` advisory locks are gone; each spec owns its
+ * own throwaway School so the cleanup-by-prefix race can no longer fire.
+ *
  * Covers the per-ClassSubject teacher picker shipped in the teacherId PR:
  *   - E2E-CLS-TEACHER-ASSIGN: open Stundentafel tab, pick a teacher for
  *     the first row, save → PUT body carries the chosen teacherId for
@@ -14,27 +19,21 @@
  *   - Sentinel `__no_teacher__` clears the assignment (Radix Select
  *     does not accept empty string as a value).
  *
- * Scoped to desktop + chromium-only per the parallel-cleanup race family
- * — same pattern as admin-classes-home-room.spec.ts (#67) and
- * admin-subjects-required-room-type.spec.ts (#69).
+ * Throwaway-school provides exactly ONE Teacher (via `withTimetableStack`).
+ * The spec picks that lone teacher as the target — the dropdown will
+ * show two options ("Nicht zugewiesen" + the fixture Teacher) which is
+ * sufficient to exercise both assign and clear flows.
  */
-import { expect, test } from '@playwright/test';
-import { getAdminToken, loginAsAdmin } from './helpers/login';
+import { expect, test, type APIRequestContext } from '@playwright/test';
+import { getAdminToken, loginAsRole } from './helpers/login';
 import {
-  cleanupE2EClasses,
-  createClassViaAPI,
-} from './helpers/students';
-import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
-import { acquireAdvisoryLock, type AdvisoryLock } from './helpers/advisory-lock';
+  createThrowawaySchool,
+  type ThrowawaySchoolFixture,
+} from './fixtures/throwaway-school';
+import { useThrowawaySchoolHeader } from './helpers/school-context';
 
 const PREFIX = 'E2E-TA-';
-const API = 'http://localhost:3000/api/v1';
-
-interface TeacherSummary {
-  id: string;
-  firstName: string;
-  lastName: string;
-}
+const API = process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
 
 interface ClassSubjectRow {
   id: string;
@@ -44,42 +43,47 @@ interface ClassSubjectRow {
   teacher?: { id: string; person: { firstName: string; lastName: string } } | null;
 }
 
-async function listTeachers(
-  request: import('@playwright/test').APIRequestContext,
-): Promise<TeacherSummary[]> {
+async function createClass(
+  request: APIRequestContext,
+  schoolId: string,
+  schoolYearId: string,
+  fields: { name: string; yearLevel: number },
+): Promise<{ id: string; name: string }> {
   const token = await getAdminToken(request);
-  const res = await request.get(
-    `${API}/teachers?schoolId=${SEED_SCHOOL_UUID}&limit=20`,
-    { headers: { Authorization: `Bearer ${token}` } },
-  );
-  expect(res.ok(), 'GET /teachers').toBeTruthy();
-  const body = (await res.json()) as {
-    data?: Array<{ id: string; person?: { firstName?: string; lastName?: string } }>;
-  };
-  return (body.data ?? [])
-    .filter((t) => t.person)
-    .map((t) => ({
-      id: t.id,
-      firstName: t.person!.firstName ?? '',
-      lastName: t.person!.lastName ?? '',
-    }));
+  const res = await request.post(`${API}/classes`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'X-School-Id': schoolId,
+      'Content-Type': 'application/json',
+    },
+    data: {
+      schoolId,
+      schoolYearId,
+      name: fields.name,
+      yearLevel: fields.yearLevel,
+    },
+  });
+  expect(res.ok(), `POST /classes (${fields.name})`).toBeTruthy();
+  return (await res.json()) as { id: string; name: string };
 }
 
 async function listClassSubjects(
-  request: import('@playwright/test').APIRequestContext,
+  request: APIRequestContext,
   classId: string,
+  schoolId: string,
 ): Promise<ClassSubjectRow[]> {
   const token = await getAdminToken(request);
   const res = await request.get(`${API}/classes/${classId}/subjects`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${token}`, 'X-School-Id': schoolId },
   });
   expect(res.ok(), `GET /classes/${classId}/subjects`).toBeTruthy();
   return (await res.json()) as ClassSubjectRow[];
 }
 
 async function applyStundentafel(
-  request: import('@playwright/test').APIRequestContext,
+  request: APIRequestContext,
   classId: string,
+  schoolId: string,
   schoolType: string,
 ): Promise<void> {
   const token = await getAdminToken(request);
@@ -88,6 +92,7 @@ async function applyStundentafel(
     {
       headers: {
         Authorization: `Bearer ${token}`,
+        'X-School-Id': schoolId,
         'Content-Type': 'application/json',
       },
       data: { schoolType },
@@ -99,48 +104,57 @@ async function applyStundentafel(
   ).toBeTruthy();
 }
 
-test.describe('Issue #71 — Stundentafel Teacher-Zuweisung (desktop)', () => {
+test.describe('Issue #71 — Stundentafel Teacher-Zuweisung (throwaway-school, #152)', () => {
   test.skip(
     ({ isMobile }) => isMobile,
     'Stundentafel teacher picker uses identical Select on mobile — desktop is enough.',
   );
 
-  // Issue #112 phase 4 wave 2d (#122): per-spec advisory lock serializes
-  // parallel browser projects on the cleanup-by-prefix race.
-  let lock: AdvisoryLock | undefined;
+  let fixture: ThrowawaySchoolFixture | undefined;
 
-  test.beforeEach(async ({ page }) => {
-    // See admin-classes-home-room.spec.ts for the two-lock rationale —
-    // per-spec key + shared canary-sweep guard.
-    lock = await acquireAdvisoryLock([
-      `admin-stundentafel-teacher-assignment:${SEED_SCHOOL_UUID}`,
-      `e2e-rows-on-seed-school:${SEED_SCHOOL_UUID}`,
-    ]);
-    await loginAsAdmin(page);
+  test.beforeEach(async () => {
+    fixture = await createThrowawaySchool({
+      roles: { admin: true },
+      withClasses: 1,
+      withTimetableStack: true, // provisions the lone Teacher the picker selects
+      namePrefix: 'E2E-TA',
+    });
   });
 
-  test.afterEach(async ({ request }) => {
-    await cleanupE2EClasses(request, PREFIX);
-    if (lock) {
-      await lock.release();
-      lock = undefined;
+  test.afterEach(async () => {
+    if (fixture) {
+      await fixture.cleanup();
+      fixture = undefined;
     }
   });
 
   test('E2E-CLS-TEACHER-ASSIGN: pick teacher → save → PUT body + persist', async ({
     page,
+    context,
     request,
   }) => {
-    const ts = Date.now().toString().slice(-6);
-    const cls = await createClassViaAPI(request, {
-      name: `${PREFIX}A-${ts}`,
-      yearLevel: 1,
-    });
-    // Apply the AHS_UNTER year-1 Stundentafel so the new class has rows
-    // (4 seeded subjects).
-    await applyStundentafel(request, cls.id, 'AHS_UNTER');
+    if (!fixture) throw new Error('fixture not seeded');
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
+    await loginAsRole(page, 'admin');
 
-    const rowsBefore = await listClassSubjects(request, cls.id);
+    const target = {
+      id: fixture.timetable!.teacherId,
+      displayName: fixture.timetable!.teacherDisplayName,
+    };
+
+    const ts = Date.now().toString().slice(-6);
+    const cls = await createClass(
+      request,
+      fixture.schoolId,
+      fixture.schoolYearId,
+      { name: `${PREFIX}A-${ts}`, yearLevel: 1 },
+    );
+    // Apply the AHS_UNTER year-1 Stundentafel so the new class has rows
+    // (subjects auto-created from the template). Template name is
+    // independent of the school's own schoolType (the throwaway is 'AHS').
+    await applyStundentafel(request, cls.id, fixture.schoolId, 'AHS_UNTER');
+
+    const rowsBefore = await listClassSubjects(request, cls.id, fixture.schoolId);
     expect(
       rowsBefore.length,
       'Stundentafel applied → at least one row',
@@ -150,10 +164,6 @@ test.describe('Issue #71 — Stundentafel Teacher-Zuweisung (desktop)', () => {
       'all rows start unassigned',
     ).toBe(true);
 
-    const teachers = await listTeachers(request);
-    const target = teachers[0];
-    expect(target, 'at least one seeded teacher').toBeTruthy();
-
     // Pick a row deterministically — Deutsch ("D") is in every AHS_UNTER
     // year-1 Stundentafel.
     const targetRow = rowsBefore.find((r) => r.subject.shortName === 'D');
@@ -162,12 +172,10 @@ test.describe('Issue #71 — Stundentafel Teacher-Zuweisung (desktop)', () => {
 
     await page.goto(`/admin/classes/${cls.id}?tab=stundentafel`);
 
-    // Open the teacher Select for D, pick the target teacher.
+    // Open the teacher Select for D, pick the throwaway's fixture teacher.
     const trigger = page.getByTestId('stundentafel-teacher-D');
     await trigger.click();
-    await page
-      .getByRole('option', { name: `${target.lastName} ${target.firstName}` })
-      .click();
+    await page.getByRole('option', { name: target.displayName }).click();
 
     // Save and capture the PUT.
     const putPromise = page.waitForResponse(
@@ -189,29 +197,37 @@ test.describe('Issue #71 — Stundentafel Teacher-Zuweisung (desktop)', () => {
     ).toBe(target.id);
 
     // DB persistence.
-    const rowsAfter = await listClassSubjects(request, cls.id);
+    const rowsAfter = await listClassSubjects(request, cls.id, fixture.schoolId);
     const persisted = rowsAfter.find((r) => r.subject.shortName === 'D');
     expect(persisted?.teacherId).toBe(target.id);
   });
 
   test('E2E-CLS-TEACHER-CLEAR: switch teacher → Nicht zugewiesen → PUT body null', async ({
     page,
+    context,
     request,
   }) => {
-    const ts = Date.now().toString().slice(-6);
-    const cls = await createClassViaAPI(request, {
-      name: `${PREFIX}C-${ts}`,
-      yearLevel: 1,
-    });
-    await applyStundentafel(request, cls.id, 'AHS_UNTER');
+    if (!fixture) throw new Error('fixture not seeded');
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
+    await loginAsRole(page, 'admin');
 
-    const teachers = await listTeachers(request);
-    const target = teachers[0];
-    expect(target, 'at least one seeded teacher').toBeTruthy();
+    const target = {
+      id: fixture.timetable!.teacherId,
+      displayName: fixture.timetable!.teacherDisplayName,
+    };
+
+    const ts = Date.now().toString().slice(-6);
+    const cls = await createClass(
+      request,
+      fixture.schoolId,
+      fixture.schoolYearId,
+      { name: `${PREFIX}C-${ts}`, yearLevel: 1 },
+    );
+    await applyStundentafel(request, cls.id, fixture.schoolId, 'AHS_UNTER');
 
     // Pre-assign the D row via the PUT endpoint so the clear flow has
     // something to clear.
-    const rowsBefore = await listClassSubjects(request, cls.id);
+    const rowsBefore = await listClassSubjects(request, cls.id, fixture.schoolId);
     const dRow = rowsBefore.find((r) => r.subject.shortName === 'D');
     expect(dRow, 'D row exists').toBeTruthy();
     if (!dRow) return;
@@ -219,6 +235,7 @@ test.describe('Issue #71 — Stundentafel Teacher-Zuweisung (desktop)', () => {
     await request.put(`${API}/classes/${cls.id}/subjects`, {
       headers: {
         Authorization: `Bearer ${token}`,
+        'X-School-Id': fixture.schoolId,
         'Content-Type': 'application/json',
       },
       data: {
@@ -231,7 +248,7 @@ test.describe('Issue #71 — Stundentafel Teacher-Zuweisung (desktop)', () => {
       },
     });
 
-    const verifySeed = await listClassSubjects(request, cls.id);
+    const verifySeed = await listClassSubjects(request, cls.id, fixture.schoolId);
     expect(
       verifySeed.find((r) => r.subject.shortName === 'D')?.teacherId,
     ).toBe(target.id);
@@ -262,7 +279,7 @@ test.describe('Issue #71 — Stundentafel Teacher-Zuweisung (desktop)', () => {
       'PUT body sets teacherId=null for the D row',
     ).toBeNull();
 
-    const rowsAfter = await listClassSubjects(request, cls.id);
+    const rowsAfter = await listClassSubjects(request, cls.id, fixture.schoolId);
     expect(
       rowsAfter.find((r) => r.subject.shortName === 'D')?.teacherId,
     ).toBeNull();
