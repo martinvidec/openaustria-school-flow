@@ -72,6 +72,27 @@ describe('CurrentSchoolInterceptor', () => {
     expect(req.currentSchoolId).toBe('school-A');
   });
 
+  it('requests memberships ordered by school.createdAt asc (deterministic first-membership pick, #152)', async () => {
+    // Issue #152 — multi-membership admin users (admin KC user in seed +
+    // throwaway e2e schools concurrently) would otherwise see Postgres
+    // pick an arbitrary "first" membership for legacy specs that omit
+    // X-School-Id. Locking the orderBy means seed (oldest) is always [0].
+    prisma.person.findMany.mockResolvedValue([{ schoolId: 'seed' }]);
+    const req: MockReq = { user: { id: 'kc-1' }, headers: {} };
+
+    const observable = (await interceptor.intercept(
+      buildExecutionContext(req) as any,
+      buildCallHandler() as any,
+    )) as any;
+    await firstValueFrom(observable);
+
+    expect(prisma.person.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        orderBy: { school: { createdAt: 'asc' } },
+      }),
+    );
+  });
+
   it('honors a valid X-School-Id header that matches a membership', async () => {
     prisma.person.findMany.mockResolvedValue([
       { schoolId: 'school-A' },

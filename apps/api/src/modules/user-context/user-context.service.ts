@@ -10,6 +10,12 @@ export class UserContextService {
     keycloakUserId: string,
     currentSchoolId: string | null,
   ): Promise<UserContextResponseDto> {
+    // Order memberships by school.createdAt asc so the SEED school (oldest)
+    // is always [0]. Matches CurrentSchoolInterceptor's ordering — necessary
+    // so the fallback `currentSchoolId ?? memberships[0].schoolId` resolves
+    // to the SAME school the interceptor picked when no X-School-Id was
+    // sent. Pre-#152 the unordered findMany made this racy under parallel
+    // admin-throwaway e2e specs.
     const memberships = await this.prisma.person.findMany({
       where: { keycloakUserId },
       select: {
@@ -17,6 +23,7 @@ export class UserContextService {
         personType: true,
         school: { select: { name: true } },
       },
+      orderBy: { school: { createdAt: 'asc' } },
     });
 
     if (memberships.length === 0) {
