@@ -1,19 +1,20 @@
 /**
  * Issue #88 — iCal calendar-token generate flow (Settings).
  *
+ * Issue #154 (Phase 3.5/7) — migrated to throwaway-school per CLAUDE.md D4.
+ * The per-`(schoolId, role)` advisory lock + Prisma-direct purge are gone;
+ * each spec owns its own throwaway School so CalendarToken rows live in
+ * tenant-isolated tables. `fixture.cleanup()` cascade-drops the school
+ * (and its calendar_tokens rows via FK) on afterEach.
+ *
  * Surface: /settings → ICalSettings card (apps/web/src/components/
- * calendar/ICalSettings.tsx). Today only `roles-smoke.spec.ts`
- * proves the page rendert ohne Crash — there is no end-to-end
- * regression-lock that the generated token URL actually serves a
- * valid iCal feed.
+ * calendar/ICalSettings.tsx).
  *
  * Test-Strategie — full POST → URL → public-GET round-trip:
  *
  *   ICAL-GEN-LEHRER:
- *     1. Purge any stale token row for lehrer-user on the seed
- *        school (defensive — a previous failed run could leave
- *        one and the page would land in "Token exists" state,
- *        not "Noch kein Kalender-Abonnement").
+ *     1. Throwaway-school fixture with `lehrer` role — fresh tenant,
+ *        no pre-existing CalendarToken rows.
  *     2. Lehrer logs in, navigates to /settings.
  *     3. Page shows the empty-state copy + the "Kalender-URL erstellen"
  *        CTA. Click it.
@@ -33,57 +34,55 @@
  * Bug-class this catches: any future commit that breaks the
  * full token-URL-roundtrip — e.g. renaming the controller
  * `@Public()` decorator, changing the URL shape, dropping the
- * UUID format, or serving the wrong Content-Type. These are
- * exactly the kind of silent regressions the iCal subscription
- * surface needs locked, because the user-visible failure mode is
- * "my calendar app silently stops syncing" — no toast, no error,
- * no log line on the user's side.
- *
- * Race-Family-Achtung: Issue #112 Phase 2.5a (#117) — a per-(schoolId,
- * role) Postgres advisory lock serializes the purge → seed → test
- * body → cleanup window across parallel specs that share the lehrer
- * persona. Cross-browser safe; previous chromium-only-skip removed.
+ * UUID format, or serving the wrong Content-Type.
  */
 import { test, expect } from '@playwright/test';
 import { loginAsRole } from './helpers/login';
+import { apiBaseFromE2eEnv } from './helpers/calendar-tokens';
 import {
-  apiBaseFromE2eEnv,
-  seedCalendarTokenContext,
-  cleanupCalendarTokenContext,
-  type CalendarTokenContext,
-} from './helpers/calendar-tokens';
-import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
+  createThrowawaySchool,
+  type ThrowawaySchoolFixture,
+} from './fixtures/throwaway-school';
+import { useThrowawaySchoolHeader } from './helpers/school-context';
 
 const ROLE = 'lehrer' as const;
 
-test.describe('Issue #88 — iCal generate (desktop)', () => {
+test.describe('Issue #88 — iCal generate (throwaway-school, #154)', () => {
   test.skip(
     ({ isMobile }) => isMobile,
-    'iCal subscription is a desktop-anchored workflow (URL is copied into a desktop calendar app). Mobile coverage belongs to its own *.mobile.spec.ts that asserts the "URL kopieren" button surfaces below the URL field on base/sm.',
+    'iCal subscription is a desktop-anchored workflow (URL is copied into a desktop calendar app). Mobile coverage belongs to its own *.mobile.spec.ts.',
   );
 
-  let ctx: CalendarTokenContext | undefined;
+  let fixture: ThrowawaySchoolFixture | undefined;
 
   test.beforeEach(async () => {
-    ctx = await seedCalendarTokenContext(SEED_SCHOOL_UUID, [ROLE]);
+    fixture = await createThrowawaySchool({
+      roles: { [ROLE]: true },
+      withClasses: 1,
+      namePrefix: 'E2E-ICAL-GEN',
+    });
   });
 
   test.afterEach(async () => {
-    if (ctx) {
-      await cleanupCalendarTokenContext(ctx);
-      ctx = undefined;
+    if (fixture) {
+      await fixture.cleanup();
+      fixture = undefined;
     }
   });
 
   test('ICAL-GEN-LEHRER: "Kalender-URL erstellen" → toast + URL renders → public GET returns valid VCALENDAR', async ({
     page,
+    context,
     request,
   }) => {
+    if (!fixture) throw new Error('fixture not seeded');
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
     await loginAsRole(page, ROLE);
     await page.goto('/settings');
 
-    // Empty-state lock — proves the purge took effect and the page is
-    // actually rendering the "no token yet" branch (ICalSettings.tsx:78).
+    // Empty-state lock — proves the fresh throwaway has no prior token
+    // and the page is rendering the "no token yet" branch
+    // (ICalSettings.tsx:78).
     //
     // Note: shadcn CardTitle renders as <div>, NOT <h*> (see
     // apps/web/src/components/ui/card.tsx:32 — `React.forwardRef<HTMLDivElement>`).
@@ -102,24 +101,20 @@ test.describe('Issue #88 — iCal generate (desktop)', () => {
     await createButton.click();
 
     // Success toast surfaces from useGenerateCalendarToken.onSuccess
-    // (useCalendarToken.ts:49). Sonner renders toasts inside a region
-    // with aria-label "Notifications" — getByText scoped to status role
-    // is the cleanest locator that doesn't trip on the card body's
-    // sibling text.
+    // (useCalendarToken.ts:49).
     await expect(
       page.getByText('Kalender-URL erstellt', { exact: false }),
     ).toBeVisible();
 
     // After the query invalidation refetches, the page swaps to the
-    // "token exists" branch which renders the monospace URL field. The
-    // <label> for that field is "Ihre persoenliche Kalender-URL".
+    // "token exists" branch which renders the monospace URL field.
     await expect(
       page.getByText('Ihre persoenliche Kalender-URL'),
     ).toBeVisible();
 
     // The URL element is `<div className="font-mono ...">` with the
-    // calendarUrl text. Grab the visible relative URL — `crypto.randomUUID()`
-    // produces a v4 UUID so the format is fixed.
+    // calendarUrl text. `crypto.randomUUID()` produces a v4 UUID so
+    // the format is fixed.
     const urlElement = page
       .locator('div.font-mono')
       .filter({ hasText: /^\/api\/v1\/calendar\/[0-9a-f-]{36}\.ics$/i })
@@ -128,18 +123,16 @@ test.describe('Issue #88 — iCal generate (desktop)', () => {
     const relativeUrl = (await urlElement.textContent())?.trim() ?? '';
     expect(
       relativeUrl,
-      'Generated URL must match /api/v1/calendar/<uuid>.ics shape (token is crypto.randomUUID() per calendar.service.ts:30)',
+      'Generated URL must match /api/v1/calendar/<uuid>.ics shape',
     ).toMatch(/^\/api\/v1\/calendar\/[0-9a-f-]{36}\.ics$/i);
 
     // ── Public ICS endpoint round-trip — no Authorization header ────────
     // calendar.controller.ts:34 marks getIcs() @Public() so this
-    // request bypasses the JWT guard. The iCal subscription client
-    // (Apple Kalender etc.) sends this exact request shape.
+    // request bypasses the JWT guard AND the CurrentSchoolInterceptor
+    // (no X-School-Id needed). The iCal subscription client sends
+    // this exact request shape — pure token-lookup, no tenant header.
     const absoluteUrl = `${apiBaseFromE2eEnv()}${relativeUrl}`;
     const icsResponse = await request.get(absoluteUrl, {
-      // Belt-and-braces: explicitly drop any auth header that might be
-      // sticky on the shared Playwright APIRequestContext from earlier
-      // logged-in fetches.
       headers: {},
     });
 
@@ -162,9 +155,7 @@ test.describe('Issue #88 — iCal generate (desktop)', () => {
       'ICS body must end with END:VCALENDAR — proves the ical-generator emitted a complete document, not a partial response',
     ).toBe(true);
     // PRODID line is mandatory in RFC 5545 and the service sets it to
-    // SchoolFlow explicitly (calendar.service.ts:70). This catches a
-    // future swap to a stub ical-generator that emits empty calendars.
+    // SchoolFlow explicitly (calendar.service.ts:70).
     expect(icsBody).toMatch(/PRODID:[^\r\n]*SchoolFlow/i);
-
   });
 });
