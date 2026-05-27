@@ -1,13 +1,19 @@
 /**
  * Issue #83 — Excuses parent-submit flow.
  *
+ * Issue #151 (Phase 3.5/4) — migrated to throwaway-school per CLAUDE.md D4.
+ * The shared per-student `excuses:${SEED_STUDENT_LISA_HUBER_UUID}` advisory
+ * lock is gone; each spec owns its own throwaway School with its own
+ * Parent + Student + ParentStudent rows. `fixture.cleanup()` cascade-drops
+ * every AbsenceExcuse via the School→Student→AbsenceExcuse FK chain.
+ *
  * First sub-spec of the Entschuldigungen coverage gap. Locks the
  * Eltern-side submission flow on /excuses:
- *   1. kc-eltern (Franz Huber, parent of Lisa Huber in 1A) logs in.
+ *   1. eltern (the throwaway's Franz-Huber-equivalent) logs in.
  *   2. Page mounts the ParentExcuseView with the ExcuseForm.
- *   3. Form auto-fills today as Von + Bis (default) and Lisa Huber as
- *      the only child (the Kind field renders as a text label, not a
- *      Select, when children.length === 1 — ExcuseForm.tsx:137).
+ *   3. Form auto-fills today as Von + Bis (default) and the single linked
+ *      child as the Kind field — rendered as a text label (not a Select)
+ *      when children.length === 1 (ExcuseForm.tsx:137).
  *   4. Pick "Krank" as Grund, type a timestamped note, submit.
  *   5. Wait for the "Entschuldigung eingereicht" toast (wire-confirmed
  *      signal; without it the list assertion races the mutation).
@@ -15,54 +21,51 @@
  *      timestamped note + a PENDING status badge.
  *
  * Exercises POST /classbook/excuses + useCreateExcuse invalidation +
- * GET /excuses refetch + ExcuseCard rendering. Teacher-review and
- * attachment upload are deferred to follow-up sub-specs.
- *
- * Chromium-only-skip per the race-family precedent — every spec writes
- * AbsenceExcuse rows for the same kc-eltern parent. The cleanup sweep
- * is scoped to a note-prefix so parallel specs only delete their own.
+ * GET /excuses refetch + ExcuseCard rendering.
  */
 import { test, expect } from '@playwright/test';
 import { loginAsRole } from './helpers/login';
-import { EXCUSES_NOTE_PREFIX, cleanupE2EExcuses } from './helpers/excuses';
-import { acquireAdvisoryLock, type AdvisoryLock } from './helpers/advisory-lock';
+import { EXCUSES_NOTE_PREFIX } from './helpers/excuses';
+import {
+  createThrowawaySchool,
+  type ThrowawaySchoolFixture,
+} from './fixtures/throwaway-school';
+import { useThrowawaySchoolHeader } from './helpers/school-context';
 
-// All three excuses specs target the same seed student (Lisa Huber,
-// kc-eltern's only child) and share `AbsenceExcuse` rows on that
-// student. Sub-prefix isolation prevents cross-spec data collisions,
-// but parallel runs of the SAME spec across browser projects would
-// still interleave list views + cleanup sweeps. The per-student lock
-// (shared by all three excuses specs) serializes them — both
-// intra-spec (chromium ↔ firefox) and inter-spec.
-const EXCUSES_STUDENT_LOCK_KEY = 'excuses:e0000000-0000-4000-8000-000000000001';
-
-test.describe('Issue #83 — Excuses parent submit (desktop)', () => {
+test.describe('Issue #83 — Excuses parent submit (throwaway-school, #151)', () => {
   test.skip(
     ({ isMobile }) => isMobile,
     'Form layout is identical across viewports — desktop only for the first lock.',
   );
 
-  let lock: AdvisoryLock | undefined;
+  let fixture: ThrowawaySchoolFixture | undefined;
 
   test.beforeEach(async () => {
-    lock = await acquireAdvisoryLock(EXCUSES_STUDENT_LOCK_KEY);
+    // Lisa Huber as the single child + Franz-Huber-equivalent eltern parent
+    // linked to her via ParentStudent. children.length === 1 keeps the
+    // ExcuseForm in its text-label branch (instead of Select).
+    fixture = await createThrowawaySchool({
+      roles: { eltern: true },
+      withClasses: 1,
+      withStudents: [{ firstName: 'Lisa', lastName: 'Huber' }],
+      withParentLinks: { eltern: { studentIndexes: [0] } },
+      namePrefix: 'E2E-EXC-PARENT',
+    });
   });
 
   test.afterEach(async () => {
-    // Sweep ALL E2E-EXC- excuses, not just the one created here. A
-    // killed previous run could leave parallel siblings behind, and
-    // those would clutter the list assertion below the next time the
-    // spec runs against an unclean DB.
-    await cleanupE2EExcuses(`${EXCUSES_NOTE_PREFIX}PARENT-`);
-    if (lock) {
-      await lock.release();
-      lock = undefined;
+    if (fixture) {
+      await fixture.cleanup();
+      fixture = undefined;
     }
   });
 
   test('EXC-PARENT-01: eltern submits an excuse → toast → row visible in submitted list with PENDING badge', async ({
     page,
+    context,
   }) => {
+    if (!fixture) throw new Error('fixture not seeded');
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
     await loginAsRole(page, 'eltern');
     await page.goto('/excuses');
 
@@ -73,18 +76,13 @@ test.describe('Issue #83 — Excuses parent submit (desktop)', () => {
     ).toBeVisible();
 
     // Kind field renders as plain text when children.length === 1 —
-    // Lisa Huber is the only seed child of Franz Huber (kc-eltern).
-    // The cross-tenant assertion here is that Lisa's name appears, not
-    // a sibling-tenant child or an empty value.
-    //
-    // Scope by the form region — sibling spec excuses-teacher-review
-    // may seed an excuse for the same Lisa Huber and leak an
-    // ExcuseCard with the same name as a `<h3>` heading further down
-    // the page; the form-Kind paragraph is the assertion target.
+    // Lisa Huber is the only linked child of the throwaway eltern. The
+    // cross-tenant assertion here is that Lisa's name appears, not a
+    // sibling-tenant child or an empty value.
     const kindLabel = page.getByText('Kind', { exact: true });
     await expect(
       kindLabel.locator('..').getByText('Lisa Huber'),
-      'Kind field must render Lisa Huber for Franz Huber (kc-eltern) per the seed ParentStudent link',
+      'Kind field must render Lisa Huber for the throwaway-eltern per the seeded ParentStudent link',
     ).toBeVisible();
 
     // Grund select — pick "Krank" (KRANK enum). The form's submit is
@@ -93,10 +91,10 @@ test.describe('Issue #83 — Excuses parent submit (desktop)', () => {
     await page.getByRole('combobox', { name: 'Grund' }).click();
     await page.getByRole('option', { name: 'Krank', exact: true }).click();
 
-    // Timestamped note — keeps this run's row distinguishable from
-    // sibling specs' rows in the list assertion. EXCUSES_NOTE_PREFIX
-    // is what the cleanup sweep uses, so this stamp doubles as the
-    // cleanup discriminator.
+    // Timestamped note — keeps this run's row distinguishable in the list
+    // assertion. EXCUSES_NOTE_PREFIX keeps mid-test debugging via psql
+    // trivial; tenant isolation via the throwaway already prevents
+    // cross-spec collisions.
     const note = `${EXCUSES_NOTE_PREFIX}PARENT-${Date.now()} — Lisa hat Fieber`;
     await page.getByLabel(/Anmerkung/).fill(note);
 
@@ -111,10 +109,6 @@ test.describe('Issue #83 — Excuses parent submit (desktop)', () => {
 
     // After the toast, useCreateExcuse invalidates useExcuses → refetch
     // lands → the new excuse renders as an ExcuseCard below the form.
-    // The cross-cutting regression-lock is the timestamped note + the
-    // PENDING status — both are pulled from the API response, so a
-    // backend bug that drops the note or mis-defaults the status would
-    // be visible here.
     await expect(
       page.getByText(note),
       'newly-created excuse must surface in "Eingereichte Entschuldigungen" with the timestamped note',

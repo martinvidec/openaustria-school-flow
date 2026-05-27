@@ -68,7 +68,7 @@ export class ExcuseController {
     const isTeacher = user.roles.includes('lehrer') || user.roles.includes('schulleitung') || user.roles.includes('admin');
 
     if (isParent) {
-      return this.excuseService.getExcusesForParent(user.id);
+      return this.excuseService.getExcusesForParent(user.id, schoolId);
     }
 
     if (isTeacher) {
