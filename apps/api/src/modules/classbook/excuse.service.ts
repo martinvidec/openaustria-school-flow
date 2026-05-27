@@ -49,9 +49,15 @@ export class ExcuseService {
       throw new BadRequestException('Startdatum darf nicht mehr als 30 Tage in der Vergangenheit liegen');
     }
 
-    // Resolve parent from keycloakUserId
+    // Resolve parent from (keycloakUserId, schoolId). Issue #151 — the
+    // schoolId scope is load-bearing: a KC user with Person memberships
+    // in N schools (common under parallel e2e throwaway runs, real under
+    // multi-tenant families) without the scope would race on whichever
+    // Person Postgres returns first, and the downstream ParentStudent
+    // lookup would 403 because the sibling-school's `parentId` does not
+    // own a link to THIS school's student.
     const parentPerson = await this.prisma.person.findFirst({
-      where: { keycloakUserId: parentKeycloakId },
+      where: { keycloakUserId: parentKeycloakId, schoolId },
       include: { parent: true },
     });
     if (!parentPerson?.parent) {
@@ -251,11 +257,17 @@ export class ExcuseService {
   }
 
   /**
-   * List excuses submitted by a parent. Order by createdAt DESC.
+   * List excuses submitted by a parent within the current school. Order
+   * by createdAt DESC.
+   *
+   * Issue #151 — schoolId is now mandatory (passed from the controller's
+   * `:schoolId` path param). Without it the Person lookup would race on
+   * multi-school parents and the excuse list would leak rows from sibling
+   * tenants. Same root cause as the createExcuse 403 race fixed above.
    */
-  async getExcusesForParent(parentKeycloakId: string) {
+  async getExcusesForParent(parentKeycloakId: string, schoolId: string) {
     const parentPerson = await this.prisma.person.findFirst({
-      where: { keycloakUserId: parentKeycloakId },
+      where: { keycloakUserId: parentKeycloakId, schoolId },
       include: { parent: true },
     });
     if (!parentPerson?.parent) {
@@ -263,7 +275,7 @@ export class ExcuseService {
     }
 
     const excuses = await this.prisma.absenceExcuse.findMany({
-      where: { parentId: parentPerson.parent.id },
+      where: { parentId: parentPerson.parent.id, schoolId },
       include: { attachments: true },
       orderBy: { createdAt: 'desc' },
     });
@@ -303,9 +315,13 @@ export class ExcuseService {
    * then returns pending excuses for students in those classes.
    */
   async getPendingExcusesForKlassenvorstand(teacherKeycloakId: string, schoolId: string) {
-    // Resolve teacher
+    // Resolve teacher within the current school. Issue #151 — same
+    // multi-school race as createExcuse: a lehrer KC user with Persons
+    // in N schools would otherwise hit a sibling-school's Teacher row
+    // and the downstream Klassenvorstand-class lookup would return
+    // wrong-school data (or empty).
     const person = await this.prisma.person.findFirst({
-      where: { keycloakUserId: teacherKeycloakId },
+      where: { keycloakUserId: teacherKeycloakId, schoolId },
       include: { teacher: true },
     });
     if (!person?.teacher) {

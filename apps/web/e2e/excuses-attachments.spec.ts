@@ -1,96 +1,95 @@
 /**
  * Issue #83 — Excuses PDF attachment flow (parent upload + teacher visibility).
  *
+ * Issue #151 (Phase 3.5/4) — migrated to throwaway-school per CLAUDE.md D4.
+ * The shared per-student advisory lock + the cleanup-by-prefix sweep are
+ * gone; each test owns its own throwaway School with its own Parent +
+ * Student + Klassenvorstand assignment. `fixture.cleanup()` cascade-drops
+ * every AbsenceExcuse AND its `excuse_attachments` rows (FK
+ * onDelete: Cascade) when the School is dropped.
+ *
  * Third (and final) sub-spec of the Entschuldigungen coverage gap,
  * closing the slice the issue calls out as "optional but DSGVO-
- * sensitive (Gesundheitsdaten in Attachments)". Two locks in one file
+ * sensitive (Gesundheitsdaten in Attachments)". Two tests in one file
  * because the two surfaces share the same ExcuseCard component (the
  * attachment chip rendering is identical on both sides — see
  * `ExcuseCard.tsx:97-114`):
  *
- *   EXC-ATT-PARENT-01 — Eltern submits an excuse with a PDF attachment
+ *   EXC-ATT-PARENT-01 — eltern submits an excuse with a PDF attachment
  *     through the UI (`FileUploadField` inside `ExcuseForm`). Toast
  *     fires after both the POST /excuses and the multipart POST
  *     /:id/attachment commit. After a reload the new ExcuseCard
- *     surfaces the attachment chip with the filename — this is what
- *     locks the upload contract end-to-end.
+ *     surfaces the attachment chip with the filename — this locks
+ *     the upload contract end-to-end against the throwaway tenant.
  *
  *   EXC-ATT-TEACHER-01 — A PENDING excuse + attachment is seeded
- *     direct-to-API as kc-eltern, then kc-lehrer (Klassenvorstand of
- *     1A) opens /excuses and sees the same attachment chip on the
- *     review-side ExcuseCard. The frontend renders attachments
- *     identically on both surfaces, but the back-end visibility check
- *     differs (parent vs Klassenvorstand scope), so this lock catches
- *     a regression where the GET /excuses payload omits attachments
- *     for the reviewer role.
+ *     direct-to-API as eltern, then kc-lehrer (Klassenvorstand of
+ *     throwaway class[0]) opens /excuses and sees the same attachment
+ *     chip on the review-side ExcuseCard.
  *
- * Why bundle both tests in one spec instead of two: the file-level
- * cleanup (note-prefix sweep with cascade through
- * `excuse_attachments`) is identical, and the issue treats this slice
- * as one unit. Splitting would duplicate scaffolding for marginal
- * coverage benefit.
+ * Why bundle both tests in one spec: the fixture setup (eltern + lehrer
+ * roles, Klassenvorstand, ParentStudent link, one Student) is identical
+ * and the issue treats this slice as one unit. Splitting would duplicate
+ * scaffolding for marginal coverage benefit.
  *
  * Why NOT exercise the actual download link click: the ExcuseCard
  * builds an href `/classbook/excuses/${excuseId}/attachment/${attId}`
  * but the API serves the file at `/classbook/excuses/attachments/:id`.
  * Clicking the link 404s today — that's a separate bug (frontend URL
  * builder drift from API) and out of scope for the coverage-gap fix.
- * The PR body flags it for a follow-up issue.
- *
- * Chromium-only-skip per the race-family precedent — every spec writes
- * AbsenceExcuse rows for the same kc-eltern parent and kc-lehrer is
- * the sole Klassenvorstand of 1A. Cleanup sweeps by note-prefix so
- * parallel specs only delete their own rows.
  */
 import { test, expect } from '@playwright/test';
 import { loginAsRole } from './helpers/login';
 import {
   EXCUSES_NOTE_PREFIX,
   STUB_PDF_ATTACHMENT,
-  cleanupE2EExcuses,
   createExcuseAsParentViaAPI,
   todayISODate,
   uploadExcuseAttachmentViaAPI,
   type CreatedExcuse,
 } from './helpers/excuses';
-import { acquireAdvisoryLock, type AdvisoryLock } from './helpers/advisory-lock';
+import {
+  createThrowawaySchool,
+  type ThrowawaySchoolFixture,
+} from './fixtures/throwaway-school';
+import { useThrowawaySchoolHeader } from './helpers/school-context';
 
-const SEED_STUDENT_LISA_HUBER_UUID = 'e0000000-0000-4000-8000-000000000001';
-// Per #112 phase 4 wave 2c (#121): shared with the other two excuses
-// specs so cross-spec AND cross-project parallel runs serialize on the
-// per-student row family.
-const EXCUSES_STUDENT_LOCK_KEY = `excuses:${SEED_STUDENT_LISA_HUBER_UUID}`;
+const ATT_PREFIX = `${EXCUSES_NOTE_PREFIX}ATT-`;
 
-test.describe('Issue #83 — Excuses attachments (desktop)', () => {
+test.describe('Issue #83 — Excuses attachments (throwaway-school, #151)', () => {
   test.skip(
     ({ isMobile }) => isMobile,
     'Attachment chip layout is identical across viewports — desktop only for the first lock.',
   );
 
-  // Sibling specs (excuses-parent-submit, excuses-teacher-review) use
-  // sub-prefixes E2E-EXC-PARENT- / E2E-EXC-REVIEW-. Use a distinct
-  // E2E-EXC-ATT- sub-prefix here so a sibling spec's afterEach cannot
-  // sweep our mid-test fixture (lesson from the parent-submit ↔
-  // teacher-review race recorded in `excuses-teacher-review.spec.ts:73`).
-  const ATT_PREFIX = `${EXCUSES_NOTE_PREFIX}ATT-`;
-
-  let lock: AdvisoryLock | undefined;
+  let fixture: ThrowawaySchoolFixture | undefined;
 
   test.beforeEach(async () => {
-    lock = await acquireAdvisoryLock(EXCUSES_STUDENT_LOCK_KEY);
+    fixture = await createThrowawaySchool({
+      roles: { lehrer: true, eltern: true },
+      withClasses: 1,
+      withTimetableStack: true,
+      withKlassenvorstand: 'lehrer',
+      withStudents: [{ firstName: 'Lisa', lastName: 'Huber' }],
+      withParentLinks: { eltern: { studentIndexes: [0] } },
+      namePrefix: 'E2E-EXC-ATT',
+    });
   });
 
   test.afterEach(async () => {
-    await cleanupE2EExcuses(ATT_PREFIX);
-    if (lock) {
-      await lock.release();
-      lock = undefined;
+    if (fixture) {
+      await fixture.cleanup();
+      fixture = undefined;
     }
   });
 
   test('EXC-ATT-PARENT-01: eltern submits an excuse with PDF attachment → toast → attachment chip visible after reload', async ({
     page,
+    context,
   }) => {
+    if (!fixture) throw new Error('fixture not seeded');
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
+
     const note = `${ATT_PREFIX}PARENT-${Date.now()} — Lisa hat Arzttermin (Attest)`;
     const filename = `e2e-attest-parent-${Date.now()}.pdf`;
 
@@ -112,10 +111,9 @@ test.describe('Issue #83 — Excuses attachments (desktop)', () => {
     await page.getByLabel(/Anmerkung/).fill(note);
 
     // Attach the stub PDF via FileUploadField's hidden input. The
-    // FileUploadField wraps the input as `<input type="file" hidden>`
-    // (FileUploadField.tsx — same component the handover spec drives).
-    // Scope to the form so a parallel attachment input on the page
-    // (none today, defensive) is never mis-picked.
+    // FileUploadField wraps the input as `<input type="file" hidden>`.
+    // Scope to the form so a parallel attachment input on the page is
+    // never mis-picked.
     await page
       .locator('form input[type="file"]')
       .setInputFiles({
@@ -148,10 +146,7 @@ test.describe('Issue #83 — Excuses attachments (desktop)', () => {
     ).toBeVisible();
 
     // Attachment chip — the ExcuseCard renders attachments as <a>
-    // elements containing the filename text and a paperclip icon
-    // (ExcuseCard.tsx:99-113). Matching by filename keeps the
-    // assertion stable even with parallel-spec attachments on the
-    // same Lisa Huber.
+    // elements containing the filename text and a paperclip icon.
     await expect(
       page.getByRole('link', { name: new RegExp(filename) }),
       'attachment chip with the uploaded filename must render on the excuse card',
@@ -160,23 +155,28 @@ test.describe('Issue #83 — Excuses attachments (desktop)', () => {
 
   test('EXC-ATT-TEACHER-01: kc-lehrer (Klassenvorstand) sees the same PDF attachment on the review-side ExcuseCard', async ({
     page,
+    context,
     request,
   }) => {
+    if (!fixture) throw new Error('fixture not seeded');
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
+
     const today = todayISODate();
     const note = `${ATT_PREFIX}TEACHER-${Date.now()} — Attest fuer Pollenallergie`;
     const filename = `e2e-attest-teacher-${Date.now()}.pdf`;
 
-    // Seed excuse + attachment direct-to-API as kc-eltern. The two
-    // halves are a single user-perceived action (the parent UI ships
-    // them as one submit), but the spec only needs the resulting DB
-    // state for the teacher-side assertion — UI-driving the upload is
-    // already locked by EXC-ATT-PARENT-01.
+    // Seed excuse + attachment direct-to-API as eltern on the throwaway
+    // schoolId. The two halves are a single user-perceived action (the
+    // parent UI ships them as one submit), but the spec only needs the
+    // resulting DB state for the teacher-side assertion — UI-driving
+    // the upload is already locked by EXC-ATT-PARENT-01.
     const excuse: CreatedExcuse = await createExcuseAsParentViaAPI(request, {
-      studentId: SEED_STUDENT_LISA_HUBER_UUID,
+      studentId: fixture.studentIds[0],
       startDate: today,
       endDate: today,
       reason: 'ARZTTERMIN',
       note,
+      schoolId: fixture.schoolId,
     });
     expect(
       excuse.status,
@@ -186,6 +186,7 @@ test.describe('Issue #83 — Excuses attachments (desktop)', () => {
       filename,
       mimeType: 'application/pdf',
       buffer: STUB_PDF_ATTACHMENT,
+      schoolId: fixture.schoolId,
     });
 
     await loginAsRole(page, 'lehrer');
@@ -203,7 +204,7 @@ test.describe('Issue #83 — Excuses attachments (desktop)', () => {
     // Our seeded excuse must surface (Klassenvorstand-scoped fetch).
     await expect(
       page.getByText(note),
-      'kc-lehrer (Klassenvorstand of 1A) must see the seeded excuse in the review list',
+      'kc-lehrer (Klassenvorstand of throwaway class[0]) must see the seeded excuse in the review list',
     ).toBeVisible();
 
     // Attachment chip must render with the uploaded filename. This is

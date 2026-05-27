@@ -69,9 +69,16 @@ const { PrismaClient } = require('../../../api/dist/config/database/generated/cl
     };
     schoolClass: {
       create: (args: any) => Promise<{ id: string; name: string }>;
+      update: (args: any) => Promise<{ id: string; name: string; klassenvorstandId: string | null }>;
     };
     teacher: {
       create: (args: any) => Promise<{ id: string; personId: string }>;
+    };
+    parent: {
+      create: (args: any) => Promise<{ id: string; personId: string }>;
+    };
+    parentStudent: {
+      create: (args: any) => Promise<{ id: string; parentId: string; studentId: string }>;
     };
     subject: {
       create: (args: any) => Promise<{ id: string; shortName: string }>;
@@ -208,6 +215,34 @@ export interface ThrowawaySchoolOptions {
    * deletes it on `fixture.cleanup()`.
    */
   withSecondTeacherLesson?: boolean;
+  /**
+   * Issue #151 (Phase 3.5/4) — link the `eltern` Person to one or more
+   * students via `Parent` + `ParentStudent` rows. The eltern Person's
+   * `personId` becomes a `Parent.personId` (`@unique`); each
+   * `studentIndexes[i]` in `withStudents` is linked as a child via
+   * `ParentStudent`. Requires `roles.eltern === true` AND
+   * `withStudents.length >= max(studentIndexes) + 1`.
+   *
+   * The ExcuseForm renders a child as a plain text label when
+   * `children.length === 1` (ExcuseForm.tsx:137); passing a single
+   * index produces that branch, multiple indexes produce the Select.
+   * Cleanup is automatic via the School cascade (Parent + ParentStudent
+   * both have `onDelete: Cascade` on their FKs).
+   */
+  withParentLinks?: {
+    eltern?: { studentIndexes: number[] };
+  };
+  /**
+   * Issue #151 — assign the timetable stack's primary Teacher as
+   * `klassenvorstand` of `classIds[0]`. Required by the Excuses review
+   * spec, which queries PENDING excuses scoped to the Klassenvorstand
+   * (excuse.controller.ts `getPendingExcusesForKlassenvorstand`). Pass
+   * `'lehrer'` so the teacher whose Person is the seed-lehrer's Person
+   * becomes the KV — kc-lehrer (Maria Mueller) then sees the excuses
+   * for class[0]'s students. Requires `withTimetableStack: true`
+   * (otherwise there is no Teacher row to assign).
+   */
+  withKlassenvorstand?: 'lehrer';
 }
 
 export interface ThrowawayTimetableStack {
@@ -293,6 +328,12 @@ export interface ThrowawaySchoolFixture {
   secondTeacher?: ThrowawaySecondTeacherLesson;
   /** Issue #138 — Student.id values matching the `withStudents` indexes. */
   studentIds: string[];
+  /**
+   * Issue #151 — Parent.id values per linked role, populated when
+   * `withParentLinks` was passed. Only the keys for roles actually linked
+   * are present.
+   */
+  parentIds: Partial<Record<SeedRole, string>>;
   /** Issue #138 — Populated when `withClassbookEntry` was passed. */
   classBookEntryId?: string;
   /** Issue #138 wave 2 — Populated when `withTimetableEdit` was passed. */
@@ -389,6 +430,30 @@ export async function createThrowawaySchool(
   if (options.withSecondTeacherLesson && !withTimetableStack) {
     throw new Error(
       'createThrowawaySchool: withSecondTeacherLesson requires withTimetableStack (no run + classSubject + room to attach the second lesson to)',
+    );
+  }
+  if (options.withParentLinks?.eltern && !roles.eltern) {
+    throw new Error(
+      'createThrowawaySchool: withParentLinks.eltern requires roles.eltern (no eltern Person to attach Parent + ParentStudent rows to)',
+    );
+  }
+  if (options.withParentLinks?.eltern) {
+    const studentCount = options.withStudents?.length ?? 0;
+    const maxIdx = Math.max(...options.withParentLinks.eltern.studentIndexes);
+    if (maxIdx >= studentCount) {
+      throw new Error(
+        `createThrowawaySchool: withParentLinks.eltern.studentIndexes[max=${maxIdx}] is out of range (only ${studentCount} students provisioned)`,
+      );
+    }
+  }
+  if (options.withKlassenvorstand && !withTimetableStack) {
+    throw new Error(
+      'createThrowawaySchool: withKlassenvorstand requires withTimetableStack (no Teacher row exists to assign as Klassenvorstand)',
+    );
+  }
+  if (options.withKlassenvorstand === 'lehrer' && !roles.lehrer) {
+    throw new Error(
+      'createThrowawaySchool: withKlassenvorstand=lehrer requires roles.lehrer (otherwise the timetable stack picks a fixture-only Teacher whose Person is not the seed lehrer)',
     );
   }
 
@@ -736,6 +801,41 @@ export async function createThrowawaySchool(
       };
     }
 
+    // Issue #151 — Parent + ParentStudent rows. The eltern Person was
+    // created above (when roles.eltern); attach a Parent row to it and
+    // link the requested student indexes. Cascade-clean via School delete
+    // (Parent.schoolId FK + ParentStudent FKs both onDelete: Cascade).
+    const parentIds: Partial<Record<SeedRole, string>> = {};
+    if (options.withParentLinks?.eltern && personIds.eltern) {
+      const elternParent = await prisma.parent.create({
+        data: {
+          personId: personIds.eltern,
+          schoolId: school.id,
+        },
+      });
+      parentIds.eltern = elternParent.id;
+      for (const idx of options.withParentLinks.eltern.studentIndexes) {
+        await prisma.parentStudent.create({
+          data: {
+            parentId: elternParent.id,
+            studentId: studentIds[idx],
+          },
+        });
+      }
+    }
+
+    // Issue #151 — assign the timetable stack's primary Teacher as
+    // Klassenvorstand of class[0]. Required by the Excuses review surface
+    // which scopes PENDING excuses to the KV's classes. Only the 'lehrer'
+    // role variant is supported today (schulleitung KV is rare in DACH
+    // schools and out of scope for the current spec set).
+    if (options.withKlassenvorstand === 'lehrer' && timetable && classIds[0]) {
+      await prisma.schoolClass.update({
+        where: { id: classIds[0] },
+        data: { klassenvorstandId: timetable.teacherId },
+      });
+    }
+
     const capturedTimetable = timetable;
     const cleanup = async () => {
       const p = buildPrisma();
@@ -782,6 +882,7 @@ export async function createThrowawaySchool(
       timetable,
       secondTeacher,
       studentIds,
+      parentIds,
       classBookEntryId,
       timetableEditId,
       cleanup,
