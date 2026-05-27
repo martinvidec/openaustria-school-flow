@@ -1265,13 +1265,24 @@ model Conversation {
   scopeId       String?           @map("scope_id") // classId for CLASS, yearLevel string for YEAR_GROUP, null for SCHOOL/DIRECT
   subject       String?           // required for broadcasts
   createdBy     String            @map("created_by") // keycloakUserId
-  directPairKey String?           @unique @map("direct_pair_key") // sorted "userId1:userId2" for DIRECT dedup (Pitfall 5)
+  // Issue #150 — scoped per-school. `directPairKey` is the sorted
+  // "userId1:userId2" key used by `ConversationService.createDirect`
+  // for find-or-create dedup (Pitfall 5). Pre-#150 the column was
+  // GLOBALLY @unique, which broke any deployment where a user has
+  // memberships in multiple schools: the first DIRECT conversation
+  // between two such users in school A blocked a second DIRECT
+  // conversation between the same pair in school B (and silently
+  // aliased subsequent creates back to school A). Composite-uniqueing
+  // (schoolId, directPairKey) restores per-tenant isolation and
+  // unblocks the throwaway-school e2e migration (#150).
+  directPairKey String?           @map("direct_pair_key")
   createdAt     DateTime          @default(now()) @map("created_at")
   updatedAt     DateTime          @updatedAt @map("updated_at")
 
   messages            Message[]
   conversationMembers ConversationMember[]
 
+  @@unique([schoolId, directPairKey], name: "schoolId_directPairKey")
   @@index([schoolId, scope])
   @@index([createdBy])
   @@map("conversations")

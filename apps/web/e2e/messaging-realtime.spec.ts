@@ -1,6 +1,14 @@
 /**
  * Issue #84 — Messaging Socket.IO realtime delivery (slice 5/5, "optional" per the issue).
  *
+ * Issue #150 (Phase 3.5/3) — migrated to throwaway-school per CLAUDE.md D4.
+ * The `messaging:direct:lehrer-eltern:${SEED_SCHOOL_UUID}` advisory lock
+ * is gone. Each spec owns its own throwaway School + DIRECT conversation
+ * (find-or-create scoped per-school by the (school_id, direct_pair_key)
+ * composite unique introduced in the same PR), so the Socket.IO emit
+ * delivers cross-context to the intended eltern without cross-spec
+ * collision.
+ *
  * Locks the WebSocket-driven invalidation path on /messages: a message
  * sent by one user lands in another user's open conversation view
  * WITHOUT a page reload. This is the load-bearing UX promise of the
@@ -25,58 +33,52 @@
  * Playwright contexts isolate cookies/localStorage. Sharing a context
  * between kc-lehrer and kc-eltern would force a Keycloak re-login
  * each time and risk auth-state races; two contexts give two clean
- * sessions in parallel.
+ * sessions in parallel. The Socket.IO `user:<kcUserId>` room is keyed
+ * on the Keycloak user id — no school dimension at the socket layer —
+ * so the throwaway-school binding doesn't change the WS contract;
+ * only the conversation tenancy changes.
  *
  * Why no `page.reload()` between seed and assertion: that's the whole
  * point. If a reload were needed, the socket layer wouldn't be doing
  * its job and the spec wouldn't be a regression-lock — it would be a
  * stale-cache stress test.
- *
- * Chromium-only-skip per the race-family precedent — shared
- * lehrer↔eltern DIRECT row is a per-pair singleton (`directPairKey`).
  */
 import { test, expect } from '@playwright/test';
 import { loginAsRole } from './helpers/login';
-import { getSeedUserId } from './helpers/users';
 import {
   MESSAGING_PREFIX,
-  cleanupE2EConversations,
   createDirectConversation,
   sendMessageViaAPI,
   type CreatedConversation,
 } from './helpers/messaging';
-import { acquireAdvisoryLock, type AdvisoryLock } from './helpers/advisory-lock';
-import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
+import {
+  createThrowawaySchool,
+  type ThrowawaySchoolFixture,
+} from './fixtures/throwaway-school';
+import { useThrowawaySchoolHeader } from './helpers/school-context';
 
-test.describe('Issue #84 — Messaging realtime (Socket.IO, desktop)', () => {
+test.describe('Issue #84 — Messaging realtime (Socket.IO, throwaway-school, #150)', () => {
   test.skip(
     ({ isMobile }) => isMobile,
     'List-detail two-pane layout is desktop-only; mobile realtime parity is a follow-up once the mobile route lands.',
   );
 
-  // Issue #112 Phase 4 wave 2b (#120): DIRECT lehrer↔eltern is a per-pair
-  // singleton (find-or-create on `directPairKey`). Shared with the
-  // messaging-direct-1on1 spec — without the lock, a parallel run on
-  // the other spec would interleave messages into the same row and
-  // contaminate the realtime delivery assertion. Lock acquired here
-  // serializes both specs cross-spec AND cross-project.
-  let lock: AdvisoryLock | undefined;
+  let fixture: ThrowawaySchoolFixture | undefined;
   let created: CreatedConversation | null = null;
 
   test.beforeEach(async () => {
-    lock = await acquireAdvisoryLock(
-      `messaging:direct:lehrer-eltern:${SEED_SCHOOL_UUID}`,
-    );
+    fixture = await createThrowawaySchool({
+      roles: { lehrer: true, eltern: true },
+      withClasses: 1,
+      namePrefix: 'E2E-MSG-RT',
+    });
   });
 
-  test.afterEach(async ({ request }) => {
-    // Scope sweep to this spec's own sub-prefix so sibling messaging
-    // specs running in parallel don't sweep our mid-test DIRECT row.
-    await cleanupE2EConversations(request, `${MESSAGING_PREFIX}RT-`, 'lehrer');
+  test.afterEach(async () => {
     created = null;
-    if (lock) {
-      await lock.release();
-      lock = undefined;
+    if (fixture) {
+      await fixture.cleanup();
+      fixture = undefined;
     }
   });
 
@@ -84,17 +86,22 @@ test.describe('Issue #84 — Messaging realtime (Socket.IO, desktop)', () => {
     browser,
     request,
   }) => {
+    if (!fixture) throw new Error('fixture not seeded');
+    const elternKcId = fixture.keycloakUserIds.eltern;
+    if (!elternKcId) throw new Error('throwaway fixture missing eltern KC id');
+
     const ts = Date.now();
     const initialBody = `${MESSAGING_PREFIX}RT-INIT-${ts} — Erste Nachricht (initial seed)`;
     const realtimeBody = `${MESSAGING_PREFIX}RT-LIVE-${ts} — Diese Nachricht muss ohne Reload erscheinen`;
 
     // Seed the DIRECT row + initial message so eltern's /messages
-    // list has a row to click.
-    const elternId = await getSeedUserId(request, 'eltern');
+    // list has a row to click. schoolId pinned to throwaway so the
+    // per-school directPairKey unique resolves inside our tenant.
     created = await createDirectConversation(request, {
       actorRole: 'lehrer',
-      recipientId: elternId,
+      recipientId: elternKcId,
       body: initialBody,
+      schoolId: fixture.schoolId,
     });
 
     // Eltern session — open /messages, click the row, mount
@@ -103,8 +110,15 @@ test.describe('Issue #84 — Messaging realtime (Socket.IO, desktop)', () => {
     // _authenticated layout — it doesn't require the messages route
     // specifically, but mounting there ensures we're on the right
     // useMessages query key for invalidation).
+    //
+    // The throwaway-school header is installed on the eltern context
+    // BEFORE login so `/users/me` resolves the throwaway as the active
+    // school (the seed admin's interceptor ordering doesn't matter for
+    // eltern — eltern only has one Person row in seed and one in the
+    // throwaway, header forces the throwaway pick).
     const elternContext = await browser.newContext();
     try {
+      await useThrowawaySchoolHeader(elternContext, fixture.schoolId);
       const elternPage = await elternContext.newPage();
       await loginAsRole(elternPage, 'eltern');
       await elternPage.goto('/messages');
@@ -141,6 +155,7 @@ test.describe('Issue #84 — Messaging realtime (Socket.IO, desktop)', () => {
       await sendMessageViaAPI(request, created.id, {
         actorRole: 'lehrer',
         body: realtimeBody,
+        schoolId: fixture.schoolId,
       });
 
       // Eltern's `useMessagingSocket.on('message:new')` invalidates

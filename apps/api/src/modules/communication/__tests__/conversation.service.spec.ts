@@ -249,10 +249,12 @@ describe('ConversationService', () => {
 
     expect(result).toBeDefined();
     expect(result.id).toBe('conv-direct');
-    // Verify directPairKey lookup was attempted
+    // Verify (schoolId, directPairKey) composite lookup was attempted —
+    // post-#150 the dedup is scoped per-school so a user with multi-school
+    // memberships gets a distinct DIRECT row per school.
     expect(prisma.conversation.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { directPairKey: 'user-a:user-b' },
+        where: { schoolId_directPairKey: { schoolId: 'school-1', directPairKey: 'user-a:user-b' } },
       }),
     );
   });

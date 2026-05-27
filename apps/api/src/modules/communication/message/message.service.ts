@@ -645,10 +645,15 @@ export class MessageService {
 
     const studentName = `${student.person.firstName} ${student.person.lastName}`;
 
-    // 3. Find or create DIRECT conversation between parent and KV
+    // 3. Find or create DIRECT conversation between parent and KV.
+    //
+    // Issue #150 — `directPairKey` is now scoped per-school via the
+    // composite (schoolId, directPairKey) unique key. A user with
+    // memberships in multiple schools gets a separate DIRECT conversation
+    // per school, matching ConversationService.createDirect's lookup.
     const directPairKey = [parentUserId, kvKeycloakId].sort().join(':');
     let conversation = await this.prisma.conversation.findUnique({
-      where: { directPairKey },
+      where: { schoolId_directPairKey: { schoolId, directPairKey } },
     });
 
     if (!conversation) {

@@ -1,6 +1,16 @@
 /**
  * Issue #84 — Messaging DIRECT 1:1 (lehrer → eltern, recipient visibility).
  *
+ * Issue #150 (Phase 3.5/3) — migrated to throwaway-school per CLAUDE.md D4.
+ * The `messaging:direct:lehrer-eltern:${SEED_SCHOOL_UUID}` advisory lock
+ * is gone; each spec owns its own throwaway School so DIRECT find-or-create
+ * (Pitfall 5) lives in tenant-isolated rows. The same PR also closed a
+ * latent backend bug — `conversations.direct_pair_key` was previously a
+ * GLOBALLY unique column, so two parallel throwaway specs would alias to
+ * a single Conversation row on whichever throwaway happened to win the
+ * race. The composite (school_id, direct_pair_key) unique introduced in
+ * the same PR restores per-tenant isolation.
+ *
  * Slice 2/n of the Messaging coverage gap. Locks the recipient-side flow
  * for DIRECT 1:1 conversations: a message that the lehrer sends to a
  * single parent must surface in that parent's /messages list, and
@@ -24,76 +34,64 @@
  * MSG-LIST-01 pattern (seed-via-API, assert-via-UI), keeps the spec
  * focused on the recipient-visibility contract, and avoids couplng to
  * the unrelated dialog wiring gap.
- *
- * Chromium-only-skip per the race-family precedent — DIRECT rows
- * between the shared seed (lehrer-user, eltern-user) pair are
- * find-or-create, so two parallel browser projects would step on the
- * same `directPairKey` row mid-flight.
  */
 import { test, expect } from '@playwright/test';
 import { loginAsRole } from './helpers/login';
-import { getSeedUserId } from './helpers/users';
 import {
   MESSAGING_PREFIX,
-  cleanupE2EConversations,
   createDirectConversation,
   type CreatedConversation,
 } from './helpers/messaging';
-import { acquireAdvisoryLock, type AdvisoryLock } from './helpers/advisory-lock';
-import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
+import {
+  createThrowawaySchool,
+  type ThrowawaySchoolFixture,
+} from './fixtures/throwaway-school';
+import { useThrowawaySchoolHeader } from './helpers/school-context';
 
-test.describe('Issue #84 — Messaging DIRECT 1:1 (lehrer → eltern, desktop)', () => {
+test.describe('Issue #84 — Messaging DIRECT 1:1 (lehrer → eltern, throwaway-school, #150)', () => {
   test.skip(
     ({ isMobile }) => isMobile,
     'List-detail two-pane layout is desktop-only; mobile has a separate route a future slice will cover.',
   );
 
-  // Issue #112 Phase 4 wave 2b (#120): DIRECT lehrer↔eltern is a per-pair
-  // singleton (find-or-create on `directPairKey`). The realtime spec
-  // (messaging-realtime.spec.ts) also writes to the same pair — without
-  // the lock, two parallel specs would see each other's mid-test
-  // messages on the shared row. Lock serializes both specs cross-spec
-  // AND cross-project.
-  let lock: AdvisoryLock | undefined;
+  let fixture: ThrowawaySchoolFixture | undefined;
   let created: CreatedConversation | null = null;
 
   test.beforeEach(async () => {
-    lock = await acquireAdvisoryLock(
-      `messaging:direct:lehrer-eltern:${SEED_SCHOOL_UUID}`,
-    );
+    fixture = await createThrowawaySchool({
+      roles: { lehrer: true, eltern: true },
+      withClasses: 1,
+      namePrefix: 'E2E-MSG-DIRECT',
+    });
   });
 
-  test.afterEach(async ({ request }) => {
-    // Sweep DIRECT rows whose latest message body carries the E2E-MSG-
-    // prefix. Listing AS lehrer is required because admin is not a
-    // member of DIRECT conversations and so cannot see them via the
-    // member-scoped GET. Deletion still goes through the admin token
-    // inside the helper (DELETE requires manage:communication).
-    // Scope sweep to this spec's own sub-prefix so sibling messaging
-    // specs running in parallel don't sweep our mid-test DIRECT row
-    // (race-family from PR #107 parallel-run failure: shared
-    // `E2E-MSG-` prefix made every spec's afterEach sweep every
-    // other spec's conversations).
-    await cleanupE2EConversations(request, `${MESSAGING_PREFIX}DIRECT-`, 'lehrer');
+  test.afterEach(async () => {
     created = null;
-    if (lock) {
-      await lock.release();
-      lock = undefined;
+    if (fixture) {
+      await fixture.cleanup();
+      fixture = undefined;
     }
   });
 
   test('MSG-DIRECT-01: lehrer-sent DIRECT message appears in eltern-user list and opens with body', async ({
     page,
+    context,
     request,
   }) => {
-    const elternId = await getSeedUserId(request, 'eltern');
+    if (!fixture) throw new Error('fixture not seeded');
+    const elternKcId = fixture.keycloakUserIds.eltern;
+    if (!elternKcId) throw new Error('throwaway fixture missing eltern KC id');
+
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
+
     const ts = Date.now();
     const body = `${MESSAGING_PREFIX}DIRECT-${ts} — Hallo, eine direkte Nachricht von Maria Mueller.`;
 
     created = await createDirectConversation(request, {
       actorRole: 'lehrer',
-      recipientId: elternId,
+      recipientId: elternKcId,
       body,
+      schoolId: fixture.schoolId,
     });
     expect(created.id, 'POST /conversations DIRECT must return an id').toBeTruthy();
 
@@ -109,8 +107,8 @@ test.describe('Issue #84 — Messaging DIRECT 1:1 (lehrer → eltern, desktop)',
     // body preview underneath (ConversationListItem.tsx:33-34, 73-75).
     // Matching on the unique body prefix isolates this run's row from
     // any pre-existing lehrer↔eltern DIRECT conversation (find-or-create
-    // semantics mean the same conversation row can carry many prior
-    // messages — only the latest is asserted).
+    // semantics within this school — global cross-school aliasing was
+    // closed in #150 backend changes).
     const row = page.getByRole('button', { name: new RegExp(`${MESSAGING_PREFIX}DIRECT-${ts}`) });
     await expect(
       row,
@@ -122,8 +120,7 @@ test.describe('Issue #84 — Messaging DIRECT 1:1 (lehrer → eltern, desktop)',
     // ConversationView renders the first message via MessageBubble
     // (MessageBubble.tsx:90). `.first()` because the unique body string
     // appears twice on the page after the row click: once in the
-    // truncated list preview and once in the bubble itself. Assertion
-    // intent ("body is rendered in ConversationView") is preserved.
+    // truncated list preview and once in the bubble itself.
     await expect(
       page.getByText(body).first(),
       'DIRECT message body must appear in ConversationView after click',
