@@ -19,6 +19,13 @@ import { SEED_SCHOOL_UUID } from '../fixtures/seed-uuids';
 
 export const SUBSTITUTIONS_API =
   process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
+/**
+ * Default school id for the legacy seed-school flow. Specs migrating to
+ * throwaway-school (Issue #153 batches A–D) pass `schoolId` explicitly per
+ * call; the default stays for any spec still bound to the seed school
+ * until its batch lands. The constant + default will be removed alongside
+ * the last seed-school caller in Batch D.
+ */
 export const SUBSTITUTIONS_SCHOOL_ID =
   process.env.E2E_SCHOOL_ID ?? SEED_SCHOOL_UUID;
 
@@ -38,14 +45,18 @@ export interface CreatedAbsence {
 /**
  * POST /absences as admin. Returns the new absence id so afterEach can
  * cancel it (cascade-deletes any auto-generated substitutions).
+ *
+ * `schoolId` defaults to the legacy seed-school. Throwaway-school specs
+ * pass `fixture.schoolId` so the absence lands in the per-spec school.
  */
 export async function createAbsenceViaAPI(
   request: APIRequestContext,
   input: CreateAbsenceInput,
+  schoolId: string = SUBSTITUTIONS_SCHOOL_ID,
 ): Promise<CreatedAbsence> {
   const token = await getAdminToken(request);
   const res = await request.post(
-    `${SUBSTITUTIONS_API}/schools/${SUBSTITUTIONS_SCHOOL_ID}/absences`,
+    `${SUBSTITUTIONS_API}/schools/${schoolId}/absences`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -85,10 +96,11 @@ export async function createAbsenceViaAPI(
 export async function cancelAbsenceViaAPI(
   request: APIRequestContext,
   absenceId: string,
+  schoolId: string = SUBSTITUTIONS_SCHOOL_ID,
 ): Promise<void> {
   const token = await getAdminToken(request);
   const res = await request.delete(
-    `${SUBSTITUTIONS_API}/schools/${SUBSTITUTIONS_SCHOOL_ID}/absences/${absenceId}`,
+    `${SUBSTITUTIONS_API}/schools/${schoolId}/absences/${absenceId}`,
     { headers: { Authorization: `Bearer ${token}` } },
   );
   if (!res.ok() && res.status() !== 404) {
@@ -107,6 +119,7 @@ export async function cancelAbsenceViaAPI(
  */
 export async function listSubstitutionsViaAPI(
   request: APIRequestContext,
+  schoolId: string = SUBSTITUTIONS_SCHOOL_ID,
 ): Promise<
   Array<{
     id: string;
@@ -120,7 +133,7 @@ export async function listSubstitutionsViaAPI(
 > {
   const token = await getAdminToken(request);
   const res = await request.get(
-    `${SUBSTITUTIONS_API}/schools/${SUBSTITUTIONS_SCHOOL_ID}/substitutions`,
+    `${SUBSTITUTIONS_API}/schools/${schoolId}/substitutions`,
     { headers: { Authorization: `Bearer ${token}` } },
   );
   expect(
@@ -150,10 +163,11 @@ export async function assignSubstituteViaAPI(
   request: APIRequestContext,
   substitutionId: string,
   candidateTeacherId: string,
+  schoolId: string = SUBSTITUTIONS_SCHOOL_ID,
 ): Promise<void> {
   const token = await getAdminToken(request);
   const res = await request.post(
-    `${SUBSTITUTIONS_API}/schools/${SUBSTITUTIONS_SCHOOL_ID}/substitutions/${substitutionId}/assign`,
+    `${SUBSTITUTIONS_API}/schools/${schoolId}/substitutions/${substitutionId}/assign`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
