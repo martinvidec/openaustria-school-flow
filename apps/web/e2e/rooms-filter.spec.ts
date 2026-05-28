@@ -1,6 +1,13 @@
 /**
  * Quick task 260426-fwb — Rooms-filter E2E regression guard (desktop).
  *
+ * Issue #167 (Phase 3.5/6 Batch C) — migrated to throwaway-school per
+ * CLAUDE.md D4. The `active-timetable-run:SEED_SCHOOL_UUID` advisory lock
+ * is gone; each invocation owns its own school with exactly one Room
+ * (the timetable-stack's fixture room, type KLASSENZIMMER). The filter
+ * tests now run against a one-room tenant — Test 1 hits that room as a
+ * Klassenzimmer match; Test 2 picks Werkraum and gets the empty state.
+ *
  * Drives the running RoomsPage as admin and proves the filter from commit
  * 5378ec0 (2026-04-02) is still wired correctly end-to-end:
  *
@@ -13,44 +20,23 @@
  *     appears anywhere in the request URL.
  *
  *   Test 2 — UI-level guard for hasActiveFilters branching:
- *     Selecting Raumtyp=Werkraum yields zero matches. After #51 the
- *     prisma:seed creates 3 KLASSENZIMMER + Turnsaal + EDV-Raum +
- *     Musikraum, but neither Werkraum nor Labor — Werkraum is the
- *     stable empty-filter target. The empty-state Card must show the
- *     filter-aware copy ("Keine passenden Raeume") and NOT the legacy
- *     un-branched copy ("Keine Raeume angelegt"). Reverting the
- *     hasActiveFilters branch in rooms/index.tsx fails this assertion.
- *
- * Closes deferred items 2 + 3 from
- *   .planning/debug/resolved/room-filter-not-working.md
- * Item 1 (extract RoomType to packages/shared) remains deferred per the
- * original debug session's hardening note (gated on a second consumer).
- *
- * Fixture choice — REUSE seedTimetableRun:
- *   - Self-provisions a Room with roomType KLASSENZIMMER (timetable-run.ts:240-249)
- *     when the seed school has none — kept for back-compat even though
- *     prisma:seed now creates rooms (since #51). Test 1 still finds a
- *     Klassenzimmer match. Test 2 deliberately picks Werkraum (which
- *     neither seed nor fixture provisions) for guaranteed zero matches.
- *   - Activates MON–FRI school days so the availability grid renders.
- *   - Same fixture used by admin-timetable-edit-perspective.spec.ts —
- *     keeping the contract in one place reduces fixture drift.
- *   If a future seed adds a WERKRAUM room, Test 2 will start failing —
- *   that's the correct signal. Flip the assertion to LABOR at that point.
+ *     Selecting Raumtyp=Werkraum yields zero matches in the throwaway
+ *     school (only the fixture KLASSENZIMMER exists). The empty-state
+ *     Card must show the filter-aware copy ("Keine passenden Raeume") and
+ *     NOT the legacy un-branched copy ("Keine Raeume angelegt").
+ *     Reverting the hasActiveFilters branch in rooms/index.tsx fails this
+ *     assertion.
  *
  * Desktop-only via file naming (no `mobile` infix) — playwright.config.ts:42
  * routes `*.spec.ts` files to the desktop project automatically.
  */
 import { test, expect } from '@playwright/test';
-import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 import { loginAsAdmin } from './helpers/login';
 import {
-  seedTimetableRun,
-  cleanupTimetableRun,
-  type TimetableRunFixture,
-} from './fixtures/timetable-run';
-
-const SCHOOL_ID = process.env.E2E_SCHOOL_ID ?? SEED_SCHOOL_UUID;
+  createThrowawaySchool,
+  type ThrowawaySchoolFixture,
+} from './fixtures/throwaway-school';
+import { useThrowawaySchoolHeader } from './helpers/school-context';
 
 test.describe('Rooms-filter regression — German enum + filter-aware empty state (desktop)', () => {
   // Mobile projects run their own viewport-sized specs; this regression
@@ -62,10 +48,16 @@ test.describe('Rooms-filter regression — German enum + filter-aware empty stat
     'Rooms-filter behavior is identical across viewports — desktop only.',
   );
 
-  let fixture: TimetableRunFixture;
+  let fixture: ThrowawaySchoolFixture | undefined;
 
-  test.beforeEach(async ({ page }) => {
-    fixture = await seedTimetableRun(SCHOOL_ID);
+  test.beforeEach(async ({ context, page }) => {
+    fixture = await createThrowawaySchool({
+      roles: { admin: true, lehrer: true },
+      withClasses: 1,
+      withTimetableStack: true,
+      namePrefix: 'E2E-ROOM-FILT',
+    });
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
     await loginAsAdmin(page);
     await page.goto('/rooms');
     // Wait for the Raumtyp combobox to be ready before each test interacts
@@ -75,7 +67,8 @@ test.describe('Rooms-filter regression — German enum + filter-aware empty stat
 
   test.afterEach(async () => {
     if (fixture) {
-      await cleanupTimetableRun(fixture);
+      await fixture.cleanup();
+      fixture = undefined;
     }
   });
 
@@ -128,11 +121,8 @@ test.describe('Rooms-filter regression — German enum + filter-aware empty stat
   }) => {
     await page.waitForLoadState('networkidle');
 
-    // Pick Werkraum — guaranteed zero matches. The seed school has 3
-    // KLASSENZIMMER + Turnsaal + EDV-Raum + Musikraum, but neither
-    // Werkraum nor Labor (#51 added rooms; the doc-comment of this file
-    // foresaw exactly this drift and prescribed flipping the filter to
-    // an empty type when it happens). Day filter stays at the default.
+    // Pick Werkraum — guaranteed zero matches in the throwaway school
+    // (the only room is the timetable-stack KLASSENZIMMER).
     await page.getByRole('combobox').nth(1).click();
     await page
       .getByRole('option', { name: 'Werkraum', exact: true })
