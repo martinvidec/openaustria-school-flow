@@ -1,26 +1,24 @@
 /**
  * Issue #85 — Admin "Offene Vertretungen" panel.
  *
- * First sub-spec of the Substitutions coverage gap. Locks the admin-side
- * view of auto-generated substitutions:
+ * Issue #165 (Phase 3.5/6 Batch A) — migrated to throwaway-school per
+ * CLAUDE.md D4. The `active-timetable-run:SEED_SCHOOL_UUID` advisory lock
+ * is gone for this spec; each invocation owns its own throwaway School so
+ * the substitution-list panel renders only rows this spec created. The
+ * `.first()` race-defense on the panel match is therefore no longer needed
+ * either — replaced with a strict-mode assertion.
  *
  *   1. Seed an active TimetableRun with one lesson at MONDAY/period-1
- *      for class 1A, taught by kc-lehrer (Maria Mueller).
- *   2. POST an absence for kc-lehrer covering the upcoming Monday →
- *      backend auto-expands to one Substitution row.
+ *      for the throwaway class, taught by kc-lehrer.
+ *   2. POST an absence for the throwaway teacher covering the upcoming
+ *      Monday → backend auto-expands to one Substitution row.
  *   3. Admin opens /admin/substitutions?tab=open → OpenSubstitutionsPanel
  *      surfaces the row with the absent teacher's name.
  *
  * Why this slice first: it exercises three load-bearing layers in one
  * test — backend absence-to-substitution expansion (4 .createMany
  * branch in teacher-absence.service.ts), useSubstitutions list fetch,
- * and OpenSubstitutionsPanel rendering. The UI-driven AbsenceForm
- * flow and the "assign substitute" / Entfall / Stillarbeit actions are
- * deferred to follow-up sub-specs.
- *
- * Chromium-only-skip per the race-family precedent — shared seed-school
- * mutating specs collide on parallel browser projects (TimetableRun is
- * the canonical race surface).
+ * and OpenSubstitutionsPanel rendering.
  */
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/login';
@@ -31,11 +29,10 @@ import {
   type CreatedAbsence,
 } from './helpers/substitutions';
 import {
-  cleanupTimetableRun,
-  seedTimetableRun,
-  type TimetableRunFixture,
-} from './fixtures/timetable-run';
-import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
+  createThrowawaySchool,
+  type ThrowawaySchoolFixture,
+} from './fixtures/throwaway-school';
+import { useThrowawaySchoolHeader } from './helpers/school-context';
 
 test.describe('Issue #85 — Admin Offene Vertretungen (desktop)', () => {
   test.skip(
@@ -43,47 +40,68 @@ test.describe('Issue #85 — Admin Offene Vertretungen (desktop)', () => {
     'Panel rendering is identical across viewports — desktop only for the first lock.',
   );
 
-  // Per-test seeding — describe-level test.skip does NOT gate
-  // beforeAll/afterAll (CI lesson from #81/#86). Per-test hooks ARE
-  // gated and the `if (!x)` guards belt-and-brace the cleanup against
-  // any half-applied state.
-  let fixture: TimetableRunFixture | undefined;
+  let fixture: ThrowawaySchoolFixture | undefined;
   let absence: CreatedAbsence | undefined;
 
-  test.beforeEach(async ({ page }) => {
-    fixture = await seedTimetableRun(SEED_SCHOOL_UUID);
+  test.beforeEach(async ({ context, page }) => {
+    // roles: admin (drives /admin/substitutions) + lehrer (the absent
+    // teacher must be tied to a Person row; the throwaway timetable stack
+    // binds the lone Teacher to the lehrer Person when roles.lehrer is on,
+    // so the absence has a teacher to belong to and the panel has a name
+    // to render).
+    fixture = await createThrowawaySchool({
+      roles: { admin: true, lehrer: true },
+      withClasses: 1,
+      withTimetableStack: true,
+      namePrefix: 'E2E-SUB-LIST',
+    });
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
     await loginAsAdmin(page);
   });
 
   test.afterEach(async ({ request }) => {
-    if (absence) {
-      await cancelAbsenceViaAPI(request, absence.id);
+    // Belt-and-braces cancel: the throwaway-school cleanup cascades
+    // through TeacherAbsence + Substitution rows, but explicit cancel
+    // protects against a half-applied cleanup if a later edit re-orders
+    // teardown.
+    if (absence && fixture) {
+      await cancelAbsenceViaAPI(request, absence.id, fixture.schoolId);
       absence = undefined;
     }
     if (fixture) {
-      await cleanupTimetableRun(fixture);
+      await fixture.cleanup();
       fixture = undefined;
     }
   });
 
-  test('SUB-ADMIN-01: absence for kc-lehrer surfaces a substitution row in OpenSubstitutionsPanel', async ({
+  test('SUB-ADMIN-01: absence for the throwaway teacher surfaces a substitution row in OpenSubstitutionsPanel', async ({
     page,
     request,
   }) => {
     if (!fixture) throw new Error('fixture not seeded');
+    const stack = fixture.timetable!;
 
-    // Absence covering the upcoming Monday — aligns with the seed
+    // Throwaway teacher Person was created as
+    // `firstName = '<namePrefix>-lehrer'`, `lastName = '<suffix>'`. The
+    // perspective format `${lastName} ${firstName}` is exposed via
+    // `teacherDisplayName`; split it for the substitution panel which
+    // renders `${firstName} ${lastName}` (substitution.service.ts:455).
+    const [tLast, tFirst] = stack.teacherDisplayName.split(' ');
+
+    // Absence covering the upcoming Monday — aligns with the throwaway
     // lesson's day-of-week so the expansion algorithm produces one
-    // substitution row (teacher-absence.service.ts:138 eachDayOfInterval
-    // → filter by activeDaySet → match lesson by runId+teacherId+
-    // dayOfWeek).
+    // substitution row.
     const monday = nextMondayISODate();
-    absence = await createAbsenceViaAPI(request, {
-      teacherId: fixture.teacherId,
-      dateFrom: monday,
-      dateTo: monday,
-      reason: 'KRANK',
-    });
+    absence = await createAbsenceViaAPI(
+      request,
+      {
+        teacherId: stack.teacherId,
+        dateFrom: monday,
+        dateTo: monday,
+        reason: 'KRANK',
+      },
+      fixture.schoolId,
+    );
     expect(
       absence.affectedLessonCount ?? 0,
       'absence-expansion must create at least one substitution row',
@@ -98,19 +116,14 @@ test.describe('Issue #85 — Admin Offene Vertretungen (desktop)', () => {
     // the absence we just created should have populated the panel.
     await expect(page.getByText('Keine offenen Vertretungen')).toHaveCount(0);
 
-    // The OpenSubstitutionsPanel renders "Vertretung fuer: <originalTeacherName>"
-    // (apps/web/src/components/substitution/OpenSubstitutionsPanel.tsx:125).
-    // kc-lehrer's Person record is Maria Mueller (apps/api/prisma/seed.ts).
-    //
-    // `.first()` guards against the race-family pattern: sibling specs in
-    // the #85 cluster (notably teacher-substitutions-my-absences.spec.ts)
-    // also seed kc-lehrer absences on the same Monday, producing extra rows
-    // in this admin panel and tripping Playwright's strict-mode locator
-    // resolution. The assertion's intent — "panel shows the absent
-    // teacher's name on at least one row" — is preserved.
+    // Per-school isolation: the panel ONLY shows this throwaway school's
+    // substitutions, so a strict (non-`.first()`) match is now safe. The
+    // shared-tenant race that motivated `.first()` is gone.
     await expect(
-      page.getByText(/Vertretung fuer:\s*Maria Mueller/).first(),
-      'panel must show the absent teacher name on at least one substitution row',
+      page.getByText(
+        new RegExp(`Vertretung fuer:\\s*${tFirst}\\s+${tLast}`),
+      ),
+      'panel must show the absent teacher name on the substitution row',
     ).toBeVisible();
   });
 });

@@ -12,22 +12,26 @@
  *           visual preview; the original stays put to keep its bbox stable
  *           for collision detection).
  *
+ * Issue #165 (Phase 3.5/6 Batch A) — migrated to throwaway-school per
+ * CLAUDE.md D4. The `active-timetable-run:SEED_SCHOOL_UUID` advisory lock
+ * is gone; each invocation owns its own school. The teacher-perspective
+ * driver still works because the throwaway timetable stack pins the lone
+ * Teacher row to the lehrer Person, exposed via `teacherDisplayName`.
+ *
  * The describe is gated to the desktop Playwright project — see
  * playwright.config.ts:35 — because page.mouse pointer drags are reliable on
  * Chromium-Desktop only (mobile WebKit / mobile-Chromium are known-flaky for
  * DnD, see the Phase 11 mobile DnD note at playwright.config.ts:50–56).
  */
 import { test, expect } from '@playwright/test';
-import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
 import { getAdminToken, loginAsAdmin } from './helpers/login';
 import {
-  seedTimetableRun,
-  cleanupTimetableRun,
-  type TimetableRunFixture,
-} from './fixtures/timetable-run';
+  createThrowawaySchool,
+  type ThrowawaySchoolFixture,
+} from './fixtures/throwaway-school';
+import { useThrowawaySchoolHeader } from './helpers/school-context';
 
 const API_BASE = process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
-const SCHOOL_ID = process.env.E2E_SCHOOL_ID ?? SEED_SCHOOL_UUID;
 
 // File-naming gate: playwright.config.ts:42 routes `*.spec.ts` to the desktop
 // project and `*-mobile.spec.ts` / `*.mobile.spec.ts` to the mobile projects.
@@ -43,16 +47,22 @@ test.describe('Phase 04 regression — DnD timetable-edit (commit de9ee2b)', () 
     'DnD pointer drag is supported on desktop Chromium only',
   );
 
-  let fixture: TimetableRunFixture;
+  let fixture: ThrowawaySchoolFixture;
 
-  test.beforeEach(async ({ page }) => {
-    fixture = await seedTimetableRun(SCHOOL_ID);
+  test.beforeEach(async ({ context, page }) => {
+    fixture = await createThrowawaySchool({
+      roles: { admin: true, lehrer: true },
+      withClasses: 1,
+      withTimetableStack: true,
+      namePrefix: 'E2E-DND',
+    });
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
     await loginAsAdmin(page);
   });
 
   test.afterEach(async () => {
     if (fixture) {
-      await cleanupTimetableRun(fixture);
+      await fixture.cleanup();
     }
   });
 
@@ -67,8 +77,9 @@ test.describe('Phase 04 regression — DnD timetable-edit (commit de9ee2b)', () 
   test('REGRESSION-DND-422: PATCH /lessons/:id/move rejects extra lessonId in body, accepts whitelist-only body', async ({
     request,
   }) => {
+    const stack = fixture.timetable!;
     const token = await getAdminToken(request);
-    const url = `${API_BASE}/schools/${SCHOOL_ID}/timetable/lessons/${fixture.lessonId}/move`;
+    const url = `${API_BASE}/schools/${fixture.schoolId}/timetable/lessons/${stack.timetableLessonId}/move`;
 
     // Negative: extra `lessonId` field in body → 422 (forbidNonWhitelisted)
     const negative = await request.patch(url, {
@@ -77,7 +88,7 @@ test.describe('Phase 04 regression — DnD timetable-edit (commit de9ee2b)', () 
         'Content-Type': 'application/json',
       },
       data: {
-        lessonId: fixture.lessonId,
+        lessonId: stack.timetableLessonId,
         targetDay: 'TUESDAY',
         targetPeriod: 2,
       },
@@ -118,11 +129,12 @@ test.describe('Phase 04 regression — DnD timetable-edit (commit de9ee2b)', () 
       true,
       'Phase 17 deferred: DnD pointer-drag timing regression — see 17-TRIAGE.md row #cluster-04-dnd.',
     );
+    const stack = fixture.timetable!;
     // Pick the seeded teacher in the perspective selector so the
     // timetable-view query becomes enabled (timetable-store default is
     // perspectiveId: null → query disabled → grid never mounts).
     await page.goto('/admin/timetable-edit');
-    await selectTeacherPerspective(page, fixture.teacherDisplayName);
+    await selectTeacherPerspective(page, stack.teacherDisplayName);
 
     // Enter edit mode — the page only mounts the DndContext when
     // editMode === true (timetable-edit.tsx:328).
@@ -138,7 +150,7 @@ test.describe('Phase 04 regression — DnD timetable-edit (commit de9ee2b)', () 
     // apps/api/src/modules/timetable/timetable.service.ts:447).
     const sourceLesson = page
       .getByRole('grid', { name: 'Stundenplan' })
-      .getByText(fixture.subjectAbbreviation, { exact: true })
+      .getByText(stack.subjectAbbreviation, { exact: true })
       .first();
     const targetCell = page.locator(
       '[data-slot-day="THURSDAY"][data-slot-period="5"]',
@@ -163,7 +175,7 @@ test.describe('Phase 04 regression — DnD timetable-edit (commit de9ee2b)', () 
     // checking the post-drop DOM state.
     const movePromise = page.waitForResponse(
       (r) =>
-        r.url().includes(`/lessons/${fixture.lessonId}/move`) &&
+        r.url().includes(`/lessons/${stack.timetableLessonId}/move`) &&
         r.request().method() === 'PATCH',
       { timeout: 15_000 },
     );
@@ -228,8 +240,9 @@ test.describe('Phase 04 regression — DnD timetable-edit (commit de9ee2b)', () 
   test('REGRESSION-DND-TRANSFORM: original DraggableLesson does not apply CSS translate during drag', async ({
     page,
   }) => {
+    const stack = fixture.timetable!;
     await page.goto('/admin/timetable-edit');
-    await selectTeacherPerspective(page, fixture.teacherDisplayName);
+    await selectTeacherPerspective(page, stack.teacherDisplayName);
     await page.getByRole('button', { name: 'Bearbeiten' }).click();
     await expect(
       page.getByRole('grid', { name: 'Stundenplan' }),
@@ -237,7 +250,7 @@ test.describe('Phase 04 regression — DnD timetable-edit (commit de9ee2b)', () 
 
     const sourceLesson = page
       .getByRole('grid', { name: 'Stundenplan' })
-      .getByText(fixture.subjectAbbreviation, { exact: true })
+      .getByText(stack.subjectAbbreviation, { exact: true })
       .first();
     await expect(sourceLesson).toBeVisible();
 
@@ -280,31 +293,11 @@ test.describe('Phase 04 regression — DnD timetable-edit (commit de9ee2b)', () 
     await page.mouse.move(sx + 30, sy + 30, { steps: 8 });
 
     // Active-drag detection via `aria-pressed="true"` on the OUTER
-    // useDraggable element. dnd-kit's `attributes` object sets
-    // `aria-pressed` to true while the draggable's own `isDragging`
-    // is true — same source-of-truth as the inner-cell
-    // `data-dragging-source` attribute, but bound to the element the
-    // test already located instead of a separate selector keyed on
-    // `fixture.lessonId`.
-    //
-    // The pre-fix inner-data-attribute approach was unreliable for two
-    // reasons. (1) Playwright's `toBeVisible` heuristics returned
-    // false intermittently under CI load, likely because the
-    // DragOverlay portal momentarily occludes the source cell's bbox
-    // and Playwright's visibility check briefly considered it
-    // offscreen. (2) The selector keyed on `fixture.lessonId` could
-    // mismatch the lessonId actually rendered in the grid when the
-    // page-query saw an in-flight DB state from a partially-completed
-    // cleanup of the previous test in a repeat-each batch (a stale
-    // ClassSubject still pointed the page-fetched lesson back to the
-    // previous run's id while the fixture variable already held the
-    // new one). The aria-pressed signal sidesteps both: it is
-    // intrinsic to the actually-dragged element regardless of which
-    // lessonId rendered.
-    //
-    // Timeout lifted to 20s (vs the global expect default of 10s) so
-    // a stalled CI worker does not RED-flag a drag that simply needs
-    // an extra rerender tick to commit the attribute.
+    // useDraggable element. Same source-of-truth as the inner-cell
+    // `data-dragging-source` attribute but bound to the element the
+    // test already located. Timeout lifted to 20s vs the global expect
+    // default so a stalled CI worker does not RED-flag a drag that
+    // simply needs an extra rerender tick to commit the attribute.
     await expect(
       draggableSource,
       'drag must be active (outer draggable carries aria-pressed=true)',
@@ -337,7 +330,7 @@ test.describe('Phase 04 regression — DnD timetable-edit (commit de9ee2b)', () 
     ).toBe(true);
 
     // Cleanly cancel the drag so the lesson is not moved (afterEach
-    // cleanup deletes the run anyway, but a clean drag-cancel keeps the
+    // cleanup deletes the school anyway, but a clean drag-cancel keeps the
     // page in a sane state should diagnostics need to inspect it).
     await page.keyboard.press('Escape');
     await page.mouse.up();
@@ -345,29 +338,16 @@ test.describe('Phase 04 regression — DnD timetable-edit (commit de9ee2b)', () 
 });
 
 /**
- * Switch the PerspectiveSelector to the seeded teacher (Maria Mueller).
- * Required because the timetable-store default perspective is
+ * Switch the PerspectiveSelector to the seeded throwaway teacher. Required
+ * because the timetable-store default perspective is
  * `{ perspective: 'teacher', perspectiveId: null }`, which leaves
  * useTimetableView disabled (`enabled: !!perspectiveId`) and the page
  * renders the "Kein Stundenplan vorhanden" empty state.
  *
- * Why teacher (not class): the production frontend hook
- * `useClasses` in apps/web/src/hooks/useTimetable.ts:91 calls
- * `/api/v1/classes` WITHOUT the required `?schoolId=...` query param,
- * so the API returns 404 → `classes = []` → no "Klassen" group ever
- * renders in the perspective dropdown. That's a separate frontend bug
- * (out of scope for this regression-coverage task — see SUMMARY
- * deviations). Driving via the teacher perspective is functionally
- * identical for the three FIXes under test (collision detection, body
- * shape, drag transform are all perspective-agnostic).
- *
  * Selector strategy: PerspectiveSelector renders a shadcn Select whose
- * trigger has role=combobox but no accessible name (Radix renders the
- * placeholder as inert text inside the trigger, so getByRole-with-name
- * misses it). The page only has ONE combobox before the grid mounts (the
- * DayWeekToggle is role=tablist), so `.first()` is safe and matches the
- * established pattern in admin-user-overrides.spec.ts:59 +
- * rooms-booking.spec.ts:202.
+ * trigger has role=combobox but no accessible name. The page only has ONE
+ * combobox before the grid mounts (DayWeekToggle is role=tablist), so
+ * `.first()` is safe.
  */
 async function selectTeacherPerspective(
   page: import('@playwright/test').Page,
