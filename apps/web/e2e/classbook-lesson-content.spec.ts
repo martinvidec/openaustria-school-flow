@@ -1,7 +1,11 @@
 /**
  * Issue #81 — Classbook Lesson-Content E2E coverage.
  *
- * Second sub-spec for the Klassenbuch surface (after #89 attendance).
+ * Issue #166 (Phase 3.5/6 Batch B) — migrated to throwaway-school per
+ * CLAUDE.md D4. The `active-timetable-run:SEED_SCHOOL_UUID` advisory lock
+ * is gone; each invocation owns its own ClassBookEntry (resolved on first
+ * GET), so the API-side reset before the test body is no longer needed.
+ *
  * Locks the auto-save flow on the "Inhalt" tab of /classbook/$lessonId:
  *   1. Open the lesson page with ?tab=inhalt.
  *   2. Fill the Thema textarea, blur (debounced 1 s PATCH /content).
@@ -10,30 +14,17 @@
  *      race the debounce).
  *   4. Reload → assert the value persists.
  *
- * Why this slice: it exercises the LessonContentForm blur-save loop, the
- * PATCH /classbook/:entryId/content endpoint, and the by-timetable-lesson
- * resolver chain (TimetableLesson → ClassBookEntry auto-create).
- * Lehrstoff + Hausaufgabe share the exact same hook + endpoint, so locking
- * one field locks all three at the wire level; field-specific UI quirks
- * (e.g. Thema character counter at >50 chars) can be added in a follow-up
- * spec when they become regression-prone.
- *
- * Chromium-only-skip per the race-family precedent — every spec on this
- * surface mutates the SAME seeded ClassBookEntry. Same pattern as
- * classbook-attendance.spec.ts.
+ * Exercises the LessonContentForm blur-save loop, PATCH
+ * /classbook/:entryId/content, and the by-timetable-lesson resolver
+ * chain (TimetableLesson → ClassBookEntry auto-create).
  */
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/login';
 import {
-  CLASSBOOK_SCHOOL_ID,
-  resetLessonContent,
-  resolveEntryByTimetableLesson,
-} from './helpers/classbook';
-import {
-  cleanupTimetableRun,
-  seedTimetableRun,
-  type TimetableRunFixture,
-} from './fixtures/timetable-run';
+  createThrowawaySchool,
+  type ThrowawaySchoolFixture,
+} from './fixtures/throwaway-school';
+import { useThrowawaySchoolHeader } from './helpers/school-context';
 
 test.describe('Issue #81 — Classbook Lesson-Content (desktop)', () => {
   test.skip(
@@ -41,63 +32,43 @@ test.describe('Issue #81 — Classbook Lesson-Content (desktop)', () => {
     'Content form is identical across viewports — desktop only for the first lock.',
   );
 
-  // Per-test seeding — describe-level test.skip does NOT gate beforeAll
-  // (CI lesson from #81 attendance run). Per-test hooks ARE gated.
-  let fixture: TimetableRunFixture | undefined;
+  let fixture: ThrowawaySchoolFixture | undefined;
 
-  test.beforeEach(async ({ page }) => {
-    fixture = await seedTimetableRun(CLASSBOOK_SCHOOL_ID);
+  test.beforeEach(async ({ context, page }) => {
+    fixture = await createThrowawaySchool({
+      roles: { admin: true, lehrer: true },
+      withClasses: 1,
+      withTimetableStack: true,
+      namePrefix: 'E2E-CB-CONTENT',
+    });
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
     await loginAsAdmin(page);
   });
 
-  test.afterEach(async ({ request }) => {
-    if (!fixture) return;
-    // Reset content fields BEFORE cascade-deleting the run. The
-    // ClassBookEntry is NOT FK-linked to TimetableRun (it's keyed on
-    // classSubjectId + date + period + weekType — schema.prisma:950), so
-    // the run's cascade-delete does not remove the entry. Without this
-    // reset, the next test would auto-resolve to an entry pre-populated
-    // with this test's Thema content.
-    const entry = await resolveEntryByTimetableLesson(
-      request,
-      CLASSBOOK_SCHOOL_ID,
-      fixture.lessonId,
-    );
-    await resetLessonContent(request, CLASSBOOK_SCHOOL_ID, entry.id);
-    await cleanupTimetableRun(fixture);
-    fixture = undefined;
+  test.afterEach(async () => {
+    if (fixture) {
+      await fixture.cleanup();
+      fixture = undefined;
+    }
   });
 
   test('CB-CONTENT-01: fill Thema → blur → "Gespeichert" → reload persists', async ({
     page,
-    request,
   }) => {
     if (!fixture) throw new Error('fixture not seeded');
+    const lessonId = fixture.timetable!.timetableLessonId;
 
-    // API-side baseline: clear content fields. A previously killed run
-    // could otherwise leave a Thema value in the row, and the reload
-    // assertion below would pass against state we didn't put there.
-    const entry = await resolveEntryByTimetableLesson(
-      request,
-      CLASSBOOK_SCHOOL_ID,
-      fixture.lessonId,
-    );
-    await resetLessonContent(request, CLASSBOOK_SCHOOL_ID, entry.id);
-
-    await page.goto(`/classbook/${fixture.lessonId}?tab=inhalt`);
+    await page.goto(`/classbook/${lessonId}?tab=inhalt`);
 
     const themaField = page.getByLabel('Thema', { exact: true });
     await expect(themaField).toBeVisible();
     await expect(
       themaField,
-      'Thema must start empty — reset wiped any prior content',
+      'Thema must start empty — fresh throwaway entry has no content',
     ).toHaveValue('');
 
-    // Timestamped value guards against the (unlikely) case that a sibling
-    // spec writes a fixed-string Thema between our PATCH-reset and the
-    // page reload. If we asserted on a literal like "Photosynthese" and
-    // a parallel test wrote the same, the persistence check would pass
-    // against state we didn't produce.
+    // Timestamped value keeps the assertion specific to this run even
+    // though the per-spec throwaway school already isolates state.
     const themaValue = `E2E Thema ${Date.now()}`;
     await themaField.fill(themaValue);
 

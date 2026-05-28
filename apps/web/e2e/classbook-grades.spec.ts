@@ -1,9 +1,13 @@
 /**
  * Issue #81 — Classbook Grade-Matrix create flow.
  *
- * Fourth sub-spec for the Klassenbuch surface (after #89 attendance +
- * #95 inhalt + #96 notizen). Locks the "Noten" tab's create-flow on
- * /classbook/$lessonId:
+ * Issue #166 (Phase 3.5/6 Batch B) — migrated to throwaway-school per
+ * CLAUDE.md D4. The `active-timetable-run:SEED_SCHOOL_UUID` advisory lock
+ * is gone; each invocation owns its own ClassSubject so the GradeMatrix
+ * empty-state is automatic and the `cleanupGradesForClassSubject` sweep
+ * is no longer needed.
+ *
+ * Locks the "Noten" tab's create-flow on /classbook/$lessonId:
  *   1. Open the lesson with ?tab=noten → "Noch keine Noten erfasst"
  *      empty state for a fresh ClassSubject.
  *   2. Click "Note hinzufuegen" → GradeEntryDialog opens.
@@ -13,24 +17,14 @@
  *   5. Dialog closes, GradeMatrix renders the student row with the
  *      grade column AND a weighted average. The average for one
  *      MITARBEIT-2 should display as "2.0".
- *
- * Exercises POST /classbook/grades + the GradeEntryDialog form +
- * GradeMatrix render + the grade-average util (one grade ⇒ avg =
- * that grade's value). Edit + delete + category-filter + weight
- * adjustment are deferred to follow-up sub-specs.
- *
- * Chromium-only-skip per the race-family precedent — every spec on
- * this surface writes Grade rows under the same seed ClassSubject.
  */
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/login';
-import { CLASSBOOK_SCHOOL_ID } from './helpers/classbook';
-import { cleanupGradesForClassSubject } from './helpers/grades';
 import {
-  cleanupTimetableRun,
-  seedTimetableRun,
-  type TimetableRunFixture,
-} from './fixtures/timetable-run';
+  createThrowawaySchool,
+  type ThrowawaySchoolFixture,
+} from './fixtures/throwaway-school';
+import { useThrowawaySchoolHeader } from './helpers/school-context';
 
 test.describe('Issue #81 — Classbook Grade-Matrix (desktop)', () => {
   test.skip(
@@ -38,37 +32,40 @@ test.describe('Issue #81 — Classbook Grade-Matrix (desktop)', () => {
     'GradeMatrix layout is identical across viewports — desktop only for the first lock.',
   );
 
-  let fixture: TimetableRunFixture | undefined;
+  let fixture: ThrowawaySchoolFixture | undefined;
 
-  test.beforeEach(async ({ page }) => {
-    fixture = await seedTimetableRun(CLASSBOOK_SCHOOL_ID);
+  test.beforeEach(async ({ context, page }) => {
+    fixture = await createThrowawaySchool({
+      roles: { admin: true, lehrer: true },
+      withClasses: 1,
+      withTimetableStack: true,
+      withStudents: [
+        { firstName: 'Anna', lastName: 'Schueler' },
+        { firstName: 'Berta', lastName: 'Schueler' },
+        { firstName: 'Carla', lastName: 'Schueler' },
+      ],
+      namePrefix: 'E2E-CB-GRADE',
+    });
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
     await loginAsAdmin(page);
   });
 
-  test.afterEach(async ({ request }) => {
-    if (!fixture) return;
-    // Sweep every grade on this classSubject. The Grade FK to
-    // ClassSubject is a hard reference (no cascade-from-TimetableRun),
-    // so cleanupTimetableRun does NOT cascade to Grade rows; they
-    // would otherwise survive into the next test's GradeMatrix and
-    // turn the empty-state check below into a strict-mode flake.
-    await cleanupGradesForClassSubject(request, fixture.classSubjectId);
-    await cleanupTimetableRun(fixture);
-    fixture = undefined;
+  test.afterEach(async () => {
+    if (fixture) {
+      await fixture.cleanup();
+      fixture = undefined;
+    }
   });
 
   test('CB-GRADE-01: create grade via dialog → toast → student row + average visible', async ({
     page,
-    request,
   }) => {
     if (!fixture) throw new Error('fixture not seeded');
+    const lessonId = fixture.timetable!.timetableLessonId;
 
-    // API-side baseline so the empty-state assertion is honest.
-    await cleanupGradesForClassSubject(request, fixture.classSubjectId);
+    await page.goto(`/classbook/${lessonId}?tab=noten`);
 
-    await page.goto(`/classbook/${fixture.lessonId}?tab=noten`);
-
-    // Empty state on a freshly-cleared classSubject (GradeMatrix.tsx:206).
+    // Empty state on a fresh ClassSubject (GradeMatrix.tsx:206).
     await expect(
       page.getByRole('heading', { name: 'Noch keine Noten erfasst' }),
       'fresh ClassSubject must render the GradeMatrix empty state',
@@ -82,7 +79,7 @@ test.describe('Issue #81 — Classbook Grade-Matrix (desktop)', () => {
     ).toBeVisible();
 
     // Pick first student. The select is populated from the matrix's
-    // studentList → all class-1A members. The actual student doesn't
+    // studentList → all class members. The actual student doesn't
     // matter for the create-flow lock; deterministic first pick keeps
     // the assertion stable.
     await page.getByRole('combobox', { name: 'Schueler/in' }).click();

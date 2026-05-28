@@ -1,8 +1,14 @@
 /**
  * Issue #82 — Classbook Homework create flow.
  *
- * First sub-spec of the Hausaufgaben/Klausuren coverage gap. Locks the
- * create-flow on the "Aufgaben" tab of /classbook/$lessonId:
+ * Issue #166 (Phase 3.5/6 Batch B) — migrated to throwaway-school per
+ * CLAUDE.md D4. The `active-timetable-run:SEED_SCHOOL_UUID` advisory lock
+ * is gone; each invocation owns its own ClassSubject so the
+ * "Hausaufgaben" empty-state is automatic on first load and the
+ * `cleanupE2EHomework` prefix-sweep is no longer needed (the throwaway
+ * cascade-delete takes the Homework rows with the school).
+ *
+ * Locks the create-flow on the "Aufgaben" tab of /classbook/$lessonId:
  *   1. Open the lesson with ?tab=aufgaben → "Hausaufgaben" tab shows the
  *      empty state for a fresh ClassSubject.
  *   2. Click "Hausaufgabe erstellen" → HomeworkDialog opens.
@@ -12,28 +18,19 @@
  *      refetch surfaces the new row in the list.
  *
  * Exercises POST /homework + the HomeworkDialog form + the
- * HomeworkExamList Hausaufgaben-tab render. Edit + delete + the Exam
- * surface (which has the ExamCollisionWarning regression risk per the
- * issue body) are deferred to follow-up sub-specs.
- *
- * Chromium-only-skip per the race-family precedent — every spec on
- * this surface writes Homework rows on the shared seed ClassSubject.
- * Cleanup sweeps by title-prefix so parallel specs only delete their
- * own rows.
+ * HomeworkExamList Hausaufgaben-tab render.
  */
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/login';
-import { CLASSBOOK_SCHOOL_ID } from './helpers/classbook';
 import {
   HOMEWORK_TITLE_PREFIX,
-  cleanupE2EHomework,
   isoDaysFromNow,
 } from './helpers/homework';
 import {
-  cleanupTimetableRun,
-  seedTimetableRun,
-  type TimetableRunFixture,
-} from './fixtures/timetable-run';
+  createThrowawaySchool,
+  type ThrowawaySchoolFixture,
+} from './fixtures/throwaway-school';
+import { useThrowawaySchoolHeader } from './helpers/school-context';
 
 test.describe('Issue #82 — Classbook Homework create (desktop)', () => {
   test.skip(
@@ -41,42 +38,37 @@ test.describe('Issue #82 — Classbook Homework create (desktop)', () => {
     'Dialog layout is identical across viewports — desktop only for the first lock.',
   );
 
-  let fixture: TimetableRunFixture | undefined;
+  let fixture: ThrowawaySchoolFixture | undefined;
 
-  test.beforeEach(async ({ page }) => {
-    fixture = await seedTimetableRun(CLASSBOOK_SCHOOL_ID);
+  test.beforeEach(async ({ context, page }) => {
+    fixture = await createThrowawaySchool({
+      roles: { admin: true, lehrer: true },
+      withClasses: 1,
+      withTimetableStack: true,
+      namePrefix: 'E2E-CB-HW',
+    });
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
     await loginAsAdmin(page);
   });
 
-  test.afterEach(async ({ request }) => {
-    // Sweep ALL E2E-HW- rows on this school. The Homework FK to
-    // ClassBookEntry is `onDelete: SetNull` (schema.prisma:1425) and
-    // there's no FK to TimetableRun, so cleanupTimetableRun() does NOT
-    // cascade to Homework rows; they accumulate across specs without
-    // this explicit sweep.
-    await cleanupE2EHomework(request, `${HOMEWORK_TITLE_PREFIX}CREATE-`);
+  test.afterEach(async () => {
     if (fixture) {
-      await cleanupTimetableRun(fixture);
+      await fixture.cleanup();
       fixture = undefined;
     }
   });
 
   test('CB-HW-01: create homework via dialog → row visible in Hausaufgaben tab', async ({
     page,
-    request,
   }) => {
     if (!fixture) throw new Error('fixture not seeded');
+    const lessonId = fixture.timetable!.timetableLessonId;
 
-    // Make sure no leftover homework from a killed prior run pollutes
-    // the assertions below — the empty-state and the row-visibility
-    // checks both depend on a known starting state.
-    await cleanupE2EHomework(request, `${HOMEWORK_TITLE_PREFIX}CREATE-`);
-
-    await page.goto(`/classbook/${fixture.lessonId}?tab=aufgaben`);
+    await page.goto(`/classbook/${lessonId}?tab=aufgaben`);
 
     // The empty state is rendered when homework.length === 0
-    // (HomeworkExamList.tsx:61). A polluted DB or a wrong tab default
-    // would fail this loudly.
+    // (HomeworkExamList.tsx:61). Throwaway guarantees an empty
+    // ClassSubject on every test.
     await expect(
       page.getByText('Keine Hausaufgaben', { exact: true }),
       'fresh ClassSubject must render the Hausaufgaben empty state',
@@ -96,8 +88,9 @@ test.describe('Issue #82 — Classbook Homework create (desktop)', () => {
       page.getByRole('heading', { name: 'Hausaufgabe erstellen', level: 2 }),
     ).toBeVisible();
 
-    // Timestamped title doubles as the cleanup discriminator (the
-    // prefix-sweep in afterEach hooks on HOMEWORK_TITLE_PREFIX).
+    // Timestamped title doubles as a regression-friendly discriminator
+    // even though throwaway-school isolation makes the prefix-sweep no
+    // longer necessary.
     const title = `${HOMEWORK_TITLE_PREFIX}CREATE-${Date.now()} — Mathe Kapitel 3`;
     await page.getByLabel('Titel *').fill(title);
     await page

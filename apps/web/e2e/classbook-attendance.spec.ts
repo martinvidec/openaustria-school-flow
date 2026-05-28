@@ -1,94 +1,75 @@
 /**
  * Issue #81 — Classbook Attendance E2E coverage.
  *
- * Locks the most operationally critical sub-surface of `/classbook/$lessonId`:
- * Lehrer öffnet die Stunde → "Alle anwesend" → cyclet einen Schüler auf
- * ABSENT → speichert (debounced bulk PUT) → reload zeigt den Zustand.
+ * Issue #166 (Phase 3.5/6 Batch B) — migrated to throwaway-school per
+ * CLAUDE.md D4. The `active-timetable-run:SEED_SCHOOL_UUID` advisory lock
+ * is gone; each invocation owns its own school with 3 students. The
+ * resolve/reset helper-calls against the legacy seed school are gone —
+ * the throwaway entry is fresh on every test, so the canonical
+ * "alle anwesend" state holds by construction.
  *
- * CI/local divergence note (2026-05-15): the seed (`apps/api/prisma/seed.ts`)
- * does NOT create any `TimetableLesson` rows — those are produced by a
- * solver run, which only happens in local dev. The first commit of this
- * spec assumed a MONDAY/period-1 seed lesson would exist; CI was red
- * because it doesn't. Switched to the existing `seedTimetableRun()`
- * fixture (timetable-generation-flow.spec.ts and the DnD/perspective
- * specs use the same one) which deterministically seeds one
- * MONDAY/period-1 lesson for class 1A in `beforeAll`. The fixture
- * cleanup (`afterAll`) cascade-deletes the run.
+ * Locks the most operationally critical sub-surface of `/classbook/$lessonId`:
+ * Lehrer öffnet die Stunde → cyclet einen Schüler auf ABSENT → speichert
+ * (debounced bulk PUT) → reload zeigt den Zustand.
  */
 import { test, expect } from '@playwright/test';
 import { loginAsAdmin } from './helpers/login';
 import {
-  CLASSBOOK_SCHOOL_ID,
-  resetAttendanceForEntry,
-  resolveEntryByTimetableLesson,
-} from './helpers/classbook';
-import {
-  cleanupTimetableRun,
-  seedTimetableRun,
-  type TimetableRunFixture,
-} from './fixtures/timetable-run';
+  createThrowawaySchool,
+  type ThrowawaySchoolFixture,
+} from './fixtures/throwaway-school';
+import { useThrowawaySchoolHeader } from './helpers/school-context';
 
 test.describe('Issue #81 — Classbook Attendance (desktop)', () => {
   test.skip(
     ({ isMobile }) => isMobile,
     'Attendance contract is identical across viewports — desktop only for the first lock.',
   );
-  // Per-test seeding instead of beforeAll/afterAll. Reason: describe-
-  // level `test.skip(condition, reason)` does NOT gate beforeAll —
-  // beforeAll runs in EVERY project including skipped ones (CI run
-  // 25905955650 hit `cleanupTimetableRun(undefined)` → TypeError in
-  // the desktop-firefox project). Per-test hooks ARE gated by
-  // test.skip, and `if (!fixture)` matches the existing defensive
-  // pattern in admin-timetable-edit-dnd.spec.ts.
-  let fixture: TimetableRunFixture | undefined;
 
-  test.beforeEach(async ({ page }) => {
-    fixture = await seedTimetableRun(CLASSBOOK_SCHOOL_ID);
+  let fixture: ThrowawaySchoolFixture | undefined;
+
+  test.beforeEach(async ({ context, page }) => {
+    fixture = await createThrowawaySchool({
+      roles: { admin: true, lehrer: true },
+      withClasses: 1,
+      withTimetableStack: true,
+      withStudents: [
+        { firstName: 'Anna', lastName: 'Schueler' },
+        { firstName: 'Berta', lastName: 'Schueler' },
+        { firstName: 'Carla', lastName: 'Schueler' },
+      ],
+      namePrefix: 'E2E-CB-ATTEND',
+    });
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
     await loginAsAdmin(page);
   });
 
-  test.afterEach(async ({ request }) => {
-    if (!fixture) return;
-    // Restore the canonical alle-anwesend state on the seeded entry,
-    // then cascade-delete the fixture run. Pure read-only assertions in
-    // the test body make this cleanup the single source of mutation-
-    // resetting truth.
-    const entry = await resolveEntryByTimetableLesson(
-      request,
-      CLASSBOOK_SCHOOL_ID,
-      fixture.lessonId,
-    );
-    await resetAttendanceForEntry(request, CLASSBOOK_SCHOOL_ID, entry.id);
-    await cleanupTimetableRun(fixture);
-    fixture = undefined;
+  test.afterEach(async () => {
+    if (fixture) {
+      await fixture.cleanup();
+      fixture = undefined;
+    }
   });
 
   test('CB-ATTEND-01: cycle first student to ABSENT → reload persists', async ({
     page,
-    request,
   }) => {
-    // Force the API-side baseline before opening the UI. The cycle
-    // click below assumes PRESENT → ABSENT after one tap; a previously
-    // killed run could otherwise leave a row in LATE or EXCUSED.
-    const entry = await resolveEntryByTimetableLesson(
-      request,
-      CLASSBOOK_SCHOOL_ID,
-      fixture.lessonId,
-    );
-    await resetAttendanceForEntry(request, CLASSBOOK_SCHOOL_ID, entry.id);
+    if (!fixture) throw new Error('fixture not seeded');
+    const lessonId = fixture.timetable!.timetableLessonId;
 
-    await page.goto(`/classbook/${fixture.lessonId}?tab=anwesenheit`);
+    await page.goto(`/classbook/${lessonId}?tab=anwesenheit`);
 
     const list = page.getByRole('list', { name: 'Anwesenheitsliste' });
     await expect(list).toBeVisible();
     const rows = list.getByRole('listitem');
     expect(
       await rows.count(),
-      'seed class 1A must have students',
+      'throwaway class must have students',
     ).toBeGreaterThan(0);
 
-    // Cycle order is PRESENT → ABSENT → LATE → EXCUSED. The API-side
-    // baseline above guarantees one click here lands on ABSENT.
+    // Cycle order is PRESENT → ABSENT → LATE → EXCUSED. A fresh
+    // throwaway entry has all students in the default PRESENT state, so
+    // one click here lands on ABSENT.
     const firstStatus = rows.nth(0).getByRole('button').first();
     await expect(firstStatus).toHaveAccessibleName(/anwesend/i);
     await firstStatus.click();
