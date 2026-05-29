@@ -243,6 +243,18 @@ export interface ThrowawaySchoolOptions {
    * (otherwise there is no Teacher row to assign).
    */
   withKlassenvorstand?: 'lehrer';
+  /**
+   * Issue #167 — create a `Student` row for the kc-schueler Person and
+   * enroll it in `classIds[0]` so the schueler-user's
+   * `/users/me`.classId resolves through `Person.student.classId` (per
+   * user-context.service.ts:90). Required by the timetable-schueler-view
+   * spec — without it, `/timetable` sees no class context for the
+   * logged-in schueler and renders the empty-state.
+   *
+   * Requires `roles.schueler: true` and `withClasses >= 1`. The new
+   * Student id is exposed via `ThrowawaySchoolFixture.schuelerStudentId`.
+   */
+  withSchuelerEnrollment?: boolean;
 }
 
 export interface ThrowawayTimetableStack {
@@ -328,6 +340,12 @@ export interface ThrowawaySchoolFixture {
   secondTeacher?: ThrowawaySecondTeacherLesson;
   /** Issue #138 — Student.id values matching the `withStudents` indexes. */
   studentIds: string[];
+  /**
+   * Issue #167 — Student.id created for the kc-schueler Person when
+   * `withSchuelerEnrollment: true` was passed. The Student is enrolled in
+   * `classIds[0]`.
+   */
+  schuelerStudentId?: string;
   /**
    * Issue #151 — Parent.id values per linked role, populated when
    * `withParentLinks` was passed. Only the keys for roles actually linked
@@ -456,6 +474,16 @@ export async function createThrowawaySchool(
       'createThrowawaySchool: withKlassenvorstand=lehrer requires roles.lehrer (otherwise the timetable stack picks a fixture-only Teacher whose Person is not the seed lehrer)',
     );
   }
+  if (options.withSchuelerEnrollment && !roles.schueler) {
+    throw new Error(
+      'createThrowawaySchool: withSchuelerEnrollment requires roles.schueler (no schueler Person to bind a Student row to)',
+    );
+  }
+  if (options.withSchuelerEnrollment && withClasses < 1) {
+    throw new Error(
+      'createThrowawaySchool: withSchuelerEnrollment requires withClasses >= 1 (need a class to enroll the schueler into)',
+    );
+  }
 
   const prisma = buildPrisma();
   try {
@@ -511,6 +539,33 @@ export async function createThrowawaySchool(
         },
       });
       personIds[role] = person.id;
+    }
+
+    // Issue #167 — bind kc-schueler Person to a Student row in classIds[0]
+    // so `/users/me` resolves `classId` for the logged-in schueler (per
+    // user-context.service.ts:88-92). Without this row the
+    // timetable-schueler-view spec sees no class context and the
+    // /timetable page short-circuits to the empty-state.
+    let schuelerStudentId: string | undefined;
+    if (options.withSchuelerEnrollment) {
+      const schuelerPersonId = personIds.schueler;
+      // Defensive — the validation above already guarantees this, but a
+      // localized invariant check keeps the cleanup-by-cascade story
+      // honest if the option set is reordered.
+      if (!schuelerPersonId) {
+        throw new Error(
+          'createThrowawaySchool: withSchuelerEnrollment expected the schueler Person to be created (roles.schueler must be true)',
+        );
+      }
+      const studentRow = await prisma.student.create({
+        data: {
+          personId: schuelerPersonId,
+          schoolId: school.id,
+          classId: classIds[0],
+          studentNumber: `${namePrefix}-SCH-${suffix}`,
+        },
+      });
+      schuelerStudentId = studentRow.id;
     }
 
     let timetable: ThrowawayTimetableStack | undefined;
@@ -882,6 +937,7 @@ export async function createThrowawaySchool(
       timetable,
       secondTeacher,
       studentIds,
+      schuelerStudentId,
       parentIds,
       classBookEntryId,
       timetableEditId,

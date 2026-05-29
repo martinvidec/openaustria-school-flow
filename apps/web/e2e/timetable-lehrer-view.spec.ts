@@ -1,11 +1,11 @@
 /**
  * Issue #86 — Stundenplan-Sicht Lehrer.
  *
- * /timetable wird vom Lehrer täglich geöffnet und ist heute nur durch
- * `roles-smoke.spec.ts` abgedeckt (das nur prüft, dass die Seite ohne
- * Crash rendert). Tenant-Leaks an dieser Stelle wären maximal-schmerzhaft
- * — exakt die Pattern-Familie aus `project_useTeachers_tenant_leak.md` /
- * `project_useClasses_missing_schoolId.md`.
+ * Issue #167 (Phase 3.5/6 Batch C) — migrated to throwaway-school per
+ * CLAUDE.md D4. The `active-timetable-run:SEED_SCHOOL_UUID` advisory lock
+ * is gone; each invocation owns its own school. The lehrer-Person is
+ * bound to the kc-lehrer KC user via `roles.lehrer`, and the timetable
+ * stack pins the lone Teacher row to that Person.
  *
  * Test-Strategie — zwei Schichten:
  *
@@ -16,37 +16,18 @@
  *      permissiveness), fällt dieser Test um.
  *
  *   2. Cell-Content-Lock: JEDE gerenderte Cell (role=gridcell) MUSS einen
- *      aria-label enthalten, der "bei Mueller" referenziert. Wäre die
- *      Backend-Response cross-tenant kontaminiert (z.B. weil ein Service
- *      `where: { teacherId: undefined }` baut → "kein Filter"), erschienen
- *      Cells mit fremden Lehrernamen und der Test fiele um.
- *
- * Fixture: `seedTimetableRun()` seedet kc-lehrer (Maria Mueller) als
- * einzigen Lehrer auf MONDAY/period-1 → die Cell-Content-Assertion ist
- * deterministisch.
- *
- * CI/local divergence note: das Standard-`prisma:seed` erzeugt KEINE
- * TimetableLesson-Rows (die kommen aus Solver-Runs, die in CI nicht
- * laufen). Ohne Fixture wäre der /timetable empty-state und der
- * Cell-Content-Lock würde im CI nie greifen. Memory:
- * `feedback_seed_no_timetable_lessons.md`.
- *
- * Race-Family-Achtung: per-test seeding (beforeEach + afterEach), nicht
- * beforeAll — `test.skip(condition, ...)` auf describe-Level gated NICHT
- * `beforeAll` (würde in firefox/mobile-Projects `cleanupTimetableRun(undefined)`
- * → TypeError). Chromium-only-skip + per-test Fixture matchen
- * `admin-timetable-edit-dnd.spec.ts` und das non-admin-views-Original.
+ *      aria-label enthalten, der "bei <eigener Nachname>" referenziert.
+ *      Wäre die Backend-Response cross-tenant kontaminiert (z.B. weil ein
+ *      Service `where: { teacherId: undefined }` baut → "kein Filter"),
+ *      erschienen Cells mit fremden Lehrernamen und der Test fiele um.
  */
 import { test, expect } from '@playwright/test';
 import { loginAsRole } from './helpers/login';
 import {
-  cleanupTimetableRun,
-  seedTimetableRun,
-  type TimetableRunFixture,
-} from './fixtures/timetable-run';
-import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
-
-const SEED_TEACHER_KC_LEHRER_UUID = '10000000-0000-4000-8000-000000000001';
+  createThrowawaySchool,
+  type ThrowawaySchoolFixture,
+} from './fixtures/throwaway-school';
+import { useThrowawaySchoolHeader } from './helpers/school-context';
 
 /**
  * Awaits the first outgoing `GET /api/v1/schools/.../timetable/view?...`
@@ -71,27 +52,32 @@ test.describe('Issue #86 — Timetable Lehrer view (desktop)', () => {
     ({ isMobile }) => isMobile,
     'Perspective routing is identical across viewports — desktop only for the first lock.',
   );
-  // Phase 4 of #112: chromium-only-skip removed. The active-TimetableRun
-  // race is now closed by the Postgres advisory lock in seedTimetableRun()
-  // (commit 9991e74). Parallel firefox + chromium workers seeding for the
-  // same seed school serialize at the lock; this spec is read-only after
-  // the lock is held, so cross-project parallelism is safe.
 
-  let fixture: TimetableRunFixture | undefined;
+  let fixture: ThrowawaySchoolFixture | undefined;
 
-  test.beforeEach(async () => {
-    fixture = await seedTimetableRun(SEED_SCHOOL_UUID);
+  test.beforeEach(async ({ context }) => {
+    fixture = await createThrowawaySchool({
+      roles: { lehrer: true },
+      withClasses: 1,
+      withTimetableStack: true,
+      namePrefix: 'E2E-TT-LEHRER',
+    });
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
   });
 
   test.afterEach(async () => {
-    if (!fixture) return;
-    await cleanupTimetableRun(fixture);
-    fixture = undefined;
+    if (fixture) {
+      await fixture.cleanup();
+      fixture = undefined;
+    }
   });
 
   test('TT-VIEW-LEHRER-PARAM: lehrer-user lands on perspective=teacher with own teacherId', async ({
     page,
   }) => {
+    if (!fixture) throw new Error('fixture not seeded');
+    const stack = fixture.timetable!;
+
     await loginAsRole(page, 'lehrer');
     const url = await captureTimetableViewRequest(page, async () => {
       await page.goto('/timetable');
@@ -100,31 +86,37 @@ test.describe('Issue #86 — Timetable Lehrer view (desktop)', () => {
     expect(url.searchParams.get('perspective')).toBe('teacher');
     expect(
       url.searchParams.get('perspectiveId'),
-      'lehrer-user must request their OWN teacherId — never another teacher\'s',
-    ).toBe(SEED_TEACHER_KC_LEHRER_UUID);
+      "lehrer-user must request their OWN teacherId — never another teacher's",
+    ).toBe(stack.teacherId);
 
     await expect(page.getByRole('heading', { name: 'Stundenplan' })).toBeVisible();
   });
 
-  test('TT-VIEW-LEHRER-CELLS: every rendered gridcell is one of Mueller\'s own lessons (tenant-leak guard)', async ({
+  test('TT-VIEW-LEHRER-CELLS: every rendered gridcell references the throwaway lehrer (tenant-leak guard)', async ({
     page,
   }) => {
+    if (!fixture) throw new Error('fixture not seeded');
+    const stack = fixture.timetable!;
+    // teacherDisplayName is `${lastName} ${firstName}`; lastName is the
+    // suffix used in the cell aria-label "bei <surname>".
+    const [tLast] = stack.teacherDisplayName.split(' ');
+    const surnamePattern = new RegExp(`bei ${tLast}\\b`);
+
     await loginAsRole(page, 'lehrer');
     await page.goto('/timetable');
 
     // Wait for the grid to mount. The fixture seeded exactly one lesson at
-    // MONDAY/period-1 for kc-lehrer, so at least one gridcell with the
-    // expected aria-label must appear once the view loads.
+    // MONDAY/period-1 for the throwaway lehrer.
     const grid = page.getByRole('grid', { name: 'Stundenplan' });
     await expect(grid).toBeVisible();
 
     // Tenant-leak guard: every rendered cell aria-label MUST contain
-    // "bei Mueller". The aria-label format is:
+    // "bei <throwaway-surname>". The aria-label format is:
     //   "${subjectName} bei ${teacherSurname} in ${roomName}, ${dayLabel} ${period}. Stunde"
     // (see apps/web/src/components/timetable/TimetableCell.tsx:6).
     //
     // If the backend ever returns a cross-tenant slice (e.g. by ignoring the
-    // perspective filter), foreign teachers' surnames would land in the
+    // perspective filter), a foreign teacher's surname would land in the
     // aria-label and this assertion would fail loudly.
     const cells = grid.getByRole('gridcell');
     await expect(cells.first()).toBeVisible();
@@ -138,8 +130,8 @@ test.describe('Issue #86 — Timetable Lehrer view (desktop)', () => {
     for (const label of labels) {
       expect(
         label,
-        `gridcell aria-label must reference Mueller (the logged-in lehrer); leaked label: ${label}`,
-      ).toMatch(/bei Mueller\b/);
+        `gridcell aria-label must reference the throwaway lehrer surname; leaked label: ${label}`,
+      ).toMatch(surnamePattern);
     }
   });
 });

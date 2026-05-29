@@ -1,9 +1,14 @@
 /**
  * Issue #86 — Stundenplan Wochen-Navigation.
  *
+ * Issue #167 (Phase 3.5/6 Batch C) — migrated to throwaway-school per
+ * CLAUDE.md D4. The `active-timetable-run:SEED_SCHOOL_UUID` advisory lock
+ * is gone; each invocation owns its own school with MON-FRI schoolDays
+ * activated by the timetable-stack (one of 5 column headers per default).
+ *
  * Vierte Sub-Spec der non-admin Timetable coverage gap (#86). Lockt die
- * "Woche vor/zurück + KW-Anzeige" Anforderung in der heutigen
- * Realität des /timetable Surfaces:
+ * "Woche vor/zurück + KW-Anzeige" Anforderung in der heutigen Realität
+ * des /timetable Surfaces:
  *
  *   - Es gibt KEINE kalendarische "vorige/nächste Woche" Navigation —
  *     der /timetable rendert den aktiven TimetableRun, nicht einen
@@ -12,45 +17,28 @@
  *       (a) Tag/Woche View-Mode-Toggle  → reduziert die Grid-Spalten
  *           auf einen einzigen Tag.
  *       (b) A-Woche/B-Woche Tabs        → sichtbar NUR wenn die Schule
- *           A/B-Wochen-Modus aktiviert hat. Default-Seed: deaktiviert.
+ *           A/B-Wochen-Modus aktiviert hat. Throwaway-Default: deaktiviert.
  *
  * Test-Strategie:
  *
  *   WEEK-NAV-VIEW-TOGGLE-LEHRER:
- *     Default-View-Mode auf Desktop ist 'week' (zustand store
- *     initial value, apps/web/src/stores/timetable-store.ts:32).
- *     Im Week-Mode rendert das Grid 5 Tages-Header (Mo–Fr); nach
- *     Klick auf "Tag" reduziert sich das auf einen einzigen
- *     Tages-Header. Verifiziert dass der DayWeekToggle den Grid-
- *     Render tatsächlich anpasst.
+ *     Default-View-Mode auf Desktop ist 'week' (zustand store initial
+ *     value, apps/web/src/stores/timetable-store.ts:32). Im Week-Mode
+ *     rendert das Grid 5 Tages-Header (Mo–Fr); nach Klick auf "Tag"
+ *     reduziert sich das auf einen einzigen Tages-Header.
  *
  *   WEEK-NAV-AB-HIDDEN-LEHRER:
- *     Seed-Schule hat `abWeekEnabled: false` (Prisma-Default,
- *     apps/api/prisma/schema.prisma, kein Override in seed.ts).
- *     ABWeekTabs returnt `null` wenn `isABMode === false`
- *     (apps/web/src/components/timetable/ABWeekTabs.tsx:14).
- *     Lock: kein "A-Woche" / "B-Woche" Tab im DOM für die
- *     Default-Seed-Schule. Wenn das Frontend jemals den
- *     `abWeekEnabled` Boolean ignoriert und Tabs unkonditional
- *     rendert, fällt diese Assertion um.
- *
- * Fixture: `seedTimetableRun()` seedet eine Lesson (MONDAY/period-1
- * für kc-lehrer). Lehrer-perspective wird automatisch gewählt, das
- * Grid rendert mit den Default-Schultagen Mo–Fr. Ohne Fixture wäre
- * der /timetable im empty-state und das Grid würde gar nicht
- * rendern — Memory `feedback_seed_no_timetable_lessons.md`.
- *
- * Race-Family-Achtung: per-test seeding + chromium-only-skip
- * (siehe lehrer-view.spec.ts).
+ *     Throwaway-Schule hat `abWeekEnabled: false` (Default, kein
+ *     Override im Fixture). ABWeekTabs returnt `null` wenn
+ *     `isABMode === false`. Lock: kein "A-Woche" / "B-Woche" Tab im DOM.
  */
 import { test, expect, type Page } from '@playwright/test';
 import { loginAsRole } from './helpers/login';
 import {
-  cleanupTimetableRun,
-  seedTimetableRun,
-  type TimetableRunFixture,
-} from './fixtures/timetable-run';
-import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
+  createThrowawaySchool,
+  type ThrowawaySchoolFixture,
+} from './fixtures/throwaway-school';
+import { useThrowawaySchoolHeader } from './helpers/school-context';
 
 /**
  * Counts leaf-divs inside the timetable grid whose text content is a
@@ -58,11 +46,6 @@ import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
  * header row renders exactly one such div per visible day; the count is
  * therefore equal to the number of grid columns excluding the period-
  * label column.
- *
- * Implementation note: we filter on `children.length === 0` to skip
- * any ancestor div that happens to contain the short label as part of
- * its concatenated text content (defensive — not currently the case
- * but a layout refactor could introduce one).
  */
 async function countVisibleDayHeaders(page: Page): Promise<number> {
   return page.evaluate(() => {
@@ -84,22 +67,24 @@ test.describe('Issue #86 — Timetable week navigation (desktop)', () => {
     ({ isMobile }) => isMobile,
     'Mobile forces day view (TimetablePage:118 — effectiveViewMode = isMobile ? "day" : viewMode), so the Tag/Woche toggle is hidden on base/sm. Mobile coverage of the day-selector tabs belongs to its own spec.',
   );
-  // Phase 4 of #112: chromium-only-skip removed. The active-TimetableRun
-  // race is now closed by the Postgres advisory lock in seedTimetableRun()
-  // (commit 9991e74). Parallel firefox + chromium workers seeding for the
-  // same seed school serialize at the lock; this spec is read-only after
-  // the lock is held, so cross-project parallelism is safe.
 
-  let fixture: TimetableRunFixture | undefined;
+  let fixture: ThrowawaySchoolFixture | undefined;
 
-  test.beforeEach(async () => {
-    fixture = await seedTimetableRun(SEED_SCHOOL_UUID);
+  test.beforeEach(async ({ context }) => {
+    fixture = await createThrowawaySchool({
+      roles: { lehrer: true },
+      withClasses: 1,
+      withTimetableStack: true,
+      namePrefix: 'E2E-TT-WEEK',
+    });
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
   });
 
   test.afterEach(async () => {
-    if (!fixture) return;
-    await cleanupTimetableRun(fixture);
-    fixture = undefined;
+    if (fixture) {
+      await fixture.cleanup();
+      fixture = undefined;
+    }
   });
 
   test('WEEK-NAV-VIEW-TOGGLE-LEHRER: Tag/Woche toggle changes the number of visible day columns', async ({
@@ -108,19 +93,19 @@ test.describe('Issue #86 — Timetable week navigation (desktop)', () => {
     await loginAsRole(page, 'lehrer');
     await page.goto('/timetable');
 
-    // Wait for the grid to mount — the fixture's MONDAY/period-1 lesson
+    // Wait for the grid to mount — the throwaway's MONDAY/period-1 lesson
     // gates the `lessons.length > 0` render condition in
     // apps/web/src/routes/_authenticated/timetable/index.tsx:340.
     const grid = page.getByRole('grid', { name: 'Stundenplan' });
     await expect(grid).toBeVisible();
 
     // Default desktop view-mode is "week" (zustand store initial value).
-    // The seed school's schoolDays (Mo–Fr active) project as 5 day
-    // headers in the grid's first row.
+    // The throwaway's schoolDays (Mo–Fr active) project as 5 day headers
+    // in the grid's first row.
     const weekHeaderCount = await countVisibleDayHeaders(page);
     expect(
       weekHeaderCount,
-      'Default desktop week-mode must render exactly 5 day headers (Mo–Fr) for the default seed school',
+      'Default desktop week-mode must render exactly 5 day headers (Mo–Fr) for the throwaway school',
     ).toBe(5);
 
     // Click the "Tag" tab on the DayWeekToggle. Shadcn Tabs exposes
@@ -170,11 +155,10 @@ test.describe('Issue #86 — Timetable week navigation (desktop)', () => {
     await expect(page.getByRole('tab', { name: 'Tag' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Woche' })).toBeVisible();
 
-    // Default seed school has abWeekEnabled = false (Prisma schema
-    // default, no override in seed.ts). The fixture's TimetableRun
-    // also has abWeekEnabled: false. ABWeekTabs returns null when
-    // isABMode === false. → No "A-Woche" / "B-Woche" tabs anywhere
-    // on the page.
+    // Throwaway school has abWeekEnabled = false (Prisma schema default,
+    // no override in createThrowawaySchool). The TimetableRun also has
+    // abWeekEnabled: false. ABWeekTabs returns null when isABMode ===
+    // false. → No "A-Woche" / "B-Woche" tabs anywhere on the page.
     await expect(page.getByRole('tab', { name: 'A-Woche' })).toHaveCount(0);
     await expect(page.getByRole('tab', { name: 'B-Woche' })).toHaveCount(0);
   });
