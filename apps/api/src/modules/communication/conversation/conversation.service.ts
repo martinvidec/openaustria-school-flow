@@ -395,7 +395,11 @@ export class ConversationService {
       if (!dto.scopeId) {
         throw new BadRequestException('scopeId required for CLASS scope');
       }
-      const isAssigned = await this.isTeacherAssignedToClass(userId, dto.scopeId);
+      const isAssigned = await this.isTeacherAssignedToClass(
+        schoolId,
+        userId,
+        dto.scopeId,
+      );
       if (!isAssigned) {
         throw new ForbiddenException(
           'Teacher is not assigned to this class',
@@ -418,14 +422,20 @@ export class ConversationService {
 
   /**
    * Check if a user (via keycloakUserId) is a teacher assigned to a class.
+   *
+   * #164 — scoped by schoolId. The class belongs to a specific school
+   * and the teacher must have a Person row in THAT school; resolving
+   * the Person via (keycloakUserId, schoolId) avoids picking up a
+   * sibling-school Person for a multi-tenant KC user.
    */
   private async isTeacherAssignedToClass(
+    schoolId: string,
     userId: string,
     classId: string,
   ): Promise<boolean> {
     // Find teacher by keycloakUserId
     const person = await this.prisma.person.findFirst({
-      where: { keycloakUserId: userId },
+      where: { keycloakUserId: userId, schoolId },
       include: { teacher: true },
     });
     if (!person?.teacher) return false;

@@ -84,9 +84,10 @@ export class PollController {
   @ApiResponse({ status: 200, description: 'Poll results with vote counts' })
   @ApiResponse({ status: 404, description: 'Poll not found' })
   async getResults(
+    @Param('schoolId') schoolId: string,
     @Param('pollId') pollId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.pollService.getResults(pollId, user.id, user.roles);
+    return this.pollService.getResults(schoolId, pollId, user.id, user.roles);
   }
 }

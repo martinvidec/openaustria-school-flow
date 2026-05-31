@@ -1,8 +1,9 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, ForbiddenException, Get, Query, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { KeycloakAdminService } from './keycloak-admin.service';
 import { KeycloakUserQueryDto } from './dto/keycloak-user-query.dto';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator';
+import { RequestWithSchool } from '../auth/types/request-with-school';
 
 /**
  * Admin-only bridge to Keycloak's user directory.
@@ -25,7 +26,17 @@ export class KeycloakAdminController {
   @ApiOperation({
     summary: 'Search Keycloak users by email fragment (min 3 chars, max 10 results)',
   })
-  async findUsers(@Query() dto: KeycloakUserQueryDto) {
-    return this.service.findUsersByEmail(dto.email);
+  async findUsers(
+    @Query() dto: KeycloakUserQueryDto,
+    @Req() req: RequestWithSchool,
+  ) {
+    // #164 — the admin's current schoolId scopes the
+    // `alreadyLinkedToPersonId` lookup so a KC user linked to a sibling
+    // school's Person doesn't surface as "already linked" for an admin
+    // managing a different tenant.
+    if (!req.currentSchoolId) {
+      throw new ForbiddenException('Admin without active school context');
+    }
+    return this.service.findUsersByEmail(dto.email, req.currentSchoolId);
   }
 }

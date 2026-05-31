@@ -143,6 +143,7 @@ describe('PollService', () => {
     });
 
     const result = await service.createWithMessage(
+      'school-1',
       'conv-1',
       'user-sender',
       'Was soll es zum Mittagessen geben?',
@@ -225,6 +226,7 @@ describe('PollService', () => {
     });
 
     const result = await service.createWithMessage(
+      'school-1',
       'conv-1',
       'user-sender',
       'Welche Tage passen?',
@@ -485,7 +487,7 @@ describe('PollService', () => {
     ]);
 
     // Test 1: Sender gets named voters
-    const senderResult = await service.getResults('poll-1', 'user-sender', ['lehrer']);
+    const senderResult = await service.getResults('school-1', 'poll-1', 'user-sender', ['lehrer']);
 
     expect(senderResult.options[0].voteCount).toBe(2);
     expect(senderResult.options[0].voters).toBeDefined();
@@ -494,7 +496,7 @@ describe('PollService', () => {
     expect(senderResult.options[0].voters![1].name).toBe('Karl Weber');
 
     // Test 2: Non-sender gets anonymous counts
-    const otherResult = await service.getResults('poll-1', 'user-other', ['lehrer']);
+    const otherResult = await service.getResults('school-1', 'poll-1', 'user-other', ['lehrer']);
 
     expect(otherResult.options[0].voteCount).toBe(2);
     expect(otherResult.options[0].voters).toBeUndefined();
@@ -505,7 +507,7 @@ describe('PollService', () => {
       { keycloakUserId: 'user-r2', firstName: 'Karl', lastName: 'Weber' },
     ]);
 
-    const adminResult = await service.getResults('poll-1', 'user-admin', ['admin']);
+    const adminResult = await service.getResults('school-1', 'poll-1', 'user-admin', ['admin']);
 
     expect(adminResult.options[0].voters).toBeDefined();
     expect(adminResult.options[0].voters).toHaveLength(2);

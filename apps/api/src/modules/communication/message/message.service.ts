@@ -75,6 +75,7 @@ export class MessageService {
    * Sends MESSAGE_RECEIVED notifications.
    */
   async send(
+    schoolId: string,
     conversationId: string,
     senderId: string,
     dto: SendMessageDto,
@@ -92,9 +93,11 @@ export class MessageService {
       throw new ForbiddenException('Not a member of this conversation');
     }
 
-    // Resolve sender name
+    // Resolve sender name (#164 — scope by schoolId so a KC user with
+    // Person memberships in multiple schools resolves to the Person of
+    // THIS conversation's tenant, not a non-deterministic sibling).
     const senderPerson = await this.prisma.person.findFirst({
-      where: { keycloakUserId: senderId },
+      where: { keycloakUserId: senderId, schoolId },
       select: { firstName: true, lastName: true },
     });
     const senderName = senderPerson
@@ -190,6 +193,7 @@ export class MessageService {
    * List messages with cursor-based pagination.
    */
   async findAll(
+    schoolId: string,
     conversationId: string,
     userId: string,
     cursor?: string,
@@ -245,8 +249,11 @@ export class MessageService {
 
     const dtos = await Promise.all(
       messages.map(async (msg: any) => {
+        // #164 — scope by schoolId; messages belong to the conversation
+        // (which has schoolId), so resolving the sender Person within
+        // that school is correct and avoids cross-tenant ambiguity.
         const senderPerson = await this.prisma.person.findFirst({
-          where: { keycloakUserId: msg.senderId },
+          where: { keycloakUserId: msg.senderId, schoolId },
           select: { firstName: true, lastName: true },
         });
         const senderName = senderPerson
@@ -382,6 +389,7 @@ export class MessageService {
    * Returns recipients sorted: read first (by readAt DESC), then unread alphabetically.
    */
   async getRecipients(
+    schoolId: string,
     conversationId: string,
     messageId: string,
     userId: string,
@@ -410,11 +418,13 @@ export class MessageService {
       where: { messageId },
     });
 
-    // Resolve person names for each recipient
+    // Resolve person names for each recipient (#164 — scoped by
+    // schoolId to avoid cross-tenant ambiguity for KC users with
+    // memberships in multiple schools).
     const details: RecipientDetailDto[] = await Promise.all(
       recipients.map(async (r: any) => {
         const person = await this.prisma.person.findFirst({
-          where: { keycloakUserId: r.userId },
+          where: { keycloakUserId: r.userId, schoolId },
           select: { firstName: true, lastName: true },
         });
         return {

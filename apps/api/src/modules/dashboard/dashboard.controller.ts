@@ -44,16 +44,17 @@ export class DashboardController {
     @Query() query: QueryDashboardDto,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<DashboardStatusDto> {
-    // T-16-2 tenant isolation. AuthenticatedUser does NOT carry schoolId
-    // (only id/email/username/roles — see auth/types/authenticated-user.ts).
-    // Resolve tenant via Person.findFirst({ where: { keycloakUserId: user.id } })
-    // — canonical pattern shared with calendar.service.ts:79-80 and
-    // user-context.service.ts:9-11.
-    const adminSchoolId = await this.dashboard.resolveAdminSchoolId(user.id);
+    // T-16-2 tenant isolation. AuthenticatedUser does NOT carry schoolId,
+    // so we verify the admin has a Person row in the requested school by
+    // looking up { keycloakUserId, schoolId } directly. Missing membership
+    // → 403. #164 combined the previous resolveAdminSchoolId() + equality
+    // check into a single scoped query so a multi-school admin's
+    // findFirst can't return a sibling school non-deterministically.
+    const adminSchoolId = await this.dashboard.resolveAdminSchoolId(
+      user.id,
+      query.schoolId,
+    );
     if (!adminSchoolId) {
-      throw new ForbiddenException('Admin without school context');
-    }
-    if (adminSchoolId !== query.schoolId) {
       throw new ForbiddenException('Cross-tenant access denied');
     }
     return this.dashboard.getStatus(query.schoolId);

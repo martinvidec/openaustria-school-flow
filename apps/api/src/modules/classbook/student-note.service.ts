@@ -157,7 +157,10 @@ export class StudentNoteService {
     createdAt: Date;
     updatedAt: Date;
   }): Promise<StudentNoteDto> {
-    // Resolve student name
+    // Resolve student name + capture schoolId for the author lookup
+    // below (#164 — author's Person must be scoped to THIS tenant so a
+    // KC user with memberships in multiple schools resolves to the
+    // Person of the note's school).
     const student = await this.prisma.student.findUnique({
       where: { id: note.studentId },
       include: { person: { select: { firstName: true, lastName: true } } },
@@ -166,11 +169,16 @@ export class StudentNoteService {
       ? `${student.person.firstName} ${student.person.lastName}`
       : 'Unbekannt';
 
-    // Resolve author name via Person keycloakUserId
-    const author = await this.prisma.person.findFirst({
-      where: { keycloakUserId: note.authorId },
-      select: { firstName: true, lastName: true },
-    });
+    // Resolve author name via Person keycloakUserId, scoped to the
+    // note's school (derived from the student). If the student row was
+    // deleted we fall back to a global lookup — the note's still
+    // displayable and the author name is decorative.
+    const author = student
+      ? await this.prisma.person.findFirst({
+          where: { keycloakUserId: note.authorId, schoolId: student.schoolId },
+          select: { firstName: true, lastName: true },
+        })
+      : null;
     const authorName = author
       ? `${author.firstName} ${author.lastName}`
       : 'Unbekannt';

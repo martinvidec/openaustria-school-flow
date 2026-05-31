@@ -60,6 +60,7 @@ export class ConversationController {
     // If pollData is present, create the first message with an inline poll
     if (dto.pollData) {
       const message = await this.pollService.createWithMessage(
+        schoolId,
         conversation.id,
         user.id,
         dto.body,
@@ -69,7 +70,7 @@ export class ConversationController {
     }
 
     // Otherwise, send a regular first message
-    const message = await this.messageService.send(conversation.id, user.id, {
+    const message = await this.messageService.send(schoolId, conversation.id, user.id, {
       body: dto.body,
     });
 

@@ -288,9 +288,14 @@ export class AttendanceService {
 
     await this.prisma.$transaction(upserts);
 
-    // Emit real-time event for connected clients
+    // Emit real-time event for connected clients. #164 — scope the
+    // Teacher lookup by entry.schoolId so a KC user with Teacher rows
+    // in multiple schools resolves to THIS tenant's Teacher.
     const teacher = await this.prisma.teacher.findFirst({
-      where: { person: { keycloakUserId: teacherKeycloakId } },
+      where: {
+        schoolId: entry.schoolId,
+        person: { keycloakUserId: teacherKeycloakId },
+      },
       include: { person: { select: { firstName: true, lastName: true } } },
     });
     const teacherName = teacher
@@ -330,9 +335,13 @@ export class AttendanceService {
       },
     });
 
-    // Emit real-time event for connected clients
+    // Emit real-time event for connected clients. #164 — scope by
+    // entry.schoolId (see saveBulk for the same pattern).
     const teacher = await this.prisma.teacher.findFirst({
-      where: { person: { keycloakUserId: teacherKeycloakId } },
+      where: {
+        schoolId: entry.schoolId,
+        person: { keycloakUserId: teacherKeycloakId },
+      },
       include: { person: { select: { firstName: true, lastName: true } } },
     });
     const teacherName = teacher

@@ -45,11 +45,12 @@ export class MessageController {
   @ApiResponse({ status: 201, description: 'Message sent with recipient expansion' })
   @ApiResponse({ status: 403, description: 'Not a member of the conversation' })
   async send(
+    @Param('schoolId') schoolId: string,
     @Param('conversationId') conversationId: string,
     @Body() dto: SendMessageDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.messageService.send(conversationId, user.id, dto);
+    return this.messageService.send(schoolId, conversationId, user.id, dto);
   }
 
   @Get()
@@ -57,12 +58,14 @@ export class MessageController {
   @ApiOperation({ summary: 'List messages with cursor-based pagination' })
   @ApiResponse({ status: 200, description: 'Paginated messages with nextCursor' })
   async findAll(
+    @Param('schoolId') schoolId: string,
     @Param('conversationId') conversationId: string,
     @CurrentUser() user: AuthenticatedUser,
     @Query('cursor') cursor?: string,
     @Query('limit') limit?: string,
   ) {
     return this.messageService.findAll(
+      schoolId,
       conversationId,
       user.id,
       cursor,
@@ -77,11 +80,13 @@ export class MessageController {
   @ApiResponse({ status: 403, description: 'Only sender or admin can view recipients' })
   @ApiResponse({ status: 404, description: 'Message not found' })
   async getRecipients(
+    @Param('schoolId') schoolId: string,
     @Param('conversationId') conversationId: string,
     @Param('messageId') messageId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.messageService.getRecipients(
+      schoolId,
       conversationId,
       messageId,
       user.id,

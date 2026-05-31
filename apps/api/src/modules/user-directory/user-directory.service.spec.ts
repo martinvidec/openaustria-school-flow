@@ -87,7 +87,7 @@ describe('UserDirectoryService', () => {
         { id: 'p1', keycloakUserId: 'kc-1', personType: 'TEACHER', firstName: 'Anna', lastName: 'Müller' },
       ]);
 
-      const result = await service.findAll({
+      const result = await service.findAll('school-1', {
         page: 1,
         limit: 25,
         first: 0,
@@ -116,7 +116,7 @@ describe('UserDirectoryService', () => {
         { id: 'p1', keycloakUserId: 'kc-1', personType: 'TEACHER', firstName: 'L', lastName: 'X' },
       ]);
 
-      const result = await service.findAll({
+      const result = await service.findAll('school-1', {
         page: 1,
         limit: 25,
         first: 0,
@@ -138,7 +138,7 @@ describe('UserDirectoryService', () => {
       mockPrisma.userRole.findMany.mockResolvedValue([]);
       mockPrisma.person.findMany.mockResolvedValue([]);
 
-      const result = await service.findAll({
+      const result = await service.findAll('school-1', {
         page: 1,
         limit: 25,
         first: 0,
@@ -163,7 +163,7 @@ describe('UserDirectoryService', () => {
       ]);
       mockPrisma.person.findMany.mockResolvedValue([]);
 
-      const result = await service.findAll({
+      const result = await service.findAll('school-1', {
         page: 1,
         limit: 25,
         first: 0,
@@ -199,7 +199,7 @@ describe('UserDirectoryService', () => {
         lastName: 'B',
       });
 
-      const result = await service.findOne('kc-1');
+      const result = await service.findOne('school-1', 'kc-1');
       expect(result.id).toBe('kc-1');
       expect(result.roles).toEqual(['admin']);
       expect(result.personLink).toMatchObject({ id: 'p1' });
@@ -207,7 +207,7 @@ describe('UserDirectoryService', () => {
 
     it('throws NotFoundException when KC returns undefined', async () => {
       mockKc.findUserById.mockResolvedValue(undefined);
-      await expect(service.findOne('missing')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('school-1', 'missing')).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -224,7 +224,7 @@ describe('UserDirectoryService', () => {
       mockPrisma.teacher.findUnique.mockResolvedValue({ personId: 'p1' });
       mockTeacher.linkKeycloakUser.mockResolvedValue({ id: 'p1' });
 
-      const result = await service.linkPerson('kc-1', { personType: 'TEACHER', personId: 't1' });
+      const result = await service.linkPerson('school-1', 'kc-1', { personType: 'TEACHER', personId: 't1' });
       expect(mockTeacher.linkKeycloakUser).toHaveBeenCalledWith('t1', 'kc-1');
       expect(result.person).toEqual({ id: 'p1' });
     });
@@ -239,7 +239,7 @@ describe('UserDirectoryService', () => {
       });
 
       await expect(
-        service.linkPerson('kc-1', { personType: 'TEACHER', personId: 't1' }),
+        service.linkPerson('school-1', 'kc-1', { personType: 'TEACHER', personId: 't1' }),
       ).rejects.toThrow(ConflictException);
     });
 
@@ -260,7 +260,7 @@ describe('UserDirectoryService', () => {
       });
 
       try {
-        await service.linkPerson('kc-1', { personType: 'TEACHER', personId: 't1' });
+        await service.linkPerson('school-1', 'kc-1', { personType: 'TEACHER', personId: 't1' });
         expect.fail('expected ConflictException');
       } catch (e: any) {
         expect(e).toBeInstanceOf(ConflictException);
@@ -292,7 +292,7 @@ describe('UserDirectoryService', () => {
       mockTeacher.linkKeycloakUser.mockRejectedValue({ code: 'P2002' });
 
       await expect(
-        service.linkPerson('kc-1', { personType: 'TEACHER', personId: 't1' }),
+        service.linkPerson('school-1', 'kc-1', { personType: 'TEACHER', personId: 't1' }),
       ).rejects.toThrow(ConflictException);
     });
 
@@ -308,7 +308,7 @@ describe('UserDirectoryService', () => {
       mockPrisma.student.findUnique.mockResolvedValue({ personId: 's1' });
       mockStudent.linkKeycloakUser.mockResolvedValue({ id: 's1' });
 
-      await service.linkPerson('kc-2', { personType: 'STUDENT', personId: 's1' });
+      await service.linkPerson('school-1', 'kc-2', { personType: 'STUDENT', personId: 's1' });
       expect(mockStudent.linkKeycloakUser).toHaveBeenCalledWith('s1', 'kc-2');
     });
 
@@ -324,7 +324,7 @@ describe('UserDirectoryService', () => {
       mockPrisma.parent.findUnique.mockResolvedValue({ personId: 'p1' });
       mockParent.linkKeycloakUser.mockResolvedValue({ id: 'p1' });
 
-      await service.linkPerson('kc-3', { personType: 'PARENT', personId: 'p1' });
+      await service.linkPerson('school-1', 'kc-3', { personType: 'PARENT', personId: 'p1' });
       expect(mockParent.linkKeycloakUser).toHaveBeenCalledWith('p1', 'kc-3');
     });
   });
@@ -332,7 +332,7 @@ describe('UserDirectoryService', () => {
   describe('unlinkPerson', () => {
     it('returns silently when no link exists (idempotent no-op)', async () => {
       mockPrisma.person.findFirst.mockResolvedValue(null);
-      await expect(service.unlinkPerson('kc-1')).resolves.toBeUndefined();
+      await expect(service.unlinkPerson('school-1', 'kc-1')).resolves.toBeUndefined();
       expect(mockTeacher.unlinkKeycloakUser).not.toHaveBeenCalled();
       expect(mockStudent.unlinkKeycloakUser).not.toHaveBeenCalled();
       expect(mockParent.unlinkKeycloakUser).not.toHaveBeenCalled();
@@ -347,7 +347,7 @@ describe('UserDirectoryService', () => {
         student: null,
         parent: null,
       });
-      await service.unlinkPerson('kc-1');
+      await service.unlinkPerson('school-1', 'kc-1');
       expect(mockTeacher.unlinkKeycloakUser).toHaveBeenCalledWith('t1');
     });
   });

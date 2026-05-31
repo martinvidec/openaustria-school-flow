@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
@@ -9,6 +10,7 @@ import {
   Post,
   Put,
   Query,
+  Req,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -21,6 +23,7 @@ import { UserDirectoryQueryDto } from './dto/user-directory-query.dto';
 import { LinkPersonDto } from './dto/link-person.dto';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator';
 import { EffectivePermissionsService } from '../effective-permissions/effective-permissions.service';
+import { RequestWithSchool } from '../auth/types/request-with-school';
 
 /**
  * Phase 13-01 USER-01 + USER-05 — admin user directory.
@@ -45,16 +48,27 @@ export class UserDirectoryController {
       'Hybrid Keycloak + DB user list with role + person-link hydration',
   })
   @ApiResponse({ status: 200, description: 'Paginated user directory' })
-  async findAll(@Query() query: UserDirectoryQueryDto) {
-    return this.service.findAll(query);
+  async findAll(
+    @Query() query: UserDirectoryQueryDto,
+    @Req() req: RequestWithSchool,
+  ) {
+    // #164 — scope person-link hydration to the admin's current school
+    // so KC users with sibling-tenant Persons surface as "unlinked"
+    // here (which is correct from this admin's perspective).
+    const schoolId = requireSchoolId(req);
+    return this.service.findAll(schoolId, query);
   }
 
   @Get(':userId')
   @CheckPermissions({ action: 'manage', subject: 'user' })
   @ApiOperation({ summary: 'Single user detail (KC + roles + personLink)' })
   @ApiResponse({ status: 404, description: 'Keycloak user not found' })
-  async findOne(@Param('userId') userId: string) {
-    return this.service.findOne(userId);
+  async findOne(
+    @Param('userId') userId: string,
+    @Req() req: RequestWithSchool,
+  ) {
+    const schoolId = requireSchoolId(req);
+    return this.service.findOne(schoolId, userId);
   }
 
   @Put(':userId/enabled')
@@ -63,8 +77,10 @@ export class UserDirectoryController {
   async setEnabled(
     @Param('userId') userId: string,
     @Body() body: { enabled: boolean },
+    @Req() req: RequestWithSchool,
   ) {
-    return this.service.setEnabled(userId, body.enabled);
+    const schoolId = requireSchoolId(req);
+    return this.service.setEnabled(schoolId, userId, body.enabled);
   }
 
   @Post(':userId/link-person')
@@ -81,16 +97,22 @@ export class UserDirectoryController {
   async linkPerson(
     @Param('userId') userId: string,
     @Body() dto: LinkPersonDto,
+    @Req() req: RequestWithSchool,
   ) {
-    return this.service.linkPerson(userId, dto);
+    const schoolId = requireSchoolId(req);
+    return this.service.linkPerson(schoolId, userId, dto);
   }
 
   @Delete(':userId/link-person')
   @HttpCode(HttpStatus.NO_CONTENT)
   @CheckPermissions({ action: 'manage', subject: 'user' })
   @ApiOperation({ summary: 'Remove the Person link (idempotent no-op if absent)' })
-  async unlinkPerson(@Param('userId') userId: string) {
-    await this.service.unlinkPerson(userId);
+  async unlinkPerson(
+    @Param('userId') userId: string,
+    @Req() req: RequestWithSchool,
+  ) {
+    const schoolId = requireSchoolId(req);
+    await this.service.unlinkPerson(schoolId, userId);
   }
 
   @Get(':userId/effective-permissions')
@@ -102,4 +124,17 @@ export class UserDirectoryController {
   async effectivePermissions(@Param('userId') userId: string) {
     return this.effectivePermissionsService.resolve(userId);
   }
+}
+
+/**
+ * Read `currentSchoolId` set by `CurrentSchoolInterceptor` or 403 if
+ * the request has no active school context. Used by every Person-
+ * scoped endpoint above so the #164 scoping is consistent across the
+ * controller without per-call boilerplate.
+ */
+function requireSchoolId(req: RequestWithSchool): string {
+  if (!req.currentSchoolId) {
+    throw new ForbiddenException('Admin without active school context');
+  }
+  return req.currentSchoolId;
 }
