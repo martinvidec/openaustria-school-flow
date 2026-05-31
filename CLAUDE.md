@@ -62,7 +62,7 @@ Begründung: GSD-State über zu viele Files verteilt → Plan-vs-Realität-Drift
 **How to apply:**
 1. Bei JEDER neuen E2E-Spec: throwaway-school-Fixture **ist der Default**. Spec-Pattern: `createThrowawaySchool({ roles, withClasses, withTimetableStack?, withStudents?, withClassbookEntry?, withTimetableEdit? })` → `useThrowawaySchoolHeader(context, fixture.schoolId)` → assertions → `fixture.cleanup()` in afterEach. Wenn nicht möglich → in der Spec-Begründung dokumentieren WARUM nicht (z.B. spec testet seed-bound Auth-Flow ohne Schreibrechte).
 2. Bei Race-Discovery in einer Bestandsspec: zuerst auf throwaway-school migrieren statt ad-hoc chromium-only-skip dranzuschrauben.
-3. Existierende advisory-locks (`helpers/advisory-lock.ts`) auf seed-school-shared resources (TimeGrid, CalendarToken, messaging, classbook, excuses, etc.) sind LEGACY — sie werden pro Spec entfernt sobald die jeweilige Spec auf throwaway migriert ist. Tracker: ein eigenes Follow-up Issue (Phase 3.5).
+3. Advisory-locks waren der Pre-Phase-3.5-Workaround und sind seit #155 (2026-05-31) entfernt. `helpers/advisory-lock.ts` + `fixtures/timetable-run.ts` existieren nicht mehr — throwaway-school ist die EINZIGE deterministische Isolation, die wir noch verwenden.
 
 ## D5 — GitHub Issue-Relationships statt nur Text-Refs (User-Direktive 2026-05-19)
 

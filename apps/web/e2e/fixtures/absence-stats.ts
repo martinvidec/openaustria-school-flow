@@ -31,7 +31,7 @@
  * specs leave attendance noise in class 1A on different dates.
  *
  * Module-loading pattern: same `createRequire` + dotenv belt-and-braces
- * bridge that fixtures/timetable-run.ts uses to load the API's
+ * bridge that `fixtures/throwaway-school.ts` uses to load the API's
  * SWC-emitted CJS Prisma client into the ESM Playwright runner.
  */
 import 'dotenv/config';
@@ -100,7 +100,7 @@ import { SEED_TEACHER_KC_LEHRER_UUID } from './seed-uuids';
 export const STATS_FIXTURE_DATE = '2026-03-15';
 
 /** Spec sets this period on the fixture to avoid colliding with the
- *  period=1 used by the seedTimetableRun() singleton lesson. */
+ *  period=1 used by the throwaway timetable stack's singleton lesson. */
 export const STATS_FIXTURE_PERIOD = 5;
 
 export interface AbsenceStatsFixture {
@@ -170,8 +170,8 @@ async function findThreeSeedStudents(
  *
  * Uniqueness: ClassBookEntry has @@unique([classSubjectId, date,
  * periodNumber, weekType]). Pinning periodNumber = STATS_FIXTURE_PERIOD
- * (5) keeps us clear of the period=1 lesson seedTimetableRun() plants
- * and of any other classbook-related fixture using period=1 or 2.
+ * (5) keeps us clear of the period=1 lesson the throwaway timetable
+ * stack plants and of any other classbook-related fixture using period=1 or 2.
  */
 export async function seedAbsenceStats(
   schoolId: string,

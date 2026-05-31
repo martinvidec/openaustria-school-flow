@@ -3,11 +3,11 @@
  *
  * The classbook surface is anchored on a `TimetableLesson` ID: clicking a
  * timetable cell navigates to `/classbook/<timetableLessonId>` and the
- * backend resolves it to (or creates) a `ClassBookEntry`. Specs use the
- * existing `fixtures/timetable-run.ts:seedTimetableRun()` helper to
- * deterministically seed one such lesson in `beforeAll` (the standard
- * prisma:seed creates ZERO TimetableLesson rows — they're produced by
- * solver runs, which only happens in local dev).
+ * backend resolves it to (or creates) a `ClassBookEntry`. Specs seed
+ * exactly one such lesson via `createThrowawaySchool({ withTimetableStack: true })`
+ * (`fixtures/throwaway-school.ts`). The standard prisma:seed creates
+ * ZERO TimetableLesson rows — they're produced by solver runs, which
+ * only happens in local dev.
  *
  * This module covers the API-side state plumbing tests need on top of
  * the lesson fixture:
@@ -15,6 +15,11 @@
  *     resolve endpoint so tests can mix UI actions with API state setup
  *   - `resetAttendanceForEntry` puts a ClassBookEntry back into the
  *     canonical "alle anwesend" state for use in afterEach hooks
+ *
+ * Note: After Phase 3.5 migrations (#147), the Batch B classbook specs
+ * rely on the throwaway-school cascade for cleanup and no longer call
+ * the reset/cleanup helpers in this module. The helpers stay available
+ * for any future spec that mixes UI + API state inside a single throwaway.
  */
 import { expect, type APIRequestContext } from '@playwright/test';
 import { getAdminToken } from './login';
@@ -45,11 +50,10 @@ export async function resolveEntryByTimetableLesson(
 }
 
 /**
- * Sweep all student notes attached to a ClassBookEntry. Used in afterEach
- * to keep the next test's "Keine Notizen vorhanden" empty-state assertion
- * deterministic — `cleanupTimetableRun()` does NOT cascade to
- * ClassBookEntry (no FK), so notes survive run-cleanup and leak into the
- * next test's view of the same lesson.
+ * Sweep all student notes attached to a ClassBookEntry. Legacy helper —
+ * kept for any spec that explicitly reuses a ClassBookEntry between
+ * tests. Throwaway-school specs (Batch B, #166) no longer need this
+ * because the per-spec School cascade-deletes the entry and its notes.
  *
  * Best-effort: swallows individual DELETE failures so a half-applied
  * fixture from a previously killed run doesn't block this run's cleanup.
@@ -110,12 +114,8 @@ export async function resetAttendanceForEntry(
 
 /**
  * Clear thema/lehrstoff/hausaufgabe on a ClassBookEntry so the next test
- * sees blank inputs. The ClassBookEntry row is NOT linked to the
- * TimetableRun fixture (its primary key chain is classSubjectId + date +
- * period + weekType — see schema.prisma:950) so `cleanupTimetableRun()`
- * does NOT cascade to it. Without this reset the spec's "Thema persists
- * after reload" lock would mask a later test that silently inherits the
- * E2E-flavoured content.
+ * sees blank inputs. Legacy helper — Batch B specs (#166) rely on the
+ * throwaway-school cascade instead.
  *
  * UpdateLessonContentDto enforces `@IsString()` on each field, so we send
  * empty strings (not `null`) — the service-side spread guards on
