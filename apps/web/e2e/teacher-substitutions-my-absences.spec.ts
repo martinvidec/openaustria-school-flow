@@ -1,45 +1,40 @@
 /**
  * Issue #85 — Teacher "Meine Abwesenheiten" view.
  *
- * Second sub-spec of the Substitutions coverage gap. Locks the absent-
- * teacher's view of their auto-generated substitution rows on
- * /teacher/substitutions:
+ * Issue #168 (Phase 3.5/6 Batch D) — migrated to throwaway-school per
+ * CLAUDE.md D4. The `active-timetable-run:SEED_SCHOOL_UUID` advisory lock
+ * is gone; each invocation owns its own school. The class name override
+ * (`classNames: ['1A']`) keeps the row-text assertion stable since the
+ * substitution panel renders `<subjectAbbreviation> · <className>`.
  *
- *   1. Seed an active TimetableRun with one lesson at MONDAY/period-1
- *      for class 1A, taught by kc-lehrer (Maria Mueller).
- *   2. POST an absence for kc-lehrer covering the upcoming Monday →
- *      backend auto-expands to one Substitution row with
- *      originalTeacherId = kc-lehrer.teacher.id.
- *   3. kc-lehrer logs in → /teacher/substitutions → Section 2
- *      ("Meine Abwesenheiten") surfaces the row with subject + class +
- *      period + a PENDING status badge.
+ * Locks the absent-teacher's view of their auto-generated substitution
+ * rows on /teacher/substitutions:
  *
- * Why this slice: it exercises GET /substitutions/my-absences
- * (substitution.controller.ts:43) and the SubstitutionDto join chain
- * (subjectAbbreviation, className, periodNumber), plus the
- * useMyAbsenceSubstitutions hook + the page's Section-2 render
- * branch. Section 1 ("Offene Anfragen" / OFFERED to me) is deferred to
- * a follow-up sub-spec — that requires a second teacher with their own
- * lesson + an admin assigning kc-lehrer as substitute, which is
- * out-of-scope for this PR's seed surface.
+ *   1. Throwaway TimetableRun + one lesson at MONDAY/period-1 for the
+ *      throwaway lehrer (bound to kc-lehrer's KC user).
+ *   2. POST an absence for the throwaway lehrer covering the upcoming
+ *      Monday → backend auto-expands to one Substitution row.
+ *   3. kc-lehrer logs in → /teacher/substitutions → Section 2 ("Meine
+ *      Abwesenheiten") surfaces the row with subject + class + period
+ *      + a PENDING status badge.
  *
- * Chromium-only-skip per the race-family precedent — shared seed-school
- * mutating specs collide on parallel browser projects.
+ * Exercises GET /substitutions/my-absences (substitution.controller.ts:43)
+ * and the SubstitutionDto join chain (subjectAbbreviation, className,
+ * periodNumber), plus the useMyAbsenceSubstitutions hook + the page's
+ * Section-2 render branch.
  */
 import { test, expect } from '@playwright/test';
 import { loginAsRole } from './helpers/login';
 import {
-  cancelAbsenceViaAPI,
   createAbsenceViaAPI,
   nextMondayISODate,
   type CreatedAbsence,
 } from './helpers/substitutions';
 import {
-  cleanupTimetableRun,
-  seedTimetableRun,
-  type TimetableRunFixture,
-} from './fixtures/timetable-run';
-import { SEED_SCHOOL_UUID } from './fixtures/seed-uuids';
+  createThrowawaySchool,
+  type ThrowawaySchoolFixture,
+} from './fixtures/throwaway-school';
+import { useThrowawaySchoolHeader } from './helpers/school-context';
 
 test.describe('Issue #85 — Teacher Meine Abwesenheiten (desktop)', () => {
   test.skip(
@@ -47,26 +42,33 @@ test.describe('Issue #85 — Teacher Meine Abwesenheiten (desktop)', () => {
     'Section-2 rendering is identical across viewports — desktop only for the first lock.',
   );
 
-  // Per-test seed; describe-level test.skip does NOT gate beforeAll/afterAll
-  // (lesson from #86 / #81). Per-test hooks ARE gated; the if-guard belts-and-
-  // braces against half-applied state from a failed seed.
-  let fixture: TimetableRunFixture | undefined;
+  let fixture: ThrowawaySchoolFixture | undefined;
   let absence: CreatedAbsence | undefined;
 
-  test.beforeEach(async ({ page, request }) => {
-    fixture = await seedTimetableRun(SEED_SCHOOL_UUID);
+  test.beforeEach(async ({ context, page, request }) => {
+    fixture = await createThrowawaySchool({
+      roles: { admin: true, lehrer: true },
+      withClasses: 1,
+      classNames: ['1A'],
+      withTimetableStack: true,
+      namePrefix: 'E2E-SUB-LEHRER',
+    });
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
 
     // Seed the absence BEFORE the lehrer logs in — the admin token comes
     // from request.context (helpers/login.getAdminToken) and is independent
-    // of the page's Keycloak session. Doing this in beforeEach keeps the
-    // test body focused on the rendered UI.
+    // of the page's Keycloak session.
     const monday = nextMondayISODate();
-    absence = await createAbsenceViaAPI(request, {
-      teacherId: fixture.teacherId,
-      dateFrom: monday,
-      dateTo: monday,
-      reason: 'KRANK',
-    });
+    absence = await createAbsenceViaAPI(
+      request,
+      {
+        teacherId: fixture.timetable!.teacherId,
+        dateFrom: monday,
+        dateTo: monday,
+        reason: 'KRANK',
+      },
+      fixture.schoolId,
+    );
     expect(
       absence.affectedLessonCount ?? 0,
       'absence-expansion must create at least one substitution row',
@@ -75,14 +77,13 @@ test.describe('Issue #85 — Teacher Meine Abwesenheiten (desktop)', () => {
     await loginAsRole(page, 'lehrer');
   });
 
-  test.afterEach(async ({ request }) => {
-    if (absence) {
-      await cancelAbsenceViaAPI(request, absence.id);
-      absence = undefined;
-    }
+  test.afterEach(async () => {
+    // Throwaway-school cleanup cascades through TeacherAbsence +
+    // Substitution + HandoverNote rows — no explicit cancel needed.
     if (fixture) {
-      await cleanupTimetableRun(fixture);
+      await fixture.cleanup();
       fixture = undefined;
+      absence = undefined;
     }
   });
 
@@ -90,6 +91,7 @@ test.describe('Issue #85 — Teacher Meine Abwesenheiten (desktop)', () => {
     page,
   }) => {
     if (!fixture) throw new Error('fixture not seeded');
+    const stack = fixture.timetable!;
 
     await page.goto('/teacher/substitutions');
 
@@ -105,30 +107,23 @@ test.describe('Issue #85 — Teacher Meine Abwesenheiten (desktop)', () => {
     ).toBeVisible();
 
     // The Section-2 empty state must NOT appear — our admin-created
-    // absence for kc-lehrer should populate this section. (Section-1
-    // empty state "Keine offenen Vertretungsanfragen" may legitimately
-    // still appear because no admin has assigned kc-lehrer as a
-    // substitute in this spec — that's the SUB-LEHRER-02 slice.)
+    // absence for the throwaway lehrer should populate this section.
     await expect(
       page.getByText('Keine aktiven Abwesenheiten'),
       'Section-2 empty state must not appear when the absent teacher has at least one substitution row',
     ).toHaveCount(0);
 
     // Substitution row data — assert on the period + subject from the
-    // seedTimetableRun fixture. The "X. Stunde" rendering is on
+    // throwaway timetable stack. The "X. Stunde" rendering is on
     // substitutions.tsx:93; subjectAbbreviation comes from the join in
     // findByAbsentUser (substitution.service.ts) and surfaces as
     // SubstitutionDto.subjectAbbreviation.
     await expect(
-      page
-        .getByText(/1\.\s*Stunde/)
-        .first(),
-      'fixture seeds MONDAY/period-1 — the row must render "1. Stunde"',
+      page.getByText(/1\.\s*Stunde/),
+      'throwaway seeds MONDAY/period-1 — the row must render "1. Stunde"',
     ).toBeVisible();
     await expect(
-      page
-        .getByText(new RegExp(`${fixture.subjectAbbreviation}\\s*·\\s*1A`))
-        .first(),
+      page.getByText(new RegExp(`${stack.subjectAbbreviation}\\s*·\\s*1A`)),
       'row must render "<subjectAbbreviation> · <className>" from the join',
     ).toBeVisible();
 
@@ -137,17 +132,16 @@ test.describe('Issue #85 — Teacher Meine Abwesenheiten (desktop)', () => {
     // stays at PENDING. Badge text comes from SubstitutionDto.status
     // verbatim (substitutions.tsx:98).
     await expect(
-      page.getByText('PENDING').first(),
+      page.getByText('PENDING'),
       'newly-generated substitution must render the PENDING status badge in Section 2',
     ).toBeVisible();
 
     // "Uebergabenotiz" button — when no handover note exists yet, the
     // button label is the German default (substitutions.tsx:111). This
     // both locks the no-note state AND verifies the button is reachable
-    // from this view (SUB-LEHRER-HANDOVER follow-up spec drives the
-    // editor open and asserts the saved note round-trips).
+    // from this view.
     await expect(
-      page.getByRole('button', { name: 'Uebergabenotiz' }).first(),
+      page.getByRole('button', { name: 'Uebergabenotiz' }),
       'no-handover-note button label must be "Uebergabenotiz" by default',
     ).toBeVisible();
   });

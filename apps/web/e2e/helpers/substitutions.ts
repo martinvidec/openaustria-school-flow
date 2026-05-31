@@ -15,19 +15,9 @@
  */
 import { expect, type APIRequestContext } from '@playwright/test';
 import { getAdminToken } from './login';
-import { SEED_SCHOOL_UUID } from '../fixtures/seed-uuids';
 
 export const SUBSTITUTIONS_API =
   process.env.E2E_API_URL ?? 'http://localhost:3000/api/v1';
-/**
- * Default school id for the legacy seed-school flow. Specs migrating to
- * throwaway-school (Issue #153 batches A–D) pass `schoolId` explicitly per
- * call; the default stays for any spec still bound to the seed school
- * until its batch lands. The constant + default will be removed alongside
- * the last seed-school caller in Batch D.
- */
-export const SUBSTITUTIONS_SCHOOL_ID =
-  process.env.E2E_SCHOOL_ID ?? SEED_SCHOOL_UUID;
 
 export interface CreateAbsenceInput {
   teacherId: string;
@@ -45,14 +35,11 @@ export interface CreatedAbsence {
 /**
  * POST /absences as admin. Returns the new absence id so afterEach can
  * cancel it (cascade-deletes any auto-generated substitutions).
- *
- * `schoolId` defaults to the legacy seed-school. Throwaway-school specs
- * pass `fixture.schoolId` so the absence lands in the per-spec school.
  */
 export async function createAbsenceViaAPI(
   request: APIRequestContext,
   input: CreateAbsenceInput,
-  schoolId: string = SUBSTITUTIONS_SCHOOL_ID,
+  schoolId: string,
 ): Promise<CreatedAbsence> {
   const token = await getAdminToken(request);
   const res = await request.post(
@@ -96,7 +83,7 @@ export async function createAbsenceViaAPI(
 export async function cancelAbsenceViaAPI(
   request: APIRequestContext,
   absenceId: string,
-  schoolId: string = SUBSTITUTIONS_SCHOOL_ID,
+  schoolId: string,
 ): Promise<void> {
   const token = await getAdminToken(request);
   const res = await request.delete(
@@ -119,7 +106,7 @@ export async function cancelAbsenceViaAPI(
  */
 export async function listSubstitutionsViaAPI(
   request: APIRequestContext,
-  schoolId: string = SUBSTITUTIONS_SCHOOL_ID,
+  schoolId: string,
 ): Promise<
   Array<{
     id: string;
@@ -163,7 +150,7 @@ export async function assignSubstituteViaAPI(
   request: APIRequestContext,
   substitutionId: string,
   candidateTeacherId: string,
-  schoolId: string = SUBSTITUTIONS_SCHOOL_ID,
+  schoolId: string,
 ): Promise<void> {
   const token = await getAdminToken(request);
   const res = await request.post(
@@ -185,7 +172,7 @@ export async function assignSubstituteViaAPI(
 /**
  * Compute the YYYY-MM-DD string for the next MONDAY at-or-after the
  * given anchor date (defaults to today). Used to align test absences
- * with the seedTimetableRun fixture's MONDAY/period-1 lesson so the
+ * with the throwaway timetable stack's MONDAY/period-1 lesson so the
  * absence-expansion algorithm produces exactly one substitution row.
  */
 export function nextMondayISODate(anchor: Date = new Date()): string {
