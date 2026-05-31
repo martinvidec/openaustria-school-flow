@@ -9,7 +9,7 @@
  *
  * No description-prefix filter is needed for cleanup — the sweep is
  * scoped to one classSubjectId, which a single test owns end-to-end
- * via the seedTimetableRun fixture.
+ * via the throwaway-school timetable stack.
  */
 import { type APIRequestContext } from '@playwright/test';
 import { getAdminToken } from './login';
