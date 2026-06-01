@@ -66,9 +66,20 @@ export class KeycloakAdminService implements OnModuleInit {
   /**
    * Search Keycloak users by email fragment (case-insensitive, max 10).
    * Returns an enriched list with an `alreadyLinkedToPersonId` flag
-   * for each match that is already wired up to a SchoolFlow Person.
+   * for each match that is already wired up to a SchoolFlow Person
+   * within the caller's schoolId.
+   *
+   * #164 — the `alreadyLinkedToPersonId` lookup is scoped to the active
+   * school so a KC user linked to a Person in a SIBLING school doesn't
+   * appear as "already linked" for an admin trying to use them in
+   * their own tenant. The intent is "is this KC account available to
+   * link to a new Person in MY school?" — global linkage state is
+   * irrelevant.
    */
-  async findUsersByEmail(email: string): Promise<KeycloakUserResponseDto[]> {
+  async findUsersByEmail(
+    email: string,
+    schoolId: string,
+  ): Promise<KeycloakUserResponseDto[]> {
     await this.ensureAuth();
     const users = await this.client.users.find({ email, exact: false, max: 10 });
 
@@ -76,7 +87,7 @@ export class KeycloakAdminService implements OnModuleInit {
       users.map(async (u): Promise<KeycloakUserResponseDto> => {
         const linked = u.id
           ? await this.prisma.person.findFirst({
-              where: { keycloakUserId: u.id },
+              where: { keycloakUserId: u.id, schoolId },
               select: { id: true, firstName: true, lastName: true },
             })
           : null;

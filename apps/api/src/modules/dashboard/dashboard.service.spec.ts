@@ -440,18 +440,22 @@ describe('DashboardService', () => {
   // Test 11: resolveAdminSchoolId
   // -----------------------------------------------------------------
   describe('resolveAdminSchoolId', () => {
-    it('returns Person.schoolId for the keycloakUserId', async () => {
+    it('returns Person.schoolId when the admin has a Person in the requested school', async () => {
       mockPrisma.person.findFirst.mockResolvedValue({ schoolId: 'school-A' });
-      expect(await service.resolveAdminSchoolId('kc-uuid-A')).toBe('school-A');
+      expect(
+        await service.resolveAdminSchoolId('kc-uuid-A', 'school-A'),
+      ).toBe('school-A');
       expect(mockPrisma.person.findFirst).toHaveBeenCalledWith({
-        where: { keycloakUserId: 'kc-uuid-A' },
+        where: { keycloakUserId: 'kc-uuid-A', schoolId: 'school-A' },
         select: { schoolId: true },
       });
     });
 
-    it('returns null when no Person matches', async () => {
+    it('returns null when no Person matches the (kc, schoolId) pair', async () => {
       mockPrisma.person.findFirst.mockResolvedValue(null);
-      expect(await service.resolveAdminSchoolId('kc-uuid-missing')).toBeNull();
+      expect(
+        await service.resolveAdminSchoolId('kc-uuid-missing', 'school-A'),
+      ).toBeNull();
     });
   });
 });

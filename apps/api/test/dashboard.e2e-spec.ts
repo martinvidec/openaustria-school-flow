@@ -216,6 +216,7 @@ describe('DashboardController (e2e)', () => {
     expect(body.categories).toHaveLength(10);
     expect(dashboardServiceMock.resolveAdminSchoolId).toHaveBeenCalledWith(
       'admin-kc-A',
+      SCHOOL_A,
     );
     expect(dashboardServiceMock.getStatus).toHaveBeenCalledWith(SCHOOL_A);
   });
@@ -250,7 +251,10 @@ describe('DashboardController (e2e)', () => {
   // Test 4 — cross-tenant probe denied (T-16-2 — BEHAVIOR-asserted)
   // -----------------------------------------------------------------
   it('admin from school A GET ?schoolId=schoolB → 403 Cross-tenant access denied', async () => {
-    dashboardServiceMock.resolveAdminSchoolId.mockResolvedValue(SCHOOL_A);
+    // #164: resolveAdminSchoolId is now SCOPED by (kc, requestedSchool)
+    // — when the admin has no Person in schoolB, it returns null and
+    // the controller raises 403. No equality check anymore.
+    dashboardServiceMock.resolveAdminSchoolId.mockResolvedValue(null);
 
     const result = await app.inject({
       method: 'GET',
@@ -261,13 +265,17 @@ describe('DashboardController (e2e)', () => {
     expect(result.statusCode).toBe(403);
     const body = JSON.parse(result.payload);
     expect(body.message).toBe('Cross-tenant access denied');
+    expect(dashboardServiceMock.resolveAdminSchoolId).toHaveBeenCalledWith(
+      'admin-kc-A',
+      SCHOOL_B,
+    );
     expect(dashboardServiceMock.getStatus).not.toHaveBeenCalled();
   });
 
   // -----------------------------------------------------------------
-  // Test 5 — admin without Person row (no school context)
+  // Test 5 — admin without Person row in requested school
   // -----------------------------------------------------------------
-  it('admin without Person row → 403 Admin without school context', async () => {
+  it('admin without Person row in the requested school → 403', async () => {
     dashboardServiceMock.resolveAdminSchoolId.mockResolvedValue(null);
 
     const result = await app.inject({
@@ -278,7 +286,10 @@ describe('DashboardController (e2e)', () => {
 
     expect(result.statusCode).toBe(403);
     const body = JSON.parse(result.payload);
-    expect(body.message).toBe('Admin without school context');
+    // #164: both the missing-membership and cross-tenant paths now
+    // share the same 403 message. The previous two-step check
+    // (resolve-then-equality) collapsed into a single scoped query.
+    expect(body.message).toBe('Cross-tenant access denied');
     expect(dashboardServiceMock.getStatus).not.toHaveBeenCalled();
   });
 

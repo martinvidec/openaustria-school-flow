@@ -31,18 +31,24 @@ export class DashboardService {
   ) {}
 
   /**
-   * Resolve the tenant (schoolId) of an admin from the Keycloak `sub` UUID.
+   * Verify the admin has a Person row in the requested school. Returns the
+   * schoolId on success (so the controller can pass it through), null on
+   * missing membership (controller raises 403).
    *
-   * AuthenticatedUser does NOT carry a `schoolId` field — only `id` (Keycloak
-   * sub UUID), `email`, `username`, `roles`. The codebase's established
-   * pattern for resolving the tenant of a logged-in user is
-   * `Person.findFirst({ where: { keycloakUserId } })`. Admins have a Person
-   * row with their schoolId (verified in `calendar.service.ts:79-80` and
-   * `user-context.service.ts:9-11`).
+   * #164 (multi-tenant scope audit): the pre-#164 version called
+   * `Person.findFirst({ where: { keycloakUserId } })` without a schoolId
+   * filter. For an admin with Person memberships in multiple schools that
+   * returned a non-deterministic sibling and tripped the cross-tenant
+   * guard on legitimate requests. Scoping the lookup to the requested
+   * school turns the membership check into a single deterministic query
+   * — same pattern PR #160 applied to the interceptor.
    */
-  async resolveAdminSchoolId(keycloakUserId: string): Promise<string | null> {
+  async resolveAdminSchoolId(
+    keycloakUserId: string,
+    schoolId: string,
+  ): Promise<string | null> {
     const person = await this.prisma.person.findFirst({
-      where: { keycloakUserId },
+      where: { keycloakUserId, schoolId },
       select: { schoolId: true },
     });
     return person?.schoolId ?? null;

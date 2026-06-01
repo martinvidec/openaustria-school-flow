@@ -10,12 +10,12 @@ export class UserContextService {
     keycloakUserId: string,
     currentSchoolId: string | null,
   ): Promise<UserContextResponseDto> {
-    // Order memberships by school.createdAt asc so the SEED school (oldest)
-    // is always [0]. Matches CurrentSchoolInterceptor's ordering — necessary
-    // so the fallback `currentSchoolId ?? memberships[0].schoolId` resolves
-    // to the SAME school the interceptor picked when no X-School-Id was
-    // sent. Pre-#152 the unordered findMany made this racy under parallel
-    // admin-throwaway e2e specs.
+    // INTENTIONALLY GLOBAL (#164 exception): this query enumerates every
+    // school the KC user belongs to so `/users/me` can return the
+    // `availableSchools` list. Scoping by schoolId would defeat the
+    // purpose. Order memberships by school.createdAt asc so the SEED
+    // school (oldest) is always [0] — matches the interceptor's
+    // ordering so the fallback resolves to the same school.
     const memberships = await this.prisma.person.findMany({
       where: { keycloakUserId },
       select: {

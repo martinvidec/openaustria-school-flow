@@ -57,7 +57,10 @@ export class UserDirectoryService {
     private readonly parentService: ParentService,
   ) {}
 
-  async findAll(query: UserDirectoryQueryDto): Promise<{
+  async findAll(
+    schoolId: string,
+    query: UserDirectoryQueryDto,
+  ): Promise<{
     data: UserDirectorySummary[];
     meta: {
       page: number;
@@ -87,7 +90,10 @@ export class UserDirectoryService {
       userIds.length === 0
         ? []
         : this.prisma.person.findMany({
-            where: { keycloakUserId: { in: userIds } },
+            // #164 — scope by schoolId so a KC user with Persons in
+            // multiple tenants only surfaces the link relevant to the
+            // admin's current school in this directory listing.
+            where: { keycloakUserId: { in: userIds }, schoolId },
           }),
     ]);
 
@@ -154,7 +160,7 @@ export class UserDirectoryService {
     };
   }
 
-  async findOne(userId: string) {
+  async findOne(schoolId: string, userId: string) {
     const u = await this.kcAdmin.findUserById(userId);
     if (!u) throw new NotFoundException('Keycloak-Benutzer nicht gefunden.');
 
@@ -163,7 +169,10 @@ export class UserDirectoryService {
         where: { userId },
         include: { role: true },
       }),
-      this.prisma.person.findFirst({ where: { keycloakUserId: userId } }),
+      // #164 — only surface the Person link for the current school.
+      this.prisma.person.findFirst({
+        where: { keycloakUserId: userId, schoolId },
+      }),
     ]);
 
     return {
@@ -186,11 +195,11 @@ export class UserDirectoryService {
     };
   }
 
-  async setEnabled(userId: string, enabled: boolean) {
+  async setEnabled(schoolId: string, userId: string, enabled: boolean) {
     const exists = await this.kcAdmin.findUserById(userId);
     if (!exists) throw new NotFoundException('Keycloak-Benutzer nicht gefunden.');
     await this.kcAdmin.setEnabled(userId, enabled);
-    return this.findOne(userId);
+    return this.findOne(schoolId, userId);
   }
 
   /**
@@ -212,10 +221,17 @@ export class UserDirectoryService {
    * Both checks complete BEFORE any service mutation, so a 409 leaves
    * the system in its starting state.
    */
-  async linkPerson(userId: string, dto: LinkPersonDto): Promise<{ person: unknown }> {
-    // (a) user-side pre-check
+  async linkPerson(
+    schoolId: string,
+    userId: string,
+    dto: LinkPersonDto,
+  ): Promise<{ person: unknown }> {
+    // (a) user-side pre-check (#164 — scoped to the admin's current
+    // school; a KC user with a Person link in a sibling school must
+    // not block linking in THIS school, and a "user is already linked"
+    // 409 here must refer to a Person we actually own).
     const existing = await this.prisma.person.findFirst({
-      where: { keycloakUserId: userId },
+      where: { keycloakUserId: userId, schoolId },
     });
     if (existing && existing.id !== dto.personId) {
       throw new ConflictException({
@@ -364,9 +380,11 @@ export class UserDirectoryService {
     }
   }
 
-  async unlinkPerson(userId: string): Promise<void> {
+  async unlinkPerson(schoolId: string, userId: string): Promise<void> {
+    // #164 — only unlink the Person row belonging to the admin's
+    // current school; sibling-school Persons stay linked.
     const person = await this.prisma.person.findFirst({
-      where: { keycloakUserId: userId },
+      where: { keycloakUserId: userId, schoolId },
       include: { teacher: true, student: true, parent: true },
     });
     if (!person) return;

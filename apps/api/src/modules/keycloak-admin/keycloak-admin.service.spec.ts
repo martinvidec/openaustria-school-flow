@@ -74,8 +74,8 @@ describe('KeycloakAdminService', () => {
 
   it('caches service-account token across calls (no re-auth if within TTL)', async () => {
     kcMock.users.find.mockResolvedValue([]);
-    await service.findUsersByEmail('maria');
-    await service.findUsersByEmail('max');
+    await service.findUsersByEmail('maria', 'school-1');
+    await service.findUsersByEmail('max', 'school-1');
     expect(kcMock.auth).toHaveBeenCalledTimes(1);
   });
 
@@ -84,12 +84,12 @@ describe('KeycloakAdminService', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
 
-    await service.findUsersByEmail('maria');
+    await service.findUsersByEmail('maria', 'school-1');
     expect(kcMock.auth).toHaveBeenCalledTimes(1);
 
     // Advance past 5 minute TTL (default)
     vi.setSystemTime(new Date('2026-01-01T00:05:01Z'));
-    await service.findUsersByEmail('max');
+    await service.findUsersByEmail('max', 'school-1');
     expect(kcMock.auth).toHaveBeenCalledTimes(2);
   });
 
@@ -103,7 +103,7 @@ describe('KeycloakAdminService', () => {
       lastName: 'Huber',
     });
 
-    const results = await service.findUsersByEmail('maria');
+    const results = await service.findUsersByEmail('maria', 'school-1');
 
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
@@ -113,14 +113,14 @@ describe('KeycloakAdminService', () => {
       alreadyLinkedToPersonName: 'Maria Huber',
     });
     expect(mockPrisma.person.findFirst).toHaveBeenCalledWith({
-      where: { keycloakUserId: 'kc-1' },
+      where: { keycloakUserId: 'kc-1', schoolId: 'school-1' },
       select: { id: true, firstName: true, lastName: true },
     });
   });
 
   it('returns empty array when no users match', async () => {
     kcMock.users.find.mockResolvedValue([]);
-    const results = await service.findUsersByEmail('noone');
+    const results = await service.findUsersByEmail('noone', 'school-1');
     expect(results).toEqual([]);
     expect(mockPrisma.person.findFirst).not.toHaveBeenCalled();
   });

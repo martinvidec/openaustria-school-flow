@@ -35,6 +35,7 @@ export class PollService {
    * in a single transaction. Sends MESSAGE_RECEIVED notifications.
    */
   async createWithMessage(
+    schoolId: string,
     conversationId: string,
     senderId: string,
     messageBody: string,
@@ -61,9 +62,11 @@ export class PollService {
       throw new BadRequestException('Umfrage darf maximal 10 Optionen haben');
     }
 
-    // Resolve sender name
+    // Resolve sender name (#164 — scope by schoolId so the sender's
+    // Person row is unambiguous when the KC user has memberships in
+    // multiple schools).
     const senderPerson = await this.prisma.person.findFirst({
-      where: { keycloakUserId: senderId },
+      where: { keycloakUserId: senderId, schoolId },
       select: { firstName: true, lastName: true },
     });
     const senderName = senderPerson
@@ -201,6 +204,7 @@ export class PollService {
    * Auto-closes poll if deadline has passed.
    */
   async castVote(
+    schoolId: string,
     pollId: string,
     userId: string,
     dto: CastVoteDto,
@@ -297,7 +301,7 @@ export class PollService {
     });
 
     // Return updated poll
-    const updatedResults = await this.getResults(pollId, userId);
+    const updatedResults = await this.getResults(schoolId, pollId, userId);
 
     // Post-transaction: emit poll:vote to all conversation members
     const allMembers = await this.prisma.conversationMember.findMany({
@@ -313,7 +317,11 @@ export class PollService {
   /**
    * Retract all votes from a poll.
    */
-  async retractVote(pollId: string, userId: string): Promise<PollDto> {
+  async retractVote(
+    schoolId: string,
+    pollId: string,
+    userId: string,
+  ): Promise<PollDto> {
     const poll = await this.prisma.poll.findUnique({
       where: { id: pollId },
       include: { options: true },
@@ -335,7 +343,7 @@ export class PollService {
       },
     });
 
-    return this.getResults(pollId, userId);
+    return this.getResults(schoolId, pollId, userId);
   }
 
   /**
@@ -343,6 +351,7 @@ export class PollService {
    * Only the message sender or admin/schulleitung can close.
    */
   async closePoll(
+    schoolId: string,
     pollId: string,
     userId: string,
     userRoles: string[],
@@ -372,7 +381,7 @@ export class PollService {
       data: { isClosed: true },
     });
 
-    return this.getResults(pollId, userId);
+    return this.getResults(schoolId, pollId, userId);
   }
 
   /**
@@ -381,7 +390,12 @@ export class PollService {
    * Named results (voters array) for the message sender and admin/schulleitung.
    * Anonymous counts only for other participants.
    */
-  async getResults(pollId: string, userId: string, userRoles?: string[]): Promise<PollDto> {
+  async getResults(
+    schoolId: string,
+    pollId: string,
+    userId: string,
+    userRoles?: string[],
+  ): Promise<PollDto> {
     const poll = await this.prisma.poll.findUnique({
       where: { id: pollId },
       include: {
@@ -413,8 +427,13 @@ export class PollService {
 
         if (showVoters && option.votes.length > 0) {
           const voterIds = option.votes.map((v: any) => v.userId);
+          // #164 — scope by schoolId so a KC user that voted from a
+          // sibling school in another tenant doesn't leak via name
+          // resolution. Voters with no Person in THIS school resolve
+          // to 'Unknown' below — defensible UX for cross-tenant edge
+          // cases.
           const persons = await this.prisma.person.findMany({
-            where: { keycloakUserId: { in: voterIds } },
+            where: { keycloakUserId: { in: voterIds }, schoolId },
             select: { keycloakUserId: true, firstName: true, lastName: true },
           });
           const personMap = new Map(

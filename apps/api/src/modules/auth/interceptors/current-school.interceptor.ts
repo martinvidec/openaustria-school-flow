@@ -54,6 +54,10 @@ export class CurrentSchoolInterceptor implements NestInterceptor {
     const user = req.user as AuthenticatedUser | undefined;
     if (!user) return next.handle();
 
+    // INTENTIONALLY GLOBAL (#164 exception): the interceptor's whole job
+    // is to enumerate the KC user's memberships so it can pick / validate
+    // the active schoolId. Scoping by schoolId here would create a
+    // chicken-and-egg dependency.
     const memberships = await this.prisma.person.findMany({
       where: { keycloakUserId: user.id },
       select: { schoolId: true },

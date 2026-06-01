@@ -159,7 +159,7 @@ describe('MessageService', () => {
       lastName: 'Mustermann',
     });
 
-    const result = await service.send('conv-1', 'user-sender', {
+    const result = await service.send('school-1', 'conv-1', 'user-sender', {
       body: 'Hello everyone',
     });
 
@@ -188,7 +188,7 @@ describe('MessageService', () => {
       lastName: 'Mustermann',
     });
 
-    await service.send('conv-1', 'user-sender', { body: 'Test' });
+    await service.send('school-1', 'conv-1', 'user-sender', { body: 'Test' });
 
     // The $transaction mock is called; inside it, conversationMember.updateMany is invoked
     // with increment: 1 for recipients only (not sender)
@@ -228,7 +228,7 @@ describe('MessageService', () => {
       lastName: 'Mustermann',
     });
 
-    await service.send('conv-1', 'user-sender', { body: 'Important message' });
+    await service.send('school-1', 'conv-1', 'user-sender', { body: 'Important message' });
 
     // NotificationService.create called for each recipient (2 recipients)
     expect(notificationService.create).toHaveBeenCalledTimes(2);
@@ -298,7 +298,7 @@ describe('MessageService', () => {
       lastName: 'Mustermann',
     });
 
-    const result = await service.send('conv-1', 'user-sender', {
+    const result = await service.send('school-1', 'conv-1', 'user-sender', {
       body: 'Check read status',
     });
 
@@ -329,6 +329,7 @@ describe('MessageService', () => {
       .mockResolvedValueOnce({ firstName: 'Karl', lastName: 'Weber' });
 
     const result = await service.getRecipients(
+      'school-1',
       'conv-1',
       'msg-1',
       'user-sender',
@@ -351,7 +352,7 @@ describe('MessageService', () => {
     });
 
     await expect(
-      service.getRecipients('conv-1', 'msg-1', 'user-other', ['lehrer']),
+      service.getRecipients('school-1', 'conv-1', 'msg-1', 'user-other', ['lehrer']),
     ).rejects.toThrow(ForbiddenException);
   });
 
