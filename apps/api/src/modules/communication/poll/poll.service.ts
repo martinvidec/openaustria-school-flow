@@ -204,6 +204,7 @@ export class PollService {
    * Auto-closes poll if deadline has passed.
    */
   async castVote(
+    schoolId: string,
     pollId: string,
     userId: string,
     dto: CastVoteDto,
@@ -300,7 +301,7 @@ export class PollService {
     });
 
     // Return updated poll
-    const updatedResults = await this.getResults(pollId, userId);
+    const updatedResults = await this.getResults(schoolId, pollId, userId);
 
     // Post-transaction: emit poll:vote to all conversation members
     const allMembers = await this.prisma.conversationMember.findMany({
@@ -316,7 +317,11 @@ export class PollService {
   /**
    * Retract all votes from a poll.
    */
-  async retractVote(pollId: string, userId: string): Promise<PollDto> {
+  async retractVote(
+    schoolId: string,
+    pollId: string,
+    userId: string,
+  ): Promise<PollDto> {
     const poll = await this.prisma.poll.findUnique({
       where: { id: pollId },
       include: { options: true },
@@ -338,7 +343,7 @@ export class PollService {
       },
     });
 
-    return this.getResults(pollId, userId);
+    return this.getResults(schoolId, pollId, userId);
   }
 
   /**
@@ -346,6 +351,7 @@ export class PollService {
    * Only the message sender or admin/schulleitung can close.
    */
   async closePoll(
+    schoolId: string,
     pollId: string,
     userId: string,
     userRoles: string[],
@@ -375,7 +381,7 @@ export class PollService {
       data: { isClosed: true },
     });
 
-    return this.getResults(pollId, userId);
+    return this.getResults(schoolId, pollId, userId);
   }
 
   /**

@@ -43,11 +43,12 @@ export class PollController {
   @ApiResponse({ status: 403, description: 'Not a member of the conversation' })
   @ApiResponse({ status: 404, description: 'Poll not found' })
   async castVote(
+    @Param('schoolId') schoolId: string,
     @Param('pollId') pollId: string,
     @Body() dto: CastVoteDto,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.pollService.castVote(pollId, user.id, dto);
+    return this.pollService.castVote(schoolId, pollId, user.id, dto);
   }
 
   @Delete(':pollId/votes')
@@ -58,10 +59,11 @@ export class PollController {
   @ApiResponse({ status: 400, description: 'Poll is closed' })
   @ApiResponse({ status: 404, description: 'Poll not found' })
   async retractVote(
+    @Param('schoolId') schoolId: string,
     @Param('pollId') pollId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.pollService.retractVote(pollId, user.id);
+    return this.pollService.retractVote(schoolId, pollId, user.id);
   }
 
   @Patch(':pollId/close')
@@ -72,10 +74,11 @@ export class PollController {
   @ApiResponse({ status: 403, description: 'Only sender or admin can close' })
   @ApiResponse({ status: 404, description: 'Poll not found' })
   async closePoll(
+    @Param('schoolId') schoolId: string,
     @Param('pollId') pollId: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    return this.pollService.closePoll(pollId, user.id, user.roles);
+    return this.pollService.closePoll(schoolId, pollId, user.id, user.roles);
   }
 
   @Get(':pollId/results')

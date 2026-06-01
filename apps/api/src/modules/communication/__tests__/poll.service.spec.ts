@@ -288,7 +288,7 @@ describe('PollService', () => {
       userVoteOptionIds: ['opt-1'],
     });
 
-    const result = await service.castVote('poll-1', 'user-voter', {
+    const result = await service.castVote('school-1', 'poll-1', 'user-voter', {
       optionIds: ['opt-1'],
     });
 
@@ -343,7 +343,7 @@ describe('PollService', () => {
       userVoteOptionIds: ['opt-a', 'opt-b'],
     });
 
-    const result = await service.castVote('poll-2', 'user-voter', {
+    const result = await service.castVote('school-1', 'poll-2', 'user-voter', {
       optionIds: ['opt-a', 'opt-b'],
     });
 
@@ -378,7 +378,7 @@ describe('PollService', () => {
     });
 
     await expect(
-      service.castVote('poll-closed', 'user-voter', { optionIds: ['opt-1'] }),
+      service.castVote('school-1', 'poll-closed', 'user-voter', { optionIds: ['opt-1'] }),
     ).rejects.toThrow(BadRequestException);
 
     // Test 2: past deadline (auto-close)
@@ -403,7 +403,7 @@ describe('PollService', () => {
     prisma.poll.update.mockResolvedValue({});
 
     await expect(
-      service.castVote('poll-expired', 'user-voter', { optionIds: ['opt-1'] }),
+      service.castVote('school-1', 'poll-expired', 'user-voter', { optionIds: ['opt-1'] }),
     ).rejects.toThrow(BadRequestException);
 
     // Verify the poll was auto-closed
@@ -437,7 +437,7 @@ describe('PollService', () => {
       userVoteOptionIds: [],
     });
 
-    const result = await service.closePoll('poll-1', 'user-sender', ['lehrer']);
+    const result = await service.closePoll('school-1', 'poll-1', 'user-sender', ['lehrer']);
 
     expect(result.isClosed).toBe(true);
     expect(prisma.poll.update).toHaveBeenCalledWith(
