@@ -136,7 +136,7 @@ test.describe('Phase 12 — Admin Students Archive + Restore (desktop)', () => {
     await page.goto('/admin/students');
     // #175: 336 demo students push the restored row out of page 1 by default.
     await page
-      .getByRole('searchbox', { name: 'Nach Name oder E-Mail suchen' })
+      .getByLabel('Nach Name oder E-Mail suchen')
       .fill(vorname);
 
     const activeRow = page.locator('tr').filter({ hasText: vorname });

@@ -84,7 +84,7 @@ test.describe('Phase 12 — Admin Students CRUD (desktop)', () => {
     // #175 demo seed adds 336 students to the seed school; the new row is no
     // longer guaranteed to be on the first page of 100. Filter to scope.
     await page
-      .getByRole('searchbox', { name: 'Nach Name oder E-Mail suchen' })
+      .getByLabel('Nach Name oder E-Mail suchen')
       .fill(vorname);
     // `.first()` because the desktop table AND mobile cards both render at
     // any viewport (the `hidden md:block` / `md:hidden` split is visual only).
