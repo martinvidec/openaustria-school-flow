@@ -134,6 +134,10 @@ test.describe('Phase 12 — Admin Students Archive + Restore (desktop)', () => {
     // filtered list is now empty, the filter bar hides per students.index.tsx).
     // Switch to the default (active) list via URL to re-verify.
     await page.goto('/admin/students');
+    // #175: 336 demo students push the restored row out of page 1 by default.
+    await page
+      .getByRole('searchbox', { name: 'Nach Name oder E-Mail suchen' })
+      .fill(vorname);
 
     const activeRow = page.locator('tr').filter({ hasText: vorname });
     await expect(activeRow).toBeVisible();

@@ -1353,10 +1353,16 @@ async function main() {
     const homeRoomId = roomByIndex.get(cls.homeRoomIndex)!.uuid;
     const kvTeacher = teacherByUsername.get(bulkTeachers[cls.kvTeacherIndex - 1].kcUsername)!;
     if (cls.name === '1A' || cls.name === '1B') {
-      // Legacy slug-id class — update homeRoom + KV per testdaten.md
+      // Legacy slug-id class — update ONLY homeRoom per testdaten.md.
+      // klassenvorstandId is intentionally not touched: class1A already has
+      // Maria Mueller assigned by the legacy KC-linkage section above, and
+      // E2E specs (messaging-polls MSG-POLL-01, excuses-teacher-review) rely
+      // on kc-lehrer seeing CLASS-scoped messages for 1A. The KV spec values
+      // from testdaten.md (l-d-01 for 1A, l-m-01 for 1B) only apply to the
+      // new 2A-4C classes.
       await prisma.schoolClass.update({
         where: { id: cls.id },
-        data: { homeRoomId, klassenvorstandId: kvTeacher.id },
+        data: { homeRoomId },
       });
     } else {
       await prisma.schoolClass.upsert({
