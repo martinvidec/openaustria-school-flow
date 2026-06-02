@@ -1,5 +1,16 @@
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../src/config/database/generated/client.js';
+import {
+  buildBulkSchoolData,
+  getBulkClasses,
+  getBulkClassSubjects,
+  getBulkRooms,
+  getBulkSchulleitung,
+  getBulkSubjects,
+  getBulkTeacherAbsences,
+  getBulkTeachers,
+  getParallelLegacyUsers,
+} from './seed-data.js';
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
@@ -501,10 +512,14 @@ async function main() {
       // mount, and `useBlocker` opened the unsaved-changes dialog on the
       // first tab switch. Repair existing rows too.
       schoolType: 'AHS',
+      // Issue #175: Rename to SchoolFlow Demo-Gymnasium (the demo-seed
+      // expansion adds 12 classes, 336 students, 622 parents, 32 teachers
+      // — see testdaten.md + seed-data.ts + Section 175 below).
+      name: 'SchoolFlow Demo-Gymnasium',
     },
     create: {
       id: SEED_SCHOOL_UUID,
-      name: 'BG/BRG Musterstadt',
+      name: 'SchoolFlow Demo-Gymnasium',
       schoolType: 'AHS',
       address: { street: 'Schulstrasse 1', zip: '1010', city: 'Wien' },
     },
@@ -1119,10 +1134,435 @@ async function main() {
     data: { homeRoomId: SEED_ROOM_K_2A_UUID },
   });
 
+  // =====================================================
+  // Section 175: Demo-Seed Bulk Data (testdaten.md)
+  // =====================================================
+  // Adds the AHS-Unterstufe demo data on top of the legacy seed:
+  //   - 19 additional rooms (Klassenzimmer 1A-4C, 2 Turnsäle, Bio/Chem/Phys, 2 Computersäle)
+  //   - 10 additional subjects (GW/GS/BE/ME/BU/PH/CH/INF/RE/WE)
+  //   - 5 parallel-legacy `kc-*` mirror users (kc-admin/lehrer/eltern/schueler/schulleitung)
+  //   - 1 schulleitung-01 + 32 bulk teachers (l-d-01 .. l-m-04)
+  //   - 10 additional classes (2A-4C); existing 1A/1B keep their slug-IDs but
+  //     receive new homeRoom + Klassenvorstand per testdaten.md
+  //   - 336 students (s-1a-01 .. s-4c-28) + 622 parents (e-fam-001-a/b .. -311-b)
+  //   - 48 Groups + 672 GroupMemberships (E + RE splits per testdaten.md)
+  //   - 174 ClassSubjects with deterministic teacher assignments
+  //   - 3 TeacherAbsences (anchored to nextMonday so they stay in the future)
+  //
+  // Idempotency: legacy seed school's groups, group memberships, class subjects
+  // and seed-managed TeacherAbsences are deleted then recreated. Upserts use
+  // the deterministic UUIDs from seed-data.ts so re-runs are no-ops.
+
+  const bulkRooms = getBulkRooms();
+  for (const r of bulkRooms) {
+    await prisma.room.upsert({
+      where: { id: r.uuid },
+      update: { name: r.name, roomType: r.roomType, capacity: r.capacity, equipment: r.equipment },
+      create: {
+        id: r.uuid,
+        schoolId: school.id,
+        name: r.name,
+        roomType: r.roomType,
+        capacity: r.capacity,
+        equipment: r.equipment,
+      },
+    });
+  }
+
+  const bulkSubjects = getBulkSubjects();
+  for (const subj of bulkSubjects) {
+    await prisma.subject.upsert({
+      where: { schoolId_shortName: { schoolId: school.id, shortName: subj.shortName } },
+      update: {
+        name: subj.fullName,
+        requiredRoomType: subj.requiredRoomType,
+      },
+      create: {
+        id: subj.id,
+        schoolId: school.id,
+        name: subj.fullName,
+        shortName: subj.shortName,
+        subjectType: 'PFLICHT',
+        lehrverpflichtungsgruppe: subj.lehrverpflichtungsgruppe,
+        werteinheitenFactor: subj.werteinheitenFactor,
+        requiredRoomType: subj.requiredRoomType,
+      },
+    });
+  }
+
+  // Reload subjects so we have the actual DB rows (the legacy 4 use slug
+  // ids, but Subject.id from seed-data may have been overwritten in an
+  // earlier seed run that hit the slug branch — we trust the schoolId +
+  // shortName composite key).
+  const subjectByShort = new Map<string, { id: string; shortName: string }>();
+  const dbSubjects = await prisma.subject.findMany({ where: { schoolId: school.id } });
+  for (const s of dbSubjects) subjectByShort.set(s.shortName, s);
+
+  // --- Bulk Teachers (32 + 1 Schulleitung) ---
+  const bulkTeachers = getBulkTeachers();
+  const teacherByUsername = new Map<string, { id: string }>();
+  for (const t of bulkTeachers) {
+    await prisma.person.upsert({
+      where: { id: t.personUuid },
+      update: {
+        keycloakUserId: t.kcUuid,
+        firstName: t.firstName,
+        lastName: t.lastName,
+        email: `${t.kcUsername}@demo.schoolflow.dev`,
+      },
+      create: {
+        id: t.personUuid,
+        schoolId: school.id,
+        personType: 'TEACHER',
+        firstName: t.firstName,
+        lastName: t.lastName,
+        email: `${t.kcUsername}@demo.schoolflow.dev`,
+        keycloakUserId: t.kcUuid,
+      },
+    });
+    await prisma.teacher.upsert({
+      where: { id: t.teacherUuid },
+      update: {},
+      create: {
+        id: t.teacherUuid,
+        personId: t.personUuid,
+        schoolId: school.id,
+        employmentPercentage: 100,
+        werteinheitenTarget: 20,
+        isPermanent: true,
+      },
+    });
+    teacherByUsername.set(t.kcUsername, { id: t.teacherUuid });
+    // TeacherSubjects (qualifications)
+    for (const subjShort of t.subjects) {
+      const subj = subjectByShort.get(subjShort);
+      if (!subj) {
+        throw new Error(`Subject ${subjShort} not found for teacher ${t.kcUsername}`);
+      }
+      await prisma.teacherSubject.upsert({
+        where: { teacherId_subjectId: { teacherId: t.teacherUuid, subjectId: subj.id } },
+        update: {},
+        create: { teacherId: t.teacherUuid, subjectId: subj.id },
+      });
+    }
+  }
+
+  const sl = getBulkSchulleitung();
+  await prisma.person.upsert({
+    where: { id: sl.personUuid },
+    update: {
+      keycloakUserId: sl.kcUuid,
+      firstName: sl.firstName,
+      lastName: sl.lastName,
+      email: `${sl.kcUsername}@demo.schoolflow.dev`,
+    },
+    create: {
+      id: sl.personUuid,
+      schoolId: school.id,
+      personType: 'TEACHER',
+      firstName: sl.firstName,
+      lastName: sl.lastName,
+      email: `${sl.kcUsername}@demo.schoolflow.dev`,
+      keycloakUserId: sl.kcUuid,
+    },
+  });
+  await prisma.teacher.upsert({
+    where: { id: sl.teacherUuid },
+    update: {},
+    create: {
+      id: sl.teacherUuid,
+      personId: sl.personUuid,
+      schoolId: school.id,
+      employmentPercentage: 100,
+      werteinheitenTarget: 10,
+      isPermanent: true,
+    },
+  });
+
+  // --- Parallel kc-* Legacy Mirror Users (5) ---
+  // Each carries a Person plus a record (Teacher / Student / Parent)
+  // depending on role. They live in the demo school PARALLEL to the
+  // existing 5 real legacy users (admin-user / lehrer-user / etc.) so the
+  // testdaten.md "kc-*" usernames are honored without disrupting the
+  // existing E2E contract.
+  const parallel = getParallelLegacyUsers();
+  for (const u of parallel) {
+    const personType: 'TEACHER' | 'STUDENT' | 'PARENT' =
+      u.role === 'eltern'   ? 'PARENT'  :
+      u.role === 'schueler' ? 'STUDENT' :
+                              'TEACHER';
+    await prisma.person.upsert({
+      where: { id: u.personUuid },
+      update: {
+        keycloakUserId: u.kcUuid,
+        firstName: u.firstName,
+        lastName: u.lastName,
+        email: u.email,
+      },
+      create: {
+        id: u.personUuid,
+        schoolId: school.id,
+        personType,
+        firstName: u.firstName,
+        lastName: u.lastName,
+        email: u.email,
+        keycloakUserId: u.kcUuid,
+      },
+    });
+    if (u.role === 'eltern') {
+      await prisma.parent.upsert({
+        where: { id: u.recordUuid },
+        update: {},
+        create: { id: u.recordUuid, personId: u.personUuid, schoolId: school.id },
+      });
+    } else if (u.role === 'schueler') {
+      await prisma.student.upsert({
+        where: { id: u.recordUuid },
+        update: {},
+        create: {
+          id: u.recordUuid,
+          personId: u.personUuid,
+          schoolId: school.id,
+          classId: class1A.id,
+          studentNumber: u.kcUsername,
+          enrollmentDate: new Date('2025-09-01'),
+        },
+      });
+    } else {
+      // admin / lehrer / schulleitung → Teacher record
+      await prisma.teacher.upsert({
+        where: { id: u.recordUuid },
+        update: {},
+        create: {
+          id: u.recordUuid,
+          personId: u.personUuid,
+          schoolId: school.id,
+          employmentPercentage: 100,
+          werteinheitenTarget: 20,
+          isPermanent: true,
+        },
+      });
+    }
+  }
+
+  // --- Bulk SchoolClasses (1A/1B update; 2A-4C upsert) ---
+  const bulkClasses = getBulkClasses();
+  const classIdByName = new Map<string, string>();
+  const roomByIndex = new Map(bulkRooms.map((r) => [r.index, r]));
+  for (const cls of bulkClasses) {
+    const homeRoomId = roomByIndex.get(cls.homeRoomIndex)!.uuid;
+    const kvTeacher = teacherByUsername.get(bulkTeachers[cls.kvTeacherIndex - 1].kcUsername)!;
+    if (cls.name === '1A' || cls.name === '1B') {
+      // Legacy slug-id class — update homeRoom + KV per testdaten.md
+      await prisma.schoolClass.update({
+        where: { id: cls.id },
+        data: { homeRoomId, klassenvorstandId: kvTeacher.id },
+      });
+    } else {
+      await prisma.schoolClass.upsert({
+        where: { id: cls.id },
+        update: { homeRoomId, klassenvorstandId: kvTeacher.id },
+        create: {
+          id: cls.id,
+          schoolId: school.id,
+          name: cls.name,
+          yearLevel: cls.yearLevel,
+          schoolYearId: schoolYear.id,
+          homeRoomId,
+          klassenvorstandId: kvTeacher.id,
+        },
+      });
+    }
+    classIdByName.set(cls.name, cls.id);
+  }
+
+  // --- Bulk Students + Parents ---
+  const { students, families } = buildBulkSchoolData();
+  for (const s of students) {
+    await prisma.person.upsert({
+      where: { id: s.personUuid },
+      update: {
+        keycloakUserId: s.kcUuid,
+        firstName: s.firstName,
+        lastName: s.lastName,
+        email: `${s.kcUsername}@demo.schoolflow.dev`,
+      },
+      create: {
+        id: s.personUuid,
+        schoolId: school.id,
+        personType: 'STUDENT',
+        firstName: s.firstName,
+        lastName: s.lastName,
+        email: `${s.kcUsername}@demo.schoolflow.dev`,
+        dateOfBirth: s.dateOfBirth,
+        keycloakUserId: s.kcUuid,
+      },
+    });
+    await prisma.student.upsert({
+      where: { id: s.studentUuid },
+      update: { classId: classIdByName.get(s.className)! },
+      create: {
+        id: s.studentUuid,
+        personId: s.personUuid,
+        schoolId: school.id,
+        classId: classIdByName.get(s.className)!,
+        studentNumber: s.kcUsername,
+        enrollmentDate: new Date('2025-09-01'),
+      },
+    });
+  }
+
+  for (const f of families) {
+    for (const p of [f.mother, f.father]) {
+      await prisma.person.upsert({
+        where: { id: p.personUuid },
+        update: {
+          keycloakUserId: p.kcUuid,
+          firstName: p.firstName,
+          lastName: p.lastName,
+          email: `${p.kcUsername}@demo.schoolflow.dev`,
+        },
+        create: {
+          id: p.personUuid,
+          schoolId: school.id,
+          personType: 'PARENT',
+          firstName: p.firstName,
+          lastName: p.lastName,
+          email: `${p.kcUsername}@demo.schoolflow.dev`,
+          keycloakUserId: p.kcUuid,
+        },
+      });
+      await prisma.parent.upsert({
+        where: { id: p.parentUuid },
+        update: {},
+        create: { id: p.parentUuid, personId: p.personUuid, schoolId: school.id },
+      });
+      for (const childGi of f.childGlobalIndexes) {
+        const child = students.find((s) => s.globalIndex === childGi)!;
+        await prisma.parentStudent.upsert({
+          where: { parentId_studentId: { parentId: p.parentUuid, studentId: child.studentUuid } },
+          update: {},
+          create: { parentId: p.parentUuid, studentId: child.studentUuid },
+        });
+      }
+    }
+  }
+
+  // --- Reset + recreate Groups / GroupMemberships / ClassSubjects ---
+  // The legacy seed block above created 8 ClassSubjects (4 subjects × 2 classes)
+  // without group splits. Section 175 needs 174 with E/RE group splits; the
+  // simplest path is a clean delete + insert for the demo school.
+  await prisma.groupMembership.deleteMany({
+    where: { group: { class: { schoolId: school.id } } },
+  });
+  await prisma.group.deleteMany({
+    where: { class: { schoolId: school.id } },
+  });
+  await prisma.classSubject.deleteMany({
+    where: { schoolClass: { schoolId: school.id } },
+  });
+
+  // 48 Groups: 12 classes × 4 (E-1, E-2, RE-katholisch, RE-evangelisch)
+  const groupIdByKey = new Map<string, string>();
+  let groupCounter = 0;
+  for (const cls of bulkClasses) {
+    const groupDefs: Array<{ name: 'E-Gruppe-1' | 'E-Gruppe-2' | 'RE-katholisch' | 'RE-evangelisch'; type: 'LANGUAGE' | 'RELIGION'; subjectShort: 'E' | 'RE' }> = [
+      { name: 'E-Gruppe-1',    type: 'LANGUAGE', subjectShort: 'E' },
+      { name: 'E-Gruppe-2',    type: 'LANGUAGE', subjectShort: 'E' },
+      { name: 'RE-katholisch', type: 'RELIGION', subjectShort: 'RE' },
+      { name: 'RE-evangelisch',type: 'RELIGION', subjectShort: 'RE' },
+    ];
+    for (const def of groupDefs) {
+      groupCounter++;
+      const id = `23000000-0000-4000-8000-${String(groupCounter).padStart(12, '0')}`;
+      const subj = subjectByShort.get(def.subjectShort)!;
+      await prisma.group.create({
+        data: {
+          id,
+          classId: classIdByName.get(cls.name)!,
+          name: def.name,
+          groupType: def.type,
+          subjectId: subj.id,
+        },
+      });
+      groupIdByKey.set(`${cls.name}|${def.name}`, id);
+    }
+  }
+
+  // 672 GroupMemberships: each student in 1 E-group + 1 RE-group
+  let gmCounter = 0;
+  for (const s of students) {
+    for (const grpName of [s.eGroup, s.reGroup]) {
+      gmCounter++;
+      const id = `24000000-0000-4000-8000-${String(gmCounter).padStart(12, '0')}`;
+      await prisma.groupMembership.create({
+        data: {
+          id,
+          groupId: groupIdByKey.get(`${s.className}|${grpName}`)!,
+          studentId: s.studentUuid,
+        },
+      });
+    }
+  }
+
+  // 174 ClassSubjects with deterministic teacher assignment
+  const bulkCs = getBulkClassSubjects(bulkClasses, bulkSubjects, bulkTeachers);
+  for (const r of bulkCs) {
+    const cls = bulkClasses.find((c) => c.index === r.classIndex)!;
+    const teacher = bulkTeachers.find((t) => t.index === r.teacherIndex)!;
+    const subj = subjectByShort.get(r.subjectShort)!;
+    const groupId = r.groupName
+      ? groupIdByKey.get(`${cls.name}|${r.groupName}`) ?? null
+      : null;
+    await prisma.classSubject.create({
+      data: {
+        id: r.id,
+        classId: classIdByName.get(cls.name)!,
+        subjectId: subj.id,
+        teacherId: teacher.teacherUuid,
+        groupId,
+        weeklyHours: r.weeklyHours,
+        isCustomized: false,
+      },
+    });
+  }
+
+  // --- TeacherAbsences (3 zukünftige) ---
+  const bulkAbsences = getBulkTeacherAbsences();
+  await prisma.teacherAbsence.deleteMany({
+    where: { id: { in: bulkAbsences.map((a) => a.id) } },
+  });
+  // createdBy must reference an existing Person.id — pick the kc-admin
+  // parallel-legacy person we just upserted.
+  const kcAdmin = parallel.find((u) => u.role === 'admin')!;
+  for (const a of bulkAbsences) {
+    const t = bulkTeachers.find((bt) => bt.kcUsername === a.teacherKcUsername)!;
+    await prisma.teacherAbsence.create({
+      data: {
+        id: a.id,
+        schoolId: school.id,
+        teacherId: t.teacherUuid,
+        dateFrom: a.dateFrom,
+        dateTo: a.dateTo,
+        reason: a.reason,
+        note: a.note,
+        status: 'ACTIVE',
+        createdBy: kcAdmin.personUuid,
+      },
+    });
+  }
+
   console.log(`Seeded ${roles.length} roles and ${allPermissions.length} default permissions`);
   console.log(`Seeded sample school: ${school.name} (${school.schoolType})`);
   console.log(`Seeded 3 teachers, 6 students, 4 subjects, 2 classes, ${seedRooms.length} rooms, 7 retention policies`);
   console.log('Linked 5 Keycloak test users to Person records with Klassenvorstand assignment');
+  console.log(
+    `#175 demo data: 19+${seedRooms.length} rooms, ${bulkClasses.length} classes (10 new), ` +
+    `${bulkTeachers.length} bulk teachers + 1 schulleitung-01 + ${parallel.length} parallel-kc-* users, ` +
+    `${students.length} students, ${families.length * 2} parents, ` +
+    `${bulkCs.length} class-subjects, ${groupCounter} groups, ${gmCounter} group-memberships, ` +
+    `${bulkAbsences.length} teacher-absences.`,
+  );
 }
 
 main()
