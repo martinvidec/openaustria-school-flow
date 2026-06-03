@@ -242,3 +242,146 @@ describe('SolverInputService.deriveLessonWeekTypes (Issue #72 regression)', () =
     expect(derive(2, 0, false)).toEqual(['BOTH']);
   });
 });
+
+describe('SolverInputService.buildLessons (Issue #73 — studentCount + requiredEquipment)', () => {
+  let service: SolverInputService;
+
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        SolverInputService,
+        {
+          provide: PrismaService,
+          useValue: { constraintTemplate: { findMany: vi.fn() } },
+        },
+        {
+          provide: ConstraintTemplateService,
+          useValue: { findActive: vi.fn() },
+        },
+      ],
+    }).compile();
+    service = module.get<SolverInputService>(SolverInputService);
+  });
+
+  // buildLessons is private — access via cast, mirroring the
+  // deriveLessonWeekTypes block above. The #73 contract (studentCount sourced
+  // from class/group size; requiredEquipment carried off the subject) is the
+  // entire interesting surface, and isolating it keeps failure modes on the
+  // failure line.
+  function makeClassSubject(overrides: Record<string, any> = {}) {
+    return {
+      id: 'cs-1',
+      weeklyHours: 1,
+      preferDoublePeriod: false,
+      groupId: null,
+      teacherId: 't-1',
+      teacher: { id: 't-1', person: { firstName: 'A', lastName: 'B' } },
+      cycleLength: 1,
+      cycleSlotMask: null,
+      subject: {
+        id: 'sub-1',
+        name: 'Mathematik',
+        subjectType: 'PFLICHT',
+        lehrverpflichtungsgruppe: null,
+        werteinheitenFactor: null,
+        requiredRoomType: null,
+        requiredEquipment: [],
+      },
+      schoolClass: { id: 'class-1', name: '1A', homeRoomId: null },
+      ...overrides,
+    };
+  }
+
+  const build = (
+    classSubjects: any[],
+    classSizeMap: Map<string, number>,
+    groupSizeMap: Map<string, number>,
+    abWeekEnabled = false,
+  ) =>
+    (service as any).buildLessons(
+      classSubjects,
+      new Map(),
+      abWeekEnabled,
+      classSizeMap,
+      groupSizeMap,
+    );
+
+  it('whole-class lesson (groupId null) sources studentCount from the class enrolment', () => {
+    const lessons = build(
+      [makeClassSubject({ groupId: null })],
+      new Map([['class-1', 25]]),
+      new Map(),
+    );
+    expect(lessons).toHaveLength(1);
+    expect(lessons[0].studentCount).toBe(25);
+  });
+
+  it('group lesson (groupId set) sources studentCount from group membership, NOT class size', () => {
+    const lessons = build(
+      [makeClassSubject({ groupId: 'group-9' })],
+      new Map([['class-1', 25]]),
+      new Map([['group-9', 12]]),
+    );
+    expect(lessons[0].studentCount).toBe(12);
+  });
+
+  it('missing size entry → studentCount 0 (honest count, never crashes) — the pre-#73 hardcoded value', () => {
+    const lessons = build(
+      [makeClassSubject({ groupId: null, schoolClass: { id: 'class-x', name: '?', homeRoomId: null } })],
+      new Map(),
+      new Map(),
+    );
+    expect(lessons[0].studentCount).toBe(0);
+  });
+
+  it('requiredEquipment is carried off the subject (was hardcoded [] before #73)', () => {
+    const lessons = build(
+      [
+        makeClassSubject({
+          subject: {
+            id: 'sub-1',
+            name: 'Informatik',
+            subjectType: 'PFLICHT',
+            lehrverpflichtungsgruppe: null,
+            werteinheitenFactor: null,
+            requiredRoomType: 'EDV_RAUM',
+            requiredEquipment: ['Beamer', 'PCs'],
+          },
+        }),
+      ],
+      new Map([['class-1', 20]]),
+      new Map(),
+    );
+    expect(lessons[0].requiredEquipment).toEqual(['Beamer', 'PCs']);
+  });
+
+  it('subject without equipment → empty array (not undefined)', () => {
+    const lessons = build(
+      [makeClassSubject({ subject: { ...makeClassSubject().subject, requiredEquipment: [] } })],
+      new Map([['class-1', 20]]),
+      new Map(),
+    );
+    expect(lessons[0].requiredEquipment).toEqual([]);
+  });
+
+  it('every expanded lesson (weeklyHours × weekTypes) carries the same studentCount + equipment', () => {
+    // weeklyHours=2 on an A/B school with an every-week subject → 2×2 = 4
+    // lessons; each must inherit the class size and equipment.
+    const lessons = build(
+      [
+        makeClassSubject({
+          weeklyHours: 2,
+          subject: { ...makeClassSubject().subject, requiredEquipment: ['Beamer'] },
+        }),
+      ],
+      new Map([['class-1', 30]]),
+      new Map(),
+      true, // abWeekEnabled → weekTypes [A, B]
+    );
+    expect(lessons).toHaveLength(4);
+    for (const lesson of lessons) {
+      expect(lesson.studentCount).toBe(30);
+      expect(lesson.requiredEquipment).toEqual(['Beamer']);
+    }
+  });
+});

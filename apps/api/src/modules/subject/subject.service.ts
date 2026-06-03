@@ -35,6 +35,9 @@ export class SubjectService {
         // Issue #69: optional. null/undefined → no requirement; the solver
         // roomTypeRequirement constraint only fires when this is non-null.
         requiredRoomType: dto.requiredRoomType as any,
+        // Issue #73: optional equipment list. Omitted → empty array (the
+        // pre-#73 default the solver-input lesson DTO hardcoded).
+        requiredEquipment: dto.requiredEquipment ?? [],
       },
       include: {
         _count: { select: { classSubjects: true } },
@@ -114,6 +117,10 @@ export class SubjectService {
         // leave it unchanged. Prisma treats undefined as "don't touch",
         // null as "SET NULL".
         requiredRoomType: dto.requiredRoomType as any,
+        // Issue #73: clients send [] to clear, an array to replace, omit to
+        // leave unchanged. Scalar lists can't be null, so [] is the clear
+        // semantic; undefined leaves the column untouched.
+        requiredEquipment: dto.requiredEquipment,
       },
       include: {
         _count: { select: { classSubjects: true } },

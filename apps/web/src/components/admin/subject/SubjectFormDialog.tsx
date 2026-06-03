@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -17,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Plus, X } from 'lucide-react';
 import {
   useCreateSubject,
   useUpdateSubject,
@@ -68,6 +70,9 @@ export function SubjectFormDialog({ open, onOpenChange, schoolId, subject }: Pro
   const [name, setName] = useState('');
   const [shortName, setShortName] = useState('');
   const [requiredRoomType, setRequiredRoomType] = useState<string | null>(null);
+  // Issue #73: free-text equipment chips. Mirrors Room.equipment (string[]).
+  const [requiredEquipment, setRequiredEquipment] = useState<string[]>([]);
+  const [equipmentDraft, setEquipmentDraft] = useState('');
   const [touched, setTouched] = useState(false);
   const [shortNameServerError, setShortNameServerError] = useState<string | null>(
     null,
@@ -79,6 +84,8 @@ export function SubjectFormDialog({ open, onOpenChange, schoolId, subject }: Pro
     setName(subject?.name ?? '');
     setShortName(subject?.shortName ?? '');
     setRequiredRoomType(subject?.requiredRoomType ?? null);
+    setRequiredEquipment(subject?.requiredEquipment ?? []);
+    setEquipmentDraft('');
     setTouched(false);
     setShortNameServerError(null);
   }, [
@@ -87,7 +94,27 @@ export function SubjectFormDialog({ open, onOpenChange, schoolId, subject }: Pro
     subject?.name,
     subject?.shortName,
     subject?.requiredRoomType,
+    // Value-based dep (not the array identity) so a background refetch that
+    // returns a new array reference doesn't reset the form mid-edit.
+    JSON.stringify(subject?.requiredEquipment ?? []),
   ]);
+
+  const handleAddEquipment = () => {
+    const value = equipmentDraft.trim();
+    if (!value || value.length > 64 || requiredEquipment.length >= 20) return;
+    // Case-insensitive dedup — equipment matching against rooms is by exact
+    // string, so silently collapsing "Beamer"/"beamer" avoids a phantom dupe.
+    if (requiredEquipment.some((e) => e.toLowerCase() === value.toLowerCase())) {
+      setEquipmentDraft('');
+      return;
+    }
+    setRequiredEquipment([...requiredEquipment, value]);
+    setEquipmentDraft('');
+  };
+
+  const handleRemoveEquipment = (value: string) => {
+    setRequiredEquipment(requiredEquipment.filter((e) => e !== value));
+  };
 
   const errors = {
     name:
@@ -134,17 +161,21 @@ export function SubjectFormDialog({ open, onOpenChange, schoolId, subject }: Pro
     try {
       if (isEdit) {
         // Update accepts explicit null to clear the requirement.
+        // Issue #73: always send requiredEquipment — [] clears the column.
         await updateMutation.mutateAsync({
           ...basePayload,
           requiredRoomType: requiredRoomType,
+          requiredEquipment,
         });
       } else {
         // Create omits the field when "Kein Pflichtraum" is selected;
         // the API DTO is @IsOptional() so undefined is fine.
+        // Issue #73: only send requiredEquipment when non-empty.
         await createMutation.mutateAsync({
           ...basePayload,
           schoolId,
           ...(requiredRoomType ? { requiredRoomType } : {}),
+          ...(requiredEquipment.length > 0 ? { requiredEquipment } : {}),
         });
       }
       onOpenChange(false);
@@ -256,6 +287,71 @@ export function SubjectFormDialog({ open, onOpenChange, schoolId, subject }: Pro
             </Select>
             <p className="text-xs text-muted-foreground mt-1">
               Der Solver wählt für dieses Fach nur passende Räume (#69).
+            </p>
+          </div>
+
+          <div>
+            <Label htmlFor="subject-equipment-input">
+              Benötigte Ausstattung (optional)
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="subject-equipment-input"
+                value={equipmentDraft}
+                onChange={(e) => setEquipmentDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  // Enter adds the chip without submitting the dialog form.
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddEquipment();
+                  }
+                }}
+                placeholder="z. B. Beamer"
+                maxLength={64}
+                data-testid="subject-equipment-input"
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleAddEquipment}
+                disabled={
+                  !equipmentDraft.trim() || requiredEquipment.length >= 20
+                }
+                aria-label="Ausstattung hinzufügen"
+                data-testid="subject-equipment-add"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            {requiredEquipment.length > 0 && (
+              <div
+                className="flex flex-wrap gap-2 mt-2"
+                data-testid="subject-equipment-list"
+              >
+                {requiredEquipment.map((item) => (
+                  <Badge
+                    key={item}
+                    variant="secondary"
+                    className="gap-1 pr-1"
+                    data-testid={`subject-equipment-chip-${item}`}
+                  >
+                    {item}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveEquipment(item)}
+                      className="ml-0.5 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                      aria-label={`${item} entfernen`}
+                      data-testid={`subject-equipment-remove-${item}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              Räume müssen diese Ausstattung bieten (#73). Der dazugehörige
+              Solver-Constraint folgt.
             </p>
           </div>
 

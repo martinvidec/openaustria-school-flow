@@ -159,6 +159,37 @@ export class SolverInputService {
       teachers.map((t) => [t.id, t]),
     );
 
+    // 8. Issue #73: per-lesson studentCount. Whole-class lessons (groupId
+    //    null) count active (non-archived) students enrolled in the class;
+    //    group lessons count active members of the group
+    //    (GroupMembership.groupId references Group.id). No constraint reads
+    //    studentCount yet, but a future room-capacity constraint
+    //    (room.capacity >= studentCount) needs it — populating it now avoids
+    //    an #67-style backfill.
+    const [classSizes, groupSizes] = await Promise.all([
+      this.prisma.student.groupBy({
+        by: ['classId'],
+        where: { schoolId, isArchived: false, classId: { not: null } },
+        _count: { _all: true },
+      }),
+      this.prisma.groupMembership.groupBy({
+        by: ['groupId'],
+        where: {
+          student: { isArchived: false },
+          group: { class: { schoolId } },
+        },
+        _count: { _all: true },
+      }),
+    ]);
+    const classSizeMap = new Map<string, number>(
+      classSizes
+        .filter((c) => c.classId !== null)
+        .map((c) => [c.classId as string, c._count._all]),
+    );
+    const groupSizeMap = new Map<string, number>(
+      groupSizes.map((g) => [g.groupId, g._count._all]),
+    );
+
     // --- Transform to solver DTOs ---
 
     // Build timeslots
@@ -178,6 +209,8 @@ export class SolverInputService {
       classSubjects,
       teacherMap,
       (school as any).abWeekEnabled ?? false,
+      classSizeMap,
+      groupSizeMap,
     );
 
     // Build rooms
@@ -293,11 +326,16 @@ export class SolverInputService {
       teacher: { id: string; person: { firstName: string; lastName: string } } | null;
       cycleLength: number;
       cycleSlotMask: number | null;
-      subject: { id: string; name: string; subjectType: string; lehrverpflichtungsgruppe: string | null; werteinheitenFactor: number | null; requiredRoomType: string | null };
+      subject: { id: string; name: string; subjectType: string; lehrverpflichtungsgruppe: string | null; werteinheitenFactor: number | null; requiredRoomType: string | null; requiredEquipment: string[] };
       schoolClass: { id: string; name: string; homeRoomId: string | null };
     }>,
     _teacherMap: Map<string, { id: string; person: { firstName: string; lastName: string } }>,
     abWeekEnabled: boolean,
+    // Issue #73: studentCount sources. classSizeMap = active students per
+    // classId (whole-class lessons); groupSizeMap = active members per
+    // Group.id (group lessons keyed by ClassSubject.groupId).
+    classSizeMap: Map<string, number>,
+    groupSizeMap: Map<string, number>,
   ): SolverLesson[] {
     const lessons: SolverLesson[] = [];
 
@@ -334,6 +372,14 @@ export class SolverInputService {
         abWeekEnabled,
       );
 
+      // Issue #73: group lessons size off the group membership; whole-class
+      // lessons off the class enrolment. Missing entry → 0 (a group with no
+      // members or a class with no active students), which is the honest
+      // count and the same value the field carried before #73.
+      const studentCount = cs.groupId
+        ? (groupSizeMap.get(cs.groupId) ?? 0)
+        : (classSizeMap.get(cs.schoolClass.id) ?? 0);
+
       for (let i = 0; i < cs.weeklyHours; i++) {
         for (const weekType of weekTypes) {
           lessons.push({
@@ -345,10 +391,15 @@ export class SolverInputService {
             classId: cs.schoolClass.id,
             className: cs.schoolClass.name,
             groupId: cs.groupId,
-            studentCount: 0, // derived from class size if needed
+            // Issue #73: real count from class enrolment / group membership
+            // (was hardcoded 0). No constraint consumes it yet.
+            studentCount,
             preferDoublePeriod: cs.preferDoublePeriod,
             requiredRoomType,
-            requiredEquipment: [],
+            // Issue #73: carry the subject's required equipment through (was
+            // hardcoded []). No constraint consumes it yet; a future
+            // equipmentRequirement constraint compares it to room.equipment.
+            requiredEquipment: cs.subject.requiredEquipment ?? [],
             // Issue #67: pass the class's home room through so the Java
             // homeRoomPreference soft constraint can fire. null falls back
             // to the pre-#67 behavior (no preference, solver minimizes other

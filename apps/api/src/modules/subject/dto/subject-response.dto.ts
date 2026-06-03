@@ -28,6 +28,14 @@ export class SubjectResponseDto {
   })
   requiredRoomType?: string | null;
 
+  @ApiProperty({
+    type: [String],
+    description:
+      'Equipment a room must provide for this subject (#73). Empty = none.',
+    example: ['Beamer', 'Smartboard'],
+  })
+  requiredEquipment!: string[];
+
   @ApiProperty({ description: 'Number of classes this subject is assigned to' })
   classSubjectsCount!: number;
 
