@@ -233,11 +233,38 @@ export class TimetableService {
             data: lessonRecords,
           });
         } catch (err) {
+          // Issue #175: Solver may return a near-optimal solution with a
+          // residual hard violation (hardScore = -1) that satisfies its
+          // internal model but trips the strict DB unique-constraint on
+          // (run_id, teacher_id, day, period, week_type) or the analogous
+          // room constraint. The original code threw — but the run record
+          // was already updated to COMPLETED above, leaving the user with
+          // a "successful" run that has 0 lessons and silently activates
+          // to an empty timetable.
+          //
+          // Now: flip the run to FAILED + record errorReason so the UI can
+          // surface the failure card (TimetableService.startSolve already
+          // primes the same code path for sidecar 5xx / watchdog timeouts).
+          // Also defensively flip isActive=false so the admin can't activate
+          // an empty run via stale UI state.
+          const message = (err as Error).message;
           this.logger.error(
-            `createMany failed for run ${runId} (${lessonRecords.length} records): ${(err as Error).message}`,
+            `createMany failed for run ${runId} (${lessonRecords.length} records): ${message}`,
             (err as Error).stack,
           );
-          throw err;
+          await this.prisma.timetableRun.update({
+            where: { id: runId },
+            data: {
+              status: 'FAILED',
+              isActive: false,
+              errorReason: `Lesson persistence failed: ${message.split('\n')[0]}`,
+            },
+          });
+          // Do not rethrow: the solver-sidecar callback has done its job
+          // (delivered the result), and a 500 response would only trigger a
+          // retry that fails the same way. The run is now FAILED in the DB,
+          // which is the observable outcome the UI needs.
+          return;
         }
       }
 
