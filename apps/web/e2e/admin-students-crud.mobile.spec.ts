@@ -63,6 +63,10 @@ test.describe('Phase 12 — Admin Students CRUD (mobile-375, mobile-chrome/Pixel
     // Back to list — confirm the mobile-cards (or table — both in DOM)
     // render the new row.
     await page.goto('/admin/students');
+    // #175: 336 demo students require filtering to scope the list.
+    await page
+      .getByLabel('Nach Name oder E-Mail suchen')
+      .fill(vorname);
     const anyVorname = page.getByText(vorname);
     await expect(async () => {
       const count = await anyVorname.count();
@@ -112,6 +116,10 @@ test.describe('Phase 12 — Admin Students CRUD (mobile-375, mobile-chrome/Pixel
     });
 
     await page.goto('/admin/students');
+    // #175: 336 demo students require filtering to scope the list.
+    await page
+      .getByLabel('Nach Name oder E-Mail suchen')
+      .fill(vorname);
 
     // Phase 17 Plan 17-04: StudentMobileCards + StudentListTable were merged
     // into a shared `<DataList>`-backed `StudentList`. DataList applies the

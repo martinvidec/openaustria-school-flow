@@ -317,6 +317,76 @@ describe('TimetableService', () => {
 
       expect(prismaService.timetableLesson.createMany).not.toHaveBeenCalled();
     });
+
+    // Regression for issue #175 demo-seed bug: solver returns near-optimal
+    // result (hardScore=-1) that satisfies its internal teacherConflict model
+    // but trips the strict DB @@unique([runId, teacherId, dayOfWeek,
+    // periodNumber, weekType]). Pre-fix: createMany threw → run record was
+    // already updated to COMPLETED → admin activated an empty timetable.
+    // Post-fix: catch + flip run to FAILED + record errorReason.
+    it('should mark run FAILED + record errorReason when createMany trips a DB unique-constraint', async () => {
+      const result: SolveResultDto = {
+        runId: 'run-1',
+        status: 'COMPLETED',
+        hardScore: -1,
+        softScore: -773,
+        elapsedSeconds: 300,
+        lessons: [
+          {
+            lessonId: 'cs-1-0-BOTH',
+            timeslotId: 'ts-1',
+            roomId: 'room-1',
+            dayOfWeek: 'MONDAY',
+            periodNumber: 1,
+            weekType: 'BOTH',
+          },
+          {
+            // same teacher (cs-1 → teacher-1), same slot → DB rejects
+            lessonId: 'cs-1-1-BOTH',
+            timeslotId: 'ts-1',
+            roomId: 'room-2',
+            dayOfWeek: 'MONDAY',
+            periodNumber: 1,
+            weekType: 'BOTH',
+          },
+        ],
+        violations: [],
+      };
+
+      // Reset the createMany mock from beforeEach (defaults to resolved) and
+      // make it throw the Prisma unique-constraint error verbatim.
+      prismaService.timetableLesson.createMany.mockRejectedValueOnce(
+        new Error(
+          'Unique constraint failed on the fields: (`run_id`, `teacher_id`, `day_of_week`, `period_number`, `week_type`)',
+        ),
+      );
+      // Suppress the expected error log so vitest output stays clean.
+      const errSpy = vi
+        .spyOn(service['logger'], 'error')
+        .mockImplementation(() => undefined);
+
+      // Must NOT throw — the controller would otherwise return 500 to the
+      // solver-sidecar which retries the same failing payload.
+      await expect(service.handleCompletion('run-1', result)).resolves.toBeUndefined();
+
+      // First update: solver result with status=COMPLETED.
+      // Second update: failure remediation with FAILED + isActive=false + errorReason.
+      const updateCalls = (prismaService.timetableRun.update as any).mock.calls;
+      const failedUpdate = updateCalls.find(
+        ([arg]: [{ data: { status?: string } }]) => arg.data.status === 'FAILED',
+      );
+      expect(failedUpdate, 'expected a second timetableRun.update with status=FAILED').toBeDefined();
+      expect(failedUpdate[0]).toMatchObject({
+        where: { id: 'run-1' },
+        data: {
+          status: 'FAILED',
+          isActive: false,
+          errorReason: expect.stringContaining('Lesson persistence failed'),
+        },
+      });
+
+      errSpy.mockRestore();
+    });
   });
 
   describe('stopSolve', () => {
