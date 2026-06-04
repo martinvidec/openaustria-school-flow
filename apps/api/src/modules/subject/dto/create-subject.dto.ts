@@ -1,5 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsEnum, IsOptional, IsNumber, MinLength, MaxLength } from 'class-validator';
+import {
+  IsString,
+  IsEnum,
+  IsOptional,
+  IsNumber,
+  IsArray,
+  ArrayMaxSize,
+  MinLength,
+  MaxLength,
+} from 'class-validator';
 
 enum SubjectTypeDto {
   PFLICHT = 'PFLICHT',
@@ -65,4 +74,19 @@ export class CreateSubjectDto {
   @IsOptional()
   @IsEnum(RoomTypeDto)
   requiredRoomType?: RoomTypeDto;
+
+  @ApiPropertyOptional({
+    type: [String],
+    description:
+      "Equipment a room must provide for this subject's lessons (Issue #73). " +
+      'Mirrors Room.equipment — a future solver equipmentRequirement constraint ' +
+      'compares lesson.requiredEquipment ⊆ room.equipment. Omit or [] = no requirement.',
+    example: ['Beamer', 'Smartboard'],
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(20)
+  @IsString({ each: true })
+  @MaxLength(64, { each: true })
+  requiredEquipment?: string[];
 }

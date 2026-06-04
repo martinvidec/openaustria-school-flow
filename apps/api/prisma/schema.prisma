@@ -547,6 +547,12 @@ model Subject {
   // Issue #69: drives the solver roomTypeRequirement constraint.
   // Null = no requirement, solver picks freely.
   requiredRoomType         RoomType?   @map("required_room_type")
+  // Issue #73: equipment a room must provide for this subject's lessons.
+  // Mirrors Room.equipment (String[]) so a future equipmentRequirement
+  // constraint can compare lesson.requiredEquipment ⊆ room.equipment with
+  // like-typed arrays. Empty array = no requirement (the pre-#73 default,
+  // which is what the solver-input lesson DTO hardcoded).
+  requiredEquipment        String[]    @map("required_equipment")
   createdAt                DateTime    @default(now()) @map("created_at")
   updatedAt                DateTime    @updatedAt @map("updated_at")
 

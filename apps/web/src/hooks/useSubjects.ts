@@ -26,6 +26,8 @@ export interface SubjectDto {
   lehrverpflichtungsgruppe?: string | null;
   werteinheitenFactor?: number | null;
   requiredRoomType?: string | null;
+  // Issue #73: equipment a room must provide for this subject's lessons.
+  requiredEquipment?: string[];
   classSubjects?: Array<{
     id: string;
     classId: string;
@@ -141,6 +143,9 @@ export interface CreateSubjectPayload {
   // (SubjectFormDialog.tsx:136-139). Create path only ever spreads
   // truthy values, so the wider type doesn't loosen create semantics.
   requiredRoomType?: string | null;
+  // Issue #73: list of required equipment. [] clears on update; the create
+  // path omits it when empty (the API DTO is @IsOptional()).
+  requiredEquipment?: string[];
 }
 
 export function useCreateSubject(schoolId: string) {
