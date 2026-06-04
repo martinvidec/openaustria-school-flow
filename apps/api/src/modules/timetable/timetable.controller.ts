@@ -116,6 +116,24 @@ export class TimetableController {
     return this.timetableService.getViolations(runId);
   }
 
+  /**
+   * GET /api/v1/schools/:schoolId/timetable/runs/:runId/conflicts
+   * Issue #177-B: lists the lessons dropped during persistence because they
+   * would break the teacher/room slot-uniqueness (the actionable conflicts
+   * behind a COMPLETED_WITH_CONFLICTS run). Foundation for the manual
+   * resolution UX (#177-C).
+   *
+   * Response: TimetableConflict[] (denormalized labels included).
+   */
+  @Get('runs/:runId/conflicts')
+  @CheckPermissions({ action: 'read', subject: 'timetable' })
+  @ApiOperation({ summary: 'Get unpersistable slot conflicts for a solve run' })
+  @ApiResponse({ status: 200, description: 'Timetable conflicts' })
+  @ApiResponse({ status: 404, description: 'Run not found' })
+  async getConflicts(@Param('runId') runId: string) {
+    return this.timetableService.getConflicts(runId);
+  }
+
   @Delete('runs/:runId/stop')
   @HttpCode(HttpStatus.OK)
   @CheckPermissions({ action: 'update', subject: 'timetable' })

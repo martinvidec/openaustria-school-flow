@@ -97,10 +97,16 @@ const { PrismaClient } = require('../../../api/dist/config/database/generated/cl
     };
     timetableRun: {
       create: (args: any) => Promise<{ id: string }>;
+      update: (args: any) => Promise<{ id: string }>;
       deleteMany: (args: any) => Promise<unknown>;
     };
     timetableLesson: {
       create: (args: any) => Promise<{ id: string; dayOfWeek: string; periodNumber: number }>;
+    };
+    // Issue #177-B — record the residual conflict behind a
+    // COMPLETED_WITH_CONFLICTS run. Cascade-deletes with the run.
+    timetableConflict: {
+      create: (args: any) => Promise<{ id: string }>;
     };
     timetableLessonEdit: {
       create: (args: any) => Promise<{ id: string }>;
@@ -164,6 +170,17 @@ export interface ThrowawaySchoolOptions {
    * so existing callers keep working unchanged.
    */
   withTimetableStack?: boolean | { active?: boolean };
+  /**
+   * Issue #177-B — turn the timetable run into a COMPLETED_WITH_CONFLICTS run
+   * by recording one TimetableConflict (a TEACHER double-book the solver would
+   * have dropped) and flipping the run status. Requires `withTimetableStack`.
+   * The conflict references the stack's own ClassSubject/Teacher/Room at
+   * MONDAY/period-1 (i.e. it would have collided with the persisted lesson).
+   * Cleanup piggy-backs on the run cascade (TimetableConflict.onDelete:
+   * Cascade). The new conflict id is exposed via
+   * `ThrowawayTimetableStack.conflictId`.
+   */
+  withConflict?: boolean;
   /**
    * Issue #138 — list of students to provision in the throwaway. Each entry
    * creates a Person + Student row enrolled in `classIds[0]`. Names show up
@@ -298,6 +315,8 @@ export interface ThrowawayTimetableStack {
   lessonDayOfWeek: 'MONDAY';
   /** 1 — the seeded lesson's period. */
   lessonPeriodNumber: 1;
+  /** Issue #177-B — the TimetableConflict id when `withConflict: true`. */
+  conflictId?: string;
 }
 
 /**
@@ -448,6 +467,11 @@ export async function createThrowawaySchool(
   if (options.withSecondTeacherLesson && !withTimetableStack) {
     throw new Error(
       'createThrowawaySchool: withSecondTeacherLesson requires withTimetableStack (no run + classSubject + room to attach the second lesson to)',
+    );
+  }
+  if (options.withConflict && !withTimetableStack) {
+    throw new Error(
+      'createThrowawaySchool: withConflict requires withTimetableStack (no run/classSubject/teacher/room to attach the conflict to)',
     );
   }
   if (options.withParentLinks?.eltern && !roles.eltern) {
@@ -694,6 +718,37 @@ export async function createThrowawaySchool(
         },
       });
 
+      // Issue #177-B — record a residual conflict + flip the run to
+      // COMPLETED_WITH_CONFLICTS. The conflict mirrors what
+      // TimetableService.handleCompletion writes for a dropped TEACHER
+      // double-book at the same slot as the persisted lesson.
+      let conflictId: string | undefined;
+      if (options.withConflict) {
+        const conflict = await prisma.timetableConflict.create({
+          data: {
+            runId: run.id,
+            conflictType: 'TEACHER',
+            classSubjectId: classSubject.id,
+            teacherId: teacher.id,
+            roomId: room.id,
+            dayOfWeek: 'MONDAY',
+            periodNumber: 1,
+            weekType: 'BOTH',
+            conflictsWithClassSubjectId: classSubject.id,
+            teacherLabel: teacherLastName,
+            subjectLabel: subject.name,
+            classLabel: null,
+            roomLabel: room.name,
+            conflictsWithLabel: subject.name,
+          },
+        });
+        conflictId = conflict.id;
+        await prisma.timetableRun.update({
+          where: { id: run.id },
+          data: { status: 'COMPLETED_WITH_CONFLICTS' },
+        });
+      }
+
       timetable = {
         teacherId: teacher.id,
         teacherDisplayName,
@@ -710,6 +765,7 @@ export async function createThrowawaySchool(
         classId: classIdForStack,
         lessonDayOfWeek: 'MONDAY',
         lessonPeriodNumber: 1,
+        conflictId,
       };
     }
 

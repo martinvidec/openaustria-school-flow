@@ -154,124 +154,234 @@ export class TimetableService {
       },
     });
 
-    // Persist lesson assignments.
-    //
-    // The lessonId carries the source ClassSubject id plus an index and the
-    // weekType variant:
-    //
-    //   `${classSubjectId}-${i}-${weekType}`
-    //
-    // where weekType ∈ {BOTH, A, B}. The legacy parser (Phase 14) called
-    // `lastIndexOf('-')` and dropped only the index suffix, which broke when
-    // Issue #72 introduced the trailing `-${weekType}` segment — the prefix
-    // produced was `${classSubjectId}-${i}` and the FK-less classSubjectId
-    // column got polluted with non-existent ids. The regex below pins the
-    // expected suffix shape explicitly.
-    //
-    // Issue #71 follow-up: also fetch the assigned teacherId from the
-    // ClassSubject record so persisted TimetableLessons carry a real
-    // teacher reference instead of the legacy hardcoded ''. The solver
-    // already respects the assignment for conflict + availability; this
-    // line is what surfaces it in the /timetable UI.
-    if (result.lessons && result.lessons.length > 0) {
-      const lessonIdRegex = /^(.+)-(\d+)-(BOTH|A|B)$/;
-      const parsed = result.lessons
-        .map((lesson: SolvedLessonDto) => {
-          const match = lesson.lessonId.match(lessonIdRegex);
-          if (!match) {
-            this.logger.error(
-              `Unparseable lessonId from solver, skipping: ${lesson.lessonId}`,
-            );
-            return null;
-          }
-          return {
-            lesson,
-            classSubjectId: match[1],
-          };
-        })
-        .filter(
-          (
-            entry,
-          ): entry is { lesson: SolvedLessonDto; classSubjectId: string } =>
-            entry !== null,
-        );
+    // No lessons to persist (solver FAILED / empty result) — nothing else to do.
+    if (!result.lessons || result.lessons.length === 0) {
+      return;
+    }
 
-      if (parsed.length < result.lessons.length) {
-        this.logger.warn(
-          `Skipped ${
-            result.lessons.length - parsed.length
-          } lessons with unparseable ids (run ${runId})`,
-        );
-      }
-
-      // Resolve teacherIds in a single query keyed by the parsed
-      // classSubjectIds. Subjects without an assigned teacher fall back to
-      // '' so the NOT-NULL teacher_id column stays satisfied (legacy
-      // behaviour pre-#71/#72).
-      const csIds = Array.from(new Set(parsed.map((p) => p.classSubjectId)));
-      const csRows = await this.prisma.classSubject.findMany({
-        where: { id: { in: csIds } },
-        select: { id: true, teacherId: true },
-      });
-      const teacherByCs = new Map(
-        csRows.map((cs) => [cs.id, cs.teacherId ?? '']),
+    // Parse lessonIds. Each carries the source ClassSubject id plus an index
+    // and the weekType variant:
+    //
+    //   `${classSubjectId}-${i}-${weekType}`   weekType ∈ {BOTH, A, B}
+    //
+    // The legacy parser (Phase 14) called `lastIndexOf('-')` and dropped only
+    // the index suffix, which broke when Issue #72 introduced the trailing
+    // `-${weekType}` segment. The regex below pins the expected suffix shape.
+    const lessonIdRegex = /^(.+)-(\d+)-(BOTH|A|B)$/;
+    const parsed = result.lessons
+      .map((lesson: SolvedLessonDto) => {
+        const match = lesson.lessonId.match(lessonIdRegex);
+        if (!match) {
+          this.logger.error(
+            `Unparseable lessonId from solver, skipping: ${lesson.lessonId}`,
+          );
+          return null;
+        }
+        return { lesson, classSubjectId: match[1] };
+      })
+      .filter(
+        (
+          entry,
+        ): entry is { lesson: SolvedLessonDto; classSubjectId: string } =>
+          entry !== null,
       );
 
-      const lessonRecords = parsed.map(({ lesson, classSubjectId }) => ({
+    if (parsed.length < result.lessons.length) {
+      this.logger.warn(
+        `Skipped ${
+          result.lessons.length - parsed.length
+        } lessons with unparseable ids (run ${runId})`,
+      );
+    }
+
+    // Resolve the assigned teacher + display labels for every ClassSubject in
+    // one query. Issue #71: TimetableLesson.teacherId must carry the real
+    // assignment (not the legacy ''); Issue #177-B: the subject/class/teacher
+    // labels are denormalized into any TimetableConflict rows so the conflict
+    // UI renders without re-joining.
+    const csIds = Array.from(new Set(parsed.map((p) => p.classSubjectId)));
+    const csRows = await this.prisma.classSubject.findMany({
+      where: { id: { in: csIds } },
+      select: {
+        id: true,
+        teacherId: true,
+        subject: { select: { name: true, shortName: true } },
+        schoolClass: { select: { name: true } },
+        teacher: {
+          select: { person: { select: { lastName: true, firstName: true } } },
+        },
+      },
+    });
+    const csById = new Map(csRows.map((cs) => [cs.id, cs]));
+
+    // Room names for conflict labels.
+    const roomIds = Array.from(new Set(parsed.map((p) => p.lesson.roomId)));
+    const roomRows = await this.prisma.room.findMany({
+      where: { id: { in: roomIds } },
+      select: { id: true, name: true },
+    });
+    const roomNameById = new Map(roomRows.map((r) => [r.id, r.name]));
+
+    // Build candidate lesson records (same shape as TimetableLesson).
+    type Candidate = {
+      classSubjectId: string;
+      record: {
+        runId: string;
+        classSubjectId: string;
+        teacherId: string;
+        roomId: string;
+        dayOfWeek: any;
+        periodNumber: number;
+        weekType: string;
+      };
+    };
+    const candidates: Candidate[] = parsed.map(({ lesson, classSubjectId }) => ({
+      classSubjectId,
+      record: {
         runId,
         classSubjectId,
-        teacherId: teacherByCs.get(classSubjectId) ?? '',
+        teacherId: csById.get(classSubjectId)?.teacherId ?? '',
         roomId: lesson.roomId,
         dayOfWeek: lesson.dayOfWeek as any,
         periodNumber: lesson.periodNumber,
         weekType: lesson.weekType,
-      }));
+      },
+    }));
 
-      if (lessonRecords.length > 0) {
-        try {
-          await this.prisma.timetableLesson.createMany({
-            data: lessonRecords,
-          });
-        } catch (err) {
-          // Issue #175: Solver may return a near-optimal solution with a
-          // residual hard violation (hardScore = -1) that satisfies its
-          // internal model but trips the strict DB unique-constraint on
-          // (run_id, teacher_id, day, period, week_type) or the analogous
-          // room constraint. The original code threw — but the run record
-          // was already updated to COMPLETED above, leaving the user with
-          // a "successful" run that has 0 lessons and silently activates
-          // to an empty timetable.
-          //
-          // Now: flip the run to FAILED + record errorReason so the UI can
-          // surface the failure card (TimetableService.startSolve already
-          // primes the same code path for sidecar 5xx / watchdog timeouts).
-          // Also defensively flip isActive=false so the admin can't activate
-          // an empty run via stale UI state.
-          const message = (err as Error).message;
-          this.logger.error(
-            `createMany failed for run ${runId} (${lessonRecords.length} records): ${message}`,
-            (err as Error).stack,
-          );
-          await this.prisma.timetableRun.update({
-            where: { id: runId },
-            data: {
-              status: 'FAILED',
-              isActive: false,
-              errorReason: `Lesson persistence failed: ${message.split('\n')[0]}`,
-            },
-          });
-          // Do not rethrow: the solver-sidecar callback has done its job
-          // (delivered the result), and a 500 response would only trigger a
-          // retry that fails the same way. The run is now FAILED in the DB,
-          // which is the observable outcome the UI needs.
-          return;
-        }
+    // ---- Issue #177-B: deterministic conflict partition ----
+    //
+    // TimetableLesson carries TWO slot-uniqueness constraints that must hold
+    // over the persisted set:
+    //   @@unique([runId, teacherId, dayOfWeek, periodNumber, weekType])
+    //   @@unique([runId, roomId,    dayOfWeek, periodNumber, weekType])
+    //
+    // Timefold may return a near-optimal solution with a residual hardScore<0
+    // (e.g. one teacher double-booked) that satisfies its internal model but
+    // violates these DB constraints. Pre-#177 the whole `createMany` threw and
+    // the run was flipped to FAILED — leaving the admin with no usable plan.
+    //
+    // Now: greedily accept candidates in solver order, reserving each one's
+    // teacher-key and room-key. A candidate that would re-use an already
+    // reserved key is dropped into `conflicts` (recording which accepted
+    // lesson it collides with). This guarantees the accepted set trips
+    // neither unique constraint, so a usable PARTIAL plan always persists and
+    // the offending slots become actionable TimetableConflict rows (#177-C).
+    const slotKey = (r: Candidate['record']) =>
+      `${r.dayOfWeek}|${r.periodNumber}|${r.weekType}`;
+    const acceptedByTeacherKey = new Map<string, Candidate>();
+    const acceptedByRoomKey = new Map<string, Candidate>();
+    const accepted: Candidate['record'][] = [];
+    const conflicts: {
+      cand: Candidate;
+      conflictType: 'TEACHER' | 'ROOM';
+      other: Candidate;
+    }[] = [];
+
+    for (const cand of candidates) {
+      const r = cand.record;
+      const teacherKey = `${r.teacherId}|${slotKey(r)}`;
+      const roomKey = `${r.roomId}|${slotKey(r)}`;
+      const teacherClash = acceptedByTeacherKey.get(teacherKey);
+      const roomClash = acceptedByRoomKey.get(roomKey);
+      if (teacherClash || roomClash) {
+        conflicts.push({
+          cand,
+          conflictType: teacherClash ? 'TEACHER' : 'ROOM',
+          other: (teacherClash ?? roomClash) as Candidate,
+        });
+      } else {
+        accepted.push(r);
+        acceptedByTeacherKey.set(teacherKey, cand);
+        acceptedByRoomKey.set(roomKey, cand);
       }
-
-      this.logger.log(
-        `Stored ${lessonRecords.length} lesson assignments for run ${runId}`,
-      );
     }
+
+    // Persist the accepted (conflict-free) lessons. skipDuplicates is
+    // belt-and-suspenders: the partition already guarantees uniqueness, but a
+    // duplicate sidecar callback (retry) racing this insert would otherwise
+    // throw — ON CONFLICT DO NOTHING keeps that idempotent.
+    try {
+      if (accepted.length > 0) {
+        await this.prisma.timetableLesson.createMany({
+          data: accepted,
+          skipDuplicates: true,
+        });
+      }
+    } catch (err) {
+      // An UNEXPECTED DB failure (not a slot clash — those are partitioned out
+      // above). Flip to FAILED so the run can't masquerade as activatable with
+      // a half-written plan. Do not rethrow: a 500 to the sidecar would only
+      // trigger a retry that fails the same way.
+      const message = (err as Error).message;
+      this.logger.error(
+        `createMany failed for run ${runId} (${accepted.length} records): ${message}`,
+        (err as Error).stack,
+      );
+      await this.prisma.timetableRun.update({
+        where: { id: runId },
+        data: {
+          status: 'FAILED',
+          isActive: false,
+          errorReason: `Lesson persistence failed: ${message.split('\n')[0]}`,
+        },
+      });
+      return;
+    }
+
+    // Record any dropped lessons as actionable conflicts and downgrade the run
+    // to COMPLETED_WITH_CONFLICTS (stays inactive until the admin activates the
+    // partial plan or resolves the conflicts in #177-C).
+    if (conflicts.length > 0) {
+      const subjClassLabel = (
+        cs: (typeof csRows)[number] | undefined,
+      ): string | null => {
+        if (!cs) return null;
+        const subj = cs.subject?.name ?? cs.subject?.shortName ?? 'Fach';
+        const klass = cs.schoolClass?.name;
+        return klass ? `${subj} ${klass}` : subj;
+      };
+      const teacherLabel = (
+        cs: (typeof csRows)[number] | undefined,
+      ): string | null => (cs?.teacher?.person?.lastName ?? null);
+
+      await this.prisma.timetableConflict.createMany({
+        data: conflicts.map(({ cand, conflictType, other }) => {
+          const cs = csById.get(cand.classSubjectId);
+          const otherCs = csById.get(other.classSubjectId);
+          return {
+            runId,
+            conflictType,
+            classSubjectId: cand.record.classSubjectId,
+            teacherId: cand.record.teacherId,
+            roomId: cand.record.roomId,
+            dayOfWeek: cand.record.dayOfWeek,
+            periodNumber: cand.record.periodNumber,
+            weekType: cand.record.weekType,
+            conflictsWithClassSubjectId: other.classSubjectId,
+            teacherLabel: teacherLabel(cs),
+            subjectLabel: subjClassLabel(cs),
+            classLabel: cs?.schoolClass?.name ?? null,
+            roomLabel: roomNameById.get(cand.record.roomId) ?? null,
+            conflictsWithLabel: subjClassLabel(otherCs),
+          };
+        }),
+      });
+
+      await this.prisma.timetableRun.update({
+        where: { id: runId },
+        data: { status: 'COMPLETED_WITH_CONFLICTS' as any, isActive: false },
+      });
+
+      this.logger.warn(
+        `Run ${runId}: persisted ${accepted.length} lesson(s), ` +
+          `recorded ${conflicts.length} conflict(s) (COMPLETED_WITH_CONFLICTS)`,
+      );
+      return;
+    }
+
+    this.logger.log(
+      `Stored ${accepted.length} lesson assignments for run ${runId}`,
+    );
   }
 
   /**
@@ -299,6 +409,9 @@ export class TimetableService {
       where: { schoolId },
       orderBy: { createdAt: 'desc' },
       take: MAX_RUNS_PER_SCHOOL,
+      // Issue #177-B: surface the conflict count so /admin/solver can render
+      // the "N Konflikte zu lösen" badge without a per-row follow-up fetch.
+      include: { _count: { select: { conflicts: true } } },
     });
   }
 
@@ -357,6 +470,26 @@ export class TimetableService {
     // violations is stored as JSON array of ViolationGroupDto objects
     const violations = run.violations as unknown as ViolationGroupDto[];
     return Array.isArray(violations) ? violations : [];
+  }
+
+  /**
+   * Issue #177-B: list the lessons that could not be persisted without
+   * breaking the teacher/room slot-uniqueness (the dropped lessons behind a
+   * COMPLETED_WITH_CONFLICTS run). Each row carries denormalized labels so the
+   * conflict UI renders without re-joining; ordered oldest-first for stable
+   * rendering. Foundation for the manual-resolution UX (#177-C).
+   */
+  async getConflicts(runId: string) {
+    // Validate the run exists (404 instead of an empty list for a bad id).
+    await this.prisma.timetableRun.findUniqueOrThrow({
+      where: { id: runId },
+      select: { id: true },
+    });
+
+    return this.prisma.timetableConflict.findMany({
+      where: { runId },
+      orderBy: { createdAt: 'asc' },
+    });
   }
 
   /**

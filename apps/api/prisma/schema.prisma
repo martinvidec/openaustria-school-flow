@@ -721,6 +721,12 @@ enum SolveStatus {
   QUEUED
   SOLVING
   COMPLETED
+  // Issue #177-B: the solver returned a usable plan, but one or more lessons
+  // could not be persisted without violating the teacher/room slot-uniqueness
+  // (residual hardScore<0). The non-conflicting lessons ARE persisted and the
+  // run is activatable as a partial plan; the dropped lessons are recorded as
+  // TimetableConflict rows for manual resolution (#177-C).
+  COMPLETED_WITH_CONFLICTS
   FAILED
   STOPPED
 }
@@ -767,10 +773,62 @@ model TimetableRun {
   createdAt        DateTime    @default(now()) @map("created_at")
   updatedAt        DateTime    @updatedAt @map("updated_at")
 
-  lessons TimetableLesson[]
+  lessons   TimetableLesson[]
+  conflicts TimetableConflict[]
 
   @@index([schoolId, createdAt])
   @@map("timetable_runs")
+}
+
+// --- TimetableConflict (Issue #177-B) ---
+//
+// A lesson the solver placed but that could NOT be persisted into
+// TimetableLesson without violating one of its slot-uniqueness constraints
+// (teacher or room double-booked in the same day/period/weekType). The
+// solver tolerates a residual hardScore<0 internally; the DB does not. Rather
+// than failing the whole run, handleCompletion persists every non-conflicting
+// lesson and records the dropped ones here so the admin sees exactly WHICH
+// teacher/room is double-booked and can resolve it manually (#177-C).
+//
+// Display labels are denormalized at persist time so the conflict UI renders
+// without re-joining ClassSubject/Teacher/Subject/Room. status/resolved* track
+// the manual-resolution lifecycle consumed by #177-C.
+model TimetableConflict {
+  id           String       @id @default(uuid())
+  runId        String       @map("run_id")
+  run          TimetableRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  // 'TEACHER' | 'ROOM' — which slot-uniqueness the dropped lesson would break.
+  conflictType String @map("conflict_type")
+
+  // The dropped lesson's intended placement (same shape as TimetableLesson).
+  classSubjectId String    @map("class_subject_id")
+  teacherId      String    @map("teacher_id")
+  roomId         String    @map("room_id")
+  dayOfWeek      DayOfWeek  @map("day_of_week")
+  periodNumber   Int        @map("period_number")
+  weekType       String     @default("BOTH") @map("week_type")
+
+  // The classSubject of the ACCEPTED lesson it collides with (context for #177-C).
+  conflictsWithClassSubjectId String? @map("conflicts_with_class_subject_id")
+
+  // Denormalized, human-readable labels resolved at persist time.
+  teacherLabel      String? @map("teacher_label")
+  subjectLabel      String? @map("subject_label")
+  classLabel        String? @map("class_label")
+  roomLabel         String? @map("room_label")
+  conflictsWithLabel String? @map("conflicts_with_label")
+
+  // Resolution lifecycle (#177-C). status: 'OPEN' | 'RESOLVED'.
+  status           String    @default("OPEN")
+  resolutionAction String?   @map("resolution_action")
+  resolvedBy       String?   @map("resolved_by")
+  resolvedAt       DateTime? @map("resolved_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([runId])
+  @@map("timetable_conflicts")
 }
 
 // --- TimetableLesson (solved lesson assignment) ---
