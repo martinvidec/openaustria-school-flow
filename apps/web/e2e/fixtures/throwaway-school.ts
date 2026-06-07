@@ -171,6 +171,13 @@ export interface ThrowawaySchoolOptions {
    */
   withTimetableStack?: boolean | { active?: boolean };
   /**
+   * Issue #177-D — over-dimension the timetable stack so the pre-solve
+   * feasibility check reports a hard error: bumps the stack ClassSubject's
+   * `weeklyHours` to 99, far above the throwaway's grid (5 days × 1 period = 5
+   * slots). Requires `withTimetableStack`.
+   */
+  withOverload?: boolean;
+  /**
    * Issue #177-B — turn the timetable run into a COMPLETED_WITH_CONFLICTS run
    * by recording one TimetableConflict (a TEACHER double-book the solver would
    * have dropped) and flipping the run status. Requires `withTimetableStack`.
@@ -650,7 +657,9 @@ export async function createThrowawaySchool(
           classId: classIdForStack,
           subjectId: subject.id,
           teacherId: teacher.id,
-          weeklyHours: 1,
+          // #177-D: withOverload pushes weeklyHours far above the throwaway
+          // grid (5 slots) so the feasibility check reports a hard error.
+          weeklyHours: options.withOverload ? 99 : 1,
         },
       });
 

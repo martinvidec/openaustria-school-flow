@@ -33,6 +33,7 @@ import { ValidateMoveDto, MoveValidationResponseDto } from './dto/validate-move.
 import { MoveLessonDto } from './dto/move-lesson.dto';
 import { TimetableEditService } from './timetable-edit.service';
 import { TimetableConflictService } from './timetable-conflict.service';
+import { TimetableDiagnosticsService } from './timetable-diagnostics.service';
 import { ResolveConflictDto } from './dto/resolve-conflict.dto';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -53,7 +54,36 @@ export class TimetableController {
     private timetableEditService: TimetableEditService,
     private timetableExportService: TimetableExportService,
     private timetableConflictService: TimetableConflictService,
+    private timetableDiagnosticsService: TimetableDiagnosticsService,
   ) {}
+
+  /**
+   * GET /api/v1/schools/:schoolId/timetable/feasibility
+   * Issue #177-D: pre-solve dimensioning check — compares demanded weekly
+   * lesson hours against time-grid / teacher / room capacity and returns
+   * warnings (so the admin sees over-dimensioning before starting the solver).
+   */
+  @Get('feasibility')
+  @CheckPermissions({ action: 'read', subject: 'timetable' })
+  @ApiOperation({ summary: 'Pre-solve feasibility / dimensioning check' })
+  @ApiResponse({ status: 200, description: 'Feasibility report' })
+  async getFeasibility(@Param('schoolId') schoolId: string) {
+    return this.timetableDiagnosticsService.getFeasibility(schoolId);
+  }
+
+  /**
+   * GET /api/v1/schools/:schoolId/timetable/runs/:runId/report
+   * Issue #177-D: post-run overview — teacher/room utilization, per-class
+   * lesson distribution, and the hardest remaining constraints.
+   */
+  @Get('runs/:runId/report')
+  @CheckPermissions({ action: 'read', subject: 'timetable' })
+  @ApiOperation({ summary: 'Post-run solve report (utilization + distribution)' })
+  @ApiResponse({ status: 200, description: 'Solve report' })
+  @ApiResponse({ status: 404, description: 'Run not found' })
+  async getReport(@Param('runId') runId: string) {
+    return this.timetableDiagnosticsService.getReport(runId);
+  }
 
   @Get('constraint-catalog')
   @CheckPermissions({ action: 'read', subject: 'timetable' })

@@ -10,6 +10,8 @@ import { useRecentTimetableRuns } from '@/hooks/useRecentTimetableRuns';
 import { apiFetch } from '@/lib/api';
 import { GeneratorPageWeightsCard } from '@/components/admin/solver/GeneratorPageWeightsCard';
 import { ConflictsCard } from '@/components/admin/solver/ConflictsCard';
+import { FeasibilityCard } from '@/components/admin/solver/FeasibilityCard';
+import { SolveReportCard } from '@/components/admin/solver/SolveReportCard';
 
 export const Route = createFileRoute('/_authenticated/admin/solver')({
   component: AdminSolverPage,
@@ -152,6 +154,14 @@ function AdminSolverPage() {
     (r) => r.status === 'COMPLETED_WITH_CONFLICTS' || r.conflictCount > 0,
   );
 
+  // #177-D: the most recent finished run drives the post-run report card.
+  const reportRun = recentRuns.find(
+    (r) =>
+      r.status === 'COMPLETED' ||
+      r.status === 'COMPLETED_WITH_CONFLICTS' ||
+      r.status === 'STOPPED',
+  );
+
   return (
     <div className="max-w-[800px] mx-auto space-y-6">
       {/* Page header */}
@@ -168,6 +178,9 @@ function AdminSolverPage() {
       {/* Phase 14-02 D-06: read-only Schul-Gewichtungen card with deep-link
           to /admin/solver-tuning?tab=weights. */}
       {schoolId && <GeneratorPageWeightsCard schoolId={schoolId} />}
+
+      {/* #177-D: pre-solve dimensioning check — warns before a doomed run. */}
+      {schoolId && <FeasibilityCard schoolId={schoolId} />}
 
       {/* Status + trigger card */}
       <Card>
@@ -370,6 +383,12 @@ function AdminSolverPage() {
           is double-booked in which slot) so the admin can resolve them. */}
       {schoolId && conflictRun && (
         <ConflictsCard schoolId={schoolId} runId={conflictRun.id} />
+      )}
+
+      {/* #177-D: post-run overview (utilization, distribution, top constraints)
+          for the most recent finished run. */}
+      {schoolId && reportRun && (
+        <SolveReportCard schoolId={schoolId} runId={reportRun.id} />
       )}
 
       {/* #53 Schicht 1: failure card — surfaces the watchdog-detected
