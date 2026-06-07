@@ -5,6 +5,27 @@ import { PrismaService } from '../../config/database/prisma.service';
 /**
  * Issue #177-D — unit tests for the solver diagnostics service.
  */
+
+/** Build a ClassSubject mock row in the shape getFeasibility selects. */
+function cs(o: {
+  weeklyHours: number;
+  teacherId: string | null;
+  groupId: string | null;
+  classId?: string;
+  className?: string;
+  requiredRoomType?: string | null;
+}) {
+  return {
+    weeklyHours: o.weeklyHours,
+    teacherId: o.teacherId,
+    classId: o.classId ?? 'c1',
+    groupId: o.groupId,
+    schoolClass: { name: o.className ?? '4A' },
+    teacher: o.teacherId ? { person: { lastName: o.teacherId } } : null,
+    subject: { requiredRoomType: o.requiredRoomType ?? null },
+  };
+}
+
 describe('TimetableDiagnosticsService', () => {
   let service: TimetableDiagnosticsService;
   let prisma: any;
@@ -81,6 +102,50 @@ describe('TimetableDiagnosticsService', () => {
       expect(types).toContain('TEACHER_OVERLOADED');
       // 10 lessons vs 1 room × 5 slots = 5 → room capacity error too.
       expect(types).toContain('ROOM_CAPACITY');
+    });
+
+    // #186 regression: the demo's 4th-year classes have 41 summed weekly hours
+    // but only 40 slots — yet 12 of those hours are PARALLEL groups (Englisch
+    // ×2, Religion ×2) that share slots. Real demand = 29 whole-class + 4
+    // (busiest group) = 33 ≤ 40. Pre-fix this raised a false CLASS_OVERLOADED.
+    it('does NOT false-flag a class whose hours fit once parallel groups are de-duplicated', async () => {
+      prisma.schoolDay.count.mockResolvedValue(5);
+      prisma.period.count.mockResolvedValue(8); // gridSlots = 40
+      prisma.classSubject.findMany.mockResolvedValue([
+        // 29h whole-class (groupId null)
+        cs({ weeklyHours: 29, teacherId: 't-whole', groupId: null }),
+        // Englisch: two parallel groups, 4h each
+        cs({ weeklyHours: 4, teacherId: 't-engA', groupId: 'g-eng-A' }),
+        cs({ weeklyHours: 4, teacherId: 't-engB', groupId: 'g-eng-B' }),
+        // Religion: two parallel groups, 2h each
+        cs({ weeklyHours: 2, teacherId: 't-relA', groupId: 'g-rel-A' }),
+        cs({ weeklyHours: 2, teacherId: 't-relB', groupId: 'g-rel-B' }),
+      ]); // Σ weeklyHours = 41, but demand = 29 + max(4,4,2,2) = 33
+      prisma.room.groupBy.mockResolvedValue([
+        { roomType: 'KLASSENZIMMER', _count: { _all: 25 } },
+      ]);
+
+      const res = await service.getFeasibility('school-1');
+
+      expect(res.warnings.map((w) => w.type)).not.toContain('CLASS_OVERLOADED');
+      expect(res.feasible).toBe(true);
+      expect(res.totalLessons).toBe(41); // unchanged: every group lesson is real
+    });
+
+    it('still flags a genuinely over-dimensioned whole-class load', async () => {
+      prisma.schoolDay.count.mockResolvedValue(5);
+      prisma.period.count.mockResolvedValue(8); // gridSlots = 40
+      prisma.classSubject.findMany.mockResolvedValue([
+        cs({ weeklyHours: 42, teacherId: 't1', groupId: null }), // > 40, no groups
+      ]);
+      prisma.room.groupBy.mockResolvedValue([
+        { roomType: 'KLASSENZIMMER', _count: { _all: 25 } },
+      ]);
+
+      const res = await service.getFeasibility('school-1');
+
+      expect(res.feasible).toBe(false);
+      expect(res.warnings.map((w) => w.type)).toContain('CLASS_OVERLOADED');
     });
 
     it('warns (non-fatal) about unassigned-teacher hours', async () => {
