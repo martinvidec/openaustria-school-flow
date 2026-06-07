@@ -60,6 +60,9 @@ export class TimetableDiagnosticsService {
           weeklyHours: true,
           teacherId: true,
           classId: true,
+          // #186: groupId distinguishes parallel group lessons (which share a
+          // slot) from whole-class lessons (which do not).
+          groupId: true,
           schoolClass: { select: { name: true } },
           teacher: {
             select: { person: { select: { lastName: true } } },
@@ -102,23 +105,46 @@ export class TimetableDiagnosticsService {
       });
     }
 
-    // Per-class capacity: a class can hold at most one lesson per slot.
-    const hoursByClass = new Map<string, { name: string; hours: number }>();
+    // Per-class capacity: a class can hold at most one lesson per slot, BUT
+    // parallel group lessons (disjoint student sets — e.g. two language groups
+    // or kath./evang. Religion) share a slot. #186: the sound, false-alarm-free
+    // lower bound on the slots a class needs is therefore
+    //   whole-class hours  +  hours of the single busiest group
+    // — the busiest group's lessons run sequentially AND are mutually exclusive
+    // with the whole-class lessons for those students, so this sum is always
+    // ≤ the true minimum; other groups run in parallel and do not raise it.
+    // Summing ALL weeklyHours (the pre-#186 behaviour) double-counts parallel
+    // groups and raised a false CLASS_OVERLOADED on group-split classes.
+    const classNames = new Map<string, string>();
+    const wholeClassHours = new Map<string, number>();
+    const groupHoursByClass = new Map<string, Map<string, number>>();
     for (const cs of classSubjects) {
-      const entry = hoursByClass.get(cs.classId) ?? {
-        name: cs.schoolClass?.name ?? cs.classId,
-        hours: 0,
-      };
-      entry.hours += cs.weeklyHours;
-      hoursByClass.set(cs.classId, entry);
+      classNames.set(cs.classId, cs.schoolClass?.name ?? cs.classId);
+      if (!cs.groupId) {
+        wholeClassHours.set(
+          cs.classId,
+          (wholeClassHours.get(cs.classId) ?? 0) + cs.weeklyHours,
+        );
+      } else {
+        let groups = groupHoursByClass.get(cs.classId);
+        if (!groups) {
+          groups = new Map();
+          groupHoursByClass.set(cs.classId, groups);
+        }
+        groups.set(cs.groupId, (groups.get(cs.groupId) ?? 0) + cs.weeklyHours);
+      }
     }
     if (gridSlots > 0) {
-      for (const { name, hours } of hoursByClass.values()) {
-        if (hours > gridSlots) {
+      for (const [classId, name] of classNames) {
+        const whole = wholeClassHours.get(classId) ?? 0;
+        const groups = groupHoursByClass.get(classId);
+        const busiestGroup = groups ? Math.max(0, ...groups.values()) : 0;
+        const demand = whole + busiestGroup;
+        if (demand > gridSlots) {
           warnings.push({
             type: 'CLASS_OVERLOADED',
             severity: 'error',
-            message: `Klasse ${name}: ${hours} Wochenstunden, aber nur ${gridSlots} Slots verfügbar.`,
+            message: `Klasse ${name}: ${demand} Wochenstunden (parallele Gruppen berücksichtigt), aber nur ${gridSlots} Slots verfügbar.`,
           });
         }
       }
@@ -193,7 +219,7 @@ export class TimetableDiagnosticsService {
       gridSlots,
       totalLessons,
       roomCount,
-      classCount: hoursByClass.size,
+      classCount: classNames.size,
       teacherCount: hoursByTeacher.size,
       warnings,
     };
