@@ -32,6 +32,8 @@ import { TimetableViewQueryDto, TimetableViewResponseDto } from './dto/timetable
 import { ValidateMoveDto, MoveValidationResponseDto } from './dto/validate-move.dto';
 import { MoveLessonDto } from './dto/move-lesson.dto';
 import { TimetableEditService } from './timetable-edit.service';
+import { TimetableConflictService } from './timetable-conflict.service';
+import { ResolveConflictDto } from './dto/resolve-conflict.dto';
 import { CheckPermissions } from '../auth/decorators/check-permissions.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../auth/types/authenticated-user';
@@ -50,6 +52,7 @@ export class TimetableController {
     private timetableService: TimetableService,
     private timetableEditService: TimetableEditService,
     private timetableExportService: TimetableExportService,
+    private timetableConflictService: TimetableConflictService,
   ) {}
 
   @Get('constraint-catalog')
@@ -132,6 +135,52 @@ export class TimetableController {
   @ApiResponse({ status: 404, description: 'Run not found' })
   async getConflicts(@Param('runId') runId: string) {
     return this.timetableService.getConflicts(runId);
+  }
+
+  /**
+   * GET /api/v1/schools/:schoolId/timetable/runs/:runId/conflicts/:conflictId/suggestions
+   * Issue #177-C: resolution options for one conflict — free qualified
+   * teachers / free compatible rooms at the original slot, plus free slots
+   * elsewhere. Drives the resolution dialog.
+   */
+  @Get('runs/:runId/conflicts/:conflictId/suggestions')
+  @CheckPermissions({ action: 'read', subject: 'timetable' })
+  @ApiOperation({ summary: 'Get resolution suggestions for a timetable conflict' })
+  @ApiResponse({ status: 200, description: 'Suggestions (resources + free slots)' })
+  @ApiResponse({ status: 404, description: 'Conflict not found' })
+  async getConflictSuggestions(
+    @Param('runId') runId: string,
+    @Param('conflictId') conflictId: string,
+  ) {
+    return this.timetableConflictService.getSuggestions(runId, conflictId);
+  }
+
+  /**
+   * POST /api/v1/schools/:schoolId/timetable/runs/:runId/conflicts/:conflictId/resolve
+   * Issue #177-C: apply a resolution (cancel / reassign-resource / move-slot)
+   * atomically. Flips the run back to COMPLETED once the last OPEN conflict is
+   * resolved.
+   */
+  @Post('runs/:runId/conflicts/:conflictId/resolve')
+  @HttpCode(HttpStatus.OK)
+  @CheckPermissions({ action: 'update', subject: 'timetable' })
+  @ApiOperation({ summary: 'Resolve a timetable conflict' })
+  @ApiResponse({ status: 200, description: 'Conflict resolved' })
+  @ApiResponse({ status: 400, description: 'Invalid resolution payload' })
+  @ApiResponse({ status: 404, description: 'Conflict not found' })
+  @ApiResponse({ status: 409, description: 'Target slot/resource is no longer free' })
+  async resolveConflict(
+    @Param('runId') runId: string,
+    @Param('conflictId') conflictId: string,
+    @Body() dto: ResolveConflictDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.timetableConflictService.resolveConflict(
+      runId,
+      conflictId,
+      dto,
+      user.id,
+    );
   }
 
   @Delete('runs/:runId/stop')

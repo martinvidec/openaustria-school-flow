@@ -128,4 +128,48 @@ test.describe('Issue #177-B — COMPLETED_WITH_CONFLICTS workflow (throwaway-sch
       'persisted partial-plan lesson must render after activation',
     ).toBeVisible();
   });
+
+  test('CONFLICT-03: resolving the last conflict (cancel) flips the run to COMPLETED and clears the card', async ({
+    page,
+    context,
+  }) => {
+    // #177-C: the resolution dialog's "cancel" path always works (no dependency
+    // on free teachers/rooms), so it is the deterministic happy-path lock.
+    fixture = await createThrowawaySchool({
+      roles: { admin: true },
+      withTimetableStack: { active: false },
+      withConflict: true,
+      namePrefix: 'E2E-CONFLICT03',
+    });
+    const stack = fixture.timetable!;
+
+    await useThrowawaySchoolHeader(context, fixture.schoolId);
+    await loginAsAdmin(page);
+    await page.goto('/admin/solver');
+
+    // Open the resolution dialog for the seeded conflict.
+    await expect(page.getByTestId('solver-conflicts-card')).toBeVisible();
+    await page.getByTestId(`resolve-conflict-${stack.conflictId}`).click();
+
+    const dialog = page.getByTestId('conflict-resolve-dialog');
+    await expect(dialog).toBeVisible();
+
+    // "Lektion entfernen" (cancel) is the default selection — submit it.
+    await page.getByTestId('conflict-resolve-submit').click();
+
+    // The run had exactly one conflict → resolving it completes the plan.
+    await expect(
+      page.getByText('Stundenplan ist jetzt vollständig'),
+    ).toBeVisible();
+
+    // The conflict card disappears (no OPEN conflicts left) and the run row no
+    // longer advertises conflicts (status flipped COMPLETED_WITH_CONFLICTS →
+    // COMPLETED), so the plain Aktivieren button is now offered.
+    await expect(page.getByTestId('solver-conflicts-card')).toHaveCount(0);
+    const runRow = page.getByTestId(`recent-run-row-${stack.timetableRunId}`);
+    await expect(runRow).not.toContainText('Konflikte');
+    await expect(
+      page.getByTestId(`activate-run-${stack.timetableRunId}`),
+    ).toBeVisible();
+  });
 });

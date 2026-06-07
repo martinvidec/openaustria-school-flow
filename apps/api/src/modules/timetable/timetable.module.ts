@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TimetableController, SolverCallbackController } from './timetable.controller';
 import { TimetableService } from './timetable.service';
 import { TimetableEditService } from './timetable-edit.service';
+import { TimetableConflictService } from './timetable-conflict.service';
 import { TimetableExportService } from './timetable-export.service';
 import { TimetableGateway } from './timetable.gateway';
 import { TimetableEventsGateway } from './timetable-events.gateway';
@@ -24,6 +25,7 @@ import { SolveWatchdogService } from './solve-watchdog.service';
   providers: [
     TimetableService,
     TimetableEditService,
+    TimetableConflictService,
     TimetableExportService,
     TimetableGateway,
     TimetableEventsGateway,

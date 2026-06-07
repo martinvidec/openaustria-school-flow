@@ -409,9 +409,12 @@ export class TimetableService {
       where: { schoolId },
       orderBy: { createdAt: 'desc' },
       take: MAX_RUNS_PER_SCHOOL,
-      // Issue #177-B: surface the conflict count so /admin/solver can render
-      // the "N Konflikte zu lösen" badge without a per-row follow-up fetch.
-      include: { _count: { select: { conflicts: true } } },
+      // Issue #177-B/C: surface the count of *open* conflicts so /admin/solver
+      // renders an accurate "N Konflikte zu lösen" badge that decreases as the
+      // admin resolves them — without a per-row follow-up fetch.
+      include: {
+        _count: { select: { conflicts: { where: { status: 'OPEN' } } } },
+      },
     });
   }
 

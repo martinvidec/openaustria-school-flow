@@ -8,7 +8,7 @@
  *   - prisma:seed executed so an admin user + sample school exist
  *   - DATABASE_URL exported in the test-runner shell (source apps/api/.env)
  */
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import {
   cleanupOrphanYear,
   seedOrphanYear,
@@ -16,13 +16,39 @@ import {
 } from './fixtures/orphan-year';
 import { getAdminToken, loginAsAdmin } from './helpers/login';
 
+/**
+ * Firefox aborts `page.goto` with NS_BINDING_ABORTED when the settings SPA does
+ * a client-side redirect (school-context bootstrap) while the document request
+ * is still in flight. This is a navigation-timing flake, not a cross-spec data
+ * race: SCHOOL-05 flaked on desktop-firefox in CI run 27100522605 while passing
+ * on chromium and on the immediately-prior run. Retrying the navigation lands
+ * after the app has settled. FIXME: deterministic-e2e #112
+ */
+async function gotoSettings(page: Page, tab?: string): Promise<void> {
+  const url = tab
+    ? `/admin/school/settings?tab=${tab}`
+    : '/admin/school/settings';
+  let lastErr: unknown;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      await page.goto(url);
+      return;
+    } catch (err) {
+      lastErr = err;
+      if (!String(err).includes('NS_BINDING_ABORTED')) throw err;
+      await page.waitForTimeout(250);
+    }
+  }
+  throw lastErr;
+}
+
 test.describe('Phase 10 — Admin School Settings (desktop)', () => {
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page);
     // 10.3-01: loginAsRole no longer navigates to /admin/school/settings;
     // specs own their own post-login routing. This beforeEach restores the
     // pre-10.3 behavior for the admin-school-settings.spec shell.
-    await page.goto('/admin/school/settings');
+    await gotoSettings(page);
   });
 
   // 10.4-02: throwaway cleanup for SCHOOL-03 E2E-SCHOOL03-* rows.
@@ -106,7 +132,7 @@ test.describe('Phase 10 — Admin School Settings (desktop)', () => {
   });
 
   test('SCHOOL-02: time grid tab renders toggles + periods + Save', async ({ page }) => {
-    await page.goto('/admin/school/settings?tab=timegrid');
+    await gotoSettings(page, 'timegrid');
     await expect(page.getByRole('heading', { name: 'Unterrichtstage' })).toBeVisible();
 
     // At least Mo-Fr toggles visible.
@@ -135,7 +161,7 @@ test.describe('Phase 10 — Admin School Settings (desktop)', () => {
     // 10.4-02: parameterize year name to avoid multi-worker collision
     // (seed school is shared across all admin-school-settings workers).
     const yearName = `E2E-SCHOOL03-${Date.now()}`;
-    await page.goto('/admin/school/settings?tab=years');
+    await gotoSettings(page, 'years');
     await page.getByRole('button', { name: /Neues Schuljahr anlegen/ }).click();
     // Dialog open — 5 fields.
     await page.getByLabel('Name').fill(yearName);
@@ -182,7 +208,7 @@ test.describe('Phase 10 — Admin School Settings (desktop)', () => {
   test('SCHOOL-04: A/B toggle persists across reload + toast "Option gespeichert."', async ({
     page,
   }) => {
-    await page.goto('/admin/school/settings?tab=options');
+    await gotoSettings(page, 'options');
     const toggle = page.getByLabel('A/B-Wochen-Modus aktivieren');
     const initiallyChecked = await toggle.isChecked();
     await toggle.click();
@@ -210,7 +236,7 @@ test.describe('Phase 10 — Admin School Settings (desktop)', () => {
 
     const fixture: OrphanFixture = await seedOrphanYear(schoolId);
     try {
-      await page.goto('/admin/school/settings?tab=years');
+      await gotoSettings(page, 'years');
       const yearLabel = page.getByText(/^ORPHAN-TEST-YEAR-/);
       await expect(yearLabel).toBeVisible();
       const card = yearLabel.locator(
