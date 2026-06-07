@@ -3,6 +3,7 @@ import { TimetableController, SolverCallbackController } from './timetable.contr
 import { TimetableService } from './timetable.service';
 import { TimetableEditService } from './timetable-edit.service';
 import { TimetableConflictService } from './timetable-conflict.service';
+import { TimetableDiagnosticsService } from './timetable-diagnostics.service';
 import { TimetableExportService } from './timetable-export.service';
 import { TimetableGateway } from './timetable.gateway';
 import { TimetableEventsGateway } from './timetable-events.gateway';
@@ -26,6 +27,7 @@ import { SolveWatchdogService } from './solve-watchdog.service';
     TimetableService,
     TimetableEditService,
     TimetableConflictService,
+    TimetableDiagnosticsService,
     TimetableExportService,
     TimetableGateway,
     TimetableEventsGateway,
