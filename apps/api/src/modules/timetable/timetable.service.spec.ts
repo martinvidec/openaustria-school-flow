@@ -60,17 +60,26 @@ describe('TimetableService', () => {
       // returns 6 (matches the seed-school count); the no-rooms spec
       // overrides to 0.
       count: vi.fn().mockResolvedValue(6),
+      // #177-B: handleCompletion resolves room names for conflict labels.
+      findMany: vi.fn().mockResolvedValue([]),
     },
     timetableRun: {
       create: vi.fn().mockResolvedValue(mockRun),
       findMany: vi.fn().mockResolvedValue(mockRuns),
       findUnique: vi.fn().mockResolvedValue({ ...mockRun, lessons: [] }),
+      findUniqueOrThrow: vi.fn().mockResolvedValue(mockRun),
       update: vi.fn().mockResolvedValue(mockRun),
       updateMany: vi.fn().mockResolvedValue({ count: 3 }),
       deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
     },
     timetableLesson: {
       createMany: vi.fn().mockResolvedValue({ count: 5 }),
+    },
+    // #177-B: handleCompletion records dropped lessons here when the solver
+    // returns a residual slot-conflict. Default mock no-ops.
+    timetableConflict: {
+      createMany: vi.fn().mockResolvedValue({ count: 0 }),
+      findMany: vi.fn().mockResolvedValue([]),
     },
     // Issue #72: handleCompletion now resolves classSubject.teacherId
     // through a single batch query before INSERT. Default mock returns
@@ -299,7 +308,14 @@ describe('TimetableService', () => {
             weekType: 'BOTH',
           }),
         ]),
+        // #177-B: idempotent insert (partition guarantees uniqueness, but a
+        // duplicate sidecar callback must not throw).
+        skipDuplicates: true,
       });
+      // No conflicts on a clean (hardScore=0) result.
+      expect(
+        prismaService.timetableConflict.createMany,
+      ).not.toHaveBeenCalled();
     });
 
     it('should not create lessons when none returned', async () => {
@@ -318,13 +334,15 @@ describe('TimetableService', () => {
       expect(prismaService.timetableLesson.createMany).not.toHaveBeenCalled();
     });
 
-    // Regression for issue #175 demo-seed bug: solver returns near-optimal
-    // result (hardScore=-1) that satisfies its internal teacherConflict model
-    // but trips the strict DB @@unique([runId, teacherId, dayOfWeek,
-    // periodNumber, weekType]). Pre-fix: createMany threw → run record was
-    // already updated to COMPLETED → admin activated an empty timetable.
-    // Post-fix: catch + flip run to FAILED + record errorReason.
-    it('should mark run FAILED + record errorReason when createMany trips a DB unique-constraint', async () => {
+    // Regression for issue #177-B (supersedes the #175 "→ FAILED" behaviour):
+    // the solver returns a near-optimal result (hardScore=-1) where two lessons
+    // share the same (teacher, day, period, weekType) — fine in its internal
+    // model, but the DB @@unique([runId, teacherId, dayOfWeek, periodNumber,
+    // weekType]) rejects the second. Pre-#177 the whole createMany was flipped
+    // to FAILED, blocking the admin. Post-#177: the non-conflicting lesson IS
+    // persisted, the dropped one is recorded as a TimetableConflict, and the
+    // run becomes COMPLETED_WITH_CONFLICTS (activatable as a partial plan).
+    it('should soft-persist + record a TEACHER conflict on a residual slot clash', async () => {
       const result: SolveResultDto = {
         runId: 'run-1',
         status: 'COMPLETED',
@@ -341,8 +359,9 @@ describe('TimetableService', () => {
             weekType: 'BOTH',
           },
           {
-            // same teacher (cs-1 → teacher-1), same slot → DB rejects
-            lessonId: 'cs-1-1-BOTH',
+            // cs-2 is taught by the SAME teacher in the SAME slot → the second
+            // lesson cannot be persisted without a teacher double-booking.
+            lessonId: 'cs-2-0-BOTH',
             timeslotId: 'ts-1',
             roomId: 'room-2',
             dayOfWeek: 'MONDAY',
@@ -353,29 +372,126 @@ describe('TimetableService', () => {
         violations: [],
       };
 
-      // Reset the createMany mock from beforeEach (defaults to resolved) and
-      // make it throw the Prisma unique-constraint error verbatim.
-      prismaService.timetableLesson.createMany.mockRejectedValueOnce(
-        new Error(
-          'Unique constraint failed on the fields: (`run_id`, `teacher_id`, `day_of_week`, `period_number`, `week_type`)',
-        ),
+      // Both ClassSubjects resolve to teacher-1 → real teacher double-book.
+      prismaService.classSubject.findMany.mockResolvedValueOnce([
+        {
+          id: 'cs-1',
+          teacherId: 'teacher-1',
+          subject: { name: 'Mathematik', shortName: 'M' },
+          schoolClass: { name: '3a' },
+          teacher: { person: { lastName: 'Müller', firstName: 'Anna' } },
+        },
+        {
+          id: 'cs-2',
+          teacherId: 'teacher-1',
+          subject: { name: 'Physik', shortName: 'PH' },
+          schoolClass: { name: '3b' },
+          teacher: { person: { lastName: 'Müller', firstName: 'Anna' } },
+        },
+      ]);
+      prismaService.room.findMany.mockResolvedValueOnce([
+        { id: 'room-1', name: 'R1' },
+        { id: 'room-2', name: 'R2' },
+      ]);
+
+      await expect(
+        service.handleCompletion('run-1', result),
+      ).resolves.toBeUndefined();
+
+      // Only the conflict-free lesson (cs-1) is persisted.
+      expect(prismaService.timetableLesson.createMany).toHaveBeenCalledTimes(1);
+      const lessonArg = (prismaService.timetableLesson.createMany as any).mock
+        .calls[0][0];
+      expect(lessonArg.data).toHaveLength(1);
+      expect(lessonArg.data[0]).toMatchObject({
+        classSubjectId: 'cs-1',
+        teacherId: 'teacher-1',
+        periodNumber: 1,
+      });
+
+      // The dropped lesson is recorded as a TEACHER conflict with labels.
+      expect(prismaService.timetableConflict.createMany).toHaveBeenCalledTimes(
+        1,
       );
-      // Suppress the expected error log so vitest output stays clean.
+      const conflictArg = (prismaService.timetableConflict.createMany as any)
+        .mock.calls[0][0];
+      expect(conflictArg.data).toHaveLength(1);
+      expect(conflictArg.data[0]).toMatchObject({
+        runId: 'run-1',
+        conflictType: 'TEACHER',
+        classSubjectId: 'cs-2',
+        teacherId: 'teacher-1',
+        roomId: 'room-2',
+        dayOfWeek: 'MONDAY',
+        periodNumber: 1,
+        weekType: 'BOTH',
+        conflictsWithClassSubjectId: 'cs-1',
+        teacherLabel: 'Müller',
+        subjectLabel: 'Physik 3b',
+        classLabel: '3b',
+        roomLabel: 'R2',
+        conflictsWithLabel: 'Mathematik 3a',
+      });
+
+      // Run downgraded to COMPLETED_WITH_CONFLICTS + kept inactive.
+      const updateCalls = (prismaService.timetableRun.update as any).mock.calls;
+      const conflictUpdate = updateCalls.find(
+        ([arg]: [{ data: { status?: string } }]) =>
+          arg.data.status === 'COMPLETED_WITH_CONFLICTS',
+      );
+      expect(
+        conflictUpdate,
+        'expected an update to COMPLETED_WITH_CONFLICTS',
+      ).toBeDefined();
+      expect(conflictUpdate[0]).toMatchObject({
+        where: { id: 'run-1' },
+        data: { status: 'COMPLETED_WITH_CONFLICTS', isActive: false },
+      });
+    });
+
+    // The try/catch → FAILED fallback still guards UNEXPECTED DB errors (not a
+    // slot clash — those are partitioned out before the insert). A clean result
+    // whose createMany throws an unrelated error must flip the run to FAILED.
+    it('should flip run to FAILED when createMany throws an unexpected DB error', async () => {
+      const result: SolveResultDto = {
+        runId: 'run-1',
+        status: 'COMPLETED',
+        hardScore: 0,
+        softScore: -8,
+        elapsedSeconds: 120,
+        lessons: [
+          {
+            lessonId: 'cs-1-0-BOTH',
+            timeslotId: 'ts-1',
+            roomId: 'room-1',
+            dayOfWeek: 'MONDAY',
+            periodNumber: 1,
+            weekType: 'BOTH',
+          },
+        ],
+        violations: [],
+      };
+
+      prismaService.timetableLesson.createMany.mockRejectedValueOnce(
+        new Error('connection terminated unexpectedly'),
+      );
       const errSpy = vi
         .spyOn(service['logger'], 'error')
         .mockImplementation(() => undefined);
 
-      // Must NOT throw — the controller would otherwise return 500 to the
-      // solver-sidecar which retries the same failing payload.
-      await expect(service.handleCompletion('run-1', result)).resolves.toBeUndefined();
+      await expect(
+        service.handleCompletion('run-1', result),
+      ).resolves.toBeUndefined();
 
-      // First update: solver result with status=COMPLETED.
-      // Second update: failure remediation with FAILED + isActive=false + errorReason.
       const updateCalls = (prismaService.timetableRun.update as any).mock.calls;
       const failedUpdate = updateCalls.find(
-        ([arg]: [{ data: { status?: string } }]) => arg.data.status === 'FAILED',
+        ([arg]: [{ data: { status?: string } }]) =>
+          arg.data.status === 'FAILED',
       );
-      expect(failedUpdate, 'expected a second timetableRun.update with status=FAILED').toBeDefined();
+      expect(
+        failedUpdate,
+        'expected an update with status=FAILED',
+      ).toBeDefined();
       expect(failedUpdate[0]).toMatchObject({
         where: { id: 'run-1' },
         data: {
@@ -384,8 +500,40 @@ describe('TimetableService', () => {
           errorReason: expect.stringContaining('Lesson persistence failed'),
         },
       });
+      // No conflict rows recorded on an unexpected failure.
+      expect(
+        prismaService.timetableConflict.createMany,
+      ).not.toHaveBeenCalled();
 
       errSpy.mockRestore();
+    });
+  });
+
+  describe('getConflicts', () => {
+    it('should return the run conflicts ordered oldest-first', async () => {
+      const rows = [
+        { id: 'conf-1', runId: 'run-1', conflictType: 'TEACHER' },
+        { id: 'conf-2', runId: 'run-1', conflictType: 'ROOM' },
+      ];
+      prismaService.timetableConflict.findMany.mockResolvedValueOnce(rows);
+
+      const result = await service.getConflicts('run-1');
+
+      expect(result).toEqual(rows);
+      expect(
+        prismaService.timetableRun.findUniqueOrThrow,
+      ).toHaveBeenCalledWith({ where: { id: 'run-1' }, select: { id: true } });
+      expect(prismaService.timetableConflict.findMany).toHaveBeenCalledWith({
+        where: { runId: 'run-1' },
+        orderBy: { createdAt: 'asc' },
+      });
+    });
+
+    it('should propagate NotFound when the run does not exist', async () => {
+      prismaService.timetableRun.findUniqueOrThrow.mockRejectedValueOnce(
+        new Error('No TimetableRun found'),
+      );
+      await expect(service.getConflicts('missing')).rejects.toThrow();
     });
   });
 
@@ -424,6 +572,7 @@ describe('TimetableService', () => {
         where: { schoolId: 'school-1' },
         orderBy: { createdAt: 'desc' },
         take: 3,
+        include: { _count: { select: { conflicts: true } } },
       });
     });
   });

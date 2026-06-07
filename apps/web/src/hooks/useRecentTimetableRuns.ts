@@ -8,12 +8,22 @@ import { apiFetch } from '@/lib/api';
  */
 export interface RecentRunDto {
   id: string;
-  status: 'QUEUED' | 'SOLVING' | 'COMPLETED' | 'FAILED' | 'STOPPED';
+  status:
+    | 'QUEUED'
+    | 'SOLVING'
+    | 'COMPLETED'
+    // Issue #177-B: solver produced a usable plan but some lessons were
+    // dropped to satisfy slot-uniqueness. Activatable as a partial plan.
+    | 'COMPLETED_WITH_CONFLICTS'
+    | 'FAILED'
+    | 'STOPPED';
   hardScore: number | null;
   softScore: number | null;
   elapsedSeconds: number | null;
   isActive: boolean;
   errorReason: string | null;
+  /** Issue #177-B: number of dropped-lesson conflicts recorded for this run. */
+  conflictCount: number;
   createdAt: string;
 }
 
@@ -51,6 +61,10 @@ export function useRecentTimetableRuns(schoolId: string | null | undefined) {
         elapsedSeconds: r.elapsedSeconds ?? null,
         isActive: !!r.isActive,
         errorReason: r.errorReason ?? null,
+        // Prisma `include: { _count: { select: { conflicts } } }` rides along
+        // on each run row (#177-B). Fall back to 0 for older/partial payloads.
+        conflictCount:
+          (r as { _count?: { conflicts?: number } })._count?.conflicts ?? 0,
         createdAt: String(r.createdAt ?? ''),
       }));
     },

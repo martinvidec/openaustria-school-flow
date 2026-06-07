@@ -9,6 +9,7 @@ import { useSolverSocket } from '@/hooks/useSolverSocket';
 import { useRecentTimetableRuns } from '@/hooks/useRecentTimetableRuns';
 import { apiFetch } from '@/lib/api';
 import { GeneratorPageWeightsCard } from '@/components/admin/solver/GeneratorPageWeightsCard';
+import { ConflictsCard } from '@/components/admin/solver/ConflictsCard';
 
 export const Route = createFileRoute('/_authenticated/admin/solver')({
   component: AdminSolverPage,
@@ -142,6 +143,14 @@ function AdminSolverPage() {
     activeRun?.status === 'QUEUED';
   const failedRun =
     activeRun?.status === 'FAILED' ? activeRun : null;
+
+  // #177-B: the most recent run that produced unpersistable conflicts (dropped
+  // lessons) drives the "N Konflikte zu lösen" card. COMPLETED_WITH_CONFLICTS
+  // is the canonical signal; conflictCount>0 is a defensive fallback for older
+  // payloads. Independent of WS state — sourced from the resilient REST list.
+  const conflictRun = recentRuns.find(
+    (r) => r.status === 'COMPLETED_WITH_CONFLICTS' || r.conflictCount > 0,
+  );
 
   return (
     <div className="max-w-[800px] mx-auto space-y-6">
@@ -292,8 +301,12 @@ function AdminSolverPage() {
                       dateStyle: 'short',
                       timeStyle: 'short',
                     });
+                // #177-B: a COMPLETED_WITH_CONFLICTS run is activatable too —
+                // its persisted lessons form a valid partial plan.
                 const canActivate =
-                  run.status === 'COMPLETED' && !run.isActive;
+                  (run.status === 'COMPLETED' ||
+                    run.status === 'COMPLETED_WITH_CONFLICTS') &&
+                  !run.isActive;
                 return (
                   <li
                     key={run.id}
@@ -309,12 +322,18 @@ function AdminSolverPage() {
                               ? 'rounded bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-800'
                               : run.status === 'COMPLETED'
                                 ? 'rounded bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800'
-                                : run.status === 'FAILED'
-                                  ? 'rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-800'
-                                  : 'rounded bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground'
+                                : run.status === 'COMPLETED_WITH_CONFLICTS'
+                                  ? 'rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800'
+                                  : run.status === 'FAILED'
+                                    ? 'rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-800'
+                                    : 'rounded bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground'
                           }
                         >
-                          {run.isActive ? 'Aktiv' : run.status}
+                          {run.isActive
+                            ? 'Aktiv'
+                            : run.status === 'COMPLETED_WITH_CONFLICTS'
+                              ? `${run.conflictCount} Konflikte`
+                              : run.status}
                         </span>
                       </div>
                       <div className="text-xs text-muted-foreground">
@@ -344,6 +363,13 @@ function AdminSolverPage() {
             </ul>
           </CardContent>
         </Card>
+      )}
+
+      {/* #177-B: conflict surface — when the most recent run is
+          COMPLETED_WITH_CONFLICTS, list the dropped lessons (which teacher/room
+          is double-booked in which slot) so the admin can resolve them. */}
+      {schoolId && conflictRun && (
+        <ConflictsCard schoolId={schoolId} runId={conflictRun.id} />
       )}
 
       {/* #53 Schicht 1: failure card — surfaces the watchdog-detected
