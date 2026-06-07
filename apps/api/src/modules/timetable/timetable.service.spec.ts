@@ -572,7 +572,9 @@ describe('TimetableService', () => {
         where: { schoolId: 'school-1' },
         orderBy: { createdAt: 'desc' },
         take: 3,
-        include: { _count: { select: { conflicts: true } } },
+        include: {
+          _count: { select: { conflicts: { where: { status: 'OPEN' } } } },
+        },
       });
     });
   });

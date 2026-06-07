@@ -1,19 +1,19 @@
-import { Link } from '@tanstack/react-router';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   useTimetableConflicts,
   type TimetableConflictDto,
 } from '@/hooks/useTimetableConflicts';
+import { ConflictResolutionDialog } from './ConflictResolutionDialog';
 
 /**
- * Issue #177-B — read-only surface for the dropped-lesson conflicts behind a
+ * Issue #177-B/C — surface + resolve the dropped-lesson conflicts behind a
  * COMPLETED_WITH_CONFLICTS run. Renders "N Konflikte zu lösen" with a
- * human-readable list (which teacher/room is double-booked in which slot) and
- * a deep-link to the manual editor. Returns null when the run has no conflicts
- * so the page stays clean for healthy runs.
- *
- * The full per-conflict resolution UX (reassign teacher / move slot / cancel)
- * lands in #177-C; this card is the visibility floor that unblocks the admin.
+ * human-readable list (which teacher/room is double-booked in which slot), and
+ * a per-conflict "Lösen" button that opens the resolution dialog (#177-C:
+ * reassign teacher/room, move to a free slot, or cancel the lesson). Returns
+ * null when the run has no open conflicts so the page stays clean.
  */
 
 const DAY_LABELS: Record<string, string> = {
@@ -39,7 +39,11 @@ export function ConflictsCard({
   schoolId: string;
   runId: string;
 }) {
-  const { data: conflicts = [] } = useTimetableConflicts(schoolId, runId);
+  const { data: allConflicts = [] } = useTimetableConflicts(schoolId, runId);
+  const [selected, setSelected] = useState<TimetableConflictDto | null>(null);
+
+  // Only OPEN conflicts are actionable; resolved ones drop off the card.
+  const conflicts = allConflicts.filter((c) => c.status === 'OPEN');
 
   if (conflicts.length === 0) return null;
 
@@ -67,53 +71,67 @@ export function ConflictsCard({
           {conflicts.map((c) => (
             <li
               key={c.id}
-              className="rounded-md border border-amber-200 bg-background/60 p-3"
+              className="flex flex-wrap items-start justify-between gap-3 rounded-md border border-amber-200 bg-background/60 p-3"
               data-testid={`conflict-row-${c.id}`}
             >
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
-                  {c.conflictType === 'TEACHER'
-                    ? 'Lehrer-Doppelbelegung'
-                    : 'Raum-Doppelbelegung'}
-                </span>
-                <span className="font-mono text-xs text-muted-foreground">
-                  {slotLabel(c)}
-                </span>
-              </div>
-              <div className="mt-1.5">
-                <span className="font-semibold">
-                  {c.subjectLabel ?? 'Lektion'}
-                </span>
-                {c.conflictsWithLabel && (
-                  <>
-                    {' '}
-                    kollidiert mit{' '}
-                    <span className="font-semibold">{c.conflictsWithLabel}</span>
-                  </>
-                )}
-                {c.conflictType === 'TEACHER' && c.teacherLabel && (
-                  <span className="text-muted-foreground">
-                    {' '}
-                    · Lehrer: {c.teacherLabel}
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
+                    {c.conflictType === 'TEACHER'
+                      ? 'Lehrer-Doppelbelegung'
+                      : 'Raum-Doppelbelegung'}
                   </span>
-                )}
-                {c.conflictType === 'ROOM' && c.roomLabel && (
-                  <span className="text-muted-foreground">
-                    {' '}
-                    · Raum: {c.roomLabel}
+                  <span className="font-mono text-xs text-muted-foreground">
+                    {slotLabel(c)}
                   </span>
-                )}
+                </div>
+                <div className="mt-1.5">
+                  <span className="font-semibold">
+                    {c.subjectLabel ?? 'Lektion'}
+                  </span>
+                  {c.conflictsWithLabel && (
+                    <>
+                      {' '}
+                      kollidiert mit{' '}
+                      <span className="font-semibold">
+                        {c.conflictsWithLabel}
+                      </span>
+                    </>
+                  )}
+                  {c.conflictType === 'TEACHER' && c.teacherLabel && (
+                    <span className="text-muted-foreground">
+                      {' '}
+                      · Lehrer: {c.teacherLabel}
+                    </span>
+                  )}
+                  {c.conflictType === 'ROOM' && c.roomLabel && (
+                    <span className="text-muted-foreground">
+                      {' '}
+                      · Raum: {c.roomLabel}
+                    </span>
+                  )}
+                </div>
               </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setSelected(c)}
+                data-testid={`resolve-conflict-${c.id}`}
+              >
+                Lösen
+              </Button>
             </li>
           ))}
         </ul>
-        <Link
-          to="/admin/timetable-edit"
-          className="inline-block text-sm font-medium text-primary underline-offset-4 hover:underline"
-        >
-          Stundenplan bearbeiten →
-        </Link>
       </CardContent>
+
+      <ConflictResolutionDialog
+        open={selected !== null}
+        schoolId={schoolId}
+        runId={runId}
+        conflict={selected}
+        onClose={() => setSelected(null)}
+      />
     </Card>
   );
 }
