@@ -79,7 +79,7 @@ export function ClassAutocomplete({
           <ChevronDown className="h-4 w-4 ml-2 shrink-0 opacity-50" aria-hidden />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
         <Command shouldFilter={false}>
           <CommandInput
             value={query}
