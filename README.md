@@ -1,19 +1,20 @@
 # SchoolFlow
 
-[![Version](https://img.shields.io/badge/version-v1.1--in--progress-blue.svg)](https://github.com/martinvidec/openaustria-school-flow/releases)
-[![Tests](https://img.shields.io/badge/tests-754%20api%20%2B%20107%20web-green.svg)](#entwicklung)
-[![Status](https://img.shields.io/badge/status-v1.1%20Schuladmin%20Console-success.svg)](.planning/ROADMAP.md)
+[![Version](https://img.shields.io/badge/version-v1.1-blue.svg)](https://github.com/martinvidec/openaustria-school-flow/releases)
+[![Tests](https://img.shields.io/badge/tests-819%20api%20%2B%20160%20web%20%2B%20109%20e2e-green.svg)](#entwicklung)
+[![Status](https://img.shields.io/badge/status-Schuladmin%20Console%20shipped-success.svg)](#milestones)
 
 Open-Source-Schulverwaltungsplattform fuer den DACH-Raum -- die freie Alternative zu Untis.
 
 Automatische Stundenplanerstellung, digitales Klassenbuch, Vertretungsplanung, schulinterne Kommunikation, Hausaufgaben/Pruefungen, Datenimport und Mobile PWA. Gebaut fuer alle Schultypen von der Volksschule bis zur BHS.
 
-**Status:** v1.0 MVP shipped 2026-04-09 (production-ready). v1.1 *Schuladmin Console* in progress -- 13/19 Phasen complete, kompletter Admin-Workflow (Schulstammdaten, Lehrer/Faecher/Klassen, User+Rechte, Solver-Tuning, DSGVO+Audit-Log, Dashboard) plus Mobile-Haertung gelandet auf main.
+**Status:** v1.0 MVP shipped 2026-04-09 (production-ready). v1.1 *Schuladmin Console* komplett auf `main` -- kompletter Admin-Workflow (Schulstammdaten, Lehrer/Faecher/Klassen, User+Rechte, Solver-Tuning, DSGVO+Audit-Log, Dashboard) plus Mobile-Haertung. Laufende Feature-Arbeit (z.B. Solver-Konfliktmanagement, realistischer Demo-Seed) wird seit 2026-05 ueber **GitHub Issues** statt eines Phasen-Workflows getrackt.
 
 ## Features
 
 ### Kernfunktionen
 - **Stundenplanerstellung** -- Automatische Generierung optimaler Stundenplaene mit Timefold Constraint Solver (6 harte + 9 weiche Constraints, A/B-Wochen, Doppelstunden)
+- **Solver-Konfliktmanagement** -- Bei residualen Constraint-Verletzungen wird der konfliktfreie Teilplan persistiert (`COMPLETED_WITH_CONFLICTS`) statt den ganzen Lauf zu verwerfen; die verbleibenden Doppelbelegungen werden im UI gelistet und per Dialog aufgeloest (anderer Lehrer/Raum, freier Slot, oder entfernen). Pre-Solve-Dimensionierungs-Check + Post-Run-Auswertung (Lehrer-/Raum-Auslastung, haerteste Constraints)
 - **Stundenplan-Ansichten** -- Rollenbasierte Views (Lehrer/Klasse/Raum), Drag-and-Drop-Bearbeitung, PDF/iCal-Export, Echtzeit-Updates
 - **Digitales Klassenbuch** -- Anwesenheit, Lehrstoff, Noten (Austrian 1-5 Notensystem), Schuelernotizen, Elternentschuldigungen mit File Upload
 - **Vertretungsplanung** -- Automatische Kandidaten-Ranking, Push-Benachrichtigungen, Uebergabenotizen, Fairness-Statistik
@@ -96,28 +97,31 @@ cd openaustria-school-flow
 # 2. Dependencies installieren
 pnpm install
 
-# 3. Infrastruktur starten (PostgreSQL, Keycloak, Redis, Solver)
-docker compose -f docker/docker-compose.yml up -d
+# 3. Kompletten Dev-Stack mit einem Befehl hochfahren
+#    (docker compose: PostgreSQL/Keycloak/Redis/Solver -> migrate deploy ->
+#     prisma generate -> seed -> build -> API auf :3000 + Vite auf :5173)
+pnpm dev:up
 
-# 4. Datenbank migrieren und seeden
-cd apps/api
-npx prisma migrate deploy
-npx prisma db seed
-cd ../..
-
-# 5. API und Web starten
-pnpm dev
+# Stoppen:
+pnpm dev:down            # API + Vite
+pnpm dev:down --infra    # zusaetzlich docker compose
 ```
 
-Die API laeuft auf `http://localhost:3000`, das Web-Frontend auf `http://localhost:5173`, Keycloak auf `http://localhost:8080`.
+Die API laeuft auf `http://localhost:3000`, das Web-Frontend auf `http://localhost:5173`, Keycloak auf `http://localhost:8080`. Logs: `/tmp/schoolflow-api.log`, `/tmp/schoolflow-web.log`.
 
-### Demo-Accounts (nach Seed)
+> **Hinweis:** `pnpm dev:up` exportiert `API_INTERNAL_URL=http://host.docker.internal:3000`, damit der Solver-Container (Docker) in die Host-API zurueckrufen kann. Die API NICHT mit blossem `node dist/main.js` neu starten -- ohne diese Env scheitern alle Solver-Callbacks (kein Live-Progress, kein Ergebnis).
+
+### Demo-Daten & Accounts (nach Seed)
+
+Der Seed erzeugt ein realistisches **Demo-Gymnasium (AHS)** mit 12 Klassen, ~336 Schuelern, 32 Lehrern, 25 Raeumen und vollstaendiger Stundentafel.
 
 | Rolle | Username | Passwort |
 |-------|----------|----------|
-| Admin | `admin` | `admin` |
-| Lehrer | `lehrer1` | `lehrer1` |
-| Elternteil | `eltern1` | `eltern1` |
+| Admin | `admin-user` | `admin123` |
+| Schulleitung | `schulleitung-user` | `direktor123` |
+| Lehrer | `lehrer-user` | `lehrer123` |
+| Elternteil | `eltern-user` | `eltern123` |
+| Schueler | `schueler-user` | `schueler123` |
 
 ## Production Deployment
 
@@ -146,15 +150,15 @@ curl http://localhost:3000/api/v1/health/ready
 # Alle Tests ausfuehren
 pnpm test
 
-# Nur API-Tests (754 passing, 70 spec files)
+# Nur API-Tests (819 passing, 76 spec files)
 cd apps/api && pnpm test
 
-# Nur Web-Tests (107 spec/test files)
+# Nur Web-Unit-Tests (160 passing, 47 spec/test files)
 cd apps/web && pnpm test
 
-# Playwright E2E (desktop + mobile-chrome)
-cd apps/web && pnpm playwright test --project=desktop
-cd apps/web && pnpm playwright test --project=mobile-chrome
+# Playwright E2E (109 Specs; Projekte: desktop, desktop-firefox, mobile-375)
+cd apps/web && pnpm exec playwright test --project=desktop
+cd apps/web && pnpm exec playwright test --project=desktop-firefox
 
 # Build
 pnpm build
@@ -198,31 +202,30 @@ bash scripts/check-migration-hygiene.sh
 
 Vollstaendige Milestone-Details in [.planning/milestones/v1.0-ROADMAP.md](.planning/milestones/v1.0-ROADMAP.md).
 
-### v1.1 -- Schuladmin Console (in progress)
+### v1.1 -- Schuladmin Console (shipped)
 
-13/19 Phasen complete, alles auf `main` gemerged:
+Kompletter Admin-Workflow, alles auf `main` gemerged:
 
-| Phase | Inhalt | Status |
-|-------|--------|--------|
-| 10 + 10.1-10.5 | Schulstammdaten + Zeitraster + E2E-Tranche (Tier 1-3a) | ✓ merged |
-| 11 | Lehrer- + Faecher-Verwaltung | ✓ merged |
-| 12 | Schueler- + Klassen- + Gruppen-Verwaltung | ✓ merged |
-| 13 | User- + Rechte-Verwaltung (Keycloak-Mirror) | ✓ merged |
-| 14 | Solver-Tuning (9 Soft-Constraints + Restrictions + Praeferenzen) | ✓ merged |
-| 15 + 15.1 | DSGVO-Admin + Audit-Log-Viewer + Seed-UUID-Alignment | ✓ merged |
-| 16 | Admin-Dashboard + Mobile-Haertung (44px Touch + DataList-Primitive) | ✓ merged |
-| 17 | CI Stabilization (E2E-Failure-Triage) | in flight |
-| 18-22 | Verification-Backfill + Cross-Phase-E2E + Tech-Debt-Closure | planned |
+| Bereich | Inhalt | Status |
+|---------|--------|--------|
+| Schulstammdaten + Zeitraster | Schule, Schultyp, Adresse, Schuljahre, Wochentage, Stundenraster | ✓ merged |
+| Lehrer + Faecher | Lehrverpflichtung + Verfuegbarkeitsgrid, Stundentafel-Vorlagen pro Schultyp | ✓ merged |
+| Schueler + Klassen + Gruppen | Klassenvorstand, Stammdaten, Auto-Assign-Regeln | ✓ merged |
+| User + Rechte | Keycloak-Mirror, Rollen, Permission-Overrides, Last-Admin-Guard | ✓ merged |
+| Solver-Tuning | 9 Soft-Constraints + Restrictions + Praeferenzen, Drift-Banner | ✓ merged |
+| DSGVO-Admin + Audit-Log | Einwilligungen, Retention, DSFA/VVZ, Export-Jobs, Before/After-Diff-Viewer | ✓ merged |
+| Admin-Dashboard + Mobile | Setup-Checkliste, KPI-Cards, 44px-Touch, DataList-Primitive | ✓ merged |
+| CI-Stabilisierung | E2E-Determinismus (throwaway-school-Fixture, Race-Removal) | ✓ merged |
 
-**v1.1-Highlights:**
-- **754 API-Tests** (Vitest) + **107 Web-Spec-Files** (Vitest + Playwright)
-- **Komplette Admin-Workflow-Surfaces** auf desktop + mobile-375
+**Laufende Feature-Arbeit (via GitHub Issues, seit Retirement des Phasen-Workflows):**
+- **Solver-Konfliktmanagement** -- Soft-Persist (`COMPLETED_WITH_CONFLICTS`) + manuelle Konflikt-Aufloesung + Pre-Solve-Feasibility + Solve-Report
+- **Realistischer Demo-Seed** -- 12 Klassen / 336 Schueler / 32 Lehrer als Default-Stammdatensatz
+
+**Highlights:**
+- **819 API-Tests** (Vitest) + **160 Web-Unit-Tests** + **109 Playwright-E2E-Specs** (desktop, desktop-firefox, mobile-375)
+- **Deterministische E2E** ueber per-Spec throwaway-school-Fixtures (eigene `schoolId` + Stammdaten, cascade-cleanup)
 - **Keycloak-Mirror mit Last-Admin-Guard** + per-User Permission-Overrides
-- **DSGVO-Admin von Grund auf** (Einwilligungen, Retention, DSFA, VVZ, Export-Jobs, Loeschungs-Confirms)
-- **Audit-Log-Viewer mit Before/After-Diff** + RFC-9457-konforme Error-Responses
-- **Solver-Tuning UI** mit Drift-Banner + Last-Run-Score-Badge
-
-Vollstaendige Milestone-Details in [.planning/ROADMAP.md](.planning/ROADMAP.md).
+- **DSGVO-Admin von Grund auf** + Audit-Log-Viewer mit RFC-9457-konformen Error-Responses
 
 ## Lizenz
 
@@ -230,4 +233,8 @@ Lizenz wird noch festgelegt (MIT, AGPL, oder Apache 2.0).
 
 ## Mitwirken
 
-Beitraege sind willkommen. v1.1-Phasen 17-22 sind aktiv -- siehe [.planning/ROADMAP.md](.planning/ROADMAP.md) und [CLAUDE.md](CLAUDE.md) fuer Workflow-Konventionen (GSD-Phasen-Discipline, Migration-Hygiene, E2E-First).
+Beitraege sind willkommen. Die Arbeit wird ueber **GitHub Issues** getrackt (native Sub-Issue- + blocked-by-Relationships). Verbindliche Workflow-Konventionen in [CLAUDE.md](CLAUDE.md):
+- **Migration-Hygiene** -- jede `schema.prisma`-Aenderung shippt als Migration-File (kein `prisma db push`); CI-Check via `scripts/check-migration-hygiene.sh`.
+- **E2E-First / Regression-Lock** -- jeder Bug-Fix bringt einen Playwright-E2E mit, der das Symptom reproduziert haette.
+- **Deterministische E2E** -- neue Specs nutzen die throwaway-school-Fixture als Default (keine Race-Workarounds auf geteilten Seed-Ressourcen).
+- **Sauberer `main`** -- ein PR wird erst nach vollstaendig gruenem GitHub-Actions-Lauf gemerged (kein `--admin`-Override).
