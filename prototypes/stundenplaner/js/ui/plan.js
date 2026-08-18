@@ -3,7 +3,8 @@
 
 import { DAY_LABELS, byId, teacherName } from '../model.js';
 import { checkMove, checkSwap, applyMove, applySwap, scoreFromLessons } from '../solver/edit.js';
-import { el, toast } from './components.js';
+import { timetableToCsv } from '../csv.js';
+import { el, toast, downloadFile } from './components.js';
 
 let viewType = 'klasse';
 let selectedId = null;
@@ -98,6 +99,26 @@ export function renderPlan(main, store) {
     `Rückgängig${undoStack.length ? ` (${undoStack.length})` : ''}`,
   );
   const printButton = el('button', { class: 'btn', onClick: () => window.print() }, 'Drucken');
+  const csvButton = el(
+    'button',
+    {
+      class: 'btn',
+      title: 'Gesamten Plan als CSV exportieren (alle Klassen, Excel-kompatibel)',
+      onClick: () => {
+        const csv = timetableToCsv(store.doc);
+        if (!csv) {
+          toast('Kein Plan zum Exportieren vorhanden.', 'error');
+          return;
+        }
+        downloadFile(
+          `stundenplan-${new Date().toISOString().slice(0, 10)}.csv`,
+          csv,
+          'text/csv;charset=utf-8',
+        );
+      },
+    },
+    'CSV',
+  );
 
   // --- Lektionen filtern und indexieren ---
   const filtered = timetable.lessons.filter((l) => {
@@ -312,6 +333,7 @@ export function renderPlan(main, store) {
       el('label', {}, 'Ansicht ', typeSelect),
       el('label', {}, ' ', entitySelect),
       undoButton,
+      csvButton,
       printButton,
     ),
     editable

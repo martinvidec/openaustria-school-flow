@@ -29,6 +29,7 @@ Bezieht sich auf [`01-konzept.md`](01-konzept.md). Technisches Design in
 | S4 | Druckansicht (A4 quer) der aktiven Plan-Ansicht über den Browser-Druckdialog |
 | S5 | Referenz-Prüfung beim Löschen (z. B. Fach, das in Stundentafeln verwendet wird, wird nicht kommentarlos gelöscht) |
 | S6 | Manuelles Nachbearbeiten des Plans per Drag & Drop in der Klassenansicht (seit v1.1): Live-Konfliktprüfung beim Ziehen (gültige Ziel-Slots grün, Tausch-Ziele blau), harte Constraints bleiben unverletzbar, automatische Raumwahl, Score-Neuberechnung, Undo je Move, `isManualEdit`-Markierung ✎ |
+| S7 | CSV-Export des berechneten Plans (seit v1.2): eine Zeile je Lektion (Klasse, Tag, Stunde, Uhrzeiten, Fach, Lehrkraft, Raum, Manuell-Flag), Semikolon-getrennt, UTF-8 mit BOM — direkt in deutschsprachigem Excel öffenbar |
 
 ### Kann
 
@@ -73,6 +74,9 @@ K1–K3 sind bewusst **nicht** enthalten (siehe Abgrenzung im Konzept).
   inaktiver Tag, belegter Pflicht-Raum) werden abgelehnt; nach gültigem Move/Swap hält
   die Brute-Force-Prüfung aller harten Constraints; `scoreFromLessons` liefert für den
   unveränderten Plan exakt den Solver-Score.
+- **S7:** `node tests/solver-test.js` verifiziert: 91 CSV-Zeilen (Header + 90 Lektionen)
+  mit BOM, korrekter Sortierung (Klasse → Tag → Stunde) und RFC-4180-Quoting bei
+  Semikolon in Feldwerten; ohne berechneten Plan liefert der Export `null`.
 - **M9:** „Demo laden" auf leerem Stand führt ohne weitere Eingaben zu einer grünen
   Diagnose und einem vollständig lösbaren Plan.
 

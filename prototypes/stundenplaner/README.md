@@ -22,7 +22,9 @@ Constraint-Solver, der komplett im Browser (Web Worker) rechnet.
   tauschen — beim Ziehen werden nur hart-konfliktfreie Ziele angeboten (grün = frei,
   blau = Tausch), Räume werden automatisch gewählt, der Score wird neu berechnet,
   jeder Move ist rückgängig machbar (✎ markiert manuell verschobene Lektionen).
-- **Daten behalten:** localStorage-Persistenz + JSON-Import/-Export.
+- **Daten behalten:** localStorage-Persistenz + JSON-Import/-Export; der berechnete Plan
+  lässt sich zusätzlich als CSV exportieren (eine Zeile je Lektion, Semikolon-getrennt,
+  UTF-8 mit BOM — öffnet direkt in deutschsprachigem Excel).
 
 Eine vorbefüllte Demo-Volksschule („VS Demodorf", 4 Klassen, 6 Lehrkräfte, 6 Räume,
 Stundentafel nach VS-Lehrplan) macht den Prototyp sofort ausprobierbar.

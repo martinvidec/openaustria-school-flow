@@ -73,6 +73,13 @@ Export-Format). Feldnamen spiegeln `apps/api/prisma/schema.prisma`:
 - Pausen belegen eigene `periodNumber`-Zeilen (Konvention der Hauptapp); die „5. Stunde"
   der VS-Vorlage ist `periodNumber: 9`.
 
+**Exporte:** Der JSON-Export (Header-Button) sichert das komplette Dokument und ist
+re-importierbar. Zusätzlich exportiert `js/csv.js` (`timetableToCsv`, DOM-frei) den
+berechneten Plan als CSV — eine Zeile je Lektion (Klasse, Tag, Stunde, Von, Bis, Fach,
+Fach-Kürzel, Lehrkraft, Lehrkraft-Kürzel, Raum, Manuell bearbeitet), sortiert nach
+Klasse → Tag → Stunde, Semikolon-getrennt, CRLF, UTF-8 mit BOM (deutschsprachiges Excel),
+Quoting nach RFC 4180. Button „CSV" im Stundenplan-Tab.
+
 ## 3. Machbarkeits-Diagnose (`diagnostics.js`)
 
 Spiegel von `timetable-diagnostics.service.ts` (ohne Gruppen):
@@ -260,6 +267,8 @@ via `tests/test.html`, ohne Framework):
    aller harten Constraints; Lektionsanzahl unverändert; `isManualEdit` gesetzt.
 8. Score-Mapping: `scoreFromLessons` liefert für den unveränderten Plan exakt den
    Solver-Score (`hard` 0, `soft` identisch).
+9. CSV-Export: 91 Zeilen (Header + 90 Lektionen) mit BOM, Sortierung
+   Klasse → Tag → Stunde, RFC-4180-Quoting; ohne Plan `null`.
 
 **Manuell** (Smoke-Checkliste): Demo laden → Diagnose grün → Berechnen < 10 s →
 drei Plan-Ansichten konsistent → Klasse „4b" anlegen + Stundentafel füllen + erneut

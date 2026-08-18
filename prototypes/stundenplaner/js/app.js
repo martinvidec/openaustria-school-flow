@@ -4,7 +4,7 @@ import { createStore } from './store.js';
 import { emptyDocument, STORAGE_KEY } from './model.js';
 import { seedDocument } from './seed.js';
 import { initTabs } from './ui/tabs.js';
-import { toast, confirmDialog } from './ui/components.js';
+import { toast, confirmDialog, downloadFile } from './ui/components.js';
 
 const store = createStore();
 
@@ -36,13 +36,11 @@ document.getElementById('btn-reset').addEventListener('click', async () => {
 });
 
 document.getElementById('btn-export').addEventListener('click', () => {
-  const blob = new Blob([store.exportJson()], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `stundenplaner-${new Date().toISOString().slice(0, 10)}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadFile(
+    `stundenplaner-${new Date().toISOString().slice(0, 10)}.json`,
+    store.exportJson(),
+    'application/json',
+  );
 });
 
 const importInput = document.getElementById('import-file');
