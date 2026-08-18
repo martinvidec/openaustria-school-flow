@@ -6,6 +6,7 @@ import { seedDocument } from '../js/seed.js';
 import { runDiagnostics } from '../js/solver/diagnostics.js';
 import { runSolver } from '../js/solver/run.js';
 import { checkMove, applyMove, checkSwap, applySwap, scoreFromLessons } from '../js/solver/edit.js';
+import { timetableToCsv, CSV_BOM } from '../js/csv.js';
 import { lessonPeriods, byId } from '../js/model.js';
 
 function assert(cond, msg) {
@@ -213,6 +214,30 @@ export function runAllTests() {
     assert(swapped, 'kein gültiger Swap in Klasse 1a gefunden (unplausibel)');
     assert(verifyHardConstraints(doc, swapped).length === 0, 'Hard-Constraint-Verstoß nach Swap');
     assert(lessonCountsMatch(doc, swapped).length === 0, 'Wochenstunden-Abweichung nach Swap');
+  });
+
+  test('CSV-Export: 90 Zeilen, Excel-kompatibel, Sonderzeichen korrekt escaped', () => {
+    const doc = seedDocument();
+    doc.timetable = runSolver(doc, { seed: 42 });
+    const csv = timetableToCsv(doc);
+    assert(csv, 'CSV darf nicht null sein');
+    assert(csv.startsWith(CSV_BOM), 'UTF-8-BOM fehlt');
+    const lines = csv.slice(CSV_BOM.length).split('\r\n').filter((l) => l.length);
+    assert(lines.length === 91, `${lines.length} Zeilen statt 91 (Header + 90 Lektionen)`);
+    assert(lines[0].startsWith('Klasse;Tag;Stunde;Von;Bis;Fach;'), `Header falsch: ${lines[0]}`);
+    assert(lines.every((l) => l.split(';').length >= 11), 'Zeile mit zu wenigen Spalten');
+    assert(csv.includes('Bewegung und Sport') && csv.includes('Turnsaal'), 'erwartete Inhalte fehlen');
+    // Sortierung: erste Datenzeile ist Klasse 1a am Montag in der 1. Stunde
+    assert(lines[1].startsWith('1a;Montag;'), `Sortierung falsch: ${lines[1]}`);
+    // Escaping: Semikolon im Fachnamen erzwingt Anführungszeichen
+    const doc2 = seedDocument();
+    doc2.subjects.find((s) => s.id === 's2').name = 'Deutsch; Lesen; Schreiben';
+    doc2.timetable = runSolver(doc2, { seed: 42 });
+    const csv2 = timetableToCsv(doc2);
+    assert(csv2.includes('"Deutsch; Lesen; Schreiben"'), 'Semikolon-Feld nicht gequotet');
+    // Kein Plan => null
+    const empty = seedDocument();
+    assert(timetableToCsv(empty) === null, 'ohne Plan muss null kommen');
   });
 
   test('scoreFromLessons stimmt mit dem Solver-Score überein', () => {
