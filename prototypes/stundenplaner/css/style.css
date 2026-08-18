@@ -1,0 +1,346 @@
+/* Stundenplaner-Prototyp — helles, sachliches UI ohne Framework. */
+
+:root {
+  --accent: #2563eb;
+  --accent-dark: #1d4ed8;
+  --danger: #b91c1c;
+  --text: #1f2937;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --bg: #f8fafc;
+  --card: #ffffff;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  line-height: 1.5;
+}
+
+h1 { font-size: 1.3rem; margin: 0; }
+h2 { font-size: 1.15rem; margin: 0; }
+h3 { font-size: 1rem; margin: 1.25rem 0 .5rem; }
+
+a { color: var(--accent); }
+
+/* ---- Kopf & Navigation ---- */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: .75rem 1.25rem;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+
+.app-title { display: flex; align-items: baseline; gap: .6rem; }
+
+.badge {
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--accent-dark);
+  background: #dbeafe;
+  border-radius: 999px;
+  padding: .15rem .6rem;
+  white-space: nowrap;
+}
+
+.header-actions { display: flex; gap: .4rem; flex-wrap: wrap; }
+
+.tabs {
+  display: flex;
+  gap: .25rem;
+  padding: 0 1.25rem;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+
+.tabs a {
+  padding: .6rem .9rem;
+  text-decoration: none;
+  color: var(--muted);
+  font-weight: 600;
+  border-bottom: 3px solid transparent;
+}
+
+.tabs a.active { color: var(--accent-dark); border-bottom-color: var(--accent); }
+.tabs a:hover { color: var(--accent-dark); }
+
+main { max-width: 1200px; margin: 0 auto; padding: 1.25rem; }
+
+.app-footer {
+  max-width: 1200px;
+  margin: 2rem auto 1rem;
+  padding: 0 1.25rem;
+  color: var(--muted);
+  font-size: .82rem;
+}
+
+/* ---- Buttons ---- */
+
+.btn {
+  font: inherit;
+  font-size: .88rem;
+  padding: .4rem .8rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn:hover { border-color: #cbd5e1; background: #f1f5f9; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.btn-primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+
+.btn-danger { color: var(--danger); }
+.btn-danger:hover { background: #fef2f2; border-color: #fecaca; }
+
+.btn-small { font-size: .78rem; padding: .2rem .55rem; }
+
+/* ---- Untertabs & Sektionen ---- */
+
+.subtabs { display: flex; gap: .3rem; flex-wrap: wrap; margin-bottom: 1rem; }
+
+.subtab {
+  font: inherit;
+  font-size: .85rem;
+  padding: .35rem .8rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card);
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.subtab.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: .25rem 0 .9rem;
+}
+
+.empty-state { color: var(--muted); background: var(--card); border: 1px dashed var(--border); border-radius: 8px; padding: 1.5rem; text-align: center; }
+.hint { color: var(--muted); font-size: .85rem; }
+
+/* ---- Tabellen ---- */
+
+.table-scroll { overflow-x: auto; }
+
+.data-table {
+  border-collapse: collapse;
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: .88rem;
+}
+
+.data-table th, .data-table td {
+  padding: .45rem .7rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.data-table thead th { background: #f1f5f9; font-size: .8rem; text-transform: none; }
+.data-table tbody tr:last-child td { border-bottom: none; }
+.data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.data-table .center { text-align: center; }
+.data-table .actions { text-align: right; white-space: nowrap; }
+.data-table .actions .btn { margin-left: .3rem; }
+.data-table tr.muted td { color: #b6c2d1; }
+.data-table td.over { color: var(--danger); font-weight: 700; }
+
+.break-row { background: #f8fafc; color: var(--muted); }
+
+.color-chip {
+  display: inline-block;
+  width: .85rem;
+  height: .85rem;
+  border-radius: 3px;
+  border: 1px solid rgb(0 0 0 / 12%);
+  vertical-align: -2px;
+}
+
+/* Stundentafel-Matrix */
+.st-matrix th.st-subject { white-space: nowrap; }
+.st-subject-name { color: var(--muted); font-weight: 400; font-size: .78rem; }
+.st-cell { white-space: nowrap; }
+.st-hours { width: 3.2rem; }
+.st-teacher { max-width: 6.5rem; }
+.st-double { font-size: .75rem; color: var(--muted); margin-left: .25rem; }
+.st-sum th, .st-sum td { background: #f1f5f9; font-weight: 700; }
+
+input, select {
+  font: inherit;
+  font-size: .88rem;
+  padding: .3rem .45rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--text);
+}
+
+input:focus, select:focus { outline: 2px solid #bfdbfe; border-color: var(--accent); }
+input[type="checkbox"] { width: auto; padding: 0; }
+.time-input { width: 5rem; }
+
+/* ---- Banner, Toasts ---- */
+
+.banner { border-radius: 8px; padding: .6rem .9rem; font-size: .88rem; }
+.banner-warning { background: #fef9c3; border: 1px solid #fde047; color: #854d0e; }
+.banner-error { background: #fef2f2; border: 1px solid #fecaca; color: var(--danger); }
+
+#toast-container {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  z-index: 100;
+  max-width: 340px;
+}
+
+.toast {
+  background: #1f2937;
+  color: #fff;
+  border-radius: 8px;
+  padding: .6rem .9rem;
+  font-size: .85rem;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 25%);
+}
+
+.toast-error { background: #7f1d1d; }
+
+/* ---- Dialoge ---- */
+
+dialog.modal {
+  border: none;
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  max-width: 560px;
+  width: min(92vw, 560px);
+  box-shadow: 0 10px 40px rgb(0 0 0 / 30%);
+}
+
+dialog.modal::backdrop { background: rgb(15 23 42 / 45%); }
+dialog.modal h3 { margin: 0 0 .9rem; }
+
+.modal-actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1.1rem; }
+.modal-message { margin: .25rem 0; }
+
+.form-fields { display: flex; flex-direction: column; gap: .7rem; }
+.form-field { display: flex; flex-direction: column; gap: .2rem; font-size: .88rem; }
+.form-field-checkbox { flex-direction: row; align-items: center; gap: .45rem; }
+.form-label { font-weight: 600; font-size: .8rem; }
+.form-hint { color: var(--muted); font-size: .78rem; }
+
+.checkbox-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .2rem .8rem; }
+.checkbox-item { display: flex; align-items: center; gap: .1rem; font-size: .85rem; white-space: nowrap; }
+
+.mini-grid { border-collapse: collapse; font-size: .78rem; }
+.mini-grid th, .mini-grid td { border: 1px solid var(--border); padding: .2rem .45rem; text-align: center; }
+.mini-grid th { background: #f1f5f9; font-weight: 600; }
+
+.day-toggles { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+/* ---- Berechnen ---- */
+
+.diag-facts { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: .75rem; }
+
+.diag-fact {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .5rem .9rem;
+  display: flex;
+  flex-direction: column;
+  min-width: 7rem;
+}
+
+.diag-fact strong { font-size: 1.15rem; }
+.diag-fact span { color: var(--muted); font-size: .78rem; }
+
+.diag-list { list-style: none; margin: 0 0 .5rem; padding: 0; display: flex; flex-direction: column; gap: .3rem; }
+.diag-list li { padding: .35rem .6rem; border-radius: 6px; font-size: .88rem; }
+.diag-error { background: #fef2f2; color: var(--danger); }
+.diag-warning { background: #fef9c3; color: #854d0e; }
+.diag-ok { background: #f0fdf4; color: #15803d; }
+
+.options-row { display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+.seed-input { width: 9rem; }
+.time-limit-input { width: 4.5rem; }
+
+.run-box { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+
+.progress-bar {
+  flex: 1 1 220px;
+  height: .7rem;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+  min-width: 180px;
+}
+
+.progress-fill { height: 100%; background: var(--accent); transition: width .2s; }
+.progress-text { width: 100%; color: var(--muted); font-size: .85rem; margin: .25rem 0 0; }
+
+.result-box { margin-top: 1.5rem; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; }
+.result-box h3 { margin-top: 0; }
+
+/* ---- Stundenplan ---- */
+
+.plan-controls { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: 1rem; }
+
+.plan-layout { display: flex; gap: 1.25rem; align-items: flex-start; flex-wrap: wrap; }
+.plan-grid-wrap { flex: 1 1 640px; }
+.plan-sidebar { flex: 0 1 300px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: .9rem 1.1rem; }
+.plan-sidebar h3 { margin-top: .4rem; }
+.score-table { font-size: .8rem; }
+
+.plan-grid {
+  border-collapse: collapse;
+  width: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  font-size: .82rem;
+}
+
+.plan-grid th, .plan-grid td { border: 1px solid var(--border); padding: .3rem .45rem; vertical-align: top; }
+.plan-grid thead th { background: #f1f5f9; }
+.plan-grid .plan-corner { width: 7.5rem; }
+.plan-period { text-align: left; font-weight: 600; white-space: nowrap; background: #f8fafc; }
+.plan-time { color: var(--muted); font-weight: 400; font-size: .72rem; }
+.plan-cell { min-width: 7rem; height: 3.2rem; }
+.plan-break-cell { background: repeating-linear-gradient(45deg, #f8fafc, #f8fafc 6px, #f1f5f9 6px, #f1f5f9 12px); }
+
+.lesson-chip {
+  border-radius: 6px;
+  padding: .25rem .45rem;
+  margin-bottom: .2rem;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgb(0 0 0 / 8%);
+}
+
+.lesson-chip strong { font-size: .85rem; }
+.lesson-chip span { font-size: .72rem; color: rgb(0 0 0 / 65%); }
+
+.unplaced-list { margin: 0; padding-left: 1.1rem; font-size: .85rem; color: var(--danger); }

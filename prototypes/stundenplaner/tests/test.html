@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stundenplaner &mdash; Solver-Selbsttest</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 760px; margin: 3rem auto; padding: 0 1.5rem; color: #1f2937; }
+    li { margin: .35rem 0; }
+    .ok { color: #15803d; }
+    .fail { color: #b91c1c; font-weight: 600; }
+    .summary { margin-top: 1.5rem; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <h1>Solver-Selbsttest</h1>
+  <p>F&uuml;hrt dieselben Tests aus wie <code>node tests/solver-test.js</code>.</p>
+  <ul id="results"><li>Tests laufen &hellip;</li></ul>
+  <p class="summary" id="summary"></p>
+  <p><a href="../index.html">&larr; zur&uuml;ck zur App</a></p>
+  <script type="module">
+    import { runAllTests } from './solver-test.js';
+    // setTimeout, damit der "Tests laufen"-Hinweis gerendert wird, bevor der Solver rechnet.
+    setTimeout(() => {
+      const results = runAllTests();
+      const ul = document.getElementById('results');
+      ul.innerHTML = '';
+      for (const r of results) {
+        const li = document.createElement('li');
+        li.className = r.ok ? 'ok' : 'fail';
+        li.textContent = `${r.ok ? '✓' : '✗'} ${r.name}${r.ok ? '' : ' — ' + r.message}`;
+        ul.appendChild(li);
+      }
+      const failed = results.filter((r) => !r.ok).length;
+      const summary = document.getElementById('summary');
+      summary.textContent = failed
+        ? `${failed} von ${results.length} Tests fehlgeschlagen.`
+        : `Alle ${results.length} Tests grün.`;
+      summary.className = 'summary ' + (failed ? 'fail' : 'ok');
+    }, 50);
+  </script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+/* Druckansicht: nur das Wochenraster der aktiven Plan-Ansicht, A4 quer. */
+
+@page {
+  size: A4 landscape;
+  margin: 1cm;
+}
+
+.app-header,
+.tabs,
+.app-footer,
+#toast-container,
+.plan-controls,
+.plan-sidebar,
+.section-header,
+.banner {
+  display: none !important;
+}
+
+main { max-width: none; padding: 0; }
+
+body { background: #fff; }
+
+.plan-layout { display: block; }
+.plan-grid-wrap { overflow: visible; }
+
+.plan-grid { width: 100%; font-size: 9pt; }
+.plan-grid th, .plan-grid td { border: 1pt solid #999; }
+
+.lesson-chip { border: .5pt solid #bbb; }
+
+/* Nicht-Plan-Tabs drucken schlicht den Inhalt — relevant ist nur der Stundenplan-Tab. */

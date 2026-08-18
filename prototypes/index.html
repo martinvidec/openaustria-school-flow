@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SchoolFlow Prototypen</title>
+  <style>
+    :root { color-scheme: light; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      max-width: 720px; margin: 4rem auto; padding: 0 1.5rem;
+      color: #1f2937; background: #f8fafc; line-height: 1.6;
+    }
+    h1 { font-size: 1.6rem; }
+    .card {
+      background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+      padding: 1.25rem 1.5rem; margin: 1.5rem 0;
+    }
+    .card h2 { margin: 0 0 .35rem; font-size: 1.15rem; }
+    .card p { margin: .25rem 0 .75rem; color: #475569; }
+    a.button {
+      display: inline-block; background: #2563eb; color: #fff; text-decoration: none;
+      padding: .45rem .9rem; border-radius: 6px; font-weight: 600;
+    }
+    a.button:hover { background: #1d4ed8; }
+    .hint { font-size: .85rem; color: #64748b; }
+    code { background: #eef2f7; padding: .1rem .35rem; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>SchoolFlow &mdash; Prototypen</h1>
+  <p>
+    Eigenst&auml;ndige UI-Prototypen (Sidecars) zum Hauptprojekt
+    <strong>OpenAustria SchoolFlow</strong>. Rein statisch: kein Backend, keine Accounts,
+    alle Daten bleiben im Browser.
+  </p>
+
+  <div class="card">
+    <h2>Stundenplaner (Volksschule)</h2>
+    <p>
+      Berechnet den kompletten Stundenplan einer &ouml;sterreichischen Volksschule direkt
+      im Browser &mdash; Stammdaten erfassen, Machbarkeit pr&uuml;fen, Plan l&ouml;sen und
+      je Klasse / Lehrkraft / Raum ansehen.
+    </p>
+    <a class="button" href="./stundenplaner/">Prototyp &ouml;ffnen</a>
+  </div>
+
+  <p class="hint">
+    Lokal starten: <code>python3 -m http.server</code> im Ordner <code>prototypes/</code>
+    ausf&uuml;hren und <code>http://localhost:8000</code> &ouml;ffnen
+    (direktes &Ouml;ffnen via <code>file://</code> funktioniert wegen ES-Modulen nicht).
+  </p>
+</body>
+</html>
