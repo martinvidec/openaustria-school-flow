@@ -18,6 +18,10 @@ Constraint-Solver, der komplett im Browser (Web Worker) rechnet.
   (harte Regeln) + Simulated Annealing (weiche Regeln) — deterministisch per Seed reproduzierbar.
 - **Plan ansehen:** Wochenraster je Klasse, Lehrkraft oder Raum; Score-Aufschlüsselung mit den
   deutschen Constraint-Namen des Hauptprojekts; Druckansicht (A4 quer).
+- **Plan nachbearbeiten:** Lektionen in der Klassenansicht per Drag & Drop verschieben oder
+  tauschen — beim Ziehen werden nur hart-konfliktfreie Ziele angeboten (grün = frei,
+  blau = Tausch), Räume werden automatisch gewählt, der Score wird neu berechnet,
+  jeder Move ist rückgängig machbar (✎ markiert manuell verschobene Lektionen).
 - **Daten behalten:** localStorage-Persistenz + JSON-Import/-Export.
 
 Eine vorbefüllte Demo-Volksschule („VS Demodorf", 4 Klassen, 6 Lehrkräfte, 6 Räume,

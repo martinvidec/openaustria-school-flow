@@ -72,10 +72,11 @@ bringt eigene Default-Werte nach dem Volksschul-Lehrplan mit (Quelle in `03-spez
 - **Unverändert:** gesamtes Monorepo (`apps/`, `packages/`, bestehende Workflows).
   `prototypes/` liegt außerhalb der pnpm-Workspace-Globs und ist für turbo unsichtbar.
 
-## Abgrenzung (bewusst NICHT in v1)
+## Abgrenzung (bewusst NICHT enthalten)
 
 - Gruppen/Teilungen und A/B-Wochen (in der VS unüblich; Hauptapp kann beides)
-- Manuelles Drag-&-Drop-Editieren des Plans, Undo/Redo, mehrere Planvarianten
+- Undo/Redo über manuelle Plan-Moves hinaus; mehrere gespeicherte Planvarianten
+  (Drag-&-Drop-Nachbearbeitung selbst ist seit v1.1 enthalten, siehe `03-spezifikation.md` Abschnitt 4.6)
 - UI zum Ändern der Constraint-Gewichte (nur über JSON-Export/-Import editierbar)
 - Klassen-Sperrzeiten („Klassen-Sperrzeit"-Constraint der Hauptapp)
 - Mobile-Optimierung, PDF-Export (der Browser-Druckdialog genügt), Mehrsprachigkeit

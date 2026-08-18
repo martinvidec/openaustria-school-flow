@@ -157,7 +157,33 @@ Solver-Pfad, Sortierungen nur mit total geordneten Vergleichen. Ohne User-Seed e
 der Client einen zufälligen 32-bit-Seed; der verwendete Seed steht im Ergebnis und kann
 für reproduzierbare Läufe wiederverwendet werden.
 
-### 4.5 Worker-Protokoll
+### 4.5 Manuelle Nachbearbeitung (Drag & Drop) — seit v1.1
+
+Modul `js/solver/edit.js` (DOM-frei, Node-testbar), UI in `js/ui/plan.js` (nur Klassenansicht):
+
+- **`checkMove(doc, lessons, lessonId, dayOfWeek, periodNumber)`** → `{ ok, roomId?, reason? }`:
+  validiert Ziel-Slot (aktiver Tag, keine Pause) und dieselben harten Constraints wie
+  Phase 1 (Klasse frei, Lehrkraft frei + keine Sperrzeit, passender Raum frei).
+  Raumwahl-Priorität: aktueller Raum → Stammraum → übrige Klassenzimmer; bei
+  Raumtyp-Anforderung nur Räume dieses Typs.
+- **`checkSwap(doc, lessons, idA, idB)`** → beide Lektionen tauschen die Slots; Räume
+  werden bevorzugt behalten bzw. getauscht, sonst Kandidatensuche. Beide Richtungen
+  müssen hart-gültig sein.
+- **`applyMove` / `applySwap`** → neue Lektionsliste (immutably), verschobene Lektionen
+  erhalten `isManualEdit: true` (Spiegel von `TimetableLesson.isManualEdit` der Hauptapp;
+  UI-Marker ✎).
+- **`scoreFromLessons(doc, lessons)`** → bewertet eine Lektionsliste mit derselben
+  Score-Funktion wie der Solver (Mapping über die Lektions-IDs `${csId}-${instanceIdx}`);
+  nach jedem Move wird der Score samt Breakdown neu berechnet.
+- **UI-Ablauf:** `dragstart` berechnet einmalig alle gültigen Ziele — leere gültige
+  Slots werden grün markiert (`drop-ok`), belegte Slots mit gültigem Tausch blau
+  (`drop-swap`); nur markierte Zellen akzeptieren den Drop. Ungültige Ziele sind
+  physisch nicht dropbar — harte Konflikte sind damit by-design ausgeschlossen.
+- **Undo:** Stack der Vorzustände (Lektionen + Score) je Solver-Lauf
+  (`solverInfo.createdAt` als Schlüssel; neuer Lauf leert den Stack). Kein
+  app-weites Undo/Redo (Abgrenzung).
+
+### 4.6 Worker-Protokoll
 
 ```
 Main → Worker : { type: 'solve', payload: { data, options: { seed, timeLimitMs, weights } } }
@@ -228,6 +254,12 @@ via `tests/test.html`, ohne Framework):
    Stundentafel-Zeile = `weeklyHours`).
 4. Determinismus: Seed 42 zweimal ⇒ identische Lektionslisten; Seed 43 ⇒ abweichend.
 5. Optimierer: Soft-Score nach Phase 2 ≥ Score nach Phase 1; `hard` bleibt 0.
+6. Nachbearbeitung negativ: Move auf Sperrzeit / Pausen-Slot / inaktiven Tag /
+   belegten Pflicht-Raum wird abgelehnt.
+7. Nachbearbeitung positiv: nach gültigem Move und Swap hält die Brute-Force-Prüfung
+   aller harten Constraints; Lektionsanzahl unverändert; `isManualEdit` gesetzt.
+8. Score-Mapping: `scoreFromLessons` liefert für den unveränderten Plan exakt den
+   Solver-Score (`hard` 0, `soft` identisch).
 
 **Manuell** (Smoke-Checkliste): Demo laden → Diagnose grün → Berechnen < 10 s →
 drei Plan-Ansichten konsistent → Klasse „4b" anlegen + Stundentafel füllen + erneut
