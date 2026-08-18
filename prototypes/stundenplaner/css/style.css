@@ -344,3 +344,21 @@ dialog.modal h3 { margin: 0 0 .9rem; }
 .lesson-chip span { font-size: .72rem; color: rgb(0 0 0 / 65%); }
 
 .unplaced-list { margin: 0; padding-left: 1.1rem; font-size: .85rem; color: var(--danger); }
+
+/* ---- Drag & Drop Nachbearbeitung ---- */
+
+.lesson-chip[draggable="true"] { cursor: grab; }
+.lesson-chip.dragging { opacity: .45; }
+.lesson-chip.manual { box-shadow: inset 0 0 0 1.5px rgb(37 99 235 / 55%); }
+
+.plan-cell.drop-ok {
+  outline: 2px dashed #16a34a;
+  outline-offset: -3px;
+  background: #f0fdf4;
+}
+
+.plan-cell.drop-swap {
+  outline: 2px dashed var(--accent);
+  outline-offset: -3px;
+  background: #eff6ff;
+}

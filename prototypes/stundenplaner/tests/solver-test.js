@@ -5,6 +5,7 @@
 import { seedDocument } from '../js/seed.js';
 import { runDiagnostics } from '../js/solver/diagnostics.js';
 import { runSolver } from '../js/solver/run.js';
+import { checkMove, applyMove, checkSwap, applySwap, scoreFromLessons } from '../js/solver/edit.js';
 import { lessonPeriods, byId } from '../js/model.js';
 
 function assert(cond, msg) {
@@ -148,6 +149,81 @@ export function runAllTests() {
     assert(optimized.score.hard === 0, 'hard score muss 0 sein');
     const problems = verifyHardConstraints(doc, optimized.lessons);
     assert(problems.length === 0, `Hard-Constraint-Verstöße nach Optimierung: ${problems.slice(0, 5).join(' | ')}`);
+  });
+
+  test('Nachbearbeitung: ungültige Moves werden abgelehnt', () => {
+    const doc = seedDocument();
+    const { lessons } = runSolver(doc, { seed: 42 });
+    const rel = lessons.find((l) => l.teacherId === 't5');
+    assert(rel, 'keine REL-Lektion gefunden');
+    const ontoBlocked = checkMove(doc, lessons, rel.id, 'WEDNESDAY', rel.periodNumber);
+    assert(!ontoBlocked.ok, 'Move auf Sperr-Tag der Lehrkraft muss abgelehnt werden');
+    const ontoBreak = checkMove(doc, lessons, rel.id, 'MONDAY', 2);
+    assert(!ontoBreak.ok, 'Move in einen Pausen-Slot muss abgelehnt werden');
+    const ontoInactive = checkMove(doc, lessons, rel.id, 'SATURDAY', 1);
+    assert(!ontoInactive.ok, 'Move auf inaktiven Schultag muss abgelehnt werden');
+    // Turnsaal-Lektion auf einen Slot, in dem der Turnsaal belegt ist
+    const csById = new Map(doc.classSubjects.map((cs) => [cs.id, cs]));
+    const bspLessons = lessons.filter((l) => csById.get(l.classSubjectId)?.subjectId === 's8');
+    const [b1, b2] = bspLessons;
+    if (b1 && b2) {
+      // b1 auf den Slot von b2: Turnsaal (einziger TURNSAAL) ist dort belegt,
+      // zulässig wäre das nur, wenn die eigene Klasse + Lehrkraft frei wären — Raum blockt sicher.
+      const clash = checkMove(doc, lessons, b1.id, b2.dayOfWeek, b2.periodNumber);
+      assert(!clash.ok, 'Move in belegten Pflicht-Raum muss abgelehnt werden');
+    }
+  });
+
+  test('Nachbearbeitung: gültiger Move und Swap halten harte Constraints', () => {
+    const doc = seedDocument();
+    const { lessons } = runSolver(doc, { seed: 42 });
+    const teachingPeriods = lessonPeriods(doc).map((p) => p.periodNumber);
+
+    // Brute-Force ein gültiges Move-Ziel suchen und anwenden.
+    let moved = null;
+    let movedId = null;
+    outer: for (const l of lessons) {
+      for (const day of doc.school.schoolDays) {
+        for (const p of teachingPeriods) {
+          if (checkMove(doc, lessons, l.id, day, p).ok) {
+            moved = applyMove(doc, lessons, l.id, day, p);
+            movedId = l.id;
+            break outer;
+          }
+        }
+      }
+    }
+    assert(moved, 'kein einziges gültiges Move-Ziel gefunden (unplausibel)');
+    assert(moved.length === lessons.length, 'Move darf Lektionen weder erzeugen noch löschen');
+    assert(moved.find((l) => l.id === movedId).isManualEdit === true, 'isManualEdit fehlt nach Move');
+    assert(verifyHardConstraints(doc, moved).length === 0, 'Hard-Constraint-Verstoß nach Move');
+
+    // Brute-Force einen gültigen Swap zweier Lektionen derselben Klasse.
+    const csById = new Map(doc.classSubjects.map((cs) => [cs.id, cs]));
+    const c1Lessons = moved.filter((l) => csById.get(l.classSubjectId)?.classId === 'c1');
+    let swapped = null;
+    swapOuter: for (let i = 0; i < c1Lessons.length; i++) {
+      for (let j = i + 1; j < c1Lessons.length; j++) {
+        if (checkSwap(doc, moved, c1Lessons[i].id, c1Lessons[j].id).ok) {
+          swapped = applySwap(doc, moved, c1Lessons[i].id, c1Lessons[j].id);
+          break swapOuter;
+        }
+      }
+    }
+    assert(swapped, 'kein gültiger Swap in Klasse 1a gefunden (unplausibel)');
+    assert(verifyHardConstraints(doc, swapped).length === 0, 'Hard-Constraint-Verstoß nach Swap');
+    assert(lessonCountsMatch(doc, swapped).length === 0, 'Wochenstunden-Abweichung nach Swap');
+  });
+
+  test('scoreFromLessons stimmt mit dem Solver-Score überein', () => {
+    const doc = seedDocument();
+    const result = runSolver(doc, { seed: 42 });
+    const rescored = scoreFromLessons(doc, result.lessons);
+    assert(rescored.hard === 0, 'hard muss 0 sein');
+    assert(
+      rescored.soft === result.score.soft,
+      `Score-Mapping inkonsistent: ${rescored.soft} statt ${result.score.soft}`,
+    );
   });
 
   return results;

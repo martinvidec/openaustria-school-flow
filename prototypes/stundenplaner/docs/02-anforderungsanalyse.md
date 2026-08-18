@@ -28,16 +28,17 @@ Bezieht sich auf [`01-konzept.md`](01-konzept.md). Technisches Design in
 | S3 | Fortschrittsanzeige während des Lösens (Phase, platzierte Lektionen, aktueller Best-Score) und Abbrechen-Funktion |
 | S4 | Druckansicht (A4 quer) der aktiven Plan-Ansicht über den Browser-Druckdialog |
 | S5 | Referenz-Prüfung beim Löschen (z. B. Fach, das in Stundentafeln verwendet wird, wird nicht kommentarlos gelöscht) |
+| S6 | Manuelles Nachbearbeiten des Plans per Drag & Drop in der Klassenansicht (seit v1.1): Live-Konfliktprüfung beim Ziehen (gültige Ziel-Slots grün, Tausch-Ziele blau), harte Constraints bleiben unverletzbar, automatische Raumwahl, Score-Neuberechnung, Undo je Move, `isManualEdit`-Markierung ✎ |
 
 ### Kann
 
 | # | Anforderung |
 |---|---|
 | K1 | UI zum Editieren der Constraint-Gewichte |
-| K2 | Manuelles Nachbearbeiten des Plans (Drag & Drop) mit Live-Konfliktprüfung |
-| K3 | Mehrere gespeicherte Planvarianten und Vergleich |
+| K2 | Mehrere gespeicherte Planvarianten und Vergleich |
+| K3 | Drag & Drop auch in Lehrkraft-/Raum-Ansicht sowie Platzieren offener Lektionen aus der Seitenleiste |
 
-K1–K3 sind bewusst **nicht** Teil von v1 (siehe Abgrenzung im Konzept).
+K1–K3 sind bewusst **nicht** enthalten (siehe Abgrenzung im Konzept).
 
 ## Nicht-funktionale Anforderungen
 
@@ -68,6 +69,10 @@ K1–K3 sind bewusst **nicht** Teil von v1 (siehe Abgrenzung im Konzept).
   zugehörigen Lehrkraft- und Raumansicht (Stichprobe im Selbsttest/manuell).
 - **M8:** Export → „Zurücksetzen" → Import stellt den identischen Datenstand wieder her;
   ein Browser-Reload behält den Datenstand.
+- **S6:** `node tests/solver-test.js` verifiziert: ungültige Moves (Sperrzeit, Pause,
+  inaktiver Tag, belegter Pflicht-Raum) werden abgelehnt; nach gültigem Move/Swap hält
+  die Brute-Force-Prüfung aller harten Constraints; `scoreFromLessons` liefert für den
+  unveränderten Plan exakt den Solver-Score.
 - **M9:** „Demo laden" auf leerem Stand führt ohne weitere Eingaben zu einer grünen
   Diagnose und einem vollständig lösbaren Plan.
 
