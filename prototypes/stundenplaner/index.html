@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stundenplaner (Volksschule) &mdash; Prototyp</title>
+  <link rel="stylesheet" href="./css/style.css" />
+  <link rel="stylesheet" href="./css/print.css" media="print" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-title">
+      <h1>Stundenplaner</h1>
+      <span class="badge">Volksschule &middot; Prototyp</span>
+    </div>
+    <div class="header-actions">
+      <button id="btn-demo" class="btn" title="Demo-Volksschule laden (überschreibt aktuelle Daten)">Demo laden</button>
+      <button id="btn-reset" class="btn" title="Alle Daten löschen und leer starten">Zur&uuml;cksetzen</button>
+      <button id="btn-import" class="btn" title="Daten aus JSON-Datei importieren">Import</button>
+      <button id="btn-export" class="btn" title="Alle Daten als JSON-Datei exportieren">Export</button>
+      <input type="file" id="import-file" accept="application/json,.json" hidden />
+    </div>
+  </header>
+
+  <nav class="tabs" id="main-tabs" aria-label="Hauptnavigation">
+    <a href="#stammdaten" data-tab="stammdaten">Stammdaten</a>
+    <a href="#zeitraster" data-tab="zeitraster">Zeitraster</a>
+    <a href="#berechnen" data-tab="berechnen">Berechnen</a>
+    <a href="#plan" data-tab="plan">Stundenplan</a>
+  </nav>
+
+  <main id="main"></main>
+
+  <footer class="app-footer">
+    UI-Prototyp (Sidecar) zu
+    <a href="https://github.com/martinvidec/openaustria-school-flow" rel="noopener">OpenAustria SchoolFlow</a>
+    &mdash; ohne Backend, alle Daten bleiben lokal im Browser (localStorage).
+  </footer>
+
+  <div id="toast-container" aria-live="polite"></div>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

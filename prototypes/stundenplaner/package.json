@@ -1,0 +1,9 @@
+{
+  "name": "stundenplaner-prototype",
+  "private": true,
+  "type": "module",
+  "description": "Browser-only Stundenplaner-Prototyp (Volksschule) — Sidecar zu OpenAustria SchoolFlow. package.json existiert nur, damit Node die ES-Module des Solver-Selbsttests ausführen kann.",
+  "scripts": {
+    "test": "node tests/solver-test.js"
+  }
+}
