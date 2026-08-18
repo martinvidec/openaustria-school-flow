@@ -70,6 +70,8 @@ openaustria-school-flow/
     solver/       # Timefold Timetabling Engine (Java 21 / Quarkus)
   packages/
     shared/       # Gemeinsame Types, DTOs, Enums, Permissions
+  prototypes/
+    stundenplaner/ # Browser-only Stundenplaner-Prototyp (VS), GitHub Pages
   docker/
     docker-compose.yml      # Dev: PostgreSQL, Keycloak, Redis, Solver
     docker-compose.prod.yml # Production: Multi-stage builds, resource limits
