@@ -26,7 +26,6 @@ export function runSolver(doc, options = {}, onProgress = null) {
   });
 
   let assign = phase1.assign;
-  let softScore = null;
   let stepsDone = 0;
   if (phase1.placedCount > 0) {
     const phase2 = optimize(problem, assign, {
@@ -37,7 +36,6 @@ export function runSolver(doc, options = {}, onProgress = null) {
       onProgress,
     });
     assign = phase2.assign;
-    softScore = phase2.softScore;
     stepsDone = phase2.stepsDone;
   }
 

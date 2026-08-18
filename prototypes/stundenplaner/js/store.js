@@ -18,6 +18,8 @@ export function createStore() {
     } catch {
       loadError = 'Gespeicherte Daten sind kein gültiges JSON.';
     }
+    // Nicht ladbare Altdaten sichern, bevor sie beim nächsten Speichern überschrieben würden.
+    if (loadError) localStorage.setItem(`${STORAGE_KEY}.backup`, raw);
   }
   if (!doc) doc = emptyDocument();
 
