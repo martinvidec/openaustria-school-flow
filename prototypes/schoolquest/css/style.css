@@ -137,3 +137,35 @@ main { max-width: 960px; margin: 1.5rem auto; padding: 0 1.25rem; }
 .btn-primary:hover { background: #1d4ed8; }
 .btn-secondary { background: #fff; border: 1px solid #cbd5e1; }
 .loading-hint { color: #64748b; }
+
+
+/* ---------- Lehrer-Dashboard (#203) ---------- */
+.klassen-row { display: flex; gap: .5rem; align-items: center; margin: .75rem 0; flex-wrap: wrap; }
+.klassen-select { min-height: 44px; font: inherit; padding: .4rem; border-radius: 8px; border: 1px solid #cbd5e1; }
+.fach-tabs { display: flex; gap: .5rem; margin: .75rem 0; }
+.wochen-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: .4rem; margin: .75rem 0 1rem;
+}
+.woche-cell {
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
+  padding: .4rem; min-height: 70px; font-size: .78rem;
+}
+.woche-cell.puffer { background: #f1f5f9; border-style: dashed; }
+.woche-nr { display: block; font-weight: 700; color: #64748b; margin-bottom: .25rem; }
+.kompetenz-chip {
+  background: #eff6ff; border-radius: 6px; padding: .2rem .35rem; margin: .15rem 0;
+  font-size: .72rem; line-height: 1.3;
+}
+.move-btns { display: inline-flex; gap: .15rem; margin-top: .15rem; }
+.move-btns button {
+  border: 1px solid #cbd5e1; background: #fff; border-radius: 4px;
+  min-width: 22px; min-height: 22px; font-size: .7rem; cursor: pointer; padding: 0;
+}
+.fortschritt-table { width: 100%; border-collapse: collapse; margin: .75rem 0; background: #fff; }
+.fortschritt-table th, .fortschritt-table td {
+  border: 1px solid #e2e8f0; padding: .5rem .75rem; text-align: left; font-size: .9rem;
+}
+.fortschritt-table th { background: #f8fafc; }
+.override-row { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; margin: .5rem 0 1.5rem; }
+.override-row select { min-height: 44px; font: inherit; padding: .4rem; border-radius: 8px; border: 1px solid #cbd5e1; }
