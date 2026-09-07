@@ -127,6 +127,47 @@ Begründung: GSD-State über zu viele Files verteilt → Plan-vs-Realität-Drift
 
 ---
 
+## D7 — Prototyp-Issues mit `prototype-<name>`-Label kennzeichnen (User-Direktive 2026-09-07)
+
+**Jedes Issue, das sich auf einen konkreten Prototyp unter `prototypes/` bezieht, MUSS das Label `prototype-<name>` tragen (z. B. `prototype-schoolquest`, `prototype-stundenplaner`).**
+
+**Gültigkeit:** Für ALLE Contributors — Menschen und Agenten. Ab dem Moment, in dem ein Repo mehrere Collaborators hat, sind Regeln, die nur im persönlichen Agent-Memory leben, wirkungslos für andere Agents. Deshalb steht diese Regel hier in der CLAUDE.md.
+
+**Why:** Das Repo hostet mehrere eigenständige Prototypen (stundenplaner, schoolquest, …), an denen mehrere Agenten parallel arbeiten. Ohne eindeutiges Label riskiert ein Agent, ein Issue im falschen Kontext zu bearbeiten (z. B. SchoolQuest-Quest-Logik mit Stundenplaner-Annahmen) oder Issues falsch zu priorisieren, weil der Scope unsichtbar ist.
+
+**Verboten:**
+- Prototyp-Issues ohne `prototype-<name>`-Label anlegen
+- An einem Prototyp-Issue arbeiten, ohne vorher das Label geprüft zu haben
+- Den Prototyp-Bezug nur aus dem Issue-Titel ableiten
+
+**Erlaubt / Gefordert:**
+
+1. **Label beim Issue-Anlegen mitsetzen:**
+   ```bash
+   gh issue create --label "prototype-schoolquest" --title "..." --body "..."
+   ```
+   Existiert das Label noch nicht, zuerst anlegen:
+   ```bash
+   gh label create "prototype-schoolquest" --description "Issues zum Prototyp prototypes/schoolquest/" --color 0E8A16
+   ```
+
+2. **Vor Arbeitsbeginn an einem Issue — Label-Check:**
+   ```bash
+   gh issue view <nummer> --json labels --jq '.labels[].name'
+   ```
+   Kein `prototype-*`-Label und der Bezug ist mehrdeutig → STOP und im Issue nachfragen bzw. Label ergänzen.
+
+3. **Bei Pull Requests**: dasselbe Label auf den PR setzen, damit Filter `label:prototype-schoolquest` Issue+PR abdecken.
+
+4. **Filtern nach Prototyp-Scope:**
+   ```bash
+   gh issue list --label "prototype-schoolquest" --state open
+   ```
+
+**Ausnahme:** Querschnitts-Issues, die das Repo als Ganzes betreffen (CI, Build, CLAUDE.md selbst), brauchen kein `prototype-*`-Label — sie sind per Definition nicht prototyp-spezifisch.
+
+---
+
 <!-- GSD:project-start source:PROJECT.md -->
 ## Project
 
