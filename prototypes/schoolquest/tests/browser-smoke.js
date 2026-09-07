@@ -102,4 +102,16 @@ sandbox.window.SchoolQuestSchueler.render(schuelerPanel);
 // Nach render() darf kein Crash passiert sein; der State muss lesbar sein:
 assert.ok(Array.isArray(sandbox.window.SchoolQuestStore.loadState().avatare), 'state.avatare nach render lesbar');
 
+// END-TO-END: Avatar-Erstellung simulieren (REGRESSION-TEST für den Live-Bug
+// „Klick resettet nur das Feld" — persistState darf den modifizierten State
+// nicht mit einem frischen getState() überschreiben)
+const st1 = sandbox.window.SchoolQuestStore.loadState();
+st1.avatare.push({ id: 'av-e2e', pseudonym: 'TestFuchs', avatarIcon: '🦊', klassenId: null, fortschritt: { quests: {}, badges: [] } });
+st1.aktiveAvatare = 'av-e2e';
+sandbox.window.SchoolQuestStore.saveState(st1); // wie persistState(st)
+const st2 = sandbox.window.SchoolQuestStore.loadState();
+assert.equal(st2.avatare.length, 1, 'REGRESSION: Avatar nach Persist verloren! (persistState-Überschreibungs-Bug)');
+assert.equal(st2.avatare[0].pseudonym, 'TestFuchs');
+console.log('  ⤷ Avatar-Erstellung E2E: persistiert ✅');
+
 console.log('browser-smoke: 9 Scripts im simulierten Browser geladen, 8 window-Globals vorhanden ✅');
