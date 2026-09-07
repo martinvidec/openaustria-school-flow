@@ -1,0 +1,19 @@
+{
+  "id": "quest-deutsch-3-le-1",
+  "titel": "Lesestrategien: Überfliegen & genaues Lesen",
+  "fach": "deutsch",
+  "stufe": 3,
+  "kompetenz": "deutsch.3.le.1",
+  "requires": [],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    { "typ": "quiz", "frage": "Du willst wissen, ob ein Buch für dein Referat über Vulkane passt. Welche Lesestrategie zuerst?", "optionen": ["Wort für Wort lesen", "Überfliegen: Titel, Bilder, erste Sätze", "rückwärts lesen"], "loesung": 1 },
+    { "typ": "quiz", "frage": "Text: 'Der Hund bellte laut, als das Auto vorbeifuhr.' — Wer bellte?", "optionen": ["das Auto", "der Hund", "keine Angabe"], "loesung": 1 },
+    { "typ": "quiz", "frage": "Wofür nutzt man 'genaues Lesen'?", "optionen": ["um Details zu finden", "um das Buch wegzuwerfen", "um schneller auszugeben"], "loesung": 0 }
+  ],
+  "loesungstexte": [
+    "Überfliegen zeigt schnell: Thema, Aufbau, Passung.",
+    "Das Subjekt 'der Hund' handelte — bellte.",
+    "Genaues Lesen = Details, Fakten, Anweisungen verstehen."
+  ]
+}

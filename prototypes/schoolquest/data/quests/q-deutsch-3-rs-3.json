@@ -1,0 +1,19 @@
+{
+  "id": "quest-deutsch-3-rs-3",
+  "titel": "Wortbildung: formbildende Elemente",
+  "fach": "deutsch",
+  "stufe": 3,
+  "kompetenz": "deutsch.3.rs.3",
+  "requires": ["quest-deutsch-3-rs-1"],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    { "typ": "quiz", "frage": "'lesen' + '-bar' = ?", "optionen": ["lesbar", "lesenbar", "lesse"], "loesung": 0 },
+    { "typ": "quiz", "frage": "Woraus ist 'Freundlichkeit' gebaut?", "optionen": ["freund + -lich + -keit", "freundlich + -keit", "freund + lich"], "loesung": 1 },
+    { "typ": "quiz", "frage": "Welches Wort gehört zur Wortfamilie 'sinn'?", "optionen": ["sinnlos", "Singvogel", "seitwärts"], "loesung": 0 }
+  ],
+  "loesungstexte": [
+    "lesen → lesbar (-bar macht Adjektive).",
+    "freundlich + -keit = Freundlichkeit.",
+    "sinn + -los = sinnlos (Wortfamilie sinn)."
+  ]
+}

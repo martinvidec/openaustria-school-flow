@@ -1,0 +1,21 @@
+{
+  "id": "quest-mathe-4-gr-1",
+  "titel": "Flächenmaße & Umrechnen",
+  "fach": "mathematik",
+  "stufe": 4,
+  "kompetenz": "mathe.4.gr.1",
+  "requires": ["quest-mathe-3-gr-1"],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    { "typ": "quiz", "frage": "1 m² = ? dm²", "optionen": ["10", "100", "1000"], "loesung": 1 },
+    { "typ": "eingabe", "frage": "3 m² = ? cm² (Zahl)", "loesung": ["30000", "30 000"] },
+    { "typ": "quiz", "frage": "Welche Einheit für einen Fußballplatz (Fläche)?", "optionen": ["cm²", "m²", "ha", "mm²"], "loesung": 2 },
+    { "typ": "eingabe", "frage": "1 ha = ? m² (Zahl)", "loesung": ["10000", "10 000"] }
+  ],
+  "loesungstexte": [
+    "1 m² = 10 dm × 10 dm = 100 dm².",
+    "3 m² = 3×10.000 cm² = 30.000 cm² (1 m² = 100×100 cm²).",
+    "Fußballplatz ≈ 0,7 ha — Hektar passt (m² wäre riesige Zahl).",
+    "1 ha = 100 m × 100 m = 10.000 m²."
+  ]
+}

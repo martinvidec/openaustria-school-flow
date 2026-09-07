@@ -1,0 +1,33 @@
+{
+  "id": "quest-mathe-3-zd-2",
+  "titel": "Kombinieren & Wahrscheinlichkeit qualitativ",
+  "fach": "mathematik",
+  "stufe": 3,
+  "kompetenz": "mathe.3.zd.2",
+  "requires": ["quest-mathe-3-zd-1"],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    {
+      "typ": "eingabe",
+      "frage": "Wie viele Zweierkombinationen aus Shirt (rot, blau) und Hose (grün, schwarz) gibt es? (Zahl)",
+      "loesung": ["4"]
+    },
+    {
+      "typ": "quiz",
+      "frage": "Du drehst ein Glücksrad mit 8 gleichgroßen Feldern: 6 rote, 2 grüne. Was ist wahrscheinlicher?",
+      "optionen": ["grün", "rot", "beide gleich wahrscheinlich"],
+      "loesung": 1
+    },
+    {
+      "typ": "quiz",
+      "frage": "Ein Würfel: Was ist wahrscheinlicher?",
+      "optionen": ["eine 6 würfeln", "keine 6 würfeln", "beides gleich wahrscheinlich"],
+      "loesung": 1
+    }
+  ],
+  "loesungstexte": [
+    "Baumdiagramm: 2 Shirts × 2 Hosen = 4 Kombinationen.",
+    "6 von 8 Feldern sind rot — deutlich mehr als die 2 grünen.",
+    "5 von 6 Würfelergebnissen sind KEINE 6 — das ist wahrscheinlicher."
+  ]
+}

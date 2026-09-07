@@ -1,0 +1,21 @@
+{
+  "id": "quest-mathe-3-op-3",
+  "titel": "Sachsituationen modellieren",
+  "fach": "mathematik",
+  "stufe": 3,
+  "kompetenz": "mathe.3.op.3",
+  "requires": ["quest-mathe-3-op-1"],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    { "typ": "eingabe", "frage": "Ein Schulbus fährt 4 Klassen mit je 24 Kindern. Wie viele Kinder insgesamt?", "loesung": ["96"] },
+    { "typ": "eingabe", "frage": "Mira hat 350 Sparpfennige und kauft ein Buch für 275. Wie viele bleiben?", "loesung": ["75"] },
+    { "typ": "quiz", "frage": "Welche Rechnung passt: '7 Kartons mit je 6 Marmeladengläsern'?", "optionen": ["7+6", "7×6", "7−6", "7÷6"], "loesung": 1 },
+    { "typ": "eingabe", "frage": "7 Kartons à 6 Gläser — wie viele Gläser?", "loesung": ["42"] }
+  ],
+  "loesungstexte": [
+    "4×24 = 96 Kinder (Mengen je Klasse zusammenfügen).",
+    "350−275 = 75 Pfennige bleiben.",
+    "'je 6 in 7 Kartons' = wiederholte Addition = 7×6.",
+    "7×6 = 42 Gläser."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "quest-mathe-3-er-2",
+  "titel": "Geodreieck: Rechte Winkel zeichnen",
+  "fach": "mathematik",
+  "stufe": 3,
+  "kompetenz": "mathe.3.er.2",
+  "requires": ["quest-mathe-3-er-1"],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    { "typ": "quiz", "frage": "Wie groß ist ein rechter Winkel?", "optionen": ["45°", "90°", "180°", "360°"], "loesung": 1 },
+    { "typ": "quiz", "frage": "Welches Werkzeug prüft/zeichnet rechte Winkel am besten?", "optionen": ["Lineal", "Geodreieck", "Zirkel", "Bleistift"], "loesung": 1 },
+    { "typ": "quiz", "frage": "Ein Quadrat hat …", "optionen": ["4 rechte Winkel und 4 gleiche Seiten", "4 rechte Winkel und verschiedene Seiten", "keine rechten Winkel"], "loesung": 0 }
+  ],
+  "loesungstexte": [
+    "Ein rechter Winkel = 90°.",
+    "Das Geodreieck hat die 90°-Kante zum Zeichnen und Prüfen.",
+    "Quadrat: 4 rechte Winkel + 4 gleich lange Seiten."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "quest-mathe-4-gr-2",
+  "titel": "Zeitpunkte & Zeitspannen",
+  "fach": "mathematik",
+  "stufe": 4,
+  "kompetenz": "mathe.4.gr.2",
+  "requires": ["quest-mathe-3-gr-2"],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    { "typ": "eingabe", "frage": "Von 08:15 bis 10:45 — wie viele Minuten? (Zahl)", "loesung": ["150"] },
+    { "typ": "eingabe", "frage": "Ein Film dauert 105 Minuten. Er beginnt um 19:30 — um wie viel Uhr endet er? (HH:MM)", "loesung": ["21:15"] },
+    { "typ": "quiz", "frage": "Wie viele Minuten hat 1½ Stunden?", "optionen": ["75", "90", "105"], "loesung": 1 }
+  ],
+  "loesungstexte": [
+    "08:15→10:45: 2 h 30 min = 150 Minuten.",
+    "19:30 + 1:45 = 21:15.",
+    "1½ h = 60 + 30 = 90 Minuten."
+  ]
+}

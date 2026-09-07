@@ -1,0 +1,29 @@
+{
+  "id": "quest-mathe-3-er-1b",
+  "titel": "Figuren & Körper zuordnen (Drag & Drop)",
+  "fach": "mathematik",
+  "stufe": 3,
+  "kompetenz": "mathe.3.er.1",
+  "requires": ["quest-mathe-3-er-1"],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    {
+      "typ": "drag-drop",
+      "frage": "Ordne zu: Was ist eine ebene Figur, was ein Körper?",
+      "elemente": { "quadrat": "Quadrat", "wuerfel": "Würfel", "dreieck": "Dreieck", "kugel": "Kugel", "rechteck": "Rechteck", "zylinder": "Zylinder" },
+      "loesung": { "quadrat": "figur", "dreieck": "figur", "rechteck": "figur", "wuerfel": "koerper", "kugel": "koerper", "zylinder": "koerper" },
+      "zonen": { "figur": "Ebene Figur", "koerper": "Körper" }
+    },
+    {
+      "typ": "drag-drop",
+      "frage": "Ordne die Anzahl zu: Flächen/Kanten/Ecken beim Würfel",
+      "elemente": { "f6": "6", "k12": "12", "e8": "8", "f4": "4", "k6": "6", "e4": "4" },
+      "loesung": { "f6": "flaechen", "k12": "kanten", "e8": "ecken", "f4": "abfall", "k6": "abfall", "e4": "abfall" },
+      "zonen": { "flaechen": "Flächen", "kanten": "Kanten", "ecken": "Ecken", "abfall": "passt nicht" }
+    }
+  ],
+  "loesungstexte": [
+    "Quadrat, Dreieck, Rechteck sind eben; Würfel, Kugel, Zylinder sind Körper (Volumen).",
+    "Würfel: 6 Flächen, 12 Kanten, 8 Ecken — die anderen Zahlen gehören nicht dazu."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "quest-deutsch-4-hs-1",
+  "titel": "Kommunikationskultur anwenden",
+  "fach": "deutsch",
+  "stufe": 4,
+  "kompetenz": "deutsch.4.hs.1",
+  "requires": ["quest-deutsch-3-hs-1"],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    { "typ": "quiz", "frage": "Im Klassenrat sprichst du. Was gehört zur Kommunikationskultur?", "optionen": ["ausreden lassen, Ich-Botschaften, sachlich bleiben", "lautstark übertönen", "Handys zeigen"], "loesung": 0 },
+    { "typ": "quiz", "frage": "Jemand unterbricht dich wiederholt. Wie forderst du die Kultur ein?", "optionen": ["schweigen", "'Ich bitte dich, mich ausreden zu lassen.'", "lauter werden"], "loesung": 1 },
+    { "typ": "quiz", "frage": "Hörverstehen beim Vortrag deines Mitschülers: Was notierst du?", "optionen": ["nur deine Meinung", "Kernpunkte + offene Fragen", "nichts"], "loesung": 1 }
+  ],
+  "loesungstexte": [
+    "Ausreden lassen, sachlich, Ich-Botschaften = Kultur.",
+    "Klare Ich-Botschaft fordert Respekt ein.",
+    "Kernpunkte + offene Fragen = aktives Hörverstehen."
+  ]
+}

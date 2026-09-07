@@ -1,0 +1,19 @@
+{
+  "id": "quest-deutsch-3-le-2",
+  "titel": "Literarische Kompetenz: Gedanken zur Wirkung",
+  "fach": "deutsch",
+  "stufe": 3,
+  "kompetenz": "deutsch.3.le.2",
+  "requires": ["quest-deutsch-3-le-1"],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    { "typ": "quiz", "frage": "'Der Winter zog kalt und stumm durch die Stadt.' — Welche Stimmung entsteht?", "optionen": ["fröhlich", "traurig/kalt", "aufgeregt"], "loesung": 1 },
+    { "typ": "quiz", "frage": "Warum sind Wortwahlen wie 'kalt' und 'stumm' wichtig?", "optionen": ["sie klingen schön", "sie erzeugen die Stimmung", "sie sind lang"], "loesung": 1 },
+    { "typ": "quiz", "frage": "Analogie: 'Der Sommer tanzte durch die Wiese.' — Der Sommer ist hier wie eine …", "optionen": ["Person (Personifikation)", "Zahl", "Pflanze"], "loesung": 0 }
+  ],
+  "loesungstexte": [
+    "Kalt+stumm = traurige, ruhige Stimmung.",
+    "Wortwahl baut Stimmung auf — Autoren wählen gezielt.",
+    "'tanzte' macht den Sommer zur Person = Personifikation."
+  ]
+}

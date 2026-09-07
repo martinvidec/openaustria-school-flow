@@ -1,0 +1,19 @@
+{
+  "id": "quest-mathe-4-op-2",
+  "titel": "Proportionale Zusammenhänge",
+  "fach": "mathematik",
+  "stufe": 4,
+  "kompetenz": "mathe.4.op.2",
+  "requires": ["quest-mathe-4-op-1"],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    { "typ": "quiz", "frage": "1 kg Äpfel kostet 3 €. Tabelle: 2 kg → 6 €, 3 kg → 9 €, 5 kg → ?", "optionen": ["12 €", "15 €", "18 €"], "loesung": 1 },
+    { "typ": "eingabe", "frage": "4 Bleistifte kosten 12 €. Wie viel kosten 7 Bleistifte? (nur Zahl, in €)", "loesung": ["21"] },
+    { "typ": "quiz", "frage": "Was ist 'direkt proportional'?", "optionen": ["verdoppelt man die Menge, verdoppelt sich der Preis", "der Preis bleibt gleich", "der Preis halbiert sich bei doppelte Menge"], "loesung": 0 }
+  ],
+  "loesungstexte": [
+    "5×3 € = 15 € — jede Kilogramm-Zeile verdreifacht (3€/kg).",
+    "1 Bleistift = 12÷4 = 3 €; 7 × 3 = 21 €.",
+    "Direkt proportional: gleiche Menge → gleicher Faktor (Menge ×2 ⇒ Preis ×2)."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "quest-mathe-3-er-1",
+  "titel": "Figuren & Körper untersuchen",
+  "fach": "mathematik",
+  "stufe": 3,
+  "kompetenz": "mathe.3.er.1",
+  "requires": [],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    { "typ": "quiz", "frage": "Was ist ein Körper (nicht eine ebene Figur)?", "optionen": ["Quadrat", "Dreieck", "Würfel", "Kreis"], "loesung": 2 },
+    { "typ": "quiz", "frage": "Wie viele Ecken hat ein Würfel?", "optionen": ["4", "6", "8", "12"], "loesung": 2 },
+    { "typ": "matching", "frage": "Ordne zu: Körper haben Flächen, Kanten, Ecken — wie viele beim Würfel?", "loesung": [["flaechen", "6"], ["kanten", "12"], ["ecken", "8"]] }
+  ],
+  "loesungstexte": [
+    "Der Würfel hat Volumen — er ist ein Körper; Quadrat/Dreieck/Kreis sind eben.",
+    "Ein Würfel hat 8 Ecken (2×4 im Quadrat-Netz übereinander).",
+    "Würfel: 6 Flächen, 12 Kanten, 8 Ecken — merke dir 6-12-8."
+  ]
+}
