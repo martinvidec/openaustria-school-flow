@@ -169,3 +169,27 @@ main { max-width: 960px; margin: 1.5rem auto; padding: 0 1.25rem; }
 .fortschritt-table th { background: #f8fafc; }
 .override-row { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; margin: .5rem 0 1.5rem; }
 .override-row select { min-height: 44px; font: inherit; padding: .4rem; border-radius: 8px; border: 1px solid #cbd5e1; }
+
+
+/* ---------- Lernlandkarte (#204) ---------- */
+.landkarte-kopf { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .75rem 0 1.25rem; }
+.xp-badge {
+  background: #2563eb; color: #fff; padding: .35rem .8rem;
+  border-radius: 999px; font-weight: 700; font-size: .9rem;
+}
+.badge-item {
+  background: #fef3c7; color: #92400e; padding: .35rem .7rem;
+  border-radius: 999px; font-size: .85rem; font-weight: 600;
+}
+.badge-gesperrt { opacity: .4; filter: grayscale(1); }
+.quest-kette { display: flex; flex-wrap: wrap; gap: .5rem; margin: .5rem 0 1.5rem; }
+.kette-node {
+  background: #fff; border: 2px solid #e2e8f0; border-radius: 10px;
+  padding: .5rem .7rem; font-size: .8rem; display: flex;
+  flex-direction: column; gap: .15rem; max-width: 170px;
+}
+.kette-node.status-bestanden { border-color: #16a34a; background: #f0fdf4; }
+.kette-node.status-versucht { border-color: #f59e0b; }
+.kette-node.mastery { box-shadow: 0 0 0 2px #16a34a33; }
+.mastery-mark { color: #16a34a; font-weight: 700; }
+.kette-titel { line-height: 1.3; }
