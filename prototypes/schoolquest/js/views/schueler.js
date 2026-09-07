@@ -16,8 +16,10 @@
   function getState() {
     return store.loadState();
   }
-  function persistState() {
-    store.saveState(getState());
+  // persistState speichert einen VORHANDENEN (modifizierten) State —
+  // NIEMALS getState() intern neu lesen (überschreibt Änderungen im RAM!)
+  function persistState(stateToSave) {
+    store.saveState(stateToSave ?? getState());
   }
 
   // ---------- Daten laden ----------
@@ -84,7 +86,9 @@
           console.log('[SchoolQuest] State geladen, avatare:', st.avatare.length);
           st.avatare.push(neuer);
           st.aktiveAvatare = neuer.id;
-          persistState();
+          // WICHTIG: st speichern (mit dem Push!), NICHT getState() erneut lesen —
+          // das würde den frischen (leeren) localStorage-State überspeichern
+          store.saveState(st);
           console.log('[SchoolQuest] Persistiert. localStorage:', (typeof localStorage !== 'undefined') ? 'vorhanden' : 'FEHLT');
           renderSchuelerModus(container);
           console.log('[SchoolQuest] Re-Render abgeschlossen');
@@ -108,7 +112,7 @@
       card.addEventListener('click', () => {
         const st = getState();
         st.aktiveAvatare = av.id;
-        persistState();
+        persistState(st);
         renderFachwahl(container, av);
       });
       list.appendChild(card);
