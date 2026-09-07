@@ -12,6 +12,10 @@
   }
 
   const api = { statusChip };
-  window.SchoolQuestComponents = api;
-  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = api;
+  } else {
+    window.SchoolQuestComponents = api;
+  }
 })();

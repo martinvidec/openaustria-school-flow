@@ -75,4 +75,9 @@ function kompetenzenFuerWoche(verteilung, woche) {
   return w ? w.kompetenzIds : [];
 }
 
-module.exports = { WOCHEN_GESAMT, PUFFER_WOCHEN, verteilungErstellen, sortiereKompetenzen, kompetenzenFuerWoche };
+// Universal-Export: Browser (window) + Node (module.exports)
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { WOCHEN_GESAMT, PUFFER_WOCHEN, verteilungErstellen, sortiereKompetenzen, kompetenzenFuerWoche };
+} else {
+  window.SchoolQuestVerteilung = { WOCHEN_GESAMT, PUFFER_WOCHEN, verteilungErstellen, sortiereKompetenzen, kompetenzenFuerWoche };
+}

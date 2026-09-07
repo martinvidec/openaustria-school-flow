@@ -68,4 +68,9 @@ function verfuegbareBadges(quests, fort) {
   return neue;
 }
 
-module.exports = { gemasterteKompetenzen, gesamtXp, verfuegbareBadges, MEILENSTEINE };
+// Universal-Export: Browser (window) + Node (module.exports)
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { gemasterteKompetenzen, gesamtXp, verfuegbareBadges, MEILENSTEINE };
+} else {
+  window.SchoolQuestProgress = { gemasterteKompetenzen, gesamtXp, verfuegbareBadges, MEILENSTEINE };
+}

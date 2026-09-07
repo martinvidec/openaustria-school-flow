@@ -105,4 +105,9 @@ function questStatus(quest, fortschritt, lehrerOverride, gemasterteKompetenzen) 
   return 'offen';
 }
 
-module.exports = { bewerteAufgabe, istBestanden, berechneXp, questStatus, normalisiereText, XP_MULTIPLIKATOR };
+// Universal-Export: Browser (window) + Node (module.exports)
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { bewerteAufgabe, istBestanden, berechneXp, questStatus, normalisiereText, XP_MULTIPLIKATOR };
+} else {
+  window.SchoolQuestEngine = { bewerteAufgabe, istBestanden, berechneXp, questStatus, normalisiereText, XP_MULTIPLIKATOR };
+}
