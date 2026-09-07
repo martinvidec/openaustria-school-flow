@@ -1,0 +1,21 @@
+{
+  "id": "quest-deutsch-4-rs-4",
+  "titel": "Zeitformen, direkte Rede, Satzglieder",
+  "fach": "deutsch",
+  "stufe": 4,
+  "kompetenz": "deutsch.4.rs.4",
+  "requires": ["quest-deutsch-4-rs-2"],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    { "typ": "quiz", "frage": "'Mia las das Buch.' — Zeitform?", "optionen": ["Präsens", "Präteritum", "Futur"], "loesung": 1 },
+    { "typ": "quiz", "frage": "Richtig geschriebene direkte Rede:", "optionen": [", sagte Mia, ich bin müde.',", "\"Ich bin müde\", sagte Mia.", "Sagte Mia, ich bin müde\""], "loesung": 1 },
+    { "typ": "quiz", "frage": "'Der Hund (rennt) schnell.' — 'rennt' = ?", "optionen": ["Subjekt", "Prädikat", "Objekt"], "loesung": 1 },
+    { "typ": "quiz", "frage": "Fragewort auf das Subjekt:", "optionen": ["wer?", "wen?", "wohin?"], "loesung": 0 }
+  ],
+  "loesungstexte": [
+    "'las' = Präteritum (Vergangenheit).",
+    "Direkte Rede in Anführungszeichen + Begleitsatz mit Komma.",
+    "Das konjugierte Verb = Prädikat.",
+    "Subjekt fragt man mit 'wer?'"
+  ]
+}

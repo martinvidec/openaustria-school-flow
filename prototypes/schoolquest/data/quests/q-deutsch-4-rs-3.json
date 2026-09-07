@@ -1,0 +1,19 @@
+{
+  "id": "quest-deutsch-4-rs-3",
+  "titel": "Wortzusammensetzungen & sinnverwandte Wörter",
+  "fach": "deutsch",
+  "stufe": 4,
+  "kompetenz": "deutsch.4.rs.3",
+  "requires": ["quest-deutsch-3-rs-3"],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    { "typ": "quiz", "frage": "'Regenschirm' = ? + ?", "optionen": ["Regen + Schirm", "Re + genschirm", "Regen + s + Chirm"], "loesung": 0 },
+    { "typ": "quiz", "frage": "Sinnverwandt zu 'schnell':", "optionen": ["flott/fix/geschwind", "langsamer", "lahm"], "loesung": 0 },
+    { "typ": "quiz", "frage": "Warum sinnverwandte Wörter nutzen?", "optionen": ["Wortwiederholung vermeiden, präziser formulieren", "mehr Fehler", "weil es klingt"], "loesung": 0 }
+  ],
+  "loesungstexte": [
+    "Regenschirm = Regen + Schirm (zusammengesetztes Nomen).",
+    "Flott/fix/geschwind ≈ schnell (sinnverwandt).",
+    "Varianten machen Texte abwechslungsreich und präzise."
+  ]
+}

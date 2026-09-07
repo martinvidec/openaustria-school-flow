@@ -1,0 +1,21 @@
+{
+  "id": "quest-mathe-3-gr-1",
+  "titel": "Maßeinheiten & Umrechnen",
+  "fach": "mathematik",
+  "stufe": 3,
+  "kompetenz": "mathe.3.gr.1",
+  "requires": [],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    { "typ": "quiz", "frage": "Was wiegt etwa 1 kg?", "optionen": ["ein Bleistift", "1 Liter Wasser", "ein Auto", "ein Korn Reis"], "loesung": 1 },
+    { "typ": "eingabe", "frage": "3 kg = ? g (nur Zahl)", "loesung": ["3000"] },
+    { "typ": "eingabe", "frage": "2 m 50 cm = ? cm (nur Zahl)", "loesung": ["250"] },
+    { "typ": "quiz", "frage": "Welche Einheit passt zu 'Länge eines Bleistifts'?", "optionen": ["km", "m", "cm", "kg"], "loesung": 2 }
+  ],
+  "loesungstexte": [
+    "1 Liter Wasser wiegt genau 1 kg — Stützpunktvorstellung!",
+    "3 kg = 3×1000 g = 3000 g.",
+    "2 m = 200 cm, plus 50 cm = 250 cm.",
+    "Ein Bleistift ist etwa 17 cm lang — cm passt."
+  ]
+}

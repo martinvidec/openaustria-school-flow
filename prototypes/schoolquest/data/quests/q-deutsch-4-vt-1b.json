@@ -1,0 +1,21 @@
+{
+  "id": "quest-deutsch-4-vt-1b",
+  "titel": "Schreibabsichten zuordnen (Drag & Drop)",
+  "fach": "deutsch",
+  "stufe": 4,
+  "kompetenz": "deutsch.4.vt.1",
+  "requires": ["quest-deutsch-4-vt-1"],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    {
+      "typ": "drag-drop",
+      "frage": "Welche Schreibabsicht passt zu welchem Textanfang?",
+      "elemente": { "t1": "Gestern geschah etwas Unglaubliches…", "t2": "Der Rhein ist 1.233 km lang…", "t3": "Bitte sammelt Decken!", "t4": "Milch, Eier, Brot, Butter" },
+      "loesung": { "t1": "erzaehlen", "t2": "informieren", "t3": "appellieren", "t4": "notieren" },
+      "zonen": { "erzaehlen": "erzählen", "informieren": "informieren", "appellieren": "appellieren", "notieren": "notieren" }
+    }
+  ],
+  "loesungstexte": [
+    "Erlebnis erzählen, Fakten informieren, Aufforderung appellieren, Einkaufsliste notieren."
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "id": "quest-deutsch-3-hs-1",
+  "titel": "Hörverstehen & nonverbale Kommunikation",
+  "fach": "deutsch",
+  "stufe": 3,
+  "kompetenz": "deutsch.3.hs.1",
+  "requires": [],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    { "typ": "quiz", "frage": "Deine Mitschülerin erklärt etwas und schaut dabei auf den Boden. Was zeigt ihr Blick?", "optionen": ["nichts", "nonverbale Kommunikation (evtl. Unsicherheit)", "sie ist müde vom Sprechen"], "loesung": 1 },
+    { "typ": "quiz", "frage": "Was hilft beim Zuhören am meisten?", "optionen": ["handy scrollen", "Blickkontakt + Fragen stellen", "wegschauen"], "loesung": 1 },
+    { "typ": "quiz", "frage": "Jemand spricht sehr leise. Was tust du zuhörerbezogen?", "optionen": ["rügen", "nachfragen: 'Ich habe dich nicht gehört'", "wegräuspern"], "loesung": 1 }
+  ],
+  "loesungstexte": [
+    "Blickverhalten ist nonverbal — es sagt etwas ohne Worte.",
+    "Aktives Zuhören: Blickkontakt, nachfragen, nicken.",
+    "Höflich nachfragen statt rügen — Kommunikationskultur."
+  ]
+}

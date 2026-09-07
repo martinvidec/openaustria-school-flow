@@ -1,0 +1,19 @@
+{
+  "id": "quest-deutsch-4-vt-1",
+  "titel": "Schreibabsichten nutzen",
+  "fach": "deutsch",
+  "stufe": 4,
+  "kompetenz": "deutsch.4.vt.1",
+  "requires": ["quest-deutsch-3-vt-1"],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    { "typ": "matching", "frage": "Ordne die Schreibabsicht zum Textbeispiel:", "loesung": [["erzählen", "Gestern geschah etwas Unglaubliches…"], ["informieren", "Der Wasserfall ist 979 Meter hoch…"], ["appellieren", "Bitte sammelt Decken für die Tiere!"], ["notieren", "Milch, Eier, Brot"]] },
+    { "typ": "quiz", "frage": "Bevor du schreibst: Was gehört in den Plan?", "optionen": ["Aufbau, Kernpunkte, Adressat", "nur der Schluss", "nichts"], "loesung": 0 },
+    { "typ": "quiz", "frage": "Du willst informieren — welche Sprache passt?", "optionen": ["sachlich, präzise, Fakten", "übertrieben emotional", "nur Fragen"], "loesung": 0 }
+  ],
+  "loesungstexte": [
+    "Erzählen = Erlebnis; informieren = Fakten; appellieren = Aufforderung; notieren = Stichworte.",
+    "Plan: Aufbau + Kernpunkte + an wen gerichtet.",
+    "Informationstexte: sachlich und präzise."
+  ]
+}

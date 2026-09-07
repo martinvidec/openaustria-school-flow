@@ -1,0 +1,21 @@
+{
+  "id": "quest-mathe-4-op-1",
+  "titel": "Schriftlich bis 1 000 000",
+  "fach": "mathematik",
+  "stufe": 4,
+  "kompetenz": "mathe.4.op.1",
+  "requires": ["quest-mathe-3-op-2"],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    { "typ": "eingabe", "frage": "Schriftlich: 345.678 + 254.322 = ?", "loesung": ["600000", "600 000"] },
+    { "typ": "eingabe", "frage": "Schriftlich: 1.000.000 − 487.250 = ?", "loesung": ["512750", "512 750"] },
+    { "typ": "eingabe", "frage": "Schriftlich: 12.345 × 12 = ? (zweistelliger Multiplikator)", "loesung": ["148140", "148 140"] },
+    { "typ": "eingabe", "frage": "Schriftlich: 9.648 ÷ 24 = ? (zweistelliger Divisor)", "loesung": ["402"] }
+  ],
+  "loesungstexte": [
+    "345.678+254.322: mit Überträgen in allen Stellen → 600.000.",
+    "1.000.000−487.250: ergänzen → 512.750. Kontrolle: 487.250+512.750=1.000.000 ✓",
+    "12.345×12 = 12.345×10 + 12.345×2 = 123.450+24.690 = 148.140.",
+    "9.648÷24: 96÷24=4 (Hunderter), rest 0; 48÷24=2 → 402."
+  ]
+}

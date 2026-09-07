@@ -1,0 +1,19 @@
+{
+  "id": "quest-mathe-3-er-3",
+  "titel": "Umfang berechnen",
+  "fach": "mathematik",
+  "stufe": 3,
+  "kompetenz": "mathe.3.er.3",
+  "requires": ["quest-mathe-3-er-2"],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    { "typ": "eingabe", "frage": "Ein Quadrat hat die Seitenlänge 5 cm. Umfang = ? cm", "loesung": ["20"] },
+    { "typ": "eingabe", "frage": "Ein Rechteck ist 8 cm lang und 3 cm breit. Umfang = ? cm", "loesung": ["22"] },
+    { "typ": "quiz", "frage": "Der Umfang eines Rechtecks mit Länge L und Breite B ist …", "optionen": ["L+B", "2×(L+B)", "L×B", "2×L×B"], "loesung": 1 }
+  ],
+  "loesungstexte": [
+    "Quadrat: 4 × 5 cm = 20 cm.",
+    "Rechteck: 2×(8+3) = 2×11 = 22 cm.",
+    "Umfang = 2×(L+B) — einmal herum laufen!"
+  ]
+}

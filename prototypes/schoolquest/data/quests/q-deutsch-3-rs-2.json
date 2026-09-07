@@ -1,0 +1,19 @@
+{
+  "id": "quest-deutsch-3-rs-2",
+  "titel": "Rechtschreibstrategien",
+  "fach": "deutsch",
+  "stufe": 3,
+  "kompetenz": "deutsch.3.rs.2",
+  "requires": ["quest-deutsch-3-rs-1"],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    { "typ": "quiz", "frage": "'Hase' hören — verlängern (Hasen, Hasenohr) hilft, weil …", "optionen": ["das lange Vokal hörbar bleibt", "es schöner klingt", "kein Grund"], "loesung": 0 },
+    { "typ": "quiz", "frage": "Welches Wort hat ein 'ß'?", "optionen": ["Fußball", "Muskel", "selten"], "loesung": 0 },
+    { "typ": "quiz", "frage": "Wortfamilie als Strategie: 'Hand' → 'Handschuh', 'handeln' — was zeigt die Familie?", "optionen": ["die Schreibung des Stammes", "die Farbe", "die Grammatik"], "loesung": 0 }
+  ],
+  "loesungstexte": [
+    "Verlängern macht kurze/ lange Vokale klar: Has-en → langes a, kein Doppelkonsonant.",
+    "Fußball: langes Vokal + Fugenelement → ß.",
+    "Wortfamilien sichern die Stammschreibung."
+  ]
+}

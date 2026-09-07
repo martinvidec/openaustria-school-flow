@@ -1,0 +1,39 @@
+{
+  "id": "quest-mathe-3-zd-1",
+  "titel": "Zahlen bis 1000 — Zerlegen & Vergleichen",
+  "fach": "mathematik",
+  "stufe": 3,
+  "kompetenz": "mathe.3.zd.1",
+  "requires": [],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    {
+      "typ": "eingabe",
+      "frage": "Schreibe die Zahl: 3 Hunderter, 2 Zehner, 7 Einer.",
+      "loesung": ["327"]
+    },
+    {
+      "typ": "quiz",
+      "frage": "Welche Zahl ist die größte?",
+      "optionen": ["689", "698", "869", "968"],
+      "loesung": 3
+    },
+    {
+      "typ": "eingabe",
+      "frage": "Runde 762 auf den nächsten Hunderter.",
+      "loesung": ["800"]
+    },
+    {
+      "typ": "quiz",
+      "frage": "Welcher Vergleich stimmt?",
+      "optionen": ["543 < 534", "499 > 500", "610 = 610", "725 < 715"],
+      "loesung": 2
+    }
+  ],
+  "loesungstexte": [
+    "327 = 3×100 + 2×10 + 7×1. Stelle das mit Material vor.",
+    "968: Vergleiche zuerst die Hunderter (9 > 8 > 6).",
+    "762 → 762 liegt näher an 800 als an 700 (62 > 50).",
+    "610 = 610 — Gleichheit! Alle anderen Vergleiche sind falsch."
+  ]
+}

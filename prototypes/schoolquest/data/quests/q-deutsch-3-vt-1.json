@@ -1,0 +1,19 @@
+{
+  "id": "quest-deutsch-3-vt-1",
+  "titel": "Texte planen und verfassen",
+  "fach": "deutsch",
+  "stufe": 3,
+  "kompetenz": "deutsch.3.vt.1",
+  "requires": ["quest-deutsch-3-le-1"],
+  "bestehensgrenze": 0.8,
+  "aufgaben": [
+    { "typ": "quiz", "frage": "Du schreibst eine Einladung zur Geburtstagsparty. Welches Textmuster passt?", "optionen": ["Bericht", "Einladung (Anrede, Info, Datum, Gruß)", "Rezept", "Märchen"], "loesung": 1 },
+    { "typ": "quiz", "frage": "Was gehört in die Planung eines Textes?", "optionen": ["nur schreiben-los-los", "Sammeln (Stichpunkte), ordnen, dann schreiben", "zuerst korrigieren"], "loesung": 1 },
+    { "typ": "quiz", "frage": "Konzeptionell schriftlich heißt: die Sprache ist wie …", "optionen": ["gesprochene Alltagssprache", "geschriebene, ausformulierte Sprache", "ein Geräusch"], "loesung": 1 }
+  ],
+  "loesungstexte": [
+    "Einladung: Anrede (Liebe…), Infos (wer/wann/wo), Gruß.",
+    "Planen = sammeln → ordnen → schreiben.",
+    "Konzeptionell schriftlich = vollständige Sätze, keine Umgangssprache."
+  ]
+}
