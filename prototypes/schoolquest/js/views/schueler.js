@@ -60,25 +60,38 @@
         iconGrid.appendChild(b);
       });
       const createBtn = document.createElement('button');
+      createBtn.type = 'button'; // verhindert versehentliches Form-Submit/Seiten-Reload
       createBtn.textContent = 'Avatar erstellen';
       createBtn.className = 'btn-primary';
       createBtn.addEventListener('click', () => {
-        const pseudonym = input.value.trim();
-        if (!pseudonym) { alert('Bitte Pseudonym eingeben (kein echter Name!).'); return; }
-        const idx = Number(iconGrid.dataset.ausgewaehlt ?? 0);
-        const av = d.avatare[idx] || d.avatare[0];
-        const neuer = {
-          id: 'av-' + Date.now().toString(36),
-          pseudonym,
-          avatarIcon: av.icon,
-          klassenId: null,
-          fortschritt: { quests: {}, badges: [] },
-        };
-        const st = getState();
-        st.avatare.push(neuer);
-        st.aktiveAvatare = neuer.id;
-        persistState();
-        renderSchuelerModus(container);
+        try {
+          console.log('[SchoolQuest] Avatar-Erstellung geklickt');
+          const pseudonym = input.value.trim();
+          console.log('[SchoolQuest] Pseudonym:', JSON.stringify(pseudonym));
+          if (!pseudonym) { alert('Bitte Pseudonym eingeben (kein echter Name!).'); return; }
+          const idx = Number(iconGrid.dataset.ausgewaehlt ?? 0);
+          console.log('[SchoolQuest] Icon-Index:', idx);
+          const av = d.avatare[idx] || d.avatare[0];
+          const neuer = {
+            id: 'av-' + Date.now().toString(36),
+            pseudonym,
+            avatarIcon: av.icon,
+            klassenId: null,
+            fortschritt: { quests: {}, badges: [] },
+          };
+          console.log('[SchoolQuest] Neuer Avatar:', neuer.id);
+          const st = getState();
+          console.log('[SchoolQuest] State geladen, avatare:', st.avatare.length);
+          st.avatare.push(neuer);
+          st.aktiveAvatare = neuer.id;
+          persistState();
+          console.log('[SchoolQuest] Persistiert. localStorage:', (typeof localStorage !== 'undefined') ? 'vorhanden' : 'FEHLT');
+          renderSchuelerModus(container);
+          console.log('[SchoolQuest] Re-Render abgeschlossen');
+        } catch (err) {
+          console.error('[SchoolQuest] FEHLER bei Avatar-Erstellung:', err);
+          alert('Fehler beim Erstellen: ' + err.message);
+        }
       });
       form.append(input, iconGrid, createBtn);
       container.querySelector('.placeholder-card').appendChild(form);
