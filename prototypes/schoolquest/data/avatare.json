@@ -1,0 +1,16 @@
+{
+  "avatare": [
+    { "icon": "🦊", "name": "Fuchs" },
+    { "icon": "🐨", "name": "Koala" },
+    { "icon": "🐼", "name": "Panda" },
+    { "icon": "🦉", "name": "Eule" },
+    { "icon": "🐢", "name": "Turtle" },
+    { "icon": "🦄", "name": "Einhorn" },
+    { "icon": "🐬", "name": "Delfin" },
+    { "icon": "🐙", "name": "Oktopus" },
+    { "icon": "🐝", "name": "Biene" },
+    { "icon": "🦁", "name": "Löwe" },
+    { "icon": "🐧", "name": "Pingu" },
+    { "icon": "🐸", "name": "Frosch" }
+  ]
+}

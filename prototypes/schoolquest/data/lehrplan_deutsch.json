@@ -1,0 +1,167 @@
+{
+  "fach": "deutsch",
+  "fachLabel": "Deutsch — Lesen/Schreiben",
+  "quelle": "BGBl. II Nr. 1/2023 (Lehrplan der Volksschule, Neunter Teil) — § 7 UrhG freies Werk; extrahiert aus research/vs-lehrplan-spec/fach_deutsch.txt",
+  "kompetenzen": [
+    {
+      "id": "deutsch.3.hs.1",
+      "stufe": 3,
+      "bereich": "hs",
+      "bereichLabel": "(Zu-)Hören und Sprechen",
+      "text": "Die Schülerinnen und Schüler können Strategien für das Hörverstehen entwickeln als auch zuhörerbezogen Sprech- und Sprachformen unter Berücksichtigung von nonverbaler Kommunikation im Gespräch anwenden.",
+      "quelle": "BGBl. II Nr. 1/2023"
+    },
+    {
+      "id": "deutsch.3.hs.2",
+      "stufe": 3,
+      "bereich": "hs",
+      "bereichLabel": "(Zu-)Hören und Sprechen",
+      "text": "Die Schülerinnen und Schüler können bewusst sprachliche Ausdrucksformen und einfache normierte Sprachmuster in konkreten monologischen wie dialogischen Sprechbeiträgen richtig einsetzen und sich verschiedener Sprachregister der Situation angemessen bedienen.",
+      "quelle": "BGBl. II Nr. 1/2023"
+    },
+    {
+      "id": "deutsch.3.le.1",
+      "stufe": 3,
+      "bereich": "le",
+      "bereichLabel": "Lesen",
+      "text": "Die Schülerinnen und Schüler können zunehmend ökonomisch lesen, Lesestrategien zunehmend bewusst nach Zielvorgabe einsetzen, Texte durch adäquate Hilfestellungen verstehend und reflexiv lesen.",
+      "quelle": "BGBl. II Nr. 1/2023"
+    },
+    {
+      "id": "deutsch.3.le.2",
+      "stufe": 3,
+      "bereich": "le",
+      "bereichLabel": "Lesen",
+      "text": "Die Schülerinnen und Schüler können ihre literarische Kompetenz zunehmend aufbauen, zur Wirkung gelesener Texte eigene Gedanken entwickeln, Analogien bilden und in der Anschlusskommunikation, auch kritisch, Stellung nehmen.",
+      "quelle": "BGBl. II Nr. 1/2023"
+    },
+    {
+      "id": "deutsch.3.vt.1",
+      "stufe": 3,
+      "bereich": "vt",
+      "bereichLabel": "Verfassen von Texten",
+      "text": "Die Schülerinnen und Schüler können unterschiedliche konzeptionell mündliche wie konzeptionell schriftliche Textmuster zu freien und vorgegebenen Themen bewusst nutzen und Texte entsprechend sinnvoll planen und verfassen.",
+      "quelle": "BGBl. II Nr. 1/2023"
+    },
+    {
+      "id": "deutsch.3.vt.2",
+      "stufe": 3,
+      "bereich": "vt",
+      "bereichLabel": "Verfassen von Texten",
+      "text": "Die Schülerinnen und Schüler können adressatengerechte, situationsbezogene und intentionsgeleitete Texte nach bestimmten Aspekten überprüfen und mit Hilfsmitteln in analoger und digitaler Form überarbeiten und berichtigen.",
+      "quelle": "BGBl. II Nr. 1/2023"
+    },
+    {
+      "id": "deutsch.3.rs.1",
+      "stufe": 3,
+      "bereich": "rs",
+      "bereichLabel": "(Recht-)Schreiben und Sprachbetrachtung",
+      "text": "Die Schülerinnen und Schüler können beim Ab- und Aufschreiben Regelbildungen bewusst erkennen, reflektieren und anwenden sowie den erarbeiteten Wortschatz in verschiedenen Übungsformen einsetzen.",
+      "quelle": "BGBl. II Nr. 1/2023"
+    },
+    {
+      "id": "deutsch.3.rs.2",
+      "stufe": 3,
+      "bereich": "rs",
+      "bereichLabel": "(Recht-)Schreiben und Sprachbetrachtung",
+      "text": "Die Schülerinnen und Schüler können zunehmend Einsicht in Wörter mit orthografischen Regel- und Merkelementen gewinnen, Rechtschreibstrategien für das richtige Schreiben von Wörtern sowie unterschiedliche Medien als Rechtschreibhilfe einsetzen.",
+      "quelle": "BGBl. II Nr. 1/2023"
+    },
+    {
+      "id": "deutsch.3.rs.3",
+      "stufe": 3,
+      "bereich": "rs",
+      "bereichLabel": "(Recht-)Schreiben und Sprachbetrachtung",
+      "text": "Die Schülerinnen und Schüler können formbildende Elemente für die Bildung neuer Wörter nutzen, aus verschiedenen Wortarten neue Wörter bilden sowie sinnverwandte Wörter erkennen und nach unterschiedlichen Kriterien strukturieren.",
+      "quelle": "BGBl. II Nr. 1/2023"
+    },
+    {
+      "id": "deutsch.3.rs.4",
+      "stufe": 3,
+      "bereich": "rs",
+      "bereichLabel": "(Recht-)Schreiben und Sprachbetrachtung",
+      "text": "Die Schülerinnen und Schüler können die Wortarten wie Nomen, Verb, Adjektiv in zunehmendem Maß mit den Fachbegriffen benennen, den Zusammenhang zwischen Zeitstufen und Zeitformen erkennen sowie durch handlungsorientierte Verfahren Einsicht in die Syntax gewinnen.",
+      "quelle": "BGBl. II Nr. 1/2023"
+    },
+    {
+      "id": "deutsch.4.hs.1",
+      "stufe": 4,
+      "bereich": "hs",
+      "bereichLabel": "(Zu-)Hören und Sprechen",
+      "text": "Die Schülerinnen und Schüler können unter Berücksichtigung von Hörverstehen, Sprechhandlungen und sprachlichen Gestaltungsmitteln eine Kommunikationskultur anwenden und einfordern.",
+      "quelle": "BGBl. II Nr. 1/2023"
+    },
+    {
+      "id": "deutsch.4.hs.2",
+      "stufe": 4,
+      "bereich": "hs",
+      "bereichLabel": "(Zu-)Hören und Sprechen",
+      "text": "Die Schülerinnen und Schüler können ausdrucksvoll und an der Standardsprache ausgerichtet Beobachtungen und Sachverhalte in monologischen wie dialogischen Sprechbeiträgen adressatengerecht und situationsgerecht sprechen.",
+      "quelle": "BGBl. II Nr. 1/2023"
+    },
+    {
+      "id": "deutsch.4.le.1",
+      "stufe": 4,
+      "bereich": "le",
+      "bereichLabel": "Lesen",
+      "text": "Die Schülerinnen und Schüler können ökonomisch lesen, Lesestrategien bewusst nach Zielvorgabe einsetzen sowie den Wortschatz mit geeigneten analogen oder digitalen Hilfsmitteln ausdifferenzieren.",
+      "quelle": "BGBl. II Nr. 1/2023"
+    },
+    {
+      "id": "deutsch.4.le.2",
+      "stufe": 4,
+      "bereich": "le",
+      "bereichLabel": "Lesen",
+      "text": "Die Schülerinnen und Schüler können ihre literarische Kompetenz um die Auseinandersetzung mit Textgattungen, Beschaffenheit und Merkmalen von Texten erweitern und sich in der Anschlusskommunikation über Leseinteressen bzw. Gelesenes selbstständig austauschen.",
+      "quelle": "BGBl. II Nr. 1/2023"
+    },
+    {
+      "id": "deutsch.4.vt.1",
+      "stufe": 4,
+      "bereich": "vt",
+      "bereichLabel": "Verfassen von Texten",
+      "text": "Die Schülerinnen und Schüler können unterschiedliche Schreibabsichten (erzählen, informieren, notieren, appellieren) nutzen, Texte sinnvoll planen und mit bewusstem Einsatz sprachlicher Mittel und unter Nutzung von unterschiedlichen Informationsquellen verfassen.",
+      "quelle": "BGBl. II Nr. 1/2023"
+    },
+    {
+      "id": "deutsch.4.vt.2",
+      "stufe": 4,
+      "bereich": "vt",
+      "bereichLabel": "Verfassen von Texten",
+      "text": "Die Schülerinnen und Schüler können adressatengerechte Texte unter Einsatz von Überarbeitungsstrategien überprüfen, mit Hilfsmitteln in analoger und digitaler Form berichtigen, besonders gut gelungene Textstellen erkennen und gewonnene Erkenntnisse adaptieren.",
+      "quelle": "BGBl. II Nr. 1/2023"
+    },
+    {
+      "id": "deutsch.4.rs.1",
+      "stufe": 4,
+      "bereich": "rs",
+      "bereichLabel": "(Recht-)Schreiben und Sprachbetrachtung",
+      "text": "Die Schülerinnen und Schüler können beim Ab- und Aufschreiben auf erworbenes Regelwissen zurückgreifen sowie von rechtschreibmäßig gesicherten Wörtern zur Schreibung anderer Wortformen gelangen.",
+      "quelle": "BGBl. II Nr. 1/2023"
+    },
+    {
+      "id": "deutsch.4.rs.2",
+      "stufe": 4,
+      "bereich": "rs",
+      "bereichLabel": "(Recht-)Schreiben und Sprachbetrachtung",
+      "text": "Die Schülerinnen und Schüler können erworbene Rechtschreibstrategien für normgerechtes Schreiben nutzen, ihre Schreibung von Wörtern begründen sowie unterschiedliche Medien als Rechtschreibhilfe einsetzen.",
+      "quelle": "BGBl. II Nr. 1/2023"
+    },
+    {
+      "id": "deutsch.4.rs.3",
+      "stufe": 4,
+      "bereich": "rs",
+      "bereichLabel": "(Recht-)Schreiben und Sprachbetrachtung",
+      "text": "Die Schülerinnen und Schüler können das Wissen über Wortzusammensetzungen nutzen sowie sinnverwandte Wörter in ihren unterschiedlichen Bedeutungen erkennen und begründet einsetzen.",
+      "quelle": "BGBl. II Nr. 1/2023"
+    },
+    {
+      "id": "deutsch.4.rs.4",
+      "stufe": 4,
+      "bereich": "rs",
+      "bereichLabel": "(Recht-)Schreiben und Sprachbetrachtung",
+      "text": "Die Schülerinnen und Schüler können die verschiedenen Zeitformen in Texten erkennen und adäquat anwenden, direkte Rede gebrauchen, Satzglieder unterscheiden und die wichtigsten bestimmen und richtig benennen.",
+      "quelle": "BGBl. II Nr. 1/2023"
+    }
+  ]
+}
