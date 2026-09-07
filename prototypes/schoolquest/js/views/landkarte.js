@@ -8,7 +8,7 @@
   const progress = window.SchoolQuestProgress;
 
   function render(container) {
-    state = store.loadState();
+    const state = store.loadState();
     container.innerHTML = '<h2>🗺️ Lernlandkarte</h2>';
     const avatar = state.avatare.find((a) => a.id === state.aktiveAvatare);
     if (!avatar) {

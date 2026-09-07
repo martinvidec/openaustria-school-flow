@@ -99,6 +99,10 @@ sandbox.window.LEHRPLAN_DEUTSCH = { fachLabel: 'Deutsch', kompetenzen: [] };
 sandbox.window.AVATARE = { avatare: [{ icon: '🦊', name: 'Fuchs' }] };
 sandbox.window.QUESTS = [{ id: 'q1', titel: 'Demo', fach: 'mathematik', stufe: 3, kompetenz: 'mathe.3.zd.1', requires: [], bestehensgrenze: 0.8, aufgaben: [], loesungstexte: [] }];
 sandbox.window.SchoolQuestSchueler.render(schuelerPanel);
+const lehrerPanel = { innerHTML: '', children: [], appendChild: (c) => lehrerPanel.children.push(c), prepend: () => {}, querySelectorAll: () => [], querySelector: () => ({ appendChild: () => {} }) };
+sandbox.window.SchoolQuestLehrer.render(lehrerPanel);
+const landkartePanel = { innerHTML: '', children: [], appendChild: (c) => landkartePanel.children.push(c), prepend: () => {}, querySelectorAll: () => [], querySelector: () => ({ appendChild: () => {} }) };
+sandbox.window.SchoolQuestLandkarte.render(landkartePanel);
 // Nach render() darf kein Crash passiert sein; der State muss lesbar sein:
 assert.ok(Array.isArray(sandbox.window.SchoolQuestStore.loadState().avatare), 'state.avatare nach render lesbar');
 
