@@ -31,8 +31,23 @@ name: Playwright E2E
 on:
   pull_request:
     branches: [main]
+    # Issue #196: Docs-/Prototypes-only-PRs skippen die 38min-E2E-Suite.
+    # Wenn eine dieser Pfade trotzdem App-Code beruehrt (z.B. ein Proto-
+    # typ, der packages/shared importiert — prototypes/ ist aber bewusst
+    # dependency-frei), reicht ein push auf den PR-Branch mit leerem Diff-
+    # Commit oder workflow_dispatch zum Neu-Anstossen.
+    paths-ignore:
+      - 'prototypes/**'
+      - 'docs/**'
+      - '**.md'
+      - '.planning/**'
   push:
     branches: [main]
+    paths-ignore:
+      - 'prototypes/**'
+      - 'docs/**'
+      - '**.md'
+      - '.planning/**'
   workflow_dispatch:
 
 jobs:
