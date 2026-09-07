@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SchoolQuest — Volksschule 1–4</title>
+  <style>
+    :root { color-scheme: light; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      max-width: 720px; margin: 4rem auto; padding: 0 1.5rem;
+      color: #1f2937; background: #f8fafc; line-height: 1.6;
+    }
+    h1 { font-size: 1.6rem; }
+    .card {
+      background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+      padding: 1.25rem 1.5rem; margin: 1.5rem 0;
+    }
+    .badge {
+      display: inline-block; background: #fef3c7; color: #92400e;
+      padding: .15rem .6rem; border-radius: 999px; font-size: .8rem; font-weight: 600;
+    }
+    code { background: #eef2f7; padding: .1rem .35rem; border-radius: 4px; }
+    a { color: #2563eb; }
+  </style>
+</head>
+<body>
+  <h1>🎓 SchoolQuest — Volksschule 1–4</h1>
+  <p><span class="badge">Prototyp — Work in Progress</span></p>
+  <div class="card">
+    <h2>Was wird hier entstehen?</h2>
+    <p>Eine Lern-Quest-App für die österreichische Volksschule (Stufen 1–4) auf Basis des
+    neuen Lehrplans (BGBl. II Nr. 1/2023): vollständige Inhalte + interaktive Quests,
+    damit Lehrer ohne zusätzliche Materialien unterrichten können.</p>
+    <p>MVP-Fokus: <strong>Deutsch &amp; Mathematik (3.–4. Stufe)</strong>.</p>
+  </div>
+  <div class="card">
+    <h2>Nächste Schritte</h2>
+    <ol>
+      <li>Konzeptdokument &amp; Spec (Workflow: concept-analysis-spec)</li>
+      <li>Datenmodell: Fach → Stufe → Kompetenz → Quest (aus Lehrplan-Research)</li>
+      <li>Quest-Engine (Browser-only, localStorage)</li>
+      <li>Inhalts-Pipeline aus <code>research/vs-lehrplan-spec/</code></li>
+    </ol>
+  </div>
+  <p>Geschwister-Prototyp: <a href="../stundenplaner/">Stundenplaner</a> ·
+     Hauptprojekt: <a href="https://github.com/martinvidec/openaustria-school-flow">openaustria-school-flow</a></p>
+</body>
+</html>
