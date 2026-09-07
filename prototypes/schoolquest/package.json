@@ -1,0 +1,9 @@
+{
+  "name": "schoolquest-prototype",
+  "private": true,
+  "type": "commonjs",
+  "description": "Browser-only SchoolQuest-Prototyp (Volksschule 1-4) — Sidecar zu OpenAustria SchoolFlow. package.json existiert nur für die Node-Tests der DOM-freien Engine/Store-Module.",
+  "scripts": {
+    "test": "node tests/store-test.js && node tests/engine-test.js"
+  }
+}

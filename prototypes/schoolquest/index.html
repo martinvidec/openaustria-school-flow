@@ -4,46 +4,48 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SchoolQuest — Volksschule 1–4</title>
-  <style>
-    :root { color-scheme: light; }
-    body {
-      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-      max-width: 720px; margin: 4rem auto; padding: 0 1.5rem;
-      color: #1f2937; background: #f8fafc; line-height: 1.6;
-    }
-    h1 { font-size: 1.6rem; }
-    .card {
-      background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
-      padding: 1.25rem 1.5rem; margin: 1.5rem 0;
-    }
-    .badge {
-      display: inline-block; background: #fef3c7; color: #92400e;
-      padding: .15rem .6rem; border-radius: 999px; font-size: .8rem; font-weight: 600;
-    }
-    code { background: #eef2f7; padding: .1rem .35rem; border-radius: 4px; }
-    a { color: #2563eb; }
-  </style>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/app.js" defer></script>
 </head>
 <body>
-  <h1>🎓 SchoolQuest — Volksschule 1–4</h1>
-  <p><span class="badge">Prototyp — Work in Progress</span></p>
-  <div class="card">
-    <h2>Was wird hier entstehen?</h2>
-    <p>Eine Lern-Quest-App für die österreichische Volksschule (Stufen 1–4) auf Basis des
-    neuen Lehrplans (BGBl. II Nr. 1/2023): vollständige Inhalte + interaktive Quests,
-    damit Lehrer ohne zusätzliche Materialien unterrichten können.</p>
-    <p>MVP-Fokus: <strong>Deutsch &amp; Mathematik (3.–4. Stufe)</strong>.</p>
-  </div>
-  <div class="card">
-    <h2>Nächste Schritte</h2>
-    <ol>
-      <li>Konzeptdokument &amp; Spec (Workflow: concept-analysis-spec)</li>
-      <li>Datenmodell: Fach → Stufe → Kompetenz → Quest (aus Lehrplan-Research)</li>
-      <li>Quest-Engine (Browser-only, localStorage)</li>
-      <li>Inhalts-Pipeline aus <code>research/vs-lehrplan-spec/</code></li>
-    </ol>
-  </div>
-  <p>Geschwister-Prototyp: <a href="../stundenplaner/">Stundenplaner</a> ·
-     Hauptprojekt: <a href="https://github.com/martinvidec/openaustria-school-flow">openaustria-school-flow</a></p>
+  <header class="topbar">
+    <h1>🎓 SchoolQuest</h1>
+    <nav class="ansicht-switcher" role="tablist" aria-label="Ansichten">
+      <button class="ansicht-btn aktiv" data-ansicht="schueler" role="tab" aria-selected="true">Schüler</button>
+      <button class="ansicht-btn" data-ansicht="lehrer" role="tab" aria-selected="false">Lehrer</button>
+      <button class="ansicht-btn" data-ansicht="landkarte" role="tab" aria-selected="false">Landkarte</button>
+    </nav>
+  </header>
+
+  <main id="app">
+    <section class="ansicht" id="ansicht-schueler" data-ansicht-panel="schueler">
+      <div class="placeholder-card">
+        <h2>👋 Hallo!</h2>
+        <p>Der Schüler-Modus wird in Issue #202 (#5) implementiert.</p>
+      </div>
+    </section>
+
+    <section class="ansicht" id="ansicht-lehrer" data-ansicht-panel="lehrer" hidden>
+      <div class="placeholder-card">
+        <h2>🧑‍🏫 Lehrer-Dashboard</h2>
+        <p>Das Lehrer-Dashboard wird in Issue #203 (#6) implementiert.</p>
+      </div>
+    </section>
+
+    <section class="ansicht" id="ansicht-landkarte" data-ansicht-panel="landkarte" hidden>
+      <div class="placeholder-card">
+        <h2>🗺️ Lernlandkarte</h2>
+        <p>Die Lernlandkarte wird in Issue #204 (#7) implementiert.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>SchoolQuest — UI-Prototyp · kein Backend, Daten bleiben lokal</span>
+    <button id="btn-export" type="button">⬇ Export</button>
+    <button id="btn-import" type="button">⬆ Import</button>
+    <button id="btn-reset" type="button">🗑 Zurücksetzen</button>
+    <input type="file" id="file-import" accept="application/json" hidden />
+  </footer>
 </body>
 </html>
