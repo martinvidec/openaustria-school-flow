@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SchoolQuest — Volksschule 1–4</title>
   <link rel="stylesheet" href="css/style.css" />
+  <script src="js/store.js"></script>
+  <script src="js/engine/quest-engine.js"></script>
+  <script src="js/engine/verteilung.js"></script>
+  <script src="js/engine/progress.js"></script>
+  <script src="js/views/schueler.js"></script>
   <script src="js/app.js" defer></script>
 </head>
 <body>
@@ -19,10 +24,7 @@
 
   <main id="app">
     <section class="ansicht" id="ansicht-schueler" data-ansicht-panel="schueler">
-      <div class="placeholder-card">
-        <h2>👋 Hallo!</h2>
-        <p>Der Schüler-Modus wird in Issue #202 (#5) implementiert.</p>
-      </div>
+      <p class="loading-hint">Lade Quests…</p>
     </section>
 
     <section class="ansicht" id="ansicht-lehrer" data-ansicht-panel="lehrer" hidden>

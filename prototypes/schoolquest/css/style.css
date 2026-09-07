@@ -56,3 +56,84 @@ main { max-width: 960px; margin: 1.5rem auto; padding: 0 1.25rem; }
   .topbar, .footer, .ansicht-switcher { display: none; }
   body { background: #fff; }
 }
+
+
+/* ---------- Schüler-Modus (#202) ---------- */
+.avatar-list { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1rem 0; }
+.avatar-card {
+  display: flex; flex-direction: column; align-items: center; gap: .25rem;
+  min-width: 110px; min-height: 44px; padding: .75rem;
+  border: 2px solid #cbd5e1; border-radius: 12px; background: #fff;
+  font: inherit; cursor: pointer;
+}
+.avatar-card.aktiv { border-color: #2563eb; background: #eff6ff; }
+.avatar-icon { font-size: 2rem; }
+
+.icon-grid { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0; }
+.icon-btn {
+  min-height: 44px; min-width: 44px; font-size: 1.4rem;
+  border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; cursor: pointer;
+}
+.icon-btn.aktiv { border-color: #2563eb; background: #eff6ff; }
+
+.fach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: .75rem; margin: 1rem 0; }
+.fach-card {
+  display: flex; flex-direction: column; gap: .25rem; padding: 1rem;
+  border: 2px solid #cbd5e1; border-radius: 12px; background: #fff;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.fach-card:hover:not(:disabled) { border-color: #2563eb; }
+.fach-card:disabled { opacity: .5; cursor: not-allowed; }
+.muted { color: #64748b; font-size: .85rem; }
+
+.bereich-section { margin: 1.25rem 0; }
+.bereich-section h3 { border-bottom: 1px solid #e2e8f0; padding-bottom: .25rem; }
+.quest-row {
+  display: flex; justify-content: space-between; align-items: center; gap: .5rem;
+  width: 100%; min-height: 44px; margin: .35rem 0; padding: .55rem .9rem;
+  border: 1px solid #e2e8f0; border-radius: 8px; background: #fff;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.quest-row:hover:not(:disabled) { border-color: #2563eb; }
+.quest-row:disabled { opacity: .55; cursor: not-allowed; }
+.status-gesperrt { color: #94a3b8; }
+.status-bestanden { border-color: #16a34a; background: #f0fdf4; }
+.status-versucht { border-color: #f59e0b; }
+
+.aufgabe-card {
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+  padding: 1.25rem 1.5rem; margin: 1rem 0;
+}
+.aufgabe-frage { font-size: 1.1rem; font-weight: 600; }
+.progress-info { color: #64748b; font-size: .85rem; }
+.antwort-wrap { margin: 1rem 0; display: flex; flex-direction: column; gap: .5rem; }
+.option-btn {
+  text-align: left; min-height: 44px; padding: .6rem .9rem;
+  border: 1px solid #cbd5e1; border-radius: 8px; background: #fff;
+  font: inherit; cursor: pointer;
+}
+.option-btn:hover { border-color: #2563eb; }
+.option-btn.ausgewaehlt { border-color: #2563eb; background: #eff6ff; }
+.eingabe-feld { min-height: 44px; padding: .6rem .9rem; font: inherit; border: 1px solid #cbd5e1; border-radius: 8px; }
+.zuordnungs-row { display: flex; align-items: center; gap: .75rem; }
+.zuordnungs-row span { min-width: 180px; }
+.zuordnungs-row select { min-height: 44px; font: inherit; padding: .3rem; }
+.loesung-hinweis { background: #f1f5f9; border-radius: 8px; padding: .6rem .9rem; }
+.loesung-hinweis.richtig { background: #f0fdf4; }
+.loesung-hinweis.teils { background: #fffbeb; }
+
+.ergebnis-card {
+  background: #fff; border: 2px solid #e2e8f0; border-radius: 12px;
+  padding: 1.5rem; margin: 1rem 0; text-align: center;
+}
+.ergebnis-card.bestanden { border-color: #16a34a; background: #f0fdf4; }
+.ergebnis-card strong { font-size: 1.3rem; }
+
+.btn-primary, .btn-secondary {
+  min-height: 44px; padding: .55rem 1.1rem; margin: .25rem .25rem .25rem 0;
+  border-radius: 8px; font: inherit; font-weight: 600; cursor: pointer;
+}
+.btn-primary { background: #2563eb; color: #fff; border: none; }
+.btn-primary:hover { background: #1d4ed8; }
+.btn-secondary { background: #fff; border: 1px solid #cbd5e1; }
+.loading-hint { color: #64748b; }
