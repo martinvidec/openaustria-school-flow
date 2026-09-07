@@ -1,16 +1,58 @@
 'use strict';
 /**
- * SchoolQuest App-Shell — Ansichtsumschalter + Store-Initialisierung + Import/Export.
- * Einstiegspunkt (defer). UI-Module folgen in Issue #202/#203.
+ * SchoolQuest App-Shell — Daten laden (fetch), Ansichtsumschalter, Import/Export.
+ * Einstiegspunkt. Lägt JSON-Daten (lehrplan, avatare, quests) auf window und
+ * startet dann die Schüler-Ansicht.
  */
 (function () {
   const store = window.SchoolQuestStore;
   let state = null;
 
-  function init() {
+  async function ladeJson(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Fehler beim Laden ${url}: ${res.status}`);
+    return res.json();
+  }
+
+  async function ladeQuests() {
+    // MVP: feste Liste (42 Dateien) — issue #204 ersetzt das durch manifest.json
+    const manifest = [
+      'q-mathe-3-zd-1','q-mathe-3-zd-2','q-mathe-3-op-1','q-mathe-3-op-2','q-mathe-3-op-3',
+      'q-mathe-3-gr-1','q-mathe-3-gr-2','q-mathe-3-er-1','q-mathe-3-er-1b','q-mathe-3-er-2','q-mathe-3-er-3',
+      'q-mathe-4-zd-1','q-mathe-4-zd-2','q-mathe-4-zd-3','q-mathe-4-op-1','q-mathe-4-op-2',
+      'q-mathe-4-gr-1','q-mathe-4-gr-2','q-mathe-4-er-1','q-mathe-4-er-2','q-mathe-4-er-3',
+      'q-deutsch-3-le-1','q-deutsch-3-le-2','q-deutsch-3-hs-1','q-deutsch-3-vt-1','q-deutsch-3-vt-2',
+      'q-deutsch-3-rs-1','q-deutsch-3-rs-2','q-deutsch-3-rs-2b','q-deutsch-3-rs-3','q-deutsch-3-rs-4',
+      'q-deutsch-4-le-1','q-deutsch-4-le-2','q-deutsch-4-hs-1','q-deutsch-4-hs-2','q-deutsch-4-vt-1',
+      'q-deutsch-4-vt-1b','q-deutsch-4-vt-2','q-deutsch-4-rs-1','q-deutsch-4-rs-2','q-deutsch-4-rs-3','q-deutsch-4-rs-4',
+    ];
+    const quests = await Promise.all(manifest.map((id) => ladeJson(`data/quests/${id}.json`)));
+    return quests;
+  }
+
+  async function init() {
     state = store.loadState();
-    setupViewSwitcher();
-    setupDataButtons();
+    try {
+      const [mathematik, deutsch, avatare, quests] = await Promise.all([
+        ladeJson('data/lehrplan_mathematik.json'),
+        ladeJson('data/lehrplan_deutsch.json'),
+        ladeJson('data/avatare.json'),
+        ladeQuests(),
+      ]);
+      window.LEHRPLAN_MATHEMATIK = mathematik;
+      window.LEHRPLAN_DEUTSCH = deutsch;
+      window.AVATARE = avatare;
+      window.QUESTS = quests;
+      setupViewSwitcher();
+      setupDataButtons();
+      // Schüler-Ansicht starten
+      const schuelerPanel = document.getElementById('ansicht-schueler');
+      schuelerPanel.innerHTML = '';
+      window.SchoolQuestSchueler.render(schuelerPanel);
+    } catch (e) {
+      document.getElementById('ansicht-schueler').innerHTML =
+        `<div class="placeholder-card"><h2>⚠️ Fehler beim Laden</h2><p>${e.message}</p><p>Hinweis: Bei file:// startet die App nicht (CORS) — nutze einen lokalen Server: <code>python3 -m http.server</code></p></div>`;
+    }
   }
 
   function setupViewSwitcher() {
@@ -56,7 +98,8 @@
           return;
         }
         state = result.state;
-        alert('Import erfolgreich.');
+        alert('Import erfolgreich. Seite neu laden, um den Stand zu sehen.');
+        location.reload();
       };
       reader.readAsText(file);
       ev.target.value = '';
@@ -65,7 +108,7 @@
     document.getElementById('btn-reset')?.addEventListener('click', () => {
       if (!confirm('Wirklich alle lokalen SchoolQuest-Daten löschen?')) return;
       state = store.resetState();
-      alert('Daten zurückgesetzt.');
+      location.reload();
     });
   }
 
