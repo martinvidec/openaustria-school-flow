@@ -4,12 +4,41 @@
   "fach": "deutsch",
   "stufe": 4,
   "kompetenz": "deutsch.4.rs.2",
-  "requires": ["quest-deutsch-4-rs-1"],
+  "requires": [
+    "deutsch.4.rs.1"
+  ],
   "bestehensgrenze": 0.8,
   "aufgaben": [
-    { "typ": "quiz", "frage": "Du bist dir bei 'Schwester' unsicher. Strategie-Kette:", "optionen": ["raten", "Aussprechen → Verlängern → ggf. Wörterbuch", "weglassen"], "loesung": 1 },
-    { "typ": "quiz", "frage": "Welche digitale Rechtschreibhilfe ist sinnvoll?", "optionen": ["Rechtschreibprüfung + Duden-App", "Emoji-Tastatur", "Übersetzer"], "loesung": 0 },
-    { "typ": "quiz", "frage": "Warum die Schreibung begründen können?", "optionen": ["praktisch fürs Gedächtnis", "zeigt Regelwissen — nächstes Mal ohne nachzuschauen", "nur fürs Lehrer-Fragen"], "loesung": 1 }
+    {
+      "typ": "quiz",
+      "frage": "Du bist dir bei 'Schwester' unsicher. Strategie-Kette:",
+      "optionen": [
+        "raten",
+        "Aussprechen → Verlängern → ggf. Wörterbuch",
+        "weglassen"
+      ],
+      "loesung": 1
+    },
+    {
+      "typ": "quiz",
+      "frage": "Welche digitale Rechtschreibhilfe ist sinnvoll?",
+      "optionen": [
+        "Rechtschreibprüfung + Duden-App",
+        "Emoji-Tastatur",
+        "Übersetzer"
+      ],
+      "loesung": 0
+    },
+    {
+      "typ": "quiz",
+      "frage": "Warum die Schreibung begründen können?",
+      "optionen": [
+        "praktisch fürs Gedächtnis",
+        "zeigt Regelwissen — nächstes Mal ohne nachzuschauen",
+        "nur fürs Lehrer-Fragen"
+      ],
+      "loesung": 1
+    }
   ],
   "loesungstexte": [
     "Aussprechen → Verlängern → Wörterbuch = sichere Kette.",

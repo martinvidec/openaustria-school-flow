@@ -4,18 +4,50 @@
   "fach": "deutsch",
   "stufe": 3,
   "kompetenz": "deutsch.3.rs.2",
-  "requires": ["quest-deutsch-3-rs-2"],
+  "requires": [
+    "deutsch.3.rs.2"
+  ],
   "bestehensgrenze": 0.8,
   "aufgaben": [
     {
       "typ": "matching",
       "frage": "Welche Strategie hilft bei welchem Wort?",
-      "loesung": [["Hasen", "verlängern: Has-en"], ["Fußball", "ß nach langem Vokal"], ["Handschuh", "Wortfamilie Hand"], ["sinnlos", "Wortfamilie sinn"]]
+      "loesung": [
+        [
+          "Hasen",
+          "verlängern: Has-en"
+        ],
+        [
+          "Fußball",
+          "ß nach langem Vokal"
+        ],
+        [
+          "Handschuh",
+          "Wortfamilie Hand"
+        ],
+        [
+          "sinnlos",
+          "Wortfamilie sinn"
+        ]
+      ]
     },
     {
       "typ": "matching",
       "frage": "Wortfamilie zuordnen:",
-      "loesung": [["lesen", "lesbar"], ["fahren", "Fahrrad"], ["sinn", "sinnlos"]]
+      "loesung": [
+        [
+          "lesen",
+          "lesbar"
+        ],
+        [
+          "fahren",
+          "Fahrrad"
+        ],
+        [
+          "sinn",
+          "sinnlos"
+        ]
+      ]
     }
   ],
   "loesungstexte": [

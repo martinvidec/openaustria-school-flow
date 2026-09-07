@@ -4,13 +4,46 @@
   "fach": "mathematik",
   "stufe": 4,
   "kompetenz": "mathe.4.zd.2",
-  "requires": ["quest-mathe-4-zd-1"],
+  "requires": [
+    "mathe.4.zd.1"
+  ],
   "bestehensgrenze": 0.8,
   "aufgaben": [
-    { "typ": "quiz", "frage": "1/2 von 8 Äpfeln = ?", "optionen": ["2", "3", "4", "6"], "loesung": 2 },
-    { "typ": "eingabe", "frage": "3/4 von 8 = ? (Zahl)", "loesung": ["6"] },
-    { "typ": "quiz", "frage": "Welcher Bruchteil ist größer?", "optionen": ["1/8", "1/4", "beide gleich"], "loesung": 1 },
-    { "typ": "eingabe", "frage": "1/2 + 1/4 einer Pizza = wie viele Viertel? (Zahl, z.B. '3')", "loesung": ["3"] }
+    {
+      "typ": "quiz",
+      "frage": "1/2 von 8 Äpfeln = ?",
+      "optionen": [
+        "2",
+        "3",
+        "4",
+        "6"
+      ],
+      "loesung": 2
+    },
+    {
+      "typ": "eingabe",
+      "frage": "3/4 von 8 = ? (Zahl)",
+      "loesung": [
+        "6"
+      ]
+    },
+    {
+      "typ": "quiz",
+      "frage": "Welcher Bruchteil ist größer?",
+      "optionen": [
+        "1/8",
+        "1/4",
+        "beide gleich"
+      ],
+      "loesung": 1
+    },
+    {
+      "typ": "eingabe",
+      "frage": "1/2 + 1/4 einer Pizza = wie viele Viertel? (Zahl, z.B. '3')",
+      "loesung": [
+        "3"
+      ]
+    }
   ],
   "loesungstexte": [
     "8 ÷ 2 = 4 Äpfel.",

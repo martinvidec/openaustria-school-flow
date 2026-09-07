@@ -4,12 +4,43 @@
   "fach": "mathematik",
   "stufe": 4,
   "kompetenz": "mathe.4.zd.3",
-  "requires": ["quest-mathe-3-zd-2"],
+  "requires": [
+    "mathe.3.zd.2"
+  ],
   "bestehensgrenze": 0.8,
   "aufgaben": [
-    { "typ": "quiz", "frage": "Du wirfst 10× eine Münze: 7× Kopf, 3× Zahl. Wie oft war Kopf in absoluter Häufigkeit?", "optionen": ["3", "7", "10", "0.7"], "loesung": 1 },
-    { "typ": "quiz", "frage": "Bei 20 Würfen eines Würfels kamen 5× die 6. Relative Häufigkeit der 6?", "optionen": ["5", "20", "5/20 = 1/4", "1/5"], "loesung": 2 },
-    { "typ": "quiz", "frage": "Zwei Becher: A hat 3 rote + 1 weiße Kugel, B hat 1 rote + 3 weiße. Aus welchem Becher ist Rot wahrscheinlicher?", "optionen": ["A", "B", "gleich"], "loesung": 0 }
+    {
+      "typ": "quiz",
+      "frage": "Du wirfst 10× eine Münze: 7× Kopf, 3× Zahl. Wie oft war Kopf in absoluter Häufigkeit?",
+      "optionen": [
+        "3",
+        "7",
+        "10",
+        "0.7"
+      ],
+      "loesung": 1
+    },
+    {
+      "typ": "quiz",
+      "frage": "Bei 20 Würfen eines Würfels kamen 5× die 6. Relative Häufigkeit der 6?",
+      "optionen": [
+        "5",
+        "20",
+        "5/20 = 1/4",
+        "1/5"
+      ],
+      "loesung": 2
+    },
+    {
+      "typ": "quiz",
+      "frage": "Zwei Becher: A hat 3 rote + 1 weiße Kugel, B hat 1 rote + 3 weiße. Aus welchem Becher ist Rot wahrscheinlicher?",
+      "optionen": [
+        "A",
+        "B",
+        "gleich"
+      ],
+      "loesung": 0
+    }
   ],
   "loesungstexte": [
     "Absolut = gezählt: 7× Kopf.",

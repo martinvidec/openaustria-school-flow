@@ -4,12 +4,41 @@
   "fach": "deutsch",
   "stufe": 4,
   "kompetenz": "deutsch.4.hs.2",
-  "requires": ["quest-deutsch-4-hs-1"],
+  "requires": [
+    "deutsch.4.hs.1"
+  ],
   "bestehensgrenze": 0.8,
   "aufgaben": [
-    { "typ": "quiz", "frage": "Du erzählst der Klasse von deinem Urlaub. Was ist adressatengerecht?", "optionen": ["Fachjargon", "verständliche Details, die die Klasse interessieren", "nur Daten aufzählen"], "loesung": 1 },
-    { "typ": "quiz", "frage": "Situationsgerecht beim Klassenrat: eher …", "optionen": ["Slag-Sprache und Schreien", "Standardsprache, ruhig, sachlich", "Dialekt nur"], "loesung": 1 },
-    { "typ": "quiz", "frage": "Monologisch heißt: du sprichst …", "optionen": ["mit einem Partner abwechselnd", "allein vor allen", "nur schriftlich"], "loesung": 1 }
+    {
+      "typ": "quiz",
+      "frage": "Du erzählst der Klasse von deinem Urlaub. Was ist adressatengerecht?",
+      "optionen": [
+        "Fachjargon",
+        "verständliche Details, die die Klasse interessieren",
+        "nur Daten aufzählen"
+      ],
+      "loesung": 1
+    },
+    {
+      "typ": "quiz",
+      "frage": "Situationsgerecht beim Klassenrat: eher …",
+      "optionen": [
+        "Slag-Sprache und Schreien",
+        "Standardsprache, ruhig, sachlich",
+        "Dialekt nur"
+      ],
+      "loesung": 1
+    },
+    {
+      "typ": "quiz",
+      "frage": "Monologisch heißt: du sprichst …",
+      "optionen": [
+        "mit einem Partner abwechselnd",
+        "allein vor allen",
+        "nur schriftlich"
+      ],
+      "loesung": 1
+    }
   ],
   "loesungstexte": [
     "Denken an den Hörer: verständlich, spannend, passend.",

@@ -10,23 +10,37 @@
     {
       "typ": "eingabe",
       "frage": "Schreibe die Zahl: 3 Hunderter, 2 Zehner, 7 Einer.",
-      "loesung": ["327"]
+      "loesung": [
+        "327"
+      ]
     },
     {
       "typ": "quiz",
       "frage": "Welche Zahl ist die größte?",
-      "optionen": ["689", "698", "869", "968"],
+      "optionen": [
+        "689",
+        "698",
+        "869",
+        "968"
+      ],
       "loesung": 3
     },
     {
       "typ": "eingabe",
       "frage": "Runde 762 auf den nächsten Hunderter.",
-      "loesung": ["800"]
+      "loesung": [
+        "800"
+      ]
     },
     {
       "typ": "quiz",
       "frage": "Welcher Vergleich stimmt?",
-      "optionen": ["543 < 534", "499 > 500", "610 = 610", "725 < 715"],
+      "optionen": [
+        "543 < 534",
+        "499 > 500",
+        "610 = 610",
+        "725 < 715"
+      ],
       "loesung": 2
     }
   ],

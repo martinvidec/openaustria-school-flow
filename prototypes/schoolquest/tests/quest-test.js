@@ -77,7 +77,7 @@ for (const q of quests) visit(q.id, []);
 // requires-Refs existieren (jetzt sind alle questIds bekannt)
 for (const q of quests) {
   for (const r of q.requires || []) {
-    assert.ok(questIds.has(r), `${q.id}: requires-Ref unbekannt: ${r}`);
+    assert.ok(lehrplanIds.has(r), `${q.id}: requires-Ref (Kompetenz-ID) unbekannt: ${r}`);
   }
 }
 

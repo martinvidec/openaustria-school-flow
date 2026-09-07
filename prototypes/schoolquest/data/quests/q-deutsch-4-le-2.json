@@ -4,12 +4,41 @@
   "fach": "deutsch",
   "stufe": 4,
   "kompetenz": "deutsch.4.le.2",
-  "requires": ["quest-deutsch-3-le-2"],
+  "requires": [
+    "deutsch.3.le.2"
+  ],
   "bestehensgrenze": 0.8,
   "aufgaben": [
-    { "typ": "quiz", "frage": "'Es war einmal ein kleiner Drache…' — Textgattung?", "optionen": ["Märchen", "Bericht", "Rezept"], "loesung": 0 },
-    { "typ": "quiz", "frage": "Was ist typisch für einen Bericht?", "optionen": ["Fabeln mit Moral", "sachlich, Fakten, Zeitangaben", "Reimpaare"], "loesung": 1 },
-    { "typ": "quiz", "frage": "Anschlusskommunikation heißt: nach dem Lesen …", "optionen": ["mit anderen darüber sprechen/austauschen", "Buch schließen und nichts sagen", "sofort fernsehen"], "loesung": 0 }
+    {
+      "typ": "quiz",
+      "frage": "'Es war einmal ein kleiner Drache…' — Textgattung?",
+      "optionen": [
+        "Märchen",
+        "Bericht",
+        "Rezept"
+      ],
+      "loesung": 0
+    },
+    {
+      "typ": "quiz",
+      "frage": "Was ist typisch für einen Bericht?",
+      "optionen": [
+        "Fabeln mit Moral",
+        "sachlich, Fakten, Zeitangaben",
+        "Reimpaare"
+      ],
+      "loesung": 1
+    },
+    {
+      "typ": "quiz",
+      "frage": "Anschlusskommunikation heißt: nach dem Lesen …",
+      "optionen": [
+        "mit anderen darüber sprechen/austauschen",
+        "Buch schließen und nichts sagen",
+        "sofort fernsehen"
+      ],
+      "loesung": 0
+    }
   ],
   "loesungstexte": [
     "'Es war einmal' = Märchen-Eröffnungsformel.",

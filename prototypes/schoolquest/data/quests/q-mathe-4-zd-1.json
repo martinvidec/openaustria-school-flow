@@ -4,12 +4,38 @@
   "fach": "mathematik",
   "stufe": 4,
   "kompetenz": "mathe.4.zd.1",
-  "requires": ["quest-mathe-3-zd-1"],
+  "requires": [
+    "mathe.3.zd.1"
+  ],
   "bestehensgrenze": 0.8,
   "aufgaben": [
-    { "typ": "eingabe", "frage": "Schreibe als Zahl: 4 Hundertertausender? Nein, genauer: 4 Hunderttausende, 3 Zehntausende, 5 Tausende → die Zahl?", "loesung": ["435000", "435 000"] },
-    { "typ": "quiz", "frage": "Welche Zahl ist am größten?", "optionen": ["999.999", "1.000.000", "987.654", "1.000.001"], "loesung": 3 },
-    { "typ": "eingabe", "frage": "Runde 487.500 auf den nächsten Zehntausender.", "loesung": ["490000", "490 000"] }
+    {
+      "typ": "eingabe",
+      "frage": "Schreibe als Zahl: 4 Hundertertausender? Nein, genauer: 4 Hunderttausende, 3 Zehntausende, 5 Tausende → die Zahl?",
+      "loesung": [
+        "435000",
+        "435 000"
+      ]
+    },
+    {
+      "typ": "quiz",
+      "frage": "Welche Zahl ist am größten?",
+      "optionen": [
+        "999.999",
+        "1.000.000",
+        "987.654",
+        "1.000.001"
+      ],
+      "loesung": 3
+    },
+    {
+      "typ": "eingabe",
+      "frage": "Runde 487.500 auf den nächsten Zehntausender.",
+      "loesung": [
+        "490000",
+        "490 000"
+      ]
+    }
   ],
   "loesungstexte": [
     "4 Hunderttausende + 3 Zehntausende + 5 Tausende = 435.000.",

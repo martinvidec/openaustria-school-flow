@@ -4,12 +4,37 @@
   "fach": "mathematik",
   "stufe": 3,
   "kompetenz": "mathe.3.gr.2",
-  "requires": ["quest-mathe-3-gr-1"],
+  "requires": [
+    "mathe.3.gr.1"
+  ],
   "bestehensgrenze": 0.8,
   "aufgaben": [
-    { "typ": "quiz", "frage": "Es ist 14:30. Wie heißt diese Uhrzeit umgangssprachlich?", "optionen": ["halb 3 nachmittags", "halb 2 nachmittags", "Viertel nach 3", "3 Uhr nachmittags"], "loesung": 0 },
-    { "typ": "eingabe", "frage": "Von 09:00 bis 09:45 vergehen wie viele Minuten? (Zahl)", "loesung": ["45"] },
-    { "typ": "eingabe", "frage": "Der Unterricht beginnt um 08:00 und dauert 55 Minuten. Um wie viel Uhr endet er? (Format HH:MM)", "loesung": ["08:55", "8:55"] }
+    {
+      "typ": "quiz",
+      "frage": "Es ist 14:30. Wie heißt diese Uhrzeit umgangssprachlich?",
+      "optionen": [
+        "halb 3 nachmittags",
+        "halb 2 nachmittags",
+        "Viertel nach 3",
+        "3 Uhr nachmittags"
+      ],
+      "loesung": 0
+    },
+    {
+      "typ": "eingabe",
+      "frage": "Von 09:00 bis 09:45 vergehen wie viele Minuten? (Zahl)",
+      "loesung": [
+        "45"
+      ]
+    },
+    {
+      "typ": "eingabe",
+      "frage": "Der Unterricht beginnt um 08:00 und dauert 55 Minuten. Um wie viel Uhr endet er? (Format HH:MM)",
+      "loesung": [
+        "08:55",
+        "8:55"
+      ]
+    }
   ],
   "loesungstexte": [
     "14:30 = halb 3 (nachmittags) — der Zeiger zeigt auf die 6, die volle Stunde (15) kommt.",

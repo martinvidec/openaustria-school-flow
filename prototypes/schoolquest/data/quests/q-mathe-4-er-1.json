@@ -4,12 +4,43 @@
   "fach": "mathematik",
   "stufe": 4,
   "kompetenz": "mathe.4.er.1",
-  "requires": ["quest-mathe-3-er-1"],
+  "requires": [
+    "mathe.3.er.1"
+  ],
   "bestehensgrenze": 0.8,
   "aufgaben": [
-    { "typ": "quiz", "frage": "Wird das Netz gefaltet, entsteht …? (6 gleiche Quadrate als Netz)", "optionen": ["ein Quader", "ein Würfel", "eine Pyramide"], "loesung": 1 },
-    { "typ": "quiz", "frage": "Wie viele Quadrate braucht das Netz eines Würfels?", "optionen": ["4", "6", "8", "12"], "loesung": 1 },
-    { "typ": "quiz", "frage": "Ein Dorn (Pyramide) mit quadratischer Grundfläche hat wie viele Dreiecksseiten?", "optionen": ["2", "3", "4", "6"], "loesung": 2 }
+    {
+      "typ": "quiz",
+      "frage": "Wird das Netz gefaltet, entsteht …? (6 gleiche Quadrate als Netz)",
+      "optionen": [
+        "ein Quader",
+        "ein Würfel",
+        "eine Pyramide"
+      ],
+      "loesung": 1
+    },
+    {
+      "typ": "quiz",
+      "frage": "Wie viele Quadrate braucht das Netz eines Würfels?",
+      "optionen": [
+        "4",
+        "6",
+        "8",
+        "12"
+      ],
+      "loesung": 1
+    },
+    {
+      "typ": "quiz",
+      "frage": "Ein Dorn (Pyramide) mit quadratischer Grundfläche hat wie viele Dreiecksseiten?",
+      "optionen": [
+        "2",
+        "3",
+        "4",
+        "6"
+      ],
+      "loesung": 2
+    }
   ],
   "loesungstexte": [
     "6 gleiche Quadrate gefaltet → Würfel.",

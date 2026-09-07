@@ -4,12 +4,41 @@
   "fach": "deutsch",
   "stufe": 4,
   "kompetenz": "deutsch.4.rs.1",
-  "requires": ["quest-deutsch-3-rs-2"],
+  "requires": [
+    "deutsch.3.rs.2"
+  ],
   "bestehensgrenze": 0.8,
   "aufgaben": [
-    { "typ": "quiz", "frage": "'Wald' → verlängern: 'Waldes'. Richtig geschrieben:", "optionen": ["Wald", "Walt", "Wall"], "loesung": 0 },
-    { "typ": "quiz", "frage": "'Kreide' — Ableitung: 'kreiden'. Welcher Buchstabe ist sicher?", "optionen": ["k", "kt", "ck"], "loesung": 0 },
-    { "typ": "quiz", "frage": "Von rechtschreibmäßig gesicherten Wörtern ableiten heißt …", "optionen": ["nach感じ schreiben", "Stammwort prüfen, dann ableiten", "raten"], "loesung": 1 }
+    {
+      "typ": "quiz",
+      "frage": "'Wald' → verlängern: 'Waldes'. Richtig geschrieben:",
+      "optionen": [
+        "Wald",
+        "Walt",
+        "Wall"
+      ],
+      "loesung": 0
+    },
+    {
+      "typ": "quiz",
+      "frage": "'Kreide' — Ableitung: 'kreiden'. Welcher Buchstabe ist sicher?",
+      "optionen": [
+        "k",
+        "kt",
+        "ck"
+      ],
+      "loesung": 0
+    },
+    {
+      "typ": "quiz",
+      "frage": "Von rechtschreibmäßig gesicherten Wörtern ableiten heißt …",
+      "optionen": [
+        "nach感じ schreiben",
+        "Stammwort prüfen, dann ableiten",
+        "raten"
+      ],
+      "loesung": 1
+    }
   ],
   "loesungstexte": [
     "Waldes sichert d (Wald → Waldes).",

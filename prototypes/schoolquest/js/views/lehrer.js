@@ -165,7 +165,9 @@
     if (zielW.kompetenzIds.length > 0 && (ziel === 20 || ziel === 40)) return; // Puffer bleibt frei
     quelle.kompetenzIds = quelle.kompetenzIds.filter((x) => x !== kompetenzId);
     zielW.kompetenzIds.push(kompetenzId);
-    store.saveState(state);
+    // Persistierung: verteilungFuer hat den State geladen und mutiert —
+    // frisch laden (mutierte Arrays leben im geladenen Objekt) und speichern
+    store.saveState(getState());
     render(container);
   }
 

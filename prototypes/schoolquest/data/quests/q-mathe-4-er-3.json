@@ -4,12 +4,38 @@
   "fach": "mathematik",
   "stufe": 4,
   "kompetenz": "mathe.4.er.3",
-  "requires": ["quest-mathe-4-er-2"],
+  "requires": [
+    "mathe.4.er.2"
+  ],
   "bestehensgrenze": 0.8,
   "aufgaben": [
-    { "typ": "quiz", "frage": "Ein Quadrat (Seite 2 cm) wird doppelt vergrößert. Neue Seitenlänge?", "optionen": ["4 cm", "6 cm", "8 cm"], "loesung": 0 },
-    { "typ": "quiz", "frage": "Maßstab 1:100 — 1 cm auf dem Plan = wie viel in echt?", "optionen": ["1 cm", "1 m", "10 m"], "loesung": 1 },
-    { "typ": "eingabe", "frage": "Plan 1:1000: Ein Weg ist 5 cm auf dem Plan. Echt: ? m (Zahl)", "loesung": ["50"] }
+    {
+      "typ": "quiz",
+      "frage": "Ein Quadrat (Seite 2 cm) wird doppelt vergrößert. Neue Seitenlänge?",
+      "optionen": [
+        "4 cm",
+        "6 cm",
+        "8 cm"
+      ],
+      "loesung": 0
+    },
+    {
+      "typ": "quiz",
+      "frage": "Maßstab 1:100 — 1 cm auf dem Plan = wie viel in echt?",
+      "optionen": [
+        "1 cm",
+        "1 m",
+        "10 m"
+      ],
+      "loesung": 1
+    },
+    {
+      "typ": "eingabe",
+      "frage": "Plan 1:1000: Ein Weg ist 5 cm auf dem Plan. Echt: ? m (Zahl)",
+      "loesung": [
+        "50"
+      ]
+    }
   ],
   "loesungstexte": [
     "Doppelte Seitenlänge: 2 cm × 2 = 4 cm.",
