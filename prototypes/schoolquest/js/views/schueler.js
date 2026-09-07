@@ -8,9 +8,17 @@
   const engine = window.SchoolQuestEngine;
   const progress = window.SchoolQuestProgress;
 
-  let state = null;
   let aktiveQuest = null; // Quest-Objekt während des Spielens
   let aktuelleAntworten = [];
+
+  // Store-Singleton: IMMER frisch aus dem Store laden (verhindert state=null
+  // durch Modul-Isolation — Bug vom 07.09.2026, Live-Bericht Martin)
+  function getState() {
+    return store.loadState();
+  }
+  function persistState() {
+    store.saveState(getState());
+  }
 
   // ---------- Daten laden ----------
   function ladeDaten() {
@@ -28,6 +36,7 @@
   function renderAvatarAuswahl(container) {
     const d = ladeDaten();
     container.innerHTML = '';
+    const state = getState();
     if (!state.avatare.length) {
       container.innerHTML = '<div class="placeholder-card"><h2>Avatar erstellen</h2></div>';
       const form = document.createElement('div');
@@ -65,9 +74,10 @@
           klassenId: null,
           fortschritt: { quests: {}, badges: [] },
         };
-        state.avatare.push(neuer);
-        state.aktiveAvatare = neuer.id;
-        store.saveState(state);
+        const st = getState();
+        st.avatare.push(neuer);
+        st.aktiveAvatare = neuer.id;
+        persistState();
         renderSchuelerModus(container);
       });
       form.append(input, iconGrid, createBtn);
@@ -77,14 +87,15 @@
     // Avatar-Liste
     const list = document.createElement('div');
     list.className = 'avatar-list';
-    state.avatare.forEach((av) => {
+    getState().avatare.forEach((av) => {
       const card = document.createElement('button');
       card.type = 'button';
-      card.className = 'avatar-card' + (state.aktiveAvatare === av.id ? ' aktiv' : '');
+      card.className = 'avatar-card' + (getState().aktiveAvatare === av.id ? ' aktiv' : '');
       card.innerHTML = `<span class="avatar-icon">${av.avatarIcon}</span><span>${av.pseudonym}</span>`;
       card.addEventListener('click', () => {
-        state.aktiveAvatare = av.id;
-        store.saveState(state);
+        const st = getState();
+        st.aktiveAvatare = av.id;
+        persistState();
         renderFachwahl(container, av);
       });
       list.appendChild(card);
@@ -95,7 +106,8 @@
   // ---------- Fachwahl ----------
   function renderFachwahl(container, avatar) {
     const d = ladeDaten();
-    const stufe = (avatar.klassenId && (state.klassen.find((k) => k.id === avatar.klassenId) || {}).stufe) || 3;
+    const st = getState();
+    const stufe = (avatar.klassenId && (st.klassen.find((k) => k.id === avatar.klassenId) || {}).stufe) || 3;
     container.innerHTML = `<h2>Stufe ${stufe} — Fach wählen</h2>`;
     const grid = document.createElement('div');
     grid.className = 'fach-grid';
@@ -159,7 +171,7 @@
     return { gesperrt: '🔒', offen: '▶️', versucht: '🔄', bestanden: '✅' }[status] || '•';
   }
   function overrideFuer(quest) {
-    return (state.overrides || []).find((o) => o.kompetenzId === quest.kompetenz)?.aktion || null;
+    return (getState().overrides || []).find((o) => o.kompetenzId === quest.kompetenz)?.aktion || null;
   }
 
   // ---------- Quest-Spiel ----------
