@@ -1,0 +1,58 @@
+/* SchoolQuest — Basis-Styles (Spec 04 §7) */
+:root { color-scheme: light; }
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  margin: 0; padding: 0;
+  color: #1f2937; background: #f8fafc;
+  font-size: 16px; /* N4: mindestens 16px */
+  line-height: 1.6;
+}
+
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: .5rem;
+  padding: .75rem 1.25rem;
+  background: #fff; border-bottom: 1px solid #e2e8f0;
+  position: sticky; top: 0; z-index: 10;
+}
+
+.topbar h1 { margin: 0; font-size: 1.25rem; }
+
+.ansicht-switcher { display: flex; gap: .25rem; }
+
+.ansicht-btn {
+  min-height: 44px; /* N4: Touch-Targets ≥ 44px */
+  padding: .4rem .9rem;
+  border: 1px solid #cbd5e1; border-radius: 8px;
+  background: #fff; color: #334155;
+  font: inherit; font-weight: 600; cursor: pointer;
+}
+.ansicht-btn:hover { background: #f1f5f9; }
+.ansicht-btn.aktiv { background: #2563eb; color: #fff; border-color: #2563eb; }
+
+main { max-width: 960px; margin: 1.5rem auto; padding: 0 1.25rem; }
+
+.placeholder-card {
+  background: #fff; border: 1px dashed #cbd5e1; border-radius: 12px;
+  padding: 2rem; text-align: center; color: #64748b;
+}
+
+.footer {
+  max-width: 960px; margin: 2rem auto; padding: 1rem 1.25rem;
+  color: #64748b; font-size: .85rem;
+  display: flex; flex-wrap: wrap; gap: .5rem; align-items: center;
+}
+.footer button {
+  min-height: 44px; padding: .3rem .7rem;
+  border: 1px solid #cbd5e1; border-radius: 6px;
+  background: #fff; font: inherit; cursor: pointer;
+}
+.footer button:hover { background: #f1f5f9; }
+
+@media print {
+  .topbar, .footer, .ansicht-switcher { display: none; }
+  body { background: #fff; }
+}
