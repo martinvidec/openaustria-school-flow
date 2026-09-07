@@ -4,13 +4,42 @@
   "fach": "mathematik",
   "stufe": 3,
   "kompetenz": "mathe.3.op.1",
-  "requires": ["quest-mathe-3-zd-1"],
+  "requires": [
+    "mathe.3.zd.1"
+  ],
   "bestehensgrenze": 0.8,
   "aufgaben": [
-    { "typ": "eingabe", "frage": "456 + 237 = ? (halbschriftlich, Ergebnis)", "loesung": ["693"] },
-    { "typ": "eingabe", "frage": "820 − 445 = ? (halbschriftlich, Ergebnis)", "loesung": ["375"] },
-    { "typ": "eingabe", "frage": "Schätze zuerst, rechne dann: 12 × 8 = ?", "loesung": ["96"] },
-    { "typ": "quiz", "frage": "Überschlagsrechnung: Ist 397 + 512 etwa 900?", "optionen": ["ja, 400+500=900", "nein, etwa 1000", "nein, etwa 800"], "loesung": 0 }
+    {
+      "typ": "eingabe",
+      "frage": "456 + 237 = ? (halbschriftlich, Ergebnis)",
+      "loesung": [
+        "693"
+      ]
+    },
+    {
+      "typ": "eingabe",
+      "frage": "820 − 445 = ? (halbschriftlich, Ergebnis)",
+      "loesung": [
+        "375"
+      ]
+    },
+    {
+      "typ": "eingabe",
+      "frage": "Schätze zuerst, rechne dann: 12 × 8 = ?",
+      "loesung": [
+        "96"
+      ]
+    },
+    {
+      "typ": "quiz",
+      "frage": "Überschlagsrechnung: Ist 397 + 512 etwa 900?",
+      "optionen": [
+        "ja, 400+500=900",
+        "nein, etwa 1000",
+        "nein, etwa 800"
+      ],
+      "loesung": 0
+    }
   ],
   "loesungstexte": [
     "456+237: 400+200=600, 56+37=93 → 693. Kontrolle per Überschlag: 500+200=700 ✓",

@@ -4,12 +4,41 @@
   "fach": "deutsch",
   "stufe": 4,
   "kompetenz": "deutsch.4.vt.2",
-  "requires": ["quest-deutsch-4-vt-1"],
+  "requires": [
+    "deutsch.4.vt.1"
+  ],
   "bestehensgrenze": 0.8,
   "aufgaben": [
-    { "typ": "quiz", "frage": "Du prüfst deinen Text. Prüfreihenfolge (Spec-Empfehlung):", "optionen": ["Rechtschreibung zuerst, dann Inhalt", "Inhalt/Aufbau → Sprache → Rechtschreibung", "nur Länge"], "loesung": 1 },
-    { "typ": "quiz", "frage": "Digitale Hilfsmittel beim Überarbeiten:", "optionen": ["Rechtschreibprüfung, Thesaurus", "Bildschirmhelligkeit", "Schriftgröße maximieren"], "loesung": 0 },
-    { "typ": "quiz", "frage": "'Besonders gut gelungene Textstellen' erkennst du an …", "optionen": ["Länge", "klarer Struktur, passenden Worten, Wirkung", "beliebigen Sätzen"], "loesung": 1 }
+    {
+      "typ": "quiz",
+      "frage": "Du prüfst deinen Text. Prüfreihenfolge (Spec-Empfehlung):",
+      "optionen": [
+        "Rechtschreibung zuerst, dann Inhalt",
+        "Inhalt/Aufbau → Sprache → Rechtschreibung",
+        "nur Länge"
+      ],
+      "loesung": 1
+    },
+    {
+      "typ": "quiz",
+      "frage": "Digitale Hilfsmittel beim Überarbeiten:",
+      "optionen": [
+        "Rechtschreibprüfung, Thesaurus",
+        "Bildschirmhelligkeit",
+        "Schriftgröße maximieren"
+      ],
+      "loesung": 0
+    },
+    {
+      "typ": "quiz",
+      "frage": "'Besonders gut gelungene Textstellen' erkennst du an …",
+      "optionen": [
+        "Länge",
+        "klarer Struktur, passenden Worten, Wirkung",
+        "beliebigen Sätzen"
+      ],
+      "loesung": 1
+    }
   ],
   "loesungstexte": [
     "Erst das Große (Inhalt/Aufbau), dann das Kleine (Rechtschreibung).",

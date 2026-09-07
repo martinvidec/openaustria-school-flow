@@ -7,9 +7,46 @@
   "requires": [],
   "bestehensgrenze": 0.8,
   "aufgaben": [
-    { "typ": "quiz", "frage": "Was ist ein Körper (nicht eine ebene Figur)?", "optionen": ["Quadrat", "Dreieck", "Würfel", "Kreis"], "loesung": 2 },
-    { "typ": "quiz", "frage": "Wie viele Ecken hat ein Würfel?", "optionen": ["4", "6", "8", "12"], "loesung": 2 },
-    { "typ": "matching", "frage": "Ordne zu: Körper haben Flächen, Kanten, Ecken — wie viele beim Würfel?", "loesung": [["flaechen", "6"], ["kanten", "12"], ["ecken", "8"]] }
+    {
+      "typ": "quiz",
+      "frage": "Was ist ein Körper (nicht eine ebene Figur)?",
+      "optionen": [
+        "Quadrat",
+        "Dreieck",
+        "Würfel",
+        "Kreis"
+      ],
+      "loesung": 2
+    },
+    {
+      "typ": "quiz",
+      "frage": "Wie viele Ecken hat ein Würfel?",
+      "optionen": [
+        "4",
+        "6",
+        "8",
+        "12"
+      ],
+      "loesung": 2
+    },
+    {
+      "typ": "matching",
+      "frage": "Ordne zu: Körper haben Flächen, Kanten, Ecken — wie viele beim Würfel?",
+      "loesung": [
+        [
+          "flaechen",
+          "6"
+        ],
+        [
+          "kanten",
+          "12"
+        ],
+        [
+          "ecken",
+          "8"
+        ]
+      ]
+    }
   ],
   "loesungstexte": [
     "Der Würfel hat Volumen — er ist ein Körper; Quadrat/Dreieck/Kreis sind eben.",

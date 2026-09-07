@@ -4,12 +4,41 @@
   "fach": "deutsch",
   "stufe": 4,
   "kompetenz": "deutsch.4.le.1",
-  "requires": ["quest-deutsch-3-le-1"],
+  "requires": [
+    "deutsch.3.le.1"
+  ],
   "bestehensgrenze": 0.8,
   "aufgaben": [
-    { "typ": "quiz", "frage": "Ökonomisch lesen heißt …", "optionen": ["langsam jedes Wort", "zielorientiert: scan, lese gezielt, fasse zusammen", "laut lesen"], "loesung": 1 },
-    { "typ": "quiz", "frage": "Du suchst in einem Sachtext die 3 wichtigsten Argumente. Strategie?", "optionen": ["alles markieren", "Überschriften + Kernsätze scannen, dann markieren", "nur Bild ansehen"], "loesung": 1 },
-    { "typ": "quiz", "frage": "Fremdwort 'recherchieren' unbekannt. Hilfsmittel?", "optionen": ["Buch weglegen", "Wörterbuch/Online-Lexikon nachschlagen", "raten"], "loesung": 1 }
+    {
+      "typ": "quiz",
+      "frage": "Ökonomisch lesen heißt …",
+      "optionen": [
+        "langsam jedes Wort",
+        "zielorientiert: scan, lese gezielt, fasse zusammen",
+        "laut lesen"
+      ],
+      "loesung": 1
+    },
+    {
+      "typ": "quiz",
+      "frage": "Du suchst in einem Sachtext die 3 wichtigsten Argumente. Strategie?",
+      "optionen": [
+        "alles markieren",
+        "Überschriften + Kernsätze scannen, dann markieren",
+        "nur Bild ansehen"
+      ],
+      "loesung": 1
+    },
+    {
+      "typ": "quiz",
+      "frage": "Fremdwort 'recherchieren' unbekannt. Hilfsmittel?",
+      "optionen": [
+        "Buch weglegen",
+        "Wörterbuch/Online-Lexikon nachschlagen",
+        "raten"
+      ],
+      "loesung": 1
+    }
   ],
   "loesungstexte": [
     "Ökonomisch = effizient: Ziel kennen, scannen, selektieren.",

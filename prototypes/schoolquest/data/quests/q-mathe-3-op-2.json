@@ -4,13 +4,39 @@
   "fach": "mathematik",
   "stufe": 3,
   "kompetenz": "mathe.3.op.2",
-  "requires": ["quest-mathe-3-op-1"],
+  "requires": [
+    "mathe.3.op.1"
+  ],
   "bestehensgrenze": 0.8,
   "aufgaben": [
-    { "typ": "eingabe", "frage": "Schriftlich: 567 + 285 = ?", "loesung": ["852"] },
-    { "typ": "eingabe", "frage": "Schriftlich: 731 − 264 = ?", "loesung": ["467"] },
-    { "typ": "eingabe", "frage": "Schriftlich: 238 × 6 = ? (einstelliger Multiplikator)", "loesung": ["1428"] },
-    { "typ": "eingabe", "frage": "Schriftlich: 963 ÷ 3 = ? (einstelliger Divisor)", "loesung": ["321"] }
+    {
+      "typ": "eingabe",
+      "frage": "Schriftlich: 567 + 285 = ?",
+      "loesung": [
+        "852"
+      ]
+    },
+    {
+      "typ": "eingabe",
+      "frage": "Schriftlich: 731 − 264 = ?",
+      "loesung": [
+        "467"
+      ]
+    },
+    {
+      "typ": "eingabe",
+      "frage": "Schriftlich: 238 × 6 = ? (einstelliger Multiplikator)",
+      "loesung": [
+        "1428"
+      ]
+    },
+    {
+      "typ": "eingabe",
+      "frage": "Schriftlich: 963 ÷ 3 = ? (einstelliger Divisor)",
+      "loesung": [
+        "321"
+      ]
+    }
   ],
   "loesungstexte": [
     "567+285: Einer 7+5=12 → 2, Übertrag 1; Zehner 6+8+1=15 → 5, Übertrag 1; Hunderter 5+2+1=8 → 852.",

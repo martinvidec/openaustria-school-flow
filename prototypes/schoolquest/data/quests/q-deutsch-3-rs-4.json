@@ -4,12 +4,41 @@
   "fach": "deutsch",
   "stufe": 3,
   "kompetenz": "deutsch.3.rs.4",
-  "requires": ["quest-deutsch-3-rs-2"],
+  "requires": [
+    "deutsch.3.rs.2"
+  ],
   "bestehensgrenze": 0.8,
   "aufgaben": [
-    { "typ": "quiz", "frage": "'Der Hund rennt schnell.' — 'rennt' ist …", "optionen": ["Nomen", "Verb", "Adjektiv"], "loesung": 1 },
-    { "typ": "quiz", "frage": "'gestern' zeigt welche Zeitstufe?", "optionen": ["Vergangenheit", "Gegenwart", "Zukunft"], "loesung": 0 },
-    { "typ": "quiz", "frage": "Welches Satzglied ist hier: 'Der Hund (rennt) schnell (durch den Garten).' — 'durch den Garten' = ?", "optionen": ["Subjekt", "Prädikat", "Adverbiale (wo?/wie?)"], "loesung": 2 }
+    {
+      "typ": "quiz",
+      "frage": "'Der Hund rennt schnell.' — 'rennt' ist …",
+      "optionen": [
+        "Nomen",
+        "Verb",
+        "Adjektiv"
+      ],
+      "loesung": 1
+    },
+    {
+      "typ": "quiz",
+      "frage": "'gestern' zeigt welche Zeitstufe?",
+      "optionen": [
+        "Vergangenheit",
+        "Gegenwart",
+        "Zukunft"
+      ],
+      "loesung": 0
+    },
+    {
+      "typ": "quiz",
+      "frage": "Welches Satzglied ist hier: 'Der Hund (rennt) schnell (durch den Garten).' — 'durch den Garten' = ?",
+      "optionen": [
+        "Subjekt",
+        "Prädikat",
+        "Adverbiale (wo?/wie?)"
+      ],
+      "loesung": 2
+    }
   ],
   "loesungstexte": [
     "rennt = Verb (Tun-Wort).",

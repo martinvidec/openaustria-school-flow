@@ -41,6 +41,18 @@
     const state = getState();
     if (!state.avatare.length) {
       container.innerHTML = '<div class="placeholder-card"><h2>Avatar erstellen</h2></div>';
+      // Demo-Seed-Button (Issue #204): „Schulquest-Dorf" laden
+      const seedBtn = document.createElement('button');
+      seedBtn.type = 'button';
+      seedBtn.textContent = '🧪 Demo ausprobieren (Schulquest-Dorf laden)';
+      seedBtn.className = 'btn-primary';
+      seedBtn.style.margin = '0 0 1rem';
+      seedBtn.addEventListener('click', () => {
+        if (!window.SchoolQuestSeed) { alert('Seed-Modul nicht geladen.'); return; }
+        window.SchoolQuestSeed.seedErstellen();
+        location.reload();
+      });
+      container.appendChild(seedBtn);
       const form = document.createElement('div');
       form.className = 'avatar-form';
       const input = document.createElement('input');

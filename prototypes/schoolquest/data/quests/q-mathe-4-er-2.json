@@ -4,13 +4,42 @@
   "fach": "mathematik",
   "stufe": 4,
   "kompetenz": "mathe.4.er.2",
-  "requires": ["quest-mathe-4-er-1"],
+  "requires": [
+    "mathe.4.er.1"
+  ],
   "bestehensgrenze": 0.8,
   "aufgaben": [
-    { "typ": "eingabe", "frage": "Quadrat, Seite 6 cm. Flächeninhalt = ? cm²", "loesung": ["36"] },
-    { "typ": "eingabe", "frage": "Rechteck 7 cm × 4 cm. Flächeninhalt = ? cm²", "loesung": ["28"] },
-    { "typ": "quiz", "frage": "Umfang UND Fläche eines Quadrats mit Seite 4: was stimmt?", "optionen": ["U=16, F=16", "U=8, F=16", "U=16, F=8"], "loesung": 0 },
-    { "typ": "eingabe", "frage": "Zusammengesetzt: Rechteck 10×4 + Quadrat 4×4 → Gesamtfläche = ? cm²", "loesung": ["56"] }
+    {
+      "typ": "eingabe",
+      "frage": "Quadrat, Seite 6 cm. Flächeninhalt = ? cm²",
+      "loesung": [
+        "36"
+      ]
+    },
+    {
+      "typ": "eingabe",
+      "frage": "Rechteck 7 cm × 4 cm. Flächeninhalt = ? cm²",
+      "loesung": [
+        "28"
+      ]
+    },
+    {
+      "typ": "quiz",
+      "frage": "Umfang UND Fläche eines Quadrats mit Seite 4: was stimmt?",
+      "optionen": [
+        "U=16, F=16",
+        "U=8, F=16",
+        "U=16, F=8"
+      ],
+      "loesung": 0
+    },
+    {
+      "typ": "eingabe",
+      "frage": "Zusammengesetzt: Rechteck 10×4 + Quadrat 4×4 → Gesamtfläche = ? cm²",
+      "loesung": [
+        "56"
+      ]
+    }
   ],
   "loesungstexte": [
     "A = 6×6 = 36 cm².",

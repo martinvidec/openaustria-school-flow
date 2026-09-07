@@ -7,9 +7,33 @@
   "requires": [],
   "bestehensgrenze": 0.8,
   "aufgaben": [
-    { "typ": "quiz", "frage": "Welches Wort ist richtig geschrieben?", "optionen": ["Gepard", "Gepart", "Gepardt"], "loesung": 0 },
-    { "typ": "quiz", "frage": "'Hemd' — kurz oder lang gesprochener Vokal → dann …", "optionen": ["Hemt", "Hemd", "Hämd"], "loesung": 1 },
-    { "typ": "eingabe", "frage": "Vokale davor lang: Doppelkonsonant nötig? Schreibe 'laufen' richtig in der 1. Person: 'ich l_u_e' … Tippe: 'ich laufe' korrekt so:", "loesung": ["ich laufe"] }
+    {
+      "typ": "quiz",
+      "frage": "Welches Wort ist richtig geschrieben?",
+      "optionen": [
+        "Gepard",
+        "Gepart",
+        "Gepardt"
+      ],
+      "loesung": 0
+    },
+    {
+      "typ": "quiz",
+      "frage": "'Hemd' — kurz oder lang gesprochener Vokal → dann …",
+      "optionen": [
+        "Hemt",
+        "Hemd",
+        "Hämd"
+      ],
+      "loesung": 1
+    },
+    {
+      "typ": "eingabe",
+      "frage": "Vokale davor lang: Doppelkonsonant nötig? Schreibe 'laufen' richtig in der 1. Person: 'ich l_u_e' … Tippe: 'ich laufe' korrekt so:",
+      "loesung": [
+        "ich laufe"
+      ]
+    }
   ],
   "loesungstexte": [
     "Gepard (Fremdwort, keine Doppelung).",
