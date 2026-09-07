@@ -93,7 +93,7 @@ function importState(jsonString) {
   }
 }
 
-// Node-Test-Exporte (DOM-frei testbar)
+// Universal-Export: Browser (window) + Node (module.exports) — keine Browser-Crashes mehr
 const storeApi = {
   SCHEMA_VERSION,
   STORAGE_KEY,
@@ -109,5 +109,7 @@ const storeApi = {
 };
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = storeApi;
+  module.exports = storeApi; // Node-Tests
+} else {
+  window.SchoolQuestStore = storeApi; // Browser
 }
