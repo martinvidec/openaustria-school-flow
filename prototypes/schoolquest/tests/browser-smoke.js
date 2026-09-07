@@ -25,7 +25,19 @@ const sandbox = {
   document: {
     readyState: 'complete',
     addEventListener: () => {},
-    createElement: () => ({ addEventListener: () => {}, classList: { add: () => {}, toggle: () => {} }, appendChild: () => {}, dataset: {} }),
+    createElement: () => {
+      const el = {
+        children: [], style: {}, dataset: {},
+        classList: { add: () => {}, remove: () => {}, toggle: () => {} },
+        addEventListener: () => {}, appendChild: (c) => { el.children.push(c); return c; },
+        append: (...cs) => cs.forEach((c) => el.children.push(c)),
+        prepend: () => {}, querySelectorAll: () => [], querySelector: () => ({ appendChild: () => {} }),
+        set innerHTML(v) {}, get innerHTML() { return ''; },
+        set textContent(v) {}, get textContent() { return ''; },
+        click: () => {}, disabled: false, hidden: false,
+      };
+      return el;
+    },
     querySelectorAll: () => [],
     getElementById: () => ({ set innerHTML(v) {}, appendChild: () => {}, prepend: () => {}, querySelectorAll: () => [] }),
   },
@@ -78,5 +90,16 @@ for (const g of requiredGlobals) {
 // store-Funktionsfähigkeit im simulierten Browser
 const st = sandbox.window.SchoolQuestStore.loadState();
 assert.equal(st.schemaVersion, 1);
+
+// RUNTIME-SMOKE: View-Module wirklich aufrufen (fängt state-null-Bugs, die
+// nur beim Rendern auftreten — Live-Bug vom 07.09.2026, „state is null")
+const schuelerPanel = { innerHTML: '', children: [], appendChild: (c) => schuelerPanel.children.push(c), prepend: (c) => schuelerPanel.children.unshift(c), querySelectorAll: () => [], querySelector: () => ({ appendChild: () => {} }) };
+sandbox.window.LEHRPLAN_MATHEMATIK = { fachLabel: 'Mathematik', kompetenzen: [] };
+sandbox.window.LEHRPLAN_DEUTSCH = { fachLabel: 'Deutsch', kompetenzen: [] };
+sandbox.window.AVATARE = { avatare: [{ icon: '🦊', name: 'Fuchs' }] };
+sandbox.window.QUESTS = [{ id: 'q1', titel: 'Demo', fach: 'mathematik', stufe: 3, kompetenz: 'mathe.3.zd.1', requires: [], bestehensgrenze: 0.8, aufgaben: [], loesungstexte: [] }];
+sandbox.window.SchoolQuestSchueler.render(schuelerPanel);
+// Nach render() darf kein Crash passiert sein; der State muss lesbar sein:
+assert.ok(Array.isArray(sandbox.window.SchoolQuestStore.loadState().avatare), 'state.avatare nach render lesbar');
 
 console.log('browser-smoke: 9 Scripts im simulierten Browser geladen, 8 window-Globals vorhanden ✅');
