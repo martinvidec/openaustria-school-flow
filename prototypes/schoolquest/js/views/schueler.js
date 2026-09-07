@@ -329,7 +329,16 @@
     const d = ladeDaten();
     const neue = progress.verfuegbareBadges(d.quests, avatar.fortschritt);
     if (neue.length) avatar.fortschritt.badges = [...(avatar.fortschritt.badges || []), ...neue.map((b) => b.id)];
-    store.saveState(state);
+    // Persistierung (Store-Singleton): Avatar-Fortschritt in den frisch geladenen
+    // State übertragen und diesen speichern — NIEMALS ein veraltetes 'state' referenzieren
+    const st = getState();
+    const stAvatar = st.avatare.find((a) => a.id === avatar.id);
+    if (stAvatar) {
+      stAvatar.fortschritt = avatar.fortschritt;
+    } else {
+      console.error('[SchoolQuest] Avatar für Persistierung nicht gefunden:', avatar.id);
+    }
+    store.saveState(st);
 
     container.innerHTML = `<h2>${bestanden ? '🎉 Quest bestanden!' : '🔄 Fast geschafft!'}</h2>`;
     const card = document.createElement('div');

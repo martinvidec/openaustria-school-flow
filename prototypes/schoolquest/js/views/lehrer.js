@@ -9,9 +9,17 @@
   const store = window.SchoolQuestStore;
   const verteilung = window.SchoolQuestVerteilung;
 
-  let state = null;
   let aktuelleKlassenId = null;
   let aktuellesFach = 'mathematik';
+
+  // Store-Singleton: IMMER frisch aus dem Store laden (Modul-Isolation vermeiden —
+  // gleiches Bug-Muster wie schueler.js, Live-Bug 07.09.2026)
+  function getState() {
+    return store.loadState();
+  }
+  function persistState(stateToSave) {
+    store.saveState(stateToSave ?? getState());
+  }
 
   function ladeDaten() {
     return {
@@ -21,7 +29,7 @@
   }
 
   function render(container) {
-    state = store.loadState();
+    const state = getState();
     container.innerHTML = '<h2>🧑‍🏫 Lehrer-Dashboard</h2>';
     // Klassen-Auswahl
     const klassenRow = document.createElement('div');
@@ -45,9 +53,10 @@
       const stufe = Number(prompt('Schulstufe (3 oder 4):') || 3);
       if (![3, 4].includes(stufe)) { alert('MVP: Stufe 3 oder 4.'); return; }
       const k = { id: 'kl-' + Date.now().toString(36), name: name.trim(), stufe, faecher: ['mathematik', 'deutsch'] };
-      state.klassen.push(k);
+      const st = getState();
+      st.klassen.push(k);
       aktuelleKlassenId = k.id;
-      store.saveState(state);
+      persistState(st);
       render(container);
     });
     sel.addEventListener('change', () => { aktuelleKlassenId = sel.value; render(container); });
@@ -83,14 +92,15 @@
   // ---------- 40-Wochen-Raster ----------
   function verteilungFuer(klasse, fach) {
     const key = `${klasse.id}:${fach}`;
-    if (!state.verteilung[key]) {
+    const st = getState();
+    if (!st.verteilung[key]) {
       const d = ladeDaten();
       const lp = d.lehrplan[fach];
       const kompetenzen = lp.kompetenzen.filter((k) => k.stufe === klasse.stufe);
-      state.verteilung[key] = verteilung.verteilungErstellen(kompetenzen);
-      store.saveState(state);
+      st.verteilung[key] = verteilung.verteilungErstellen(kompetenzen);
+      persistState(st);
     }
-    return state.verteilung[key];
+    return st.verteilung[key];
   }
 
   function renderVerteilung(container, klasse) {
@@ -138,8 +148,9 @@
     resetBtn.className = 'btn-secondary';
     resetBtn.addEventListener('click', () => {
       if (!confirm('Verteilung auf den Spec-Default zurücksetzen?')) return;
-      delete state.verteilung[`${klasse.id}:${aktuellesFach}`];
-      store.saveState(state);
+      const st = getState();
+      delete st.verteilung[`${klasse.id}:${aktuellesFach}`];
+      persistState(st);
       render(container);
     });
     container.appendChild(resetBtn);
@@ -161,7 +172,7 @@
   // ---------- Fortschritt-Ampel ----------
   function renderFortschritt(container, klasse) {
     const d = ladeDaten();
-    const avatare = state.avatare.filter((a) => a.klassenId === klasse.id);
+    const avatare = getState().avatare.filter((a) => a.klassenId === klasse.id);
     const h3 = document.createElement('h3');
     h3.textContent = 'Fortschritt (Stand dieses Geräts — PII-frei, E11)';
     container.appendChild(h3);
@@ -226,11 +237,12 @@
     btn.textContent = 'Override setzen';
     btn.className = 'btn-primary';
     btn.addEventListener('click', () => {
-      const vorhandene = state.overrides.findIndex((o) => o.kompetenzId === selKompetenz.value);
+      const st = getState();
+      const vorhandene = st.overrides.findIndex((o) => o.kompetenzId === selKompetenz.value);
       const eintrag = { klassenId: klasse.id, kompetenzId: selKompetenz.value, aktion: selAktion.value };
-      if (vorhandene >= 0) state.overrides[vorhandene] = eintrag;
-      else state.overrides.push(eintrag);
-      store.saveState(state);
+      if (vorhandene >= 0) st.overrides[vorhandene] = eintrag;
+      else st.overrides.push(eintrag);
+      persistState(st);
       alert(`Override gesetzt: ${eintrag.kompetenzId} → ${eintrag.aktion}`);
     });
     row.append(selKompetenz, selAktion, btn);
@@ -240,7 +252,7 @@
   window.SchoolQuestLehrer = {
     render(container) {
       render(container);
-      const klasse = state.klassen.find((k) => k.id === aktuelleKlassenId);
+      const klasse = getState().klassen.find((k) => k.id === aktuelleKlassenId);
       if (klasse) renderOverride(container, klasse);
     },
   };
